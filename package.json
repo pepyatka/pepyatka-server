@@ -1,0 +1,16 @@
+{
+  "name": "ff-slash-b",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node app"
+  },
+  "dependencies": {
+    "express": "3.0.5",
+    "ejs": "0.8.3",
+    "redis": "0.8.2",
+    "socket.io": "0.9.13",
+    "express-partials": "0.0.6",
+    "node-uuid": "1.4.0"
+  }
+}
