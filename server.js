@@ -10,9 +10,6 @@ var express = require('express')
   , path = require('path')
   , uuid = require('node-uuid')
 
-// var models = {};
-// var models.user = require('./models/user');
-
 // var path = require('path');
 // if (path.existsSync('./configLocal.js')) {
 //   var configLocal = require('./configLocal.js');

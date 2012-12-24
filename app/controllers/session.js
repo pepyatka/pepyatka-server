@@ -1,5 +1,4 @@
-var redis = require('../../db')
-  , db = redis.connect()
+var models = require('../models');
 
 exports.add_routes = function(app) {
   app.get('/session', function(req, res){
@@ -7,7 +6,7 @@ exports.add_routes = function(app) {
   });
 
   app.post('/session', function(req, res){
-    req.session.user_id = db.get('username:anonymous:uid');
+    req.session.user_id = models.User.anon();
     res.redirect("/")
   });
 

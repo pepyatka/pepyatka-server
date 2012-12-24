@@ -1,5 +1,4 @@
-var redis = require('../../db')
-  , db = redis.connect()
+var models = require('../models');
 
 exports.add_routes = function(app) {
   app.get('/', function(req, res){
