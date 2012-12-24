@@ -6,12 +6,24 @@
 var express = require('express')
   , app = express()
   , partials = require('express-partials')
-  , routes = require('./routes')
-  , user = require('./routes/user')
-  , session = require('./routes/session')
   , http = require('http')
   , path = require('path')
   , uuid = require('node-uuid')
+
+// var models = {};
+// var models.user = require('./models/user');
+
+// var path = require('path');
+// if (path.existsSync('./configLocal.js')) {
+//   var configLocal = require('./configLocal.js');
+
+//   // mail = require('mail').Mail(
+//   //   configLocal.getMailConfig());
+//   conf = configLocal.getSiteConfig();
+// }
+// else {
+//   log.error('Copy configDefault.js to configLocal.js.');
+// }
 
 app.configure(function(){
   app.set('port', process.env.PORT || 3000);
@@ -54,27 +66,9 @@ app.configure('development', function(){
   app.use(express.errorHandler());
 });
 
-helpers = function(req, res, next) {
-  res.locals.logged_in = function() { 
-    return req.session.user_id !== undefined
-  };
-
-  next();
-};
-
-app.all('/*', helpers);
-
-// generic routes
-app.get('/', routes.index);
-app.get('/users', user.list);
-
-// sessions
-app.get('/session', session.get);
-app.post('/session', session.post);
-app.get('/logout', session.logout);
-
-var server = http.createServer(app);
-var io = require('socket.io').listen(server);
+var server = http.createServer(app)
+  , routes = require('./routes')(app)
+  , io = require('socket.io').listen(server);
 
 server.listen(app.get('port'), function(){
   console.log("Express server listening on port " + app.get('port'));
