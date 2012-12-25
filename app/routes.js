@@ -1,6 +1,6 @@
-var user = require('./app/controllers/users')
-var session = require('./app/controllers/session')
-var home = require('./app/controllers/index')
+var user = require('./routes/users')
+var session = require('./routes/session')
+var home = require('./routes/index')
 
 var helpers = function(req, res, next) {
   res.locals.logged_in = function() { 

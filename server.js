@@ -64,7 +64,7 @@ app.configure('development', function(){
 });
 
 var server = http.createServer(app)
-  , routes = require('./routes')(app)
+  , routes = require('./app/routes')(app)
   , io = require('socket.io').listen(server);
 
 server.listen(app.get('port'), function(){
