@@ -11,6 +11,12 @@ exports.add_model = function(db) {
       db.get('username:anonymous:uid', function(err, res) {
         return callback(res);
       })
+    },
+
+    find: function(user_id, callback) {
+      db.hgetall('uid:' + user_id, function(err, res) {
+        return callback(res)
+      })
     }
   };
 }
