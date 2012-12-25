@@ -1,6 +1,6 @@
 var Q = require('q')
 
-var user = require('./routes/users')
+// var user = require('./routes/users')
 // var session = require('./routes/session')
 var home = require('./routes/index')
 
@@ -25,7 +25,7 @@ var findUser = function(req, res, next) {
 module.exports = function(app){
   app.all('/*', helpers, findUser);
 
-  user.add_routes(app);
+  // user.add_routes(app);
   // session.add_routes(app);
   home.add_routes(app);
 };
