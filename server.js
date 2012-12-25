@@ -1,14 +1,9 @@
-
-/**
- * Module dependencies.
- */
-
 var express = require('express')
   , app = express()
-  , partials = require('express-partials')
   , http = require('http')
   , path = require('path')
   , uuid = require('node-uuid')
+  , engine = require('ejs-locals')
 
 // var path = require('path');
 // if (path.existsSync('./configLocal.js')) {
@@ -23,8 +18,10 @@ var express = require('express')
 // }
 
 app.configure(function(){
+  app.engine('ejs', engine);
+
   app.set('port', process.env.PORT || 3000);
-  app.set('views', __dirname + '/views');
+  app.set('views', __dirname + '/app/scripts/views');
   app.set('view engine', 'ejs');
 
   app.use(express.favicon());
@@ -33,7 +30,6 @@ app.configure(function(){
   app.use(express.methodOverride());
   app.use(express.cookieParser('your secret here'));
   app.use(express.session());
-  app.use(partials());
   app.use(app.router);
   app.use(express.static(path.join(__dirname, 'public')));
   app.use(logErrors);

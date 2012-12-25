@@ -1,3 +1,5 @@
+var Q = require('q')
+
 var user = require('./routes/users')
 // var session = require('./routes/session')
 var home = require('./routes/index')
@@ -5,7 +7,7 @@ var home = require('./routes/index')
 var models = require('./models');
 
 var helpers = function(req, res, next) {
-  res.locals.logged_in = function() { 
+  res.locals.logged_in = function() {
     return req.session.user_id !== undefined
   };
 
@@ -13,9 +15,11 @@ var helpers = function(req, res, next) {
 };
 
 var findUser = function(req, res, next) {
-  req.session.user_id = models.User.anon();
-
-  next();
+  models.User.anon(function(value) {
+    req.session.user_id = value;
+      
+    next()
+  });
 }
 
 module.exports = function(app){
