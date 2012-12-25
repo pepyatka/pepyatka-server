@@ -1,5 +1,3 @@
-var Q = require('q')
-
 // var user = require('./routes/users')
 // var session = require('./routes/session')
 var home = require('./routes/index')
