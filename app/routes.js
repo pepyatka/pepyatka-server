@@ -1,6 +1,8 @@
 var user = require('./routes/users')
-var session = require('./routes/session')
+// var session = require('./routes/session')
 var home = require('./routes/index')
+
+var models = require('./models');
 
 var helpers = function(req, res, next) {
   res.locals.logged_in = function() { 
@@ -10,10 +12,16 @@ var helpers = function(req, res, next) {
   next();
 };
 
+var findUser = function(req, res, next) {
+  req.session.user_id = models.User.anon();
+
+  next();
+}
+
 module.exports = function(app){
-  app.all('/*', helpers);
+  app.all('/*', helpers, findUser);
 
   user.add_routes(app);
-  session.add_routes(app);
+  // session.add_routes(app);
   home.add_routes(app);
 };

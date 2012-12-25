@@ -9,6 +9,7 @@
     "express": "3.0.5",
     "ejs": "0.8.3",
     "redis": "0.8.2",
+    // "hiredis": "0.1.14",
     "socket.io": "0.9.13",
     "express-partials": "0.0.6",
     "node-uuid": "1.4.0"

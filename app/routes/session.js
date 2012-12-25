@@ -7,6 +7,7 @@ exports.add_routes = function(app) {
 
   app.post('/session', function(req, res){
     req.session.user_id = models.User.anon();
+
     res.redirect("/")
   });
 
