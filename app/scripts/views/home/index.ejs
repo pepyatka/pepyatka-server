@@ -2,7 +2,7 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/javascripts/jquery-1.8.3.min.js"></script>
-<!-- script src="/javascripts/ember-1.0.0-pre.2.min.js"></script -->
+<script src="/javascripts/ember-1.0.0-pre.2.min.js"></script>
 <script src="/javascripts/jquery.timeago.min.js"></script>
 <script>
   var socket = io.connect('http://localhost:3000');
@@ -32,7 +32,8 @@ xs</script>
 <ul>
   <% _.each(posts, function(post) { %>
     <li>
-      <%= post.body %> | <time class="timeago" datetime="<%= moment(post.created_at) %>"><%= moment(post.created_at).fromNow() %></time> | <a href="javascript:void(false);" onclick="jQuery(this).parent().find('form').show()">Comment</a><br/>
+      <%= post.body %><br/>
+      <a id="post<%= post.id %>" href="#post<%= post.id %>"><time class="timeago" datetime="<%= moment(post.created_at) %>"><%= moment(post.created_at).fromNow() %></time></a> - <a href="javascript:void(false);" onclick="jQuery(this).parent().find('form').show()">Comment</a><br/>
       <ul>
         <% _.each(post.comments, function(comment) { %>
           <li><%= comment.body %></li>
@@ -41,8 +42,8 @@ xs</script>
       <div>
         <form method="post" action="/comments" style="display:none">
           <input type="text" name="body" />
-          <input type="hidden" name="post_id" value="<%= post.id %>" />
-          <input type="submit" value="post" /> | <a href="javascript:void(false)" onclick="jQuery(this).parents('li').find('form').hide();">Close</a><br/><br/>
+          <input type="hidden" name="post_id" value="<%= post.id %>" /><br/>
+          <input type="submit" value="post" /> <a href="javascript:void(false)" onclick="jQuery(this).parents('li').find('form').hide();">Close</a><br/><br/>
         </form>
       </div>
     </li>
