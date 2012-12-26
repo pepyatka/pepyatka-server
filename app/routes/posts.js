@@ -6,6 +6,8 @@ exports.add_routes = function(app) {
   });
 
   app.post('/posts', function(req, res){
-    res.redirect("/")
+    post = new models.Post(req.body)
+
+    res.render('home')
   });
 }

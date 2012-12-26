@@ -14,15 +14,19 @@ var helpers = function(req, res, next) {
 };
 
 var findUser = function(req, res, next) {
-  models.User.anon(function(value) {
-    req.session.user_id = value;
+  if (req.session.user_id === undefined) {
+    models.User().anon(function(value) {
+      req.session.user_id = value;
       
+      next()
+    });
+  } else {
     next()
-  });
+  }
 }
 
 var getUser = function(req, res, next) {
-  models.User.find(req.session.user_id, function(values) {
+  models.User().find(req.session.user_id, function(values) {
     res.locals.current_user = values;
 
     next();
