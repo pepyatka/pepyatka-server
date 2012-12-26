@@ -41,10 +41,10 @@ exports.add_model = function(db) {
       var done = 0;
       var i = 0;
 
+      // Never do this at home. I'm going to modify the iterator in
+      // its body
       if (len > 0) {      
         _.each(posts, function(post_id) {
-          console.log(post_id)
-
           models.Post.find(post_id, function(num) {
             return function(post) {
               posts[num] = post

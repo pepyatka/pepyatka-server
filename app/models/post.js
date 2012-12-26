@@ -47,25 +47,31 @@ exports.add_model = function(db) {
   Post.prototype = {
     getComments: function(callback) {
       var that = this
-      db.lrange('post:' + this.id + ':comments', 0, -1, function(err, comments_ids) {
-        var comments = []
-        var len = comments_ids.length;
+      db.lrange('post:' + this.id + ':comments', 0, -1, function(err, comments) {
+        var len = comments.length;
+        var done = 0;
         var i = 0;
 
         if (len > 0) {
-          _.each(comments_ids, function(comment_id) {
-            models.Comment.find(comment_id, function(comment) {
-              comments.push(comment)
-            
-              i += 1;
-              
-              // This is the last element in the list - we can run callback
-              if (i >= len) 
-                return callback(comments)
-            })
+          // Never do this at home. I'm going to modify the iterator in
+          // its body
+          _.each(comments, function(comment_id) {
+            models.Comment.find(comment_id, function(num) {
+              return function(comment) {
+                comments[num] = comment
+                
+                done += 1;
+                
+                // This is the last element in the list - we can run callback
+                if (done >= len) 
+                  return callback(comments)
+              }
+            }(i))
+
+            i += 1
           });
         } else {
-          return callback(comments)
+          return callback([])
         }
       })
     },
