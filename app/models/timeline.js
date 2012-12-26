@@ -27,7 +27,7 @@ exports.add_model = function(db) {
     })
   }
 
-  Timeline.post = function(user_id, post_id, callback) {
+  Timeline.newPost = function(user_id, post_id, callback) {
     db.zadd('timeline:' + user_id, new Date().getTime(), post_id, function(err, res) {
       Timeline.update(user_id, function() {
         callback()
@@ -44,8 +44,6 @@ exports.add_model = function(db) {
       if (len > 0) {
         _.each(posts_ids, function(post_id) {
           models.Post.find(post_id, function(post) {
-            // TODO: please read Post.find method
-            post.user_id = user_id
             posts.push(post)
             
             i += 1;

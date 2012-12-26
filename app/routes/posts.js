@@ -7,6 +7,7 @@ exports.add_routes = function(app) {
 
   app.post('/posts', function(req, res){
     attrs = req.body
+    // TODO -> User.newPost(new models.Post(attrs)
     attrs.user_id = req.session.user_id
 
     post = new models.Post(attrs)

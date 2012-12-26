@@ -2,6 +2,7 @@
 // var session = require('./routes/session')
 var home = require('./routes/index')
   , posts = require('./routes/posts')
+  , comments = require('./routes/comments')
 
 var models = require('./models');
 
@@ -42,4 +43,5 @@ module.exports = function(app){
   // session.add_routes(app);
   home.add_routes(app);
   posts.add_routes(app);
+  comments.add_routes(app);
 };

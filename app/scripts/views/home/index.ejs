@@ -29,6 +29,13 @@
 
 <ul>
   <% _.each(posts, function(post) { %>
-    <li><%= post.body %></li>
+    <li>
+      <%= post.body %>
+      <form method="post" action="/comments">
+        <input type="text" name="body" />
+        <input type="hidden" name="post_id" value="<%= post.id %>" />
+        <input type="submit" value="post" />
+      </form>
+    </li>
   <% }) %>
 </ul>

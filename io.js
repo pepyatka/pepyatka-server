@@ -11,6 +11,7 @@ exports.add_sockets = function() {
 
     // New message sent
     socket.on('message', function(data) {
+      console.log('new message')
     }),
 
     // New comment sent
