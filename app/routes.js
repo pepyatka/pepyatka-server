@@ -26,8 +26,8 @@ var findUser = function(req, res, next) {
 }
 
 var getUser = function(req, res, next) {
-  models.User.find(req.session.user_id, function(values) {
-    res.locals.current_user = values;
+  models.User.find(req.session.user_id, function(user) {
+    res.locals.current_user = user
 
     next();
   })
