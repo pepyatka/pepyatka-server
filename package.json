@@ -13,5 +13,6 @@
     "ejs-locals": "1.0.2",
     "socket.io": "0.9.13",
     "node-uuid": "1.4.0",
+    "underscore": "1.4.3"
   }
 }

@@ -6,8 +6,13 @@ exports.add_routes = function(app) {
   });
 
   app.post('/posts', function(req, res){
-    post = new models.Post(req.body)
+    attrs = req.body
+    attrs.user_id = req.session.user_id
 
-    res.render('home')
+    post = new models.Post(attrs)
+
+    post.save(function() {
+      res.redirect('/')
+    })
   });
 }

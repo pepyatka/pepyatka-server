@@ -6,9 +6,11 @@ exports.add_routes = function(app) {
   });
 
   app.post('/session', function(req, res){
-    req.session.user_id = models.User.anon();
+    models.User.anon(function(value) {
+      req.session.user_id = value;
 
-    res.redirect("/")
+      res.redirect("/")
+    });      
   });
 
   app.get('/logout', function(req, res){
