@@ -1,19 +1,21 @@
 <% layout('../../layouts/layout.ejs') -%>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="/javascripts/ember-1.0.0-pre.2.min.js"></script>
+<script src="/javascripts/jquery-1.8.3.min.js"></script>
+<!-- script src="/javascripts/ember-1.0.0-pre.2.min.js"></script -->
+<script src="/javascripts/jquery.timeago.min.js"></script>
 <script>
-  var socket = io.connect('http://localhost:3000');
+  // var socket = io.connect('http://localhost:3000');
 
-  socket.emit('subscribe', { });
+  // socket.emit('subscribe', { });
 
-  socket.on('message', function (data) {
-    console.log(data);
-  });
+  // socket.on('message', function (data) {
+  //   console.log(data);
+  // });
 
-  socket.on('comment', function (data) {
-    console.log(data);
-  });
+  // socket.on('comment', function (data) {
+  //   console.log(data);
+  // });
 </script>
 
 <h1>ff/b/</h1>
@@ -30,12 +32,19 @@
 <ul>
   <% _.each(posts, function(post) { %>
     <li>
-      <%= post.body %>
-      <form method="post" action="/comments">
+      <%= post.body %> | <time class="timeago" datetime="<%= moment(post.created_at) %>"><%= moment(post.created_at).fromNow() %></time> | <a href="javascript:void(false);" onclick="jQuery(this).parent().find('form').show()">Comment</a><br/><br/>
+      <form method="post" action="/comments" style="display:none">
         <input type="text" name="body" />
         <input type="hidden" name="post_id" value="<%= post.id %>" />
-        <input type="submit" value="post" />
+        <input type="submit" value="post" /> | <a href="javascript:void(false)" onclick="jQuery(this).parents('li').find('form').hide();">Close</a><br/><br/>
       </form>
     </li>
   <% }) %>
 </ul>
+
+<script>
+  jQuery(document).ready(function() {
+    jQuery.timeago.settings.allowFuture = true;
+    jQuery("time.timeago").timeago();
+  });
+</script>

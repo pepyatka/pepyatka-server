@@ -14,6 +14,6 @@
     "socket.io": "0.9.13",
     "node-uuid": "1.4.0",
     "underscore": "1.4.3",
-    "connect": "2.7.1"
+    "moment": "1.7.2"
   }
 }

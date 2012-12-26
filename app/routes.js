@@ -1,5 +1,6 @@
 // var user = require('./routes/users')
 // var session = require('./routes/session')
+
 var home = require('./routes/index')
   , posts = require('./routes/posts')
   , comments = require('./routes/comments')
@@ -12,6 +13,7 @@ var helpers = function(req, res, next) {
   };
 
   res.locals._ = require('underscore');
+  res.locals.moment = require('moment');
 
   next();
 };

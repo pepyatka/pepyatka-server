@@ -1,11 +1,14 @@
 var uuid = require('node-uuid')
-  , models = require('../models');
+  , models = require('../models')
 
 exports.add_model = function(db) {
   function Post(params) {
     this.body = params.body
+
+    // params to filter
     this.id = params.id
     this.user_id = params.user_id
+    this.created_at = parseInt(params.created_at)
   }
 
   Post.find = function(post_id, callback) {

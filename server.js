@@ -2,7 +2,6 @@ var express = require('express')
   , app = express()
   , http = require('http')
   , path = require('path')
-  , uuid = require('node-uuid')
   , engine = require('ejs-locals')
 
 // var path = require('path');
