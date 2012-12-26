@@ -61,27 +61,12 @@ app.configure('development', function(){
 
 var server = http.createServer(app)
   , routes = require('./app/routes')(app)
-  , io = require('socket.io').listen(server);
 
 server.listen(app.get('port'), function(){
   console.log("Express server listening on port " + app.get('port'));
 });
 
-io.sockets.on('connection', function(socket) {
-  // User wants to listen to real-time updates
-  socket.on('subscribe', function(data) {
-    // nothing to do yet
-  }),
+var io = require('socket.io').listen(server)
+  , socket = require('./io.js')
 
-  // User wants to stop listening to real-time updates
-  socket.on('unsubscribe', function(data) {
-  }),
-
-  // New message sent
-  socket.on('message', function(data) {
-  }),
-
-  // New comment sent
-  socket.on('comment', function(data) {
-  })
-})
+io.sockets.on('connection', socket.add_sockets())

@@ -11,7 +11,7 @@ exports.add_model = function(db) {
     // init anonymous user if it doesn't exist yet
     var user_id = uuid.v4();
 
-    var getAnon = function() {
+    var returnAnon = function() {
       db.get('username:anonymous:uid', function(err, res) {
         return callback(res);
       })
@@ -20,10 +20,10 @@ exports.add_model = function(db) {
     db.setnx('username:anonymous:uid', user_id, function(err, res) {
       if (res == 1) {
         db.hsetnx('user:' + user_id, 'username', 'anonymous', function(err, res) {
-          getAnon()
+          returnAnon()
         })
       } else {
-        getAnon()
+        returnAnon()
       }
     })
   }
