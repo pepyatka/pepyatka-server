@@ -15,7 +15,7 @@ var helpers = function(req, res, next) {
 
 var findUser = function(req, res, next) {
   if (req.session.user_id === undefined) {
-    models.User().anon(function(value) {
+    models.User.anon(function(value) {
       req.session.user_id = value;
       
       next()
@@ -26,7 +26,7 @@ var findUser = function(req, res, next) {
 }
 
 var getUser = function(req, res, next) {
-  models.User().find(req.session.user_id, function(values) {
+  models.User.find(req.session.user_id, function(values) {
     res.locals.current_user = values;
 
     next();

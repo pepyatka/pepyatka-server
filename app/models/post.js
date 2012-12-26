@@ -3,10 +3,13 @@ exports.add_model = function(db) {
     this.body = params.body
   }
 
-  Post.prototype = {
-    find: function() {
-    },
+  Post.find = function() {
+    db.hgetall('post:' + user_id, function(err, res) {
+      return callback(res)
+    })
+  }
 
+  Post.prototype = {
     save: function() {
       this.created_at = new Date().getTime()
 
