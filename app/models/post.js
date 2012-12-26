@@ -10,6 +10,7 @@ exports.add_model = function(db) {
 
   Post.find = function(post_id, callback) {
     db.hgetall('post:' + post_id, function(err, attrs) {
+      // TODO: user_id is missing!
       attrs.id = post_id
       return callback(new Post(attrs))
     })

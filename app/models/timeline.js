@@ -1,7 +1,8 @@
 var _ = require('underscore')
+  , models = require('../models')
 
 exports.add_model = function(db) {
-  POSTS = 10
+  var POSTS = 10
 
   function Timeline(params) {
   }
@@ -17,6 +18,7 @@ exports.add_model = function(db) {
       _.each(posts, function(post_id) {
         db.multi()
           .zrem('timeline:' + user_id, post_id)
+          // TODO: -> Post.delete(post_id)
           .del('post:' + post_id)
           .exec(function(err, res) { })
       });
@@ -30,6 +32,32 @@ exports.add_model = function(db) {
       Timeline.update(user_id, function() {
         callback()
       })
+    })
+  }
+
+  Timeline.posts = function(user_id, callback) {
+    db.zrevrange('timeline:' + user_id, 0, POSTS, function(err, posts_ids) {
+      var posts = []
+      var len = posts_ids.length;
+      var i = 0;
+
+      if (len > 0) {
+        _.each(posts_ids, function(post_id) {
+          models.Post.find(post_id, function(post) {
+            // TODO: please read Post.find method
+            post.user_id = user_id
+            posts.push(post)
+            
+            i += 1;
+
+            // This is the last element in the list - we can run callback
+            if (i >= len) 
+              callback(posts)
+          })
+        });
+      } else {
+        callback(posts)
+      }
     })
   }
 

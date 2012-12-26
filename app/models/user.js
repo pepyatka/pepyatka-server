@@ -11,14 +11,21 @@ exports.add_model = function(db) {
     // init anonymous user if it doesn't exist yet
     var user_id = uuid.v4();
 
-    db.multi()
-      .setnx('username:anonymous:uid', user_id)
-      .hsetnx('user:' + user_id, 'username', 'anonymous')
-      .exec(function(err, res) {
-        db.get('username:anonymous:uid', function(err, res) {
-          return callback(res);
-        })
+    var getAnon = function() {
+      db.get('username:anonymous:uid', function(err, res) {
+        return callback(res);
       })
+    }
+
+    db.setnx('username:anonymous:uid', user_id, function(err, res) {
+      if (res == 1) {
+        db.hsetnx('user:' + user_id, 'username', 'anonymous', function(err, res) {
+          getAnon()
+        })
+      } else {
+        getAnon()
+      }
+    })
   }
 
   User.find = function(user_id, callback) {

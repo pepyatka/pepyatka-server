@@ -1,6 +1,7 @@
 <% layout('../../layouts/layout.ejs') -%>
 
 <script src="/socket.io/socket.io.js"></script>
+<script src="/javascripts/ember-1.0.0-pre.2.min.js"></script>
 <script>
   var socket = io.connect('http://localhost:3000');
 
@@ -15,14 +16,19 @@
   });
 </script>
 
-<% if (logged_in()) { %>
-  Hello, <%= current_user.username %>.
-<% } %>
+<h1>ff/b/</h1>
 
-<h1>FF/B</h1>
-<p>Welcome to FF/B</p>
+<% if (logged_in()) { %>
+  <p>Hello, <%= current_user.username %>.</p>
+<% } %>
 
 <form method="post" action="/posts">
   <input type="text" name="body" />
   <input type="submit" value="post" />
 </form>
+
+<ul>
+  <% _.each(posts, function(post) { %>
+    <li><%= post.body %></li>
+  <% }) %>
+</ul>
