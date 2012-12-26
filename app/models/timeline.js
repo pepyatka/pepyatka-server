@@ -36,25 +36,32 @@ exports.add_model = function(db) {
   }
 
   Timeline.posts = function(user_id, callback) {
-    db.zrevrange('timeline:' + user_id, 0, POSTS, function(err, posts_ids) {
-      var posts = []
-      var len = posts_ids.length;
+    db.zrevrange('timeline:' + user_id, 0, POSTS, function(err, posts) {
+      var len = posts.length;
+      var done = 0;
       var i = 0;
 
-      if (len > 0) {
-        _.each(posts_ids, function(post_id) {
-          models.Post.find(post_id, function(post) {
-            posts.push(post)
-            
-            i += 1;
+      if (len > 0) {      
+        _.each(posts, function(post_id) {
+          console.log(post_id)
 
-            // This is the last element in the list - we can run callback
-            if (i >= len) 
-              callback(posts)
-          })
+          models.Post.find(post_id, function(num) {
+            return function(post) {
+              posts[num] = post
+              
+              // TODO: -> _.after method
+              done += 1;
+              
+              // This is the last element in the list - we can run callback
+              if (done >= len) 
+                return callback(posts)
+            }
+          }(i))
+
+          i += 1
         });
       } else {
-        callback(posts)
+        return callback([])
       }
     })
   }

@@ -1,5 +1,6 @@
 var uuid = require('node-uuid')
   , models = require('../models')
+  , _ = require('underscore')
 
 exports.add_model = function(db) {
   function Post(params) {
@@ -14,7 +15,11 @@ exports.add_model = function(db) {
   Post.find = function(post_id, callback) {
     db.hgetall('post:' + post_id, function(err, attrs) {
       attrs.id = post_id
-      return callback(new Post(attrs))
+      var post = new Post(attrs)
+      post.getComments(function(comments) {
+        post.comments = comments
+        return callback(post)
+      })
     })
   }
 
@@ -24,7 +29,7 @@ exports.add_model = function(db) {
 
   Post.addComment = function(post_id, comment_id, callback) {
     db.hget('post:' + post_id, 'user_id', function(err, user_id) {
-      db.lpush('post:' + post_id + ':comments', comment_id, function() {
+      db.rpush('post:' + post_id + ':comments', comment_id, function() {
         // Can we bump this post
         Post.bumpable(post_id, function(bump) {
           if (bump) {
@@ -40,6 +45,31 @@ exports.add_model = function(db) {
   }
 
   Post.prototype = {
+    getComments: function(callback) {
+      var that = this
+      db.lrange('post:' + this.id + ':comments', 0, -1, function(err, comments_ids) {
+        var comments = []
+        var len = comments_ids.length;
+        var i = 0;
+
+        if (len > 0) {
+          _.each(comments_ids, function(comment_id) {
+            models.Comment.find(comment_id, function(comment) {
+              comments.push(comment)
+            
+              i += 1;
+              
+              // This is the last element in the list - we can run callback
+              if (i >= len) 
+                return callback(comments)
+            })
+          });
+        } else {
+          return callback(comments)
+        }
+      })
+    },
+
     save: function(callback) {
       var that = this
       this.created_at = new Date().getTime()

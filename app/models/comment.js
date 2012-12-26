@@ -26,6 +26,7 @@ exports.add_model = function(db) {
         .hset('comment:' + this.id, 'body', this.body)
         .hset('comment:' + this.id, 'created_at', this.created_at)
         .hset('comment:' + this.id, 'user_id', this.user_id)
+        .hset('comment:' + this.id, 'post_id', this.post_id)
         .exec(function(err, res) {
           models.Post.addComment(that.post_id, that.id, function() {
             return callback()

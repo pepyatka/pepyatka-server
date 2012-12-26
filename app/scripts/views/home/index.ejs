@@ -32,12 +32,19 @@
 <ul>
   <% _.each(posts, function(post) { %>
     <li>
-      <%= post.body %> | <time class="timeago" datetime="<%= moment(post.created_at) %>"><%= moment(post.created_at).fromNow() %></time> | <a href="javascript:void(false);" onclick="jQuery(this).parent().find('form').show()">Comment</a><br/><br/>
-      <form method="post" action="/comments" style="display:none">
-        <input type="text" name="body" />
-        <input type="hidden" name="post_id" value="<%= post.id %>" />
-        <input type="submit" value="post" /> | <a href="javascript:void(false)" onclick="jQuery(this).parents('li').find('form').hide();">Close</a><br/><br/>
-      </form>
+      <%= post.body %> | <time class="timeago" datetime="<%= moment(post.created_at) %>"><%= moment(post.created_at).fromNow() %></time> | <a href="javascript:void(false);" onclick="jQuery(this).parent().find('form').show()">Comment</a><br/>
+      <ul>
+        <% _.each(post.comments, function(comment) { %>
+          <li><%= comment.body %></li>
+        <% }) %>
+      </ul><br/>
+      <div>
+        <form method="post" action="/comments" style="display:none">
+          <input type="text" name="body" />
+          <input type="hidden" name="post_id" value="<%= post.id %>" />
+          <input type="submit" value="post" /> | <a href="javascript:void(false)" onclick="jQuery(this).parents('li').find('form').hide();">Close</a><br/><br/>
+        </form>
+      </div>
     </li>
   <% }) %>
 </ul>
