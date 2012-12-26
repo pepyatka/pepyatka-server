@@ -68,11 +68,12 @@ server.listen(app.get('port'), function(){
 });
 
 io.sockets.on('connection', function(socket) {
-  // User wants to listen to updates
+  // User wants to listen to real-time updates
   socket.on('subscribe', function(data) {
+    // nothing to do yet
   }),
 
-  // User wants to stop listening to updates
+  // User wants to stop listening to real-time updates
   socket.on('unsubscribe', function(data) {
   }),
 

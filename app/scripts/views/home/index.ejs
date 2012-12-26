@@ -1,5 +1,20 @@
 <% layout('../../layouts/layout.ejs') -%>
 
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io.connect('http://localhost:3000');
+
+  socket.emit('subscribe', { });
+
+  socket.on('message', function (data) {
+    console.log(data);
+  });
+
+  socket.on('comment', function (data) {
+    console.log(data);
+  });
+</script>
+
 <% if (logged_in()) { %>
   Hello, <%= current_user.username %>.
 <% } %>
