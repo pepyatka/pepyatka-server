@@ -67,20 +67,20 @@ server.listen(app.get('port'), function(){
   console.log("Express server listening on port " + app.get('port'));
 });
 
-// io.sockets.on('connection', function(socket) {
-//   // User wants to subscribe to room
-//   socket.on('subscribe', function(data) {
-//   }),
+io.sockets.on('connection', function(socket) {
+  // User wants to listen to updates
+  socket.on('subscribe', function(data) {
+  }),
 
-//   // User wants to unsubscribe from room
-//   socket.on('unsubscribe', function(data) {
-//   }),
+  // User wants to stop listening to updates
+  socket.on('unsubscribe', function(data) {
+  }),
 
-//   // New message sent to group
-//   socket.on('message', function(data) {
-//   }),
+  // New message sent
+  socket.on('message', function(data) {
+  }),
 
-//   // Clean up on disconnect
-//   socket.on('disconnect', function() {
-//   })
-// }
+  // New comment sent
+  socket.on('comment', function(data) {
+  })
+})
