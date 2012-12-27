@@ -8,18 +8,30 @@
 
 <script type="text/x-handlebars" data-template-name="application">
   <h1>ff/b/</h1>
+
+  {{view App.CreatePostView id="new-post"}}
+
   {{outlet}}
 </script>
 
 <script type="text/x-handlebars" data-template-name="posts">
   <ul>
   {{#each post in controller}}
-    <li><a {{action showPost post}}>{{post.body}}</a></li>
+    <li>
+      <a {{action showPost post}}>{{post.body}}</a>
+      <ul>
+      {{#each comment in post.comments}}
+        <li>{{comment.body}}</li>
+      {{/each}}
+      </ul>
+    </li>
   {{/each}}
   </ul>
 </script>
 
 <script type="text/x-handlebars" data-template-name="a-post">
+  <p><a {{action showAllPosts}}>All posts</a></p>
+
   {{body}}
 
   <ul>

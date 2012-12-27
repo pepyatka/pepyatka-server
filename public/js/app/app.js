@@ -15,18 +15,48 @@ App.OnePostView = Ember.View.extend({
   templateName: 'a-post'
 });
 
+App.CreatePostView = Ember.TextField.extend({
+  insertNewline: function() {
+    var value = this.get('value');
+
+    if (value) {
+      App.Post.createPost(value);
+      this.set('value', '');
+    }
+  }
+})
+
 App.Post = Ember.Object.extend();
 App.Post.reopenClass({
-  find: function(){
-    this.allPosts = []
+  allPosts: [],
 
+  createPost: function(body) {
+    var post = App.Post.create({ 
+      body: body 
+    });
+
+    $.ajax({
+      url: 'http://localhost:3000/v1/posts',
+      type: 'post',
+      data: { body: body },
+      context: post,
+      success: function(response) {
+        this.setProperties(response);
+        App.Post.allPosts.insertAt(0, post)
+      }
+    })
+    return post;
+  },
+
+  find: function(){
     $.ajax({
       url: 'http://localhost:3000/v1/timeline/anonymous',
       dataType: 'jsonp',
       context: this,
       success: function(response){
-        response.forEach(function(post){
-          this.allPosts.addObject(App.Post.create(post))
+        response.forEach(function(attrs){
+          var post = App.Post.create(attrs)
+          this.allPosts.addObject(post)
         }, this)
       }
     })
@@ -46,7 +76,6 @@ App.Post.reopenClass({
         this.setProperties(response)
       }
     })
-
     return post;
   }
 });
@@ -68,6 +97,8 @@ App.Router = Ember.Router.extend({
     aPost: Ember.Route.extend({
       route: '/:postId',
 
+      showAllPosts: Ember.Route.transitionTo('posts'),
+      
       connectOutlets: function(router, context) {
         router.get('applicationController').connectOutlet('onePost', context);
       },
