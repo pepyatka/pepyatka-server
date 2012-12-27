@@ -18,10 +18,12 @@ var express = require('express')
 
 app.configure(function(){
   app.engine('ejs', engine);
+  app.set('view engine', 'ejs');
 
   app.set('port', process.env.PORT || 3000);
   app.set('views', __dirname + '/app/scripts/views');
-  app.set('view engine', 'ejs');
+
+  app.enable("jsonp callback");
 
   app.use(express.favicon());
   app.use(express.logger('dev'));

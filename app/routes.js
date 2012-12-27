@@ -19,10 +19,15 @@ var helpers = function(req, res, next) {
   next();
 };
 
+var noJSONP = function(req, res, next) {
+  delete req.query.callback;
+  next();
+}
+
 var findUser = function(req, res, next) {
   if (req.session.user_id === undefined) {
-    models.User.anon(function(value) {
-      req.session.user_id = value;
+    models.User.anon(function(user_id) {
+      req.session.user_id = user_id;
       
       next()
     });

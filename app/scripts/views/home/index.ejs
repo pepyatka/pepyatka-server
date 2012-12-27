@@ -7,39 +7,16 @@
 <script src="/js/libs/jquery.timeago.min.js"></script>
 
 <script type="text/x-handlebars" data-template-name="application">
-  <h1>Ember Committers</h1>
+  <h1>ff/b/</h1>
   {{outlet}}
 </script>
 
-<script type="text/x-handlebars" data-template-name="contributors">
-    {{#each person in controller}}
-      <a {{action showContributor person}}> {{person.login}} </a>
-    {{/each}}
-</script>
-
-<script type="text/x-handlebars" data-template-name="a-contributor">
-  <div>
-    <a {{action showAllContributors}}>All Contributors</a>
-  </div>  
-  {{login}} - {{contributions}} contributions to Ember.js
+<script type="text/x-handlebars" data-template-name="posts">
   <ul>
-    <li><a {{action showDetails}}>Details</a></li>
-    <li><a {{action showRepos}}>Repos</a></li>
-  </ul>
-  <div>
-    {{outlet}}
-  </div>
-</script>
-
-<script type="text/x-handlebars" data-template-name="contributor-details">
-  <p>{{email}}</p>
-  <p>{{bio}}</p>
-</script>
-
-<script type="text/x-handlebars" data-template-name="repos">
-  {{#each repo in repos}}
-     {{repo.name}}
+  {{#each post in controller}}
+    <li>{{post.body}}</li>
   {{/each}}
+  </ul>
 </script>
 
 <script src="/js/app/app.js"></script>
@@ -60,23 +37,6 @@
 
 
 
-<h1>ff/b/</h1>
-
-<% if (logged_in()) { %>
-  <p>Hello, <%= current_user.username %>.</p>
-<% } %>
-
-<form method="post" action="/posts">
-  <input type="text" name="body" />
-  <input type="submit" value="post" />
-</form>
-
-<script>
-  jQuery(document).ready(function() {
-    jQuery.timeago.settings.allowFuture = true;
-    jQuery("time.timeago").timeago();
-  });
-</script>
 
 
 
@@ -101,7 +61,25 @@
 
 <!-- ------------------------------------------------------------- -->
 
-<!-- ul>
+<!-- h1>ff/b/</h1>
+
+<% if (logged_in()) { %>
+  <p>Hello, <%= current_user.username %>.</p>
+<% } %>
+
+<form method="post" action="/posts">
+  <input type="text" name="body" />
+  <input type="submit" value="post" />
+</form>
+
+<script>
+  jQuery(document).ready(function() {
+    jQuery.timeago.settings.allowFuture = true;
+    jQuery("time.timeago").timeago();
+  });
+</script>
+
+<ul>
   <% _.each(posts, function(post) { %>
     <li>
       <%= post.user.username %><br/>

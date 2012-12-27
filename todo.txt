@@ -1,5 +1,6 @@
 TODO list
 =========
 
-- user_id -> created_by
+- user_id -> createdBy
 - pretty print json option like ?pretty=1
+- name convention like create_by -> createdBy, user_id -> userId
