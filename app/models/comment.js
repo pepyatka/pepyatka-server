@@ -12,7 +12,11 @@ exports.add_model = function(db) {
   Comment.find = function(comment_id, callback) {
     db.hgetall('comment:' + comment_id, function(err, attrs) {
       attrs.id = comment_id
-      return callback(new Comment(attrs))
+      var comment = new Comment(attrs)
+      models.User.find(attrs.user_id, function(user) {
+        comment.user = user
+        return callback(comment)
+      })
     })
   }
 

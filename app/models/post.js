@@ -18,7 +18,11 @@ exports.add_model = function(db) {
       var post = new Post(attrs)
       post.getComments(function(comments) {
         post.comments = comments
-        return callback(post)
+
+        models.User.find(attrs.user_id, function(user) {
+          post.user = user
+          return callback(post)
+        })
       })
     })
   }

@@ -1,22 +1,64 @@
 <% layout('../../layouts/layout.ejs') -%>
 
-<script src="/socket.io/socket.io.js"></script>
-<script src="/javascripts/jquery-1.8.3.min.js"></script>
-<script src="/javascripts/ember-1.0.0-pre.2.min.js"></script>
-<script src="/javascripts/jquery.timeago.min.js"></script>
-<script>
-  var socket = io.connect('http://localhost:3000');
+<!-- script src="/socket.io/socket.io.js"></script -->
+<script src="/js/libs/jquery-1.8.3.min.js"></script>
+<script src="/js/libs/handlebars-1.0.rc.1.js"></script>
+<script src="/js/libs/ember-1.0.0-pre.2.min.js"></script>
+<script src="/js/libs/jquery.timeago.min.js"></script>
 
-  socket.emit('subscribe', { });
-
-  socket.on('message', function (data) {
-    console.log(data);
-  });
-
-  socket.on('comment', function (data) {
-    console.log(data);
-  });
+<script type="text/x-handlebars" data-template-name="application">
+  <h1>Ember Committers</h1>
+  {{outlet}}
 </script>
+
+<script type="text/x-handlebars" data-template-name="contributors">
+    {{#each person in controller}}
+      <a {{action showContributor person}}> {{person.login}} </a>
+    {{/each}}
+</script>
+
+<script type="text/x-handlebars" data-template-name="a-contributor">
+  <div>
+    <a {{action showAllContributors}}>All Contributors</a>
+  </div>  
+  {{login}} - {{contributions}} contributions to Ember.js
+  <ul>
+    <li><a {{action showDetails}}>Details</a></li>
+    <li><a {{action showRepos}}>Repos</a></li>
+  </ul>
+  <div>
+    {{outlet}}
+  </div>
+</script>
+
+<script type="text/x-handlebars" data-template-name="contributor-details">
+  <p>{{email}}</p>
+  <p>{{bio}}</p>
+</script>
+
+<script type="text/x-handlebars" data-template-name="repos">
+  {{#each repo in repos}}
+     {{repo.name}}
+  {{/each}}
+</script>
+
+<script src="/js/app/app.js"></script>
+
+<script>
+  // var socket = io.connect('http://localhost:3000');
+
+  // socket.emit('subscribe', { });
+
+  // socket.on('message', function (data) {
+  //   console.log(data);
+  // });
+
+  // socket.on('comment', function (data) {
+  //   console.log(data);
+  // });
+</script>
+
+
 
 <h1>ff/b/</h1>
 
@@ -29,14 +71,45 @@
   <input type="submit" value="post" />
 </form>
 
-<ul>
+<script>
+  jQuery(document).ready(function() {
+    jQuery.timeago.settings.allowFuture = true;
+    jQuery("time.timeago").timeago();
+  });
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- ------------------------------------------------------------- -->
+
+<!-- ul>
   <% _.each(posts, function(post) { %>
     <li>
+      <%= post.user.username %><br/>
       <%= post.body %><br/>
-      <a id="post<%= post.id %>" href="#post<%= post.id %>"><time class="timeago" datetime="<%= moment(post.created_at) %>"><%= moment(post.created_at).fromNow() %></time></a> - <a href="javascript:void(false);" onclick="jQuery(this).parent().find('form').show()">Comment</a><br/>
+      <a id="<%= post.id %>" href="#<%= post.id %>"><time class="timeago" datetime="<%= moment(post.created_at) %>"><%= moment(post.created_at).fromNow() %></time></a> - <a href="javascript:void(false);" onclick="jQuery(this).parent().find('form').show()">Comment</a><br/>
       <ul>
         <% _.each(post.comments, function(comment) { %>
-          <li><%= comment.body %></li>
+          <li><%= comment.body %> - <%= comment.user.username %></li>
         <% }) %>
       </ul><br/>
       <div>
@@ -48,11 +121,4 @@
       </div>
     </li>
   <% }) %>
-</ul>
-
-<script>
-  jQuery(document).ready(function() {
-    jQuery.timeago.settings.allowFuture = true;
-    jQuery("time.timeago").timeago();
-  });
-</script>
+</ul -->

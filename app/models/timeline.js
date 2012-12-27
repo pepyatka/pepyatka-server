@@ -7,11 +7,11 @@ exports.add_model = function(db) {
   function Timeline(params) {
   }
 
-  Timeline.find = function(user_id, callback) {
-    db.zrevrange('timeline:' + this.id, 0, -1, function(err, posts) {
-      return callback(posts)
-    })
-  }
+  // Timeline.find = function(user_id, callback) {
+  //   db.zrevrange('timeline:' + user_id, 0, -1, function(err, posts) {
+  //     return callback(posts)
+  //   })
+  // }
 
   Timeline.update = function(user_id, callback) {
     db.zrevrange('timeline:' + user_id, POSTS, -1, function(err, posts) {

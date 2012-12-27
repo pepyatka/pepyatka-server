@@ -12,8 +12,8 @@ exports.add_model = function(db) {
     var user_id = uuid.v4();
 
     var returnAnon = function() {
-      db.get('username:anonymous:uid', function(err, res) {
-        return callback(res);
+      User.find_by_username('anonymous', function(user) {
+        return callback(user.id);
       })
     }
 
@@ -26,6 +26,14 @@ exports.add_model = function(db) {
         returnAnon()
       }
     })
+  }
+
+  User.find_by_username = function(username, callback) {
+    db.get('username:' + username + ':uid', function (err, user_id) {
+      User.find(user_id, function(user) { 
+        return callback(user)
+      })
+    })  
   }
 
   User.find = function(user_id, callback) {

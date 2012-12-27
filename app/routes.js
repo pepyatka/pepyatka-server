@@ -4,6 +4,7 @@
 var home = require('./routes/index')
   , posts = require('./routes/posts')
   , comments = require('./routes/comments')
+  , timeline = require('./routes/timeline')
 
 var models = require('./models');
 
@@ -39,6 +40,8 @@ var getUser = function(req, res, next) {
 }
 
 module.exports = function(app){
+  timeline.add_routes(app);
+
   app.all('/*', helpers, findUser, getUser);
 
   // user.add_routes(app);
