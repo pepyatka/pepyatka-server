@@ -9,6 +9,10 @@
 <script type="text/x-handlebars" data-template-name="application">
   <h1>ff/b/</h1>
 
+  {{outlet}}
+</script>
+
+<script type="text/x-handlebars" data-template-name="post-list-view">
   <div>
     <div>
       {{view App.CreatePostView target="App.PostsController" action="submitPost" }}
@@ -20,12 +24,10 @@
     </div>
   </div>
 
-  {{outlet}}
-</script>
-
-<script type="text/x-handlebars" data-template-name="post-list-view">
-  {{view Ember.CollectionView contentBinding="App.PostsController"
-         itemViewClass="App.PostContainerView"}}
+  <ul>
+    {{view Ember.CollectionView contentBinding="App.PostsController"
+           itemViewClass="App.PostContainerView"}}
+  </ul>
 </script>
 
 <script type="text/x-handlebars" data-template-name="post-view">

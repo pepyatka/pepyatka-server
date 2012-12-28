@@ -7,7 +7,6 @@ App.ApplicationController = Ember.Controller.extend();
 
 // Index view to display all posts on the page
 App.AllPostsView = Ember.View.extend({
-  tagName: "ul",
   templateName: 'post-list-view'
 });
 
@@ -27,7 +26,7 @@ App.CreatePostView = Ember.TextField.extend(Ember.TargetActionSupport, {
 App.PostContainerView = Ember.View.extend({
   tagName: "li",
   templateName: 'post-view',
-  isFormVisible: true,
+  isFormVisible: false,
 
   toggleVisibility: function(){
     this.toggleProperty('isFormVisible');
