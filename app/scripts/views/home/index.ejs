@@ -17,27 +17,39 @@
   {{outlet}}
 </script>
 
-<script type="text/x-handlebars" data-template-name="post-view">
-  {{view.content.user.username}}<br/>
-  {{view.content.body}}<br/>
-  <a {{action showPost view.content}}><time datetime="{{view.content.created_at}}">{{view.content.created_at}}</time></a> - <a {{action toggleVisibility}}>Comment</a>
-
-  {{#view App.CommentForm isVisibleBinding="isFormVisible" }}
-    {{view Ember.TextField}}
-  {{/view}} 
-
-  <ul>
-  {{#each comment in view.content.comments}}
-    <li>{{comment.body}} - {{comment.user.username}}</li>
-  {{/each}}
-  </ul>
+<script type="text/x-handlebars" data-template-name="post-list-view">
+  {{view Ember.CollectionView contentBinding="App.PostsController"
+         itemViewClass="App.PostContainer"}}
 </script>
 
-<script type="text/x-handlebars" data-template-name="posts">
-  <ul>
-    {{view Ember.CollectionView contentBinding="App.PostsController"
-           itemViewClass="App.PostContainer"}}
-  </ul>
+<script type="text/x-handlebars" data-template-name="post-view">
+  {{#with view.content}}  
+    <div>{{user.username}}</div>
+    <div>{{body}}</div>
+    <div>
+      <a {{action showPost this}}>
+        <time datetime="{{created_at}}">{{created_at}}</time>
+      </a> 
+      -
+      {{#view App.CommentPostView target="parentView" action="toggleVisibility"}}
+        Comment
+      {{/view}}
+    </div>
+
+    <div>
+      {{#view App.CommentForm isVisibleBinding="isFormVisible" }}
+        {{view Ember.TextField}}
+      {{/view}} 
+    </div>
+
+    <div>
+      <ul>
+      {{#each comment in comments}}
+        <li>{{comment.body}} - {{comment.user.username}}</li>
+      {{/each}}
+      </ul>
+    </div>
+  {{/with}}
 </script>
 
 <script type="text/x-handlebars" data-template-name="a-post">

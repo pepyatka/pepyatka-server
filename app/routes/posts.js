@@ -1,10 +1,6 @@
 var models = require('../models');
 
 exports.add_routes = function(app) {
-  // app.get('/posts', function(req, res){
-  //   res.render('posts');
-  // });
-
   app.get('/v1/posts/:postId', function(req, res) {
     models.Post.find(req.params.postId, function(post) {
       res.jsonp(post);
@@ -15,6 +11,7 @@ exports.add_routes = function(app) {
     attrs = req.body
     // TODO -> User.newPost(new models.Post(attrs)
     attrs.user = res.locals.current_user
+    attrs.user_id = req.session.user_id
 
     post = new models.Post(attrs)
 

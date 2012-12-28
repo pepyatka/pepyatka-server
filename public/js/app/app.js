@@ -5,35 +5,53 @@ App.ApplicationView = Ember.View.extend({
 });
 App.ApplicationController = Ember.Controller.extend();
 
-// Index controller and view to display all posts on the page
-App.AllPostsController = Ember.ArrayController.extend();
+// Index view to display all posts on the page
 App.AllPostsView = Ember.View.extend({
-  templateName: 'posts'
+  tagName: "ul",
+  templateName: 'post-list-view'
 });
 
 // Create new post text field. Separate view to be able to bind events
 App.CreatePostView = Ember.TextField.extend(Ember.TargetActionSupport, {
-  valueBinding: 'App.PostsController.postBody',
+  valueBinding: 'App.AllPostsController.postBody',
 
   insertNewline: function() {
     this.triggerAction();
   }
 })
 
-// View to display single post
+// View to display single post. Post has following subviews (defined below):
+//  - link to show a comment form
+//  - form to add a new comment
 App.PostContainer = Ember.View.extend({
   tagName: "li",
-  isFormVisible: true,
   templateName: 'post-view',
+  isFormVisible: false,
 
   toggleVisibility: function(){
     this.toggleProperty('isFormVisible');
   }
 });
 
-// Text field to post a comment. Separate view to make it hideable
-App.CommentForm = Ember.View.extend();
+// Create new post text field. Separate view to be able to bind events
+App.CommentPostView = Ember.View.extend(Ember.TargetActionSupport, {
+  tagName: "a",
 
+  click: function() {
+    this.triggerAction();
+  }
+})
+
+// Text field to post a comment. Separate view to make it hideable
+App.CommentForm = Ember.View.extend({
+  classNameBindings: 'isVisible:btn visible:invisible',
+
+  isVisible: function() {
+    return this.get('parentView.isFormVisible') == true;
+  }.property('parentView.isFormVisible')  
+});
+
+// Separate page for a single post
 App.OnePostController = Ember.ObjectController.extend();
 App.OnePostView = Ember.View.extend({
   templateName: 'a-post'
@@ -50,6 +68,7 @@ App.PostsController = Ember.ArrayController.create({
   content: [],
   postBody: '',
 
+  // XXX: a bit strange having this method here.
   submitPost: function() {
     if (this.postBody) {
       App.PostsController.createPost(this.postBody);
@@ -59,7 +78,7 @@ App.PostsController = Ember.ArrayController.create({
 
   createPost: function(body) {
     var post = App.Post.create({ 
-      body: body 
+      body: body
     });
 
     $.ajax({
@@ -76,6 +95,7 @@ App.PostsController = Ember.ArrayController.create({
   },
 
   find: function() {
+    // clear posts in content or whatever variable
     $.ajax({
       url: '/v1/timeline/anonymous',
       dataType: 'jsonp',

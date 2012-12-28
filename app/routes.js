@@ -45,8 +45,6 @@ var getUser = function(req, res, next) {
 }
 
 module.exports = function(app){
-  timeline.add_routes(app);
-
   app.all('/*', helpers, findUser, getUser);
 
   // user.add_routes(app);
@@ -54,4 +52,5 @@ module.exports = function(app){
   home.add_routes(app);
   posts.add_routes(app);
   comments.add_routes(app);
+  timeline.add_routes(app);
 };
