@@ -13,7 +13,7 @@ App.AllPostsView = Ember.View.extend({
 
 // Create new post text field. Separate view to be able to bind events
 App.CreatePostView = Ember.TextField.extend(Ember.TargetActionSupport, {
-  valueBinding: 'App.AllPostsController.postBody',
+  valueBinding: 'App.PostsController.postBody',
 
   insertNewline: function() {
     this.triggerAction();
@@ -23,15 +23,21 @@ App.CreatePostView = Ember.TextField.extend(Ember.TargetActionSupport, {
 // View to display single post. Post has following subviews (defined below):
 //  - link to show a comment form
 //  - form to add a new comment
-App.PostContainer = Ember.View.extend({
+App.PostContainerView = Ember.View.extend({
   tagName: "li",
   templateName: 'post-view',
-  isFormVisible: false,
+  isFormVisible: true,
 
   toggleVisibility: function(){
     this.toggleProperty('isFormVisible');
   }
 });
+
+// TODO: create view for CommentContainer and AllCommentsView
+// App.CommentContainer = Ember.View.extend({
+//   tagName: "li",
+//   templateName: 'comment-view'
+// });
 
 // Create new post text field. Separate view to be able to bind events
 App.CommentPostView = Ember.View.extend(Ember.TargetActionSupport, {
@@ -44,18 +50,65 @@ App.CommentPostView = Ember.View.extend(Ember.TargetActionSupport, {
 
 // Text field to post a comment. Separate view to make it hideable
 App.CommentForm = Ember.View.extend({
-  classNameBindings: 'isVisible:btn visible:invisible',
+  // I'd no success to use isVisibleBinding property...
+  classNameBindings: 'isVisible visible:invisible',
+  bound: {
+    body: '',
+  },
 
   isVisible: function() {
     return this.get('parentView.isFormVisible') == true;
-  }.property('parentView.isFormVisible')  
+  }.property('parentView.isFormVisible'),
+
+  submitComment: function() {
+    if (this.bound.body) {
+      var post = this.bindingContext;
+      App.CommentsController.createComment(post, this.bound.body)
+      this.bound.body.clear = ''
+    }
+  }
 });
+
+// Create new post text field. Separate view to be able to bind events
+App.CreateCommentView = Ember.TextField.extend(Ember.TargetActionSupport, {
+  insertNewline: function() {
+    this.triggerAction();
+  }
+})
 
 // Separate page for a single post
 App.OnePostController = Ember.ObjectController.extend();
 App.OnePostView = Ember.View.extend({
   templateName: 'a-post'
 });
+
+App.Comment = Ember.Object.extend({
+  body: null,
+  created_at: null,
+  user: null
+});
+
+App.CommentsController = Ember.ArrayController.create({
+  createComment: function(post, body) {
+    var comment = App.Comment.create({ 
+      body: body,
+      post_id: post.id
+    });
+    
+    $.ajax({
+      url: '/v1/comments',
+      type: 'post',
+      data: { body: body, post_id: post.id }, // XXX: we've already defined a model above
+      context: comment,
+      success: function(response) {
+        this.setProperties(response);
+        post.comments.pushObject(comment)
+        // App.PostsController.insertAt(0, comments)
+      }
+    })
+    return comment;
+  }
+})
 
 App.Post = Ember.Object.extend({
   body: null,
@@ -84,7 +137,7 @@ App.PostsController = Ember.ArrayController.create({
     $.ajax({
       url: '/v1/posts',
       type: 'post',
-      data: { body: body },
+      data: { body: body }, // XXX: we've already defined a model above
       context: post,
       success: function(response) {
         this.setProperties(response);

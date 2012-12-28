@@ -83,32 +83,6 @@ exports.add_model = function(db) {
             return callback(new_comments)
           }
         )
-
-        // var len = comments.length;
-        // var done = 0;
-        // var i = 0;
-
-        // if (len > 0) {
-        //   // Never do this at home. I'm going to modify the iterator in
-        //   // its body
-        //   _.each(comments, function(comment_id) {
-        //     models.Comment.find(comment_id, function(num) {
-        //       return function(comment) {
-        //         comments[num] = comment
-                
-        //         done += 1;
-                
-        //         // This is the last element in the list - we can run callback
-        //         if (done >= len) 
-        //           return callback(comments)
-        //       }
-        //     }(i))
-
-        //     i += 1
-        //   });
-        // } else {
-        //   return callback([])
-        // }
       })
     },
 
@@ -118,9 +92,9 @@ exports.add_model = function(db) {
       var that = this
       var commentsRecord = 'post:' + this.id + ':comments'
       db.llen(commentsRecord, function(err, len) {
-        if (len > 3) {
+        if (len < 0) { // If there are more than 3 comments filter them
           db.lindex(commentsRecord, 0, function(err, firstComment) {
-            db.lindex(commentsRecords, -1, function(err, lastComment) {
+            db.lindex(commentsRecord, -1, function(err, lastComment) {
               var comments = [firstComment, lastComment]
               return callback(comments)
             })

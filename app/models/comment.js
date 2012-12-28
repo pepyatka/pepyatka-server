@@ -4,9 +4,12 @@ var uuid = require('node-uuid')
 exports.add_model = function(db) {
   function Comment(params) {
     this.body = params.body
+    this.post_id = params.post_id
+
+    // params to filter
     this.id = params.id
     this.user_id = params.user_id
-    this.post_id = params.post_id
+    this.user = params.user
   }
 
   Comment.find = function(comment_id, callback) {

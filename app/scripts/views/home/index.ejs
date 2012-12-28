@@ -2,24 +2,30 @@
 
 <!-- script src="/socket.io/socket.io.js"></script -->
 <script src="/js/libs/jquery-1.8.3.min.js"></script>
-<script src="/js/libs/moment.min.js"></script>
+<!-- script src="/js/libs/moment.min.js"></script -->
 <script src="/js/libs/handlebars-1.0.rc.1.js"></script>
 <script src="/js/libs/ember-1.0.0-pre.2.min.js"></script>
 
 <script type="text/x-handlebars" data-template-name="application">
   <h1>ff/b/</h1>
 
-  {{view App.CreatePostView target="App.PostsController" action="submitPost" }}
-  {{#view Ember.Button target="App.PostsController" action="submitPost"}}
-    Post
-  {{/view}}
+  <div>
+    <div>
+      {{view App.CreatePostView target="App.PostsController" action="submitPost" }}
+    </div>
+    <div>
+      {{#view Ember.Button target="App.PostsController" action="submitPost"}}
+        Post
+      {{/view}}
+    </div>
+  </div>
 
   {{outlet}}
 </script>
 
 <script type="text/x-handlebars" data-template-name="post-list-view">
   {{view Ember.CollectionView contentBinding="App.PostsController"
-         itemViewClass="App.PostContainer"}}
+         itemViewClass="App.PostContainerView"}}
 </script>
 
 <script type="text/x-handlebars" data-template-name="post-view">
@@ -29,17 +35,11 @@
     <div>
       <a {{action showPost this}}>
         <time datetime="{{created_at}}">{{created_at}}</time>
-      </a> 
+      </a>
       -
       {{#view App.CommentPostView target="parentView" action="toggleVisibility"}}
         Comment
       {{/view}}
-    </div>
-
-    <div>
-      {{#view App.CommentForm isVisibleBinding="isFormVisible" }}
-        {{view Ember.TextField}}
-      {{/view}} 
     </div>
 
     <div>
@@ -49,6 +49,21 @@
       {{/each}}
       </ul>
     </div>
+
+    {{#view App.CommentForm}}
+      <div>
+        <div>
+          {{view App.CreateCommentView target="parentView" 
+                action="submitComment" valueBinding="view.bound.body"}}
+        </div>
+        <div>
+          {{#view Ember.Button target="view" action="submitComment"}}
+            Post
+          {{/view}} 
+          <a>Cancel</a>
+        </div>
+      </div>
+    {{/view}} 
   {{/with}}
 </script>
 
