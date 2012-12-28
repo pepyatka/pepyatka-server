@@ -54,7 +54,7 @@
       <div>
         <div>
           {{view App.CreateCommentView target="parentView" 
-                action="submitComment" valueBinding="view.bound.body"}}
+                action="submitComment" valueBinding="view.body"}}
         </div>
         <div>
           {{#view Ember.Button target="view" action="submitComment"}}
@@ -70,13 +70,38 @@
 <script type="text/x-handlebars" data-template-name="a-post">
   <p><a {{action showAllPosts}}>All posts</a></p>
 
-  {{body}}
+    <div>{{user.username}}</div>
+    <div>{{body}}</div>
+    <div>
+      <time>{{created_at}}</time>
+      -
+      {{#view App.CommentPostView target="parentView" action="toggleVisibility"}}
+        Comment
+      {{/view}}
+    </div>
 
-  <ul>
-  {{#each comment in comments}}
-    <li>{{comment.body}}</li>
-  {{/each}}
-  </ul>
+    <div>
+      <ul>
+      {{#each comment in comments}}
+        <li>{{comment.body}} - {{comment.user.username}}</li>
+      {{/each}}
+      </ul>
+    </div>
+
+    {{#view App.CommentForm}}
+      <div>
+        <div>
+          {{view App.CreateCommentView target="parentView" 
+                action="submitComment" valueBinding="view.bound.body"}}
+        </div>
+        <div>
+          {{#view Ember.Button target="view" action="submitComment"}}
+            Post
+          {{/view}} 
+          <a>Cancel</a>
+        </div>
+      </div>
+    {{/view}} 
 </script>
 
 <script src="/js/app/app.js"></script>

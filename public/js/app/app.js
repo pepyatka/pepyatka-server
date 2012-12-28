@@ -27,7 +27,7 @@ App.CreatePostView = Ember.TextField.extend(Ember.TargetActionSupport, {
 App.PostContainerView = Ember.View.extend({
   tagName: "li",
   templateName: 'post-view',
-  isFormVisible: false,
+  isFormVisible: true,
 
   toggleVisibility: function(){
     this.toggleProperty('isFormVisible');
@@ -53,19 +53,18 @@ App.CommentPostView = Ember.View.extend(Ember.TargetActionSupport, {
 App.CommentForm = Ember.View.extend({
   // I'd no success to use isVisibleBinding property...
   classNameBindings: 'isVisible visible:invisible',
-  bound: {
-    body: '',
-  },
+  body: '',
 
   isVisible: function() {
     return this.get('parentView.isFormVisible') == true;
   }.property('parentView.isFormVisible'),
 
   submitComment: function() {
-    if (this.bound.body) {
-      var post = this.bindingContext;
-      App.CommentsController.createComment(post, this.bound.body)
-      this.bound.body.clear = ''
+    if (this.body) {
+      // XXX: rather strange bit of code here -- potentially a defect
+      var post = this.bindingContext.content || this.bindingContext;
+      App.CommentsController.createComment(post, this.body)
+      this.body = ''
     }
   }
 });
@@ -80,7 +79,12 @@ App.CreateCommentView = Ember.TextField.extend(Ember.TargetActionSupport, {
 // Separate page for a single post
 App.OnePostController = Ember.ObjectController.extend();
 App.OnePostView = Ember.View.extend({
-  templateName: 'a-post'
+  templateName: 'a-post',
+  isFormVisible: false,
+
+  toggleVisibility: function(){
+    this.toggleProperty('isFormVisible');
+  }
 });
 
 App.Comment = Ember.Object.extend({
@@ -91,6 +95,7 @@ App.Comment = Ember.Object.extend({
 
 App.CommentsController = Ember.ArrayController.create({
   createComment: function(post, body) {
+    console.log(post.id, body)
     var comment = App.Comment.create({ 
       body: body,
       post_id: post.id
@@ -104,7 +109,6 @@ App.CommentsController = Ember.ArrayController.create({
       success: function(response) {
         this.setProperties(response);
         post.comments.pushObject(comment)
-        // App.PostsController.insertAt(0, comments)
       }
     })
     return comment;
