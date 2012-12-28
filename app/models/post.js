@@ -9,6 +9,9 @@ exports.add_model = function(db) {
     // params to filter
     this.id = params.id
     this.created_at = parseInt(params.created_at)
+    this.updated_at = parseInt(params.updated_at)
+    
+    this.comments = params.comments || []
 
     this.user_id = params.user_id
     this.user = params.user
@@ -20,9 +23,8 @@ exports.add_model = function(db) {
       var post = new Post(attrs)
 
       var addAttributes = function(comments) {
-        post.comments = comments
-
         // TODO: switch comments and user selects
+        post.comments = comments
         models.User.find(attrs.user_id, function(user) {
           post.user = user
           return callback(post)
@@ -110,6 +112,7 @@ exports.add_model = function(db) {
     save: function(callback) {
       var that = this
       this.created_at = new Date().getTime()
+      this.updated_at = new Date().getTime()
       if (this.id === undefined) this.id = uuid.v4()
 
       db.multi()

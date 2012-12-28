@@ -1,6 +1,7 @@
-var models = require('../models');
+var models = require('../models')
+  , _ = require('underscore')
 
-exports.add_routes = function(app) {
+exports.add_routes = function(app, connections) {
   app.post('/v1/comments', function(req, res){
     attrs = req.body
     // TODO -> Post.newComment(new models.Comment(attrs)
@@ -10,6 +11,10 @@ exports.add_routes = function(app) {
     comment = new models.Comment(attrs)
 
     comment.save(function() {
+      _.each(connections, function(socket) {
+        socket.emit('comment', { comment: comment })
+      })
+
       res.jsonp(comment)
     })
   });

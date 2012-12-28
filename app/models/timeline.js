@@ -27,9 +27,13 @@ exports.add_model = function(db) {
   }
 
   Timeline.newPost = function(user_id, post_id, callback) {
-    db.zadd('timeline:' + user_id, new Date().getTime(), post_id, function(err, res) {
+    var current_time = new Date().getTime()
+    db.zadd('timeline:' + user_id, current_time, post_id, function(err, res) {
       Timeline.update(user_id, function() {
-        callback()
+        // TODO: -> Post.update()
+        db.hset('post:' + post_id, 'updated_at', current_time, function(err, res) {
+          callback()
+        })
       })
     })
   }

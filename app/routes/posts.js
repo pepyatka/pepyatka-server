@@ -1,6 +1,7 @@
-var models = require('../models');
+var models = require('../models')
+  , _ = require('underscore')
 
-exports.add_routes = function(app) {
+exports.add_routes = function(app, connections) {
   app.get('/v1/posts/:postId', function(req, res) {
     models.Post.find(req.params.postId, function(post) {
       res.jsonp(post);
@@ -16,6 +17,10 @@ exports.add_routes = function(app) {
     post = new models.Post(attrs)
 
     post.save(function() {
+      _.each(connections, function(socket) {
+        socket.emit('post', { post: post })
+      })
+
       res.jsonp(post)
     })
   });

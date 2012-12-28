@@ -44,13 +44,15 @@ var getUser = function(req, res, next) {
   })
 }
 
-module.exports = function(app){
+module.exports = function(app, connections) {
   app.all('/*', helpers, findUser, getUser);
 
   // user.add_routes(app);
   // session.add_routes(app);
-  home.add_routes(app);
-  posts.add_routes(app);
-  comments.add_routes(app);
-  timeline.add_routes(app);
+
+  // In theory we can send just right socket based on a user session
+  home.add_routes(app, connections);
+  posts.add_routes(app, connections);
+  comments.add_routes(app, connections);
+  timeline.add_routes(app, connections);
 };

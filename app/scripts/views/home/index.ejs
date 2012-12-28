@@ -1,7 +1,8 @@
 <% layout('../../layouts/layout.ejs') -%>
 
-<!-- script src="/socket.io/socket.io.js"></script -->
+<script src="/socket.io/socket.io.js"></script>
 <script src="/js/libs/jquery-1.8.3.min.js"></script>
+<script src="/js/libs/underscore-min.js"></script>
 <!-- script src="/js/libs/moment.min.js"></script -->
 <script src="/js/libs/handlebars-1.0.rc.1.js"></script>
 <script src="/js/libs/ember-1.0.0-pre.2.min.js"></script>
@@ -15,17 +16,17 @@
 <script type="text/x-handlebars" data-template-name="post-list-view">
   <div>
     <div>
-      {{view App.CreatePostView target="App.PostsController" action="submitPost" }}
+      {{view App.CreatePostView target="App.postsController" action="submitPost" }}
     </div>
     <div>
-      {{#view Ember.Button target="App.PostsController" action="submitPost"}}
+      {{#view Ember.Button target="App.postsController" action="submitPost"}}
         Post
       {{/view}}
     </div>
   </div>
 
   <ul>
-    {{view Ember.CollectionView contentBinding="App.PostsController"
+    {{view Ember.CollectionView contentBinding="App.postsController"
            itemViewClass="App.PostContainerView"}}
   </ul>
 </script>
@@ -109,15 +110,31 @@
 <script src="/js/app/app.js"></script>
 
 <script>
-  // var socket = io.connect('http://localhost:3000');
+  var socket = io.connect('/');
 
-  // socket.emit('subscribe', { });
+  socket.emit('subscribe', { username: '<%= current_user.username %>' });
 
-  // socket.on('message', function (data) {
-  //   console.log(data);
-  // });
+  socket.on('post', function (attrs) {
+    // console.log(attrs);
 
-  // socket.on('comment', function (data) {
-  //   console.log(data);
-  // });
+    var post = App.Post.create(attrs.post)
+   
+    App.postsController.addObject(post)
+  });
+
+  socket.on('comment', function (attrs) {
+    // console.log(attrs);
+
+    var comment = App.Comment.create(attrs.comment)
+   
+    var post = App.postsController.find(function(post) {
+      return post.id == attrs.comment.post_id
+    })
+
+    post.set('updated_at', comment.created_at)
+    
+    console.log(App.postsController.content)
+
+    post.comments.pushObject(comment)
+  });
 </script>

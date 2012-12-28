@@ -13,7 +13,7 @@ App.AllPostsView = Ember.View.extend({
 // Create new post text field. Separate view to be able to bind events
 App.CreatePostView = Ember.TextField.extend(Ember.TargetActionSupport, {
   // TODO: Extract value from controller 
-  valueBinding: 'App.PostsController.postBody', 
+  valueBinding: 'App.postsController.postBody', 
 
   insertNewline: function() {
     this.triggerAction();
@@ -62,7 +62,7 @@ App.CommentForm = Ember.View.extend({
     if (this.body) {
       // XXX: rather strange bit of code here -- potentially a defect
       var post = this.bindingContext.content || this.bindingContext;
-      App.CommentsController.createComment(post, this.body)
+      App.commentsController.createComment(post, this.body)
       this.body = ''
     }
   }
@@ -92,9 +92,8 @@ App.Comment = Ember.Object.extend({
   user: null
 });
 
-App.CommentsController = Ember.ArrayController.create({
+App.CommentsController = Ember.ArrayController.extend({
   createComment: function(post, body) {
-    console.log(post.id, body)
     var comment = App.Comment.create({ 
       body: body,
       post_id: post.id
@@ -107,28 +106,34 @@ App.CommentsController = Ember.ArrayController.create({
       context: comment,
       success: function(response) {
         this.setProperties(response);
-        post.comments.pushObject(comment)
+        // We do not insert comment right now, but wait for a socket event
+        // post.comments.pushObject(comment)
       }
     })
     return comment;
   }
 })
+App.commentsController = App.CommentsController.create()
 
 App.Post = Ember.Object.extend({
   body: null,
   created_at: null,
+  updated_at: null,
   comments: [],
   user: null
 });
 
-App.PostsController = Ember.ArrayController.create({
+App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
   content: [],
   postBody: '',
+
+  sortProperties: ['updated_at'],
+  sortAscending: false,
 
   // XXX: a bit strange having this method here.
   submitPost: function() {
     if (this.postBody) {
-      App.PostsController.createPost(this.postBody);
+      App.postsController.createPost(this.postBody);
       this.postBody = ''
     }
   },
@@ -145,13 +150,14 @@ App.PostsController = Ember.ArrayController.create({
       context: post,
       success: function(response) {
         this.setProperties(response);
-        App.PostsController.insertAt(0, post)
+        // We do not insert post right now, but wait for a socket event
+        // App.postsController.insertAt(0, post)
       }
     })
     return post;
   },
 
-  find: function() {
+  findAll: function() {
     this.set('content', [])
 
     $.ajax({
@@ -159,10 +165,9 @@ App.PostsController = Ember.ArrayController.create({
       dataType: 'jsonp',
       context: this,
       success: function(response){
-        App.PostsController.content = []
         response.forEach(function(attrs) {
           var post = App.Post.create(attrs)
-          this.pushObject(post)
+          this.addObject(post)
         }, this)
       }
     })
@@ -185,9 +190,10 @@ App.PostsController = Ember.ArrayController.create({
     return post;
   }  
 })
+App.postsController = App.PostsController.create()
 
 App.Router = Ember.Router.extend({
-  enableLogging: true,
+  // enableLogging: true,
 
   root: Ember.Route.extend({
     posts: Ember.Route.extend({
@@ -196,7 +202,7 @@ App.Router = Ember.Router.extend({
       showPost: Ember.Route.transitionTo('aPost'),
       
       connectOutlets: function(router){ 
-        router.get('applicationController').connectOutlet('allPosts', App.PostsController.find());
+        router.get('applicationController').connectOutlet('allPosts', App.postsController.findAll());
       }
     }),
 
@@ -214,7 +220,7 @@ App.Router = Ember.Router.extend({
       },
 
       deserialize: function(router, urlParams) {
-        return App.PostsController.findOne(urlParams.postId);
+        return App.postsController.findOne(urlParams.postId);
       }
     })
   })
