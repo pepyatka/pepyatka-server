@@ -14,7 +14,7 @@ exports.add_routes = function(app) {
   app.post('/v1/posts', function(req, res){
     attrs = req.body
     // TODO -> User.newPost(new models.Post(attrs)
-    attrs.user_id = req.session.user_id
+    attrs.user = res.locals.current_user
 
     post = new models.Post(attrs)
 

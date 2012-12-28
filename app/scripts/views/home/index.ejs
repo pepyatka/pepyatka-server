@@ -2,26 +2,35 @@
 
 <!-- script src="/socket.io/socket.io.js"></script -->
 <script src="/js/libs/jquery-1.8.3.min.js"></script>
+<script src="/js/libs/moment.min.js"></script>
 <script src="/js/libs/handlebars-1.0.rc.1.js"></script>
 <script src="/js/libs/ember-1.0.0-pre.2.min.js"></script>
-<script src="/js/libs/jquery.timeago.min.js"></script>
 
 <script type="text/x-handlebars" data-template-name="application">
   <h1>ff/b/</h1>
 
-  {{view App.CreatePostView id="new-post"}}
+  {{view App.CreatePostView target="App.PostsController" action="submitPost" }}
+  {{#view Ember.Button target="App.PostsController" action="submitPost"}}
+    Post
+  {{/view}}
 
   {{outlet}}
 </script>
 
 <script type="text/x-handlebars" data-template-name="posts">
-  <ul>
   {{#each post in controller}}
     <li>
-      <a {{action showPost post}}>{{post.body}}</a>
+      {{post.user.username}}<br/>
+      {{post.body}}<br/>
+      <a {{action showPost post}}><time datetime="{{post.created_at}}">{{post.created_at}}</time></a> - <a {{action toggleVisibility}}>Comment</a>
+
+      {{#view App.CommentForm isVisibleBinding="isFormVisible" }}
+        {{view Em.TextField}}
+      {{/view}} 
+
       <ul>
       {{#each comment in post.comments}}
-        <li>{{comment.body}}</li>
+        <li>{{comment.body}} - {{comment.user.username}}</li>
       {{/each}}
       </ul>
     </li>
@@ -56,69 +65,3 @@
   //   console.log(data);
   // });
 </script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- ------------------------------------------------------------- -->
-
-<!-- h1>ff/b/</h1>
-
-<% if (logged_in()) { %>
-  <p>Hello, <%= current_user.username %>.</p>
-<% } %>
-
-<form method="post" action="/posts">
-  <input type="text" name="body" />
-  <input type="submit" value="post" />
-</form>
-
-<script>
-  jQuery(document).ready(function() {
-    jQuery.timeago.settings.allowFuture = true;
-    jQuery("time.timeago").timeago();
-  });
-</script>
-
-<ul>
-  <% _.each(posts, function(post) { %>
-    <li>
-      <%= post.user.username %><br/>
-      <%= post.body %><br/>
-      <a id="<%= post.id %>" href="#<%= post.id %>"><time class="timeago" datetime="<%= moment(post.created_at) %>"><%= moment(post.created_at).fromNow() %></time></a> - <a href="javascript:void(false);" onclick="jQuery(this).parent().find('form').show()">Comment</a><br/>
-      <ul>
-        <% _.each(post.comments, function(comment) { %>
-          <li><%= comment.body %> - <%= comment.user.username %></li>
-        <% }) %>
-      </ul><br/>
-      <div>
-        <form method="post" action="/comments" style="display:none">
-          <input type="text" name="body" />
-          <input type="hidden" name="post_id" value="<%= post.id %>" /><br/>
-          <input type="submit" value="post" /> <a href="javascript:void(false)" onclick="jQuery(this).parents('li').find('form').hide();">Close</a><br/><br/>
-        </form>
-      </div>
-    </li>
-  <% }) %>
-</ul -->

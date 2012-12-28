@@ -15,20 +15,40 @@ App.OnePostView = Ember.View.extend({
   templateName: 'a-post'
 });
 
-App.CreatePostView = Ember.TextField.extend({
+App.CreatePostView = Ember.TextField.extend(Ember.TargetActionSupport, {
+  valueBinding: 'App.PostsController.postBody',
   insertNewline: function() {
-    var value = this.get('value');
-
-    if (value) {
-      App.Post.createPost(value);
-      this.set('value', '');
-    }
+    this.triggerAction();
   }
 })
 
-App.Post = Ember.Object.extend();
-App.Post.reopenClass({
-  allPosts: [],
+App.PostView = Ember.View.extend({   
+    isChildVisible: true,
+
+    toggle: function(){
+      this.toggleProperty('isChildVisible');
+    }
+});
+
+App.CommentForm = Ember.View.extend();
+
+App.Post = Ember.Object.extend({
+  body: null,
+  created_at: null,
+  comment: [],
+  user: null
+});
+
+App.PostsController = Ember.ArrayController.create({
+  content: [],
+  postBody: '',
+
+  submitPost: function() {
+    if (this.postBody) {
+      App.PostsController.createPost(this.postBody);
+      this.postBody = ''
+    }
+  },
 
   createPost: function(body) {
     var post = App.Post.create({ 
@@ -36,40 +56,40 @@ App.Post.reopenClass({
     });
 
     $.ajax({
-      url: 'http://localhost:3000/v1/posts',
+      url: '/v1/posts',
       type: 'post',
       data: { body: body },
       context: post,
       success: function(response) {
         this.setProperties(response);
-        App.Post.allPosts.insertAt(0, post)
+        App.PostsController.insertAt(0, post)
       }
     })
     return post;
   },
 
-  find: function(){
+  find: function() {
     $.ajax({
-      url: 'http://localhost:3000/v1/timeline/anonymous',
+      url: '/v1/timeline/anonymous',
       dataType: 'jsonp',
       context: this,
       success: function(response){
-        response.forEach(function(attrs){
+        response.forEach(function(attrs) {
           var post = App.Post.create(attrs)
-          this.allPosts.addObject(post)
+          this.pushObject(post)
         }, this)
       }
     })
-    return this.allPosts;
+    return this
   },
 
-  findOne: function(postId){
+  findOne: function(postId) {
     var post = App.Post.create({
       id: postId
     });
 
     $.ajax({
-      url: 'http://localhost:3000/v1/posts/' + postId,
+      url: '/v1/posts/' + postId,
       dataType: 'jsonp',
       context: post,
       success: function(response){
@@ -77,8 +97,8 @@ App.Post.reopenClass({
       }
     })
     return post;
-  }
-});
+  }  
+})
 
 App.Router = Ember.Router.extend({
   enableLogging: true,
@@ -90,7 +110,7 @@ App.Router = Ember.Router.extend({
       showPost: Ember.Route.transitionTo('aPost'),
       
       connectOutlets: function(router){ 
-        router.get('applicationController').connectOutlet('allPosts', App.Post.find());
+        router.get('applicationController').connectOutlet('allPosts', App.PostsController.find());
       }
     }),
 
@@ -108,7 +128,7 @@ App.Router = Ember.Router.extend({
       },
 
       deserialize: function(router, urlParams) {
-        return App.Post.findOne(urlParams.postId);
+        return App.PostsController.findOne(urlParams.postId);
       }
     })
   })

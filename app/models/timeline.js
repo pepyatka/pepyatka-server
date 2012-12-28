@@ -15,15 +15,14 @@ exports.add_model = function(db) {
 
   Timeline.update = function(user_id, callback) {
     db.zrevrange('timeline:' + user_id, POSTS, -1, function(err, posts) {
-      _.each(posts, function(post_id) {
-        db.multi()
-          .zrem('timeline:' + user_id, post_id)
-          // TODO: -> Post.delete(post_id)
-          .del('post:' + post_id)
-          .exec(function(err, res) { })
-      });
-
-      callback()
+      posts.forEachAsync(
+        function(post_id, next) { 
+          models.Post.destroy(post_id, function(err, res) { return next() }) 
+        }, 
+        function(num, post_id) { },
+        function() {
+          return callback() 
+        })
     })
   }
 
@@ -36,33 +35,17 @@ exports.add_model = function(db) {
   }
 
   Timeline.posts = function(user_id, callback) {
-    db.zrevrange('timeline:' + user_id, 0, POSTS, function(err, posts) {
-      var len = posts.length;
-      var done = 0;
-      var i = 0;
+    db.zrevrange('timeline:' + user_id, 0, POSTS-1, function(err, posts) {
+      var new_posts = []
 
-      // Never do this at home. I'm going to modify the iterator in
-      // its body
-      if (len > 0) {      
-        _.each(posts, function(post_id) {
-          models.Post.find(post_id, function(num) {
-            return function(post) {
-              posts[num] = post
-              
-              // TODO: -> _.after method
-              done += 1;
-              
-              // This is the last element in the list - we can run callback
-              if (done >= len) 
-                return callback(posts)
-            }
-          }(i))
-
-          i += 1
-        });
-      } else {
-        return callback([])
-      }
+      posts.forEachAsync(
+        function(post_id, next) {
+          models.Post.find(post_id, function(item) { return next(item) }) 
+        }, 
+        function(num, post) { new_posts[num] = post; },
+        function() {
+          return callback(new_posts) 
+        })
     })
   }
 

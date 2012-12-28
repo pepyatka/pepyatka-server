@@ -8,22 +8,40 @@ exports.add_model = function(db) {
 
     // params to filter
     this.id = params.id
-    this.user_id = params.user_id
     this.created_at = parseInt(params.created_at)
+
+    this.user_id = params.user_id
+    this.user = params.user
   }
 
   Post.find = function(post_id, callback) {
     db.hgetall('post:' + post_id, function(err, attrs) {
       attrs.id = post_id
       var post = new Post(attrs)
-      post.getComments(function(comments) {
+
+      var addAttributes = function(comments) {
         post.comments = comments
 
+        // TODO: switch comments and user selects
         models.User.find(attrs.user_id, function(user) {
           post.user = user
           return callback(post)
         })
-      })
+      }
+
+      post.getLastComments(addAttributes)
+    })
+  }
+
+  Post.destroy = function(post_id, callback) {
+    db.hget('post:' + post_id, 'user_id', function(err, user_id) {
+      db.multi()
+        .zrem('timeline:' + user_id, post_id)
+        .del('post:' + post_id)
+        .del('post:' + post_id + ':comments')
+        .exec(function(err, res) { 
+          callback(res)
+        })
     })
   }
 
@@ -49,33 +67,68 @@ exports.add_model = function(db) {
   }
 
   Post.prototype = {
+    // Return all comments
     getComments: function(callback) {
       var that = this
+      var new_comments = []
       db.lrange('post:' + this.id + ':comments', 0, -1, function(err, comments) {
-        var len = comments.length;
-        var done = 0;
-        var i = 0;
+        comments.forEachAsync(
+          function(comment_id, next) { 
+            return models.Comment.find(comment_id, function(item) { return next(item) })
+          },
+          function(num, comment) {
+            new_comments[num] = comment;
+          },
+          function() {
+            return callback(new_comments)
+          }
+        )
 
-        if (len > 0) {
-          // Never do this at home. I'm going to modify the iterator in
-          // its body
-          _.each(comments, function(comment_id) {
-            models.Comment.find(comment_id, function(num) {
-              return function(comment) {
-                comments[num] = comment
-                
-                done += 1;
-                
-                // This is the last element in the list - we can run callback
-                if (done >= len) 
-                  return callback(comments)
-              }
-            }(i))
+        // var len = comments.length;
+        // var done = 0;
+        // var i = 0;
 
-            i += 1
-          });
+        // if (len > 0) {
+        //   // Never do this at home. I'm going to modify the iterator in
+        //   // its body
+        //   _.each(comments, function(comment_id) {
+        //     models.Comment.find(comment_id, function(num) {
+        //       return function(comment) {
+        //         comments[num] = comment
+                
+        //         done += 1;
+                
+        //         // This is the last element in the list - we can run callback
+        //         if (done >= len) 
+        //           return callback(comments)
+        //       }
+        //     }(i))
+
+        //     i += 1
+        //   });
+        // } else {
+        //   return callback([])
+        // }
+      })
+    },
+
+    // Get first three comments if they exist or return first and last
+    // comments instead
+    getLastComments: function(callback) {
+      var that = this
+      var commentsRecord = 'post:' + this.id + ':comments'
+      db.llen(commentsRecord, function(err, len) {
+        if (len > 3) {
+          db.lindex(commentsRecord, 0, function(err, firstComment) {
+            db.lindex(commentsRecords, -1, function(err, lastComment) {
+              var comments = [firstComment, lastComment]
+              return callback(comments)
+            })
+          })
         } else {
-          return callback([])
+          that.getComments(function(comments) { 
+            return callback(comments)
+          })
         }
       })
     },
