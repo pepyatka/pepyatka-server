@@ -13,7 +13,8 @@ App.AllPostsView = Ember.View.extend({
 
 // Create new post text field. Separate view to be able to bind events
 App.CreatePostView = Ember.TextField.extend(Ember.TargetActionSupport, {
-  valueBinding: 'App.PostsController.postBody',
+  // TODO: Extract value from controller 
+  valueBinding: 'App.PostsController.postBody', 
 
   insertNewline: function() {
     this.triggerAction();
@@ -26,7 +27,7 @@ App.CreatePostView = Ember.TextField.extend(Ember.TargetActionSupport, {
 App.PostContainerView = Ember.View.extend({
   tagName: "li",
   templateName: 'post-view',
-  isFormVisible: true,
+  isFormVisible: false,
 
   toggleVisibility: function(){
     this.toggleProperty('isFormVisible');
@@ -113,7 +114,7 @@ App.CommentsController = Ember.ArrayController.create({
 App.Post = Ember.Object.extend({
   body: null,
   created_at: null,
-  comment: [],
+  comments: [],
   user: null
 });
 
@@ -148,12 +149,14 @@ App.PostsController = Ember.ArrayController.create({
   },
 
   find: function() {
-    // clear posts in content or whatever variable
+    this.set('content', [])
+
     $.ajax({
       url: '/v1/timeline/anonymous',
       dataType: 'jsonp',
       context: this,
       success: function(response){
+        App.PostsController.content = []
         response.forEach(function(attrs) {
           var post = App.Post.create(attrs)
           this.pushObject(post)
