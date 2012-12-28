@@ -5,32 +5,39 @@ App.ApplicationView = Ember.View.extend({
 });
 App.ApplicationController = Ember.Controller.extend();
 
+// Index controller and view to display all posts on the page
 App.AllPostsController = Ember.ArrayController.extend();
 App.AllPostsView = Ember.View.extend({
   templateName: 'posts'
 });
 
-App.OnePostController = Ember.ObjectController.extend();
-App.OnePostView = Ember.View.extend({
-  templateName: 'a-post'
-});
-
+// Create new post text field. Separate view to be able to bind events
 App.CreatePostView = Ember.TextField.extend(Ember.TargetActionSupport, {
   valueBinding: 'App.PostsController.postBody',
+
   insertNewline: function() {
     this.triggerAction();
   }
 })
 
-App.PostView = Ember.View.extend({   
-    isChildVisible: true,
+// View to display single post
+App.PostContainer = Ember.View.extend({
+  tagName: "li",
+  isFormVisible: true,
+  templateName: 'post-view',
 
-    toggle: function(){
-      this.toggleProperty('isChildVisible');
-    }
+  toggleVisibility: function(){
+    this.toggleProperty('isFormVisible');
+  }
 });
 
+// Text field to post a comment. Separate view to make it hideable
 App.CommentForm = Ember.View.extend();
+
+App.OnePostController = Ember.ObjectController.extend();
+App.OnePostView = Ember.View.extend({
+  templateName: 'a-post'
+});
 
 App.Post = Ember.Object.extend({
   body: null,
