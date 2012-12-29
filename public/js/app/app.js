@@ -26,7 +26,7 @@ App.CreatePostView = Ember.TextField.extend(Ember.TargetActionSupport, {
 App.PostContainerView = Ember.View.extend({
   tagName: "li",
   templateName: 'post-view',
-  isFormVisible: true,
+  isFormVisible: false,
 
   toggleVisibility: function() {
     this.toggleProperty('isFormVisible');
