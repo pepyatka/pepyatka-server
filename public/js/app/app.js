@@ -58,6 +58,12 @@ App.CommentForm = Ember.View.extend({
     return this.get('parentView.isFormVisible') == true;
   }.property('parentView.isFormVisible'),
 
+  autoFocus: function () {
+    if (this.get('parentView.isFormVisible') == true) {
+      this.$('input').focus();
+    }
+  }.observes('parentView.isFormVisible'),
+
   submitComment: function() {
     if (this.body) {
       // XXX: rather strange bit of code here -- potentially a defect
