@@ -17,6 +17,10 @@ App.CreatePostView = Ember.TextField.extend(Ember.TargetActionSupport, {
 
   insertNewline: function() {
     this.triggerAction();
+  },
+
+  didInsertElement: function() {
+    this.$().focus();
   }
 })
 
