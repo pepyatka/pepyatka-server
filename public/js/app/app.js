@@ -69,6 +69,7 @@ App.CommentForm = Ember.View.extend({
       // XXX: rather strange bit of code here -- potentially a defect
       var post = this.bindingContext.content || this.bindingContext;
       App.commentsController.createComment(post, this.body)
+      this.set('parentView.isFormVisible', false)
       this.set('body', '')
     }
   },
