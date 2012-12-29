@@ -26,9 +26,9 @@ App.CreatePostView = Ember.TextField.extend(Ember.TargetActionSupport, {
 App.PostContainerView = Ember.View.extend({
   tagName: "li",
   templateName: 'post-view',
-  isFormVisible: false,
+  isFormVisible: true,
 
-  toggleVisibility: function(){
+  toggleVisibility: function() {
     this.toggleProperty('isFormVisible');
   }
 });
@@ -65,6 +65,12 @@ App.CommentForm = Ember.View.extend({
       App.commentsController.createComment(post, this.body)
       this.set('body', '')
     }
+  },
+
+  // XXX: this is a dup of App.PostContainerView.toggleVisibility()
+  // function. I just do not know how to access it from UI bindings
+  toggleVisibility: function() {
+    this.toggleProperty('parentView.isFormVisible');
   }
 });
 
