@@ -6,14 +6,14 @@ App.ApplicationView = Ember.View.extend({
 App.ApplicationController = Ember.Controller.extend();
 
 // Index view to display all posts on the page
-App.AllPostsView = Ember.View.extend({
+App.PostsView = Ember.View.extend({
   templateName: 'post-list-view'
 });
 
 // Create new post text field. Separate view to be able to bind events
 App.CreatePostView = Ember.TextField.extend(Ember.TargetActionSupport, {
   // TODO: Extract value from controller 
-  valueBinding: 'App.postsController.postBody', 
+  valueBinding: 'App.postsController.body', 
 
   insertNewline: function() {
     this.triggerAction();
@@ -63,7 +63,7 @@ App.CommentForm = Ember.View.extend({
       // XXX: rather strange bit of code here -- potentially a defect
       var post = this.bindingContext.content || this.bindingContext;
       App.commentsController.createComment(post, this.body)
-      this.body = ''
+      this.set('body', '')
     }
   }
 });
@@ -125,16 +125,16 @@ App.Post = Ember.Object.extend({
 
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
   content: [],
-  postBody: '',
+  body: '',
 
   sortProperties: ['updated_at'],
   sortAscending: false,
 
   // XXX: a bit strange having this method here.
   submitPost: function() {
-    if (this.postBody) {
-      App.postsController.createPost(this.postBody);
-      this.postBody = ''
+    if (this.body) {
+      App.postsController.createPost(this.body);
+      this.set('body', '')
     }
   },
 
@@ -202,7 +202,7 @@ App.Router = Ember.Router.extend({
       showPost: Ember.Route.transitionTo('aPost'),
       
       connectOutlets: function(router){ 
-        router.get('applicationController').connectOutlet('allPosts', App.postsController.findAll());
+        router.get('applicationController').connectOutlet('posts', App.postsController.findAll());
       }
     }),
 

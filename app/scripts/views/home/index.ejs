@@ -1,17 +1,11 @@
 <% layout('../../layouts/layout.ejs') -%>
 
-<script src="/socket.io/socket.io.js"></script>
-<script src="/js/libs/jquery-1.8.3.min.js"></script>
-<script src="/js/libs/underscore-min.js"></script>
-<!-- script src="/js/libs/moment.min.js"></script -->
-<script src="/js/libs/handlebars-1.0.rc.1.js"></script>
-<script src="/js/libs/bootstrap.min.js"></script>
-<script src="/js/libs/ember-1.0.0-pre.2.min.js"></script>
-
 <script type="text/x-handlebars" data-template-name="application">
-  <h1>ff/b/</h1>
+  <div class="container">
+    <h1>ff/b/</h1>
 
-  {{outlet}}
+    {{outlet}}
+  </div>
 </script>
 
 <script type="text/x-handlebars" data-template-name="post-list-view">
@@ -20,9 +14,7 @@
       {{view App.CreatePostView target="App.postsController" action="submitPost" }}
     </div>
     <div>
-      {{#view Ember.Button target="App.postsController" action="submitPost"}}
-        Post
-      {{/view}}
+      <button {{action submitPost target="App.postsController"}}>Post</button>
     </div>
   </div>
 
@@ -61,9 +53,7 @@
                 action="submitComment" valueBinding="view.body"}}
         </div>
         <div>
-          {{#view Ember.Button target="view" action="submitComment"}}
-            Post
-          {{/view}} 
+          <button {{action submitComment target="view"}}>Post</button>
           <a>Cancel</a>
         </div>
       </div>
@@ -99,9 +89,7 @@
                 action="submitComment" valueBinding="view.body"}}
         </div>
         <div>
-          {{#view Ember.Button target="view" action="submitComment"}}
-            Post
-          {{/view}} 
+          <button {{action submitComment target="view"}}>Post</button>
           <a>Cancel</a>
         </div>
       </div>
@@ -134,8 +122,6 @@
 
     post.set('updated_at', comment.created_at)
     
-    console.log(App.postsController.content)
-
     post.comments.pushObject(comment)
   });
 </script>
