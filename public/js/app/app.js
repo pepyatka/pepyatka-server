@@ -137,7 +137,11 @@ App.Post = Ember.Object.extend({
   created_at: null,
   updated_at: null,
   comments: [],
-  user: null
+  user: null,
+
+  created_ago: function() {
+    return moment(this.get('created_at')).fromNow();
+  }.property('created_at')
 });
 
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
@@ -217,6 +221,7 @@ App.Router = Ember.Router.extend({
       route: '/',
 
       showPost: Ember.Route.transitionTo('aPost'),
+      showAllPosts: Ember.Route.transitionTo('posts'),
       
       connectOutlets: function(router){ 
         router.get('applicationController').connectOutlet('posts', App.postsController.findAll());
