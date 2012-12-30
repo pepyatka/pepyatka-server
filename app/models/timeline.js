@@ -4,6 +4,8 @@ var _ = require('underscore')
 exports.add_model = function(db) {
   var POSTS = 10
 
+  // User may have one or more timelines. Each timeline is a sorted
+  // set. User must has one required timeline which is river of news.
   function Timeline(params) {
   }
 

@@ -65,7 +65,7 @@ App.CommentForm = Ember.View.extend({
 
   autoFocus: function () {
     if (this.get('parentView.isFormVisible') == true) {
-      this.$('textarea').focus();
+      this.$('input').focus();
     }
   }.observes('parentView.isFormVisible'),
 

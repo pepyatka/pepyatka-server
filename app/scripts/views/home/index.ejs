@@ -4,18 +4,22 @@
   <div class="container">
     <h1><a {{action showAllPosts}}>ff/b/</a></h1>
 
-    {{outlet}}
+    <div class="row">
+      <div class="span7">
+        {{outlet}}
+      </div>
+    </div>
   </div>
 </script>
 
 <script type="text/x-handlebars" data-template-name="post-list-view">
-  <div>
+  <div class="clearfix">
     <div>
       {{view App.CreatePostView target="App.postsController" action="submitPost"
-            class="input-xxlarge"}}
+            class="span7"}}
     </div>
-    <div>
-      <button {{action submitPost target="App.postsController"}} class="btn">Post</button>
+    <div class="pull-right">
+      <button {{action submitPost target="App.postsController"}} class="btn pull-right">Post</button>
     </div>
   </div>
 
@@ -26,17 +30,19 @@
 </script>
 
 <script type="text/x-handlebars" data-template-name="post-view">
-  {{#with view.content}}  
-    <li class="media">
+  <li class="media">
+    {{#with view.content}}  
+      <hr/>
+
       <div class="pull-left">
-        <img class="media-object" src="/img/64x64.png">
+        <img class="media-object" src="/img/48x48.png">
       </div>
 
       <div class="media-body">
         <h5 class="media-heading">{{user.username}}</h5>
 
         <div>{{body}}</div>
-          <div>
+          <small>
             <a {{action showPost this}}>
               <time datetime="{{created_at}}">{{created_ago}}</time>
             </a>
@@ -44,34 +50,37 @@
             {{#view App.CommentPostView target="parentView" action="toggleVisibility"}}
               Comment
             {{/view}}
-          </div>
+          </small>
     
-          <div>
-            {{#each comment in comments}}
-              <div class="row">
-                <div class="offset1">
-                  <i class="icon-comment"></i> {{comment.body}} - {{comment.user.username}}
-                </div>
-              </div>
-            {{/each}}
-          </div>
+          <small>
+            <ul class="unstyled">
+              {{#each comment in comments}}
+                <li>
+                  <i class="icon-comment-alt"></i> {{comment.body}} - {{comment.user.username}}
+                </li>
+              {{/each}}
+            </ul>
+          </small>
     
           {{#view App.CommentForm}}
             <div>
-              <div>
-                {{view App.CreateCommentView target="parentView" 
-                      action="submitComment" valueBinding="view.body"
-                      class="input-xxlarge"}}
-              </div>
-              <div>
-                <button {{action submitComment target="view"}} class="btn">Post</button>
-               <a {{action toggleVisibility target="view"}}>Cancel</a>
+              <small>
+                <div>
+                  {{view App.CreateCommentView target="parentView" 
+                        action="submitComment" valueBinding="view.body"
+                        class="span6 input-tiny"}}
+                </div>
+                <div>
+                  <button {{action submitComment target="view"}} class="btn btn-small">Post</button>
+                  <a {{action toggleVisibility target="view"}}>Cancel</a>
+                </div>
+              </small>
             </div>
-          </div>
-        {{/view}} 
+          {{/view}} 
+        </div>
       </div>
-    </li>
-  {{/with}}
+    {{/with}}
+  </li>
 </script>
 
 <script type="text/x-handlebars" data-template-name="a-post">
@@ -80,18 +89,25 @@
     <div>{{user.username}}</div>
     <div>{{body}}</div>
     <div>
-      <time>{{created_at}}</time>
-      -
-      {{#view App.CommentPostView target="parentView" action="toggleVisibility"}}
-        Comment
-      {{/view}}
+      <small>
+        <time>{{created_at}}</time>
+        -
+        {{#view App.CommentPostView target="parentView" action="toggleVisibility"}}
+          Comment
+        {{/view}}
+      </small>
     </div>
 
-    <div>
-      {{#each comment in comments}}
-        <li>{{comment.body}} - {{comment.user.username}}</li>
-      {{/each}}
-    </div>
+    <!-- TODO: merge post-view and a-post templates -->
+    <small>
+      <ul class="unstyled">
+        {{#each comment in comments}}
+          <li>
+            <i class="icon-comment-alt"></i> {{comment.body}} - {{comment.user.username}}
+          </li>
+        {{/each}}
+      </div>
+    </small>
 
     {{#view App.CommentForm}}
       <div>
@@ -114,25 +130,33 @@
 
   socket.emit('subscribe', { username: '<%= current_user.username %>' });
 
-  socket.on('newPost', function (attrs) {
-    // console.log(attrs);
-
-    var post = App.Post.create(attrs.post)
+  socket.on('newPost', function (data) {
+    var post = App.Post.create(data.post)
    
     App.postsController.addObject(post)
   });
 
-  socket.on('newComment', function (attrs) {
-    // console.log(attrs);
+  socket.on('updatePost', function(data) {
+  })
 
-    var comment = App.Comment.create(attrs.comment)
+  socket.on('destroyPost', function(data) {
+  })
+
+  socket.on('newComment', function (data) {
+    var comment = App.Comment.create(data.comment)
    
     var post = App.postsController.find(function(post) {
-      return post.id == attrs.comment.post_id
+      return post.id == data.comment.post_id
     })
 
     post.set('updated_at', comment.created_at)
     
     post.comments.pushObject(comment)
   });
+
+  socket.on('updateComment', function(data) {
+  })
+
+  socket.on('destroyComment', function(data) {
+  })
 </script>

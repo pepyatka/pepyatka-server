@@ -11,6 +11,8 @@ exports.add_routes = function(app, connections) {
     comment = new models.Comment(attrs)
 
     comment.save(function() {
+      // Routes should know nothing about sockets. Only models can
+      // emit a message.
       _.each(connections, function(socket) {
         socket.emit('newComment', { comment: comment })
       })

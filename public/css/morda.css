@@ -1,9 +1,27 @@
 body {
-  padding: 50px;
-  font: 14px "Helvetica Neue", "Lucida Grande", Helvetica, Arial, sans-serif;
+    font: 14px "Helvetica Neue", "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
 a {
-  color: #00b7ff;
-  cursor: pointer;
+    cursor: pointer;
+}
+
+.container {
+    margin: 0 auto;
+    max-width: 700px;
+}
+
+hr {
+    margin: 10px 0 !important;
+}
+
+script {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+input.input-tiny[type="text"] {
+   height: 16px;
+   font-size: 12px;
+   line-height: 16px;
 }
