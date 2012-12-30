@@ -11,7 +11,9 @@ App.PostsView = Ember.View.extend({
 });
 
 // Create new post text field. Separate view to be able to bind events
-App.CreatePostView = Ember.TextField.extend(Ember.TargetActionSupport, {
+App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
+  attributeBindings: ['class'],
+
   // TODO: Extract value from controller 
   valueBinding: 'App.postsController.body', 
 
@@ -28,7 +30,6 @@ App.CreatePostView = Ember.TextField.extend(Ember.TargetActionSupport, {
 //  - link to show a comment form
 //  - form to add a new comment
 App.PostContainerView = Ember.View.extend({
-  tagName: "li",
   templateName: 'post-view',
   isFormVisible: false,
 
@@ -64,7 +65,7 @@ App.CommentForm = Ember.View.extend({
 
   autoFocus: function () {
     if (this.get('parentView.isFormVisible') == true) {
-      this.$('input').focus();
+      this.$('textarea').focus();
     }
   }.observes('parentView.isFormVisible'),
 
@@ -87,6 +88,8 @@ App.CommentForm = Ember.View.extend({
 
 // Create new post text field. Separate view to be able to bind events
 App.CreateCommentView = Ember.TextField.extend(Ember.TargetActionSupport, {
+  attributeBindings: ['class'],
+
   insertNewline: function() {
     this.triggerAction();
   }

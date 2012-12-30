@@ -12,7 +12,7 @@ exports.add_routes = function(app, connections) {
 
     comment.save(function() {
       _.each(connections, function(socket) {
-        socket.emit('comment', { comment: comment })
+        socket.emit('newComment', { comment: comment })
       })
 
       res.jsonp(comment)

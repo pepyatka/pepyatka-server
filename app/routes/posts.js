@@ -18,7 +18,7 @@ exports.add_routes = function(app, connections) {
 
     post.save(function() {
       _.each(connections, function(socket) {
-        socket.emit('post', { post: post })
+        socket.emit('newPost', { post: post })
       })
 
       res.jsonp(post)
