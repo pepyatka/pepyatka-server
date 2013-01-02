@@ -38,46 +38,53 @@
         <img class="media-object" src="/img/48x48.png">
       </div>
 
-      <div class="media-body">
-        <h5 class="media-heading">{{user.username}}</h5>
+      <div class="media-body post">
+        <h5 class="media-heading author">{{user.username}}</h5>
 
-        <div>{{body}}</div>
-          <small>
-            <a {{action showPost this}}>
-              <time datetime="{{created_at}}">{{created_ago}}</time>
-            </a>
-            -
-            {{#view App.CommentPostView target="parentView" action="toggleVisibility"}}
-              Comment
-            {{/view}}
-          </small>
-    
-          <small>
-            <ul class="unstyled">
-              {{#each comment in comments}}
-                <li>
-                  <i class="icon-comment-alt"></i> {{comment.body}} - {{comment.user.username}}
-                </li>
-              {{/each}}
-            </ul>
-          </small>
-    
-          {{#view App.CommentForm}}
-            <div>
-              <small>
-                <div>
-                  {{view App.CreateCommentView target="parentView" 
-                        action="submitComment" valueBinding="view.body"
-                        class="span6 input-tiny"}}
-                </div>
-                <div>
-                  <button {{action submitComment target="view"}} class="btn btn-small">Post</button>
-                  <a {{action toggleVisibility target="view"}}>Cancel</a>
-                </div>
-              </small>
-            </div>
-          {{/view}} 
+        <div class="body">{{body}}</div>
+
+        <div class="tagline">
+          <a {{action showPost this}} class="datetime">
+            <time datetime="{{created_at}}">{{created_ago}}</time>
+          </a>
+          -
+          {{#view App.CommentPostView target="parentView" action="toggleVisibility"}}
+            Comment
+          {{/view}}
         </div>
+    
+        <ul class="unstyled comments">
+          {{#each comment in comments}}
+            <li class="media">
+              <div class="pull-left">
+                <i class="icon-comment-alt media-object"></i>
+              </div>
+              <div class="media-body">
+                <span class="body">
+                  {{comment.body}}
+                </span>
+                - 
+                <span class="author">
+                  {{comment.user.username}}
+                </span>
+              </div>
+            </li>
+          {{/each}}
+        </ul>
+    
+        {{#view App.CommentForm}}
+          <div>
+            <div>
+              {{view App.CreateCommentView target="parentView" 
+                    action="submitComment" valueBinding="view.body"
+                    class="span6 input-tiny"}}
+            </div>
+            <div>
+              <button {{action submitComment target="view"}} class="btn btn-small">Post</button>
+              <a {{action toggleVisibility target="view"}}>Cancel</a>
+            </div>
+          </div>
+        {{/view}} 
       </div>
     {{/with}}
   </li>
@@ -85,42 +92,60 @@
 
 <script type="text/x-handlebars" data-template-name="a-post">
   <p><a {{action showAllPosts}}>All posts</a></p>
-
-    <div>{{user.username}}</div>
-    <div>{{body}}</div>
-    <div>
-      <small>
-        <time>{{created_at}}</time>
+    
+  <div class="media">
+    <div class="pull-left">
+      <img class="media-object" src="/img/48x48.png">
+    </div>
+    
+    <div class="media-body post">
+      <h5 class="media-heading author">{{user.username}}</h5>
+    
+      <div class="body">{{body}}</div>
+    
+      <div class="tagline">
+        <a {{action showPost this}} class="datetime">
+          <time>{{created_at}}</time>
+        </a>
         -
         {{#view App.CommentPostView target="parentView" action="toggleVisibility"}}
           Comment
         {{/view}}
-      </small>
-    </div>
-
-    <!-- TODO: merge post-view and a-post templates -->
-    <small>
-      <ul class="unstyled">
+      </div>
+    
+      <ul class="unstyled comments">
         {{#each comment in comments}}
-          <li>
-            <i class="icon-comment-alt"></i> {{comment.body}} - {{comment.user.username}}
+          <li class="media">
+            <div class="pull-left">
+              <i class="icon-comment-alt"></i>
+            </div>
+            <div class="media-body">
+              <span class="body">
+                {{comment.body}}
+              </span>
+              -
+              <span class="author">
+                {{comment.user.username}}
+              </span>
+            </div>
           </li>
         {{/each}}
       </div>
-    </small>
-
-    {{#view App.CommentForm}}
-      <div>
+    
+      {{#view App.CommentForm}}
         <div>
-          {{view App.CreateCommentView target="parentView" 
-                action="submitComment" valueBinding="view.body"}}
+          <div>
+            {{view App.CreateCommentView target="parentView" 
+                  action="submitComment" valueBinding="view.body"}}
+          </div>
+          <div>
+            <button {{action submitComment target="view"}}>Post</button>
+            <a>Cancel</a>
+          </div>
         </div>
-        <div>
-          <button {{action submitComment target="view"}}>Post</button>
-          <a>Cancel</a>
-        </div>
-      </div>
-    {{/view}} 
+      {{/view}} 
+    </div>
+  </div>
 </script>
 
 <script src="/js/app/app.js"></script>
