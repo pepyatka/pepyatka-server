@@ -4,6 +4,7 @@ var uuid = require('node-uuid')
 
 exports.add_model = function(db) {
   function Post(params) {
+    console.log('new Post(' + JSON.stringify(params) + ')')
     this.body = params.body
 
     // params to filter
@@ -18,6 +19,7 @@ exports.add_model = function(db) {
   }
 
   Post.find = function(post_id, callback) {
+    console.log('Post.find("' + post_id + '")')
     db.hgetall('post:' + post_id, function(err, attrs) {
       attrs.id = post_id
       var post = new Post(attrs)
@@ -72,8 +74,8 @@ exports.add_model = function(db) {
     // Return all comments
     getComments: function(callback) {
       var that = this
-      var new_comments = []
       db.lrange('post:' + this.id + ':comments', 0, -1, function(err, comments) {
+        var new_comments = []
         comments.forEachAsync(
           function(comment_id, next) { 
             return models.Comment.find(comment_id, function(item) { return next(item) })
@@ -124,7 +126,41 @@ exports.add_model = function(db) {
             return callback()
           })
         })
+    },
+
+    toJSON: function(callback) {
+      var that = this;
+      this.getComments(function(comments) {
+        models.User.find(that.user_id, function(user) {
+          commentsJSON = []
+          comments.forEachAsync(
+            function(comment, next) { 
+              return models.Comment.find(comment.id, function(comment) {
+                comment.toJSON(function(item) {
+                  return next(item) 
+                })
+              })
+            },
+            function(num, comment) {
+              commentsJSON[num] = comment;
+            },
+            function() {
+              user.toJSON(function(user) {
+                return callback({ 
+                  id: that.id,
+                  createdAt: that.created_at,
+                  updatedAt: that.updated_at,
+                  body: that.body,
+                  createdBy: user,
+                  comments: commentsJSON
+                })
+              })
+            }
+          )
+        })
+      })
     }
+
   }
   
   return Post;

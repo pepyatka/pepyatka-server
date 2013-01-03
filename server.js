@@ -18,7 +18,7 @@ require('./core_ext')
 //   log.error('Copy configDefault.js to configLocal.js.');
 // }
 
-app.configure(function(){
+app.configure(function() {
   app.engine('ejs', engine);
   app.set('view engine', 'ejs');
 
@@ -58,7 +58,7 @@ function logErrors(err, req, res, next) {
   next(err);
 }
 
-app.configure('development', function(){
+app.configure('development', function() {
   app.use(express.errorHandler());
 });
 
@@ -71,6 +71,6 @@ var server = http.createServer(app)
 
 io.sockets.on('connection', socket.add_sockets(connections))
 
-server.listen(app.get('port'), function(){
+server.listen(app.get('port'), function() {
   console.log("Express server listening on port " + app.get('port'));
 });

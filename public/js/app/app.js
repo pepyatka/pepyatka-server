@@ -108,7 +108,7 @@ App.OnePostView = Ember.View.extend({
 
 App.Comment = Ember.Object.extend({
   body: null,
-  created_at: null,
+  createdAt: null,
   user: null
 });
 
@@ -137,21 +137,21 @@ App.commentsController = App.CommentsController.create()
 
 App.Post = Ember.Object.extend({
   body: null,
-  created_at: null,
-  updated_at: null,
+  createdAt: null,
+  updatedAt: null,
   comments: [],
   user: null,
 
-  created_ago: function() {
-    return moment(this.get('created_at')).fromNow();
-  }.property('created_at')
+  createdAgo: function() {
+    return moment(this.get('createdAt')).fromNow();
+  }.property('createdAt')
 });
 
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
   content: [],
   body: '',
 
-  sortProperties: ['updated_at'],
+  sortProperties: ['updatedAt'],
   sortAscending: false,
 
   // XXX: a bit strange having this method here.
@@ -189,7 +189,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
       dataType: 'jsonp',
       context: this,
       success: function(response){
-        response.forEach(function(attrs) {
+        response.posts.forEach(function(attrs) {
           var post = App.Post.create(attrs)
           this.addObject(post)
         }, this)

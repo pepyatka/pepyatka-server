@@ -3,8 +3,13 @@ var uuid = require('node-uuid')
 
 exports.add_model = function(db) {
   function Comment(params) {
+    console.log('new Comment("' + JSON.stringify(params) + '")')
     this.body = params.body
     this.post_id = params.post_id
+
+    // TODO: not implemented yet
+    this.created_at = null
+    this.updated_at = null
 
     // params to filter
     this.id = params.id
@@ -13,6 +18,7 @@ exports.add_model = function(db) {
   }
 
   Comment.find = function(comment_id, callback) {
+    console.log('Comment.find("' + comment_id + '")')
     db.hgetall('comment:' + comment_id, function(err, attrs) {
       attrs.id = comment_id
       var comment = new Comment(attrs)
@@ -39,7 +45,22 @@ exports.add_model = function(db) {
             return callback()
           }) 
        })
-    }
+    },
+
+    toJSON: function(callback) {
+      var that = this;
+      models.User.find(this.user_id, function(user) {
+        user.toJSON(function(user) {
+          callback({
+            id: that.id,
+            body: that.body,
+            postId: that.post_id,
+            createdBy: user
+          })
+        })
+      }
+    )}
+
   }
   
   return Comment;

@@ -6,16 +6,26 @@ exports.add_model = function(db) {
 
   // User may have one or more timelines. Each timeline is a sorted
   // set. User must has one required timeline which is river of news.
-  function Timeline(params) {
+  function Timeline(params, callback) {
+    console.log('new Timeline(' + JSON.stringify(params) + ')')
+    var that = this;
+    this.user_id = params.user_id
+
+    db.zrevrange('timeline:' + this.user_id, 0, POSTS, function(err, posts) {
+      that.posts = posts
+      callback(that)
+    })
   }
 
-  // Timeline.find = function(user_id, callback) {
-  //   db.zrevrange('timeline:' + user_id, 0, -1, function(err, posts) {
-  //     return callback(posts)
-  //   })
-  // }
+  Timeline.find = function(user_id, callback) {
+    console.log('Timeline.find("' + user_id + '")')
+    var timeline = new Timeline({ user_id: user_id }, function() {
+      callback(timeline)
+    })
+  }
 
   Timeline.update = function(user_id, callback) {
+    console.log('Timeline.update("' + user_id + '")')
     db.zrevrange('timeline:' + user_id, POSTS, -1, function(err, posts) {
       posts.forEachAsync(
         function(post_id, next) { 
@@ -56,6 +66,33 @@ exports.add_model = function(db) {
   }
 
   Timeline.prototype = {
+    toJSON: function(callback) {
+      console.log("- timeline.toJSON()")
+      var that = this;
+      postsJSON = []
+      this.posts.forEachAsync(
+        function(post_id, next) { 
+          return models.Post.find(post_id, function(post) {
+            post.toJSON(function(item) {
+              return next(item) 
+            })
+          })
+        },
+        function(num, post) {
+          postsJSON[num] = post;
+        },
+        function() {
+          models.User.find(that.user_id, function(user) {
+            user.toJSON(function(user) {
+              return callback({ 
+                user: user,
+                posts: postsJSON
+              })
+            })
+          })
+        }
+      )      
+    }
   }
   
   return Timeline;

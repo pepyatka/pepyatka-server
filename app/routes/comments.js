@@ -3,6 +3,8 @@ var models = require('../models')
 
 exports.add_routes = function(app, connections) {
   app.post('/v1/comments', function(req, res){
+    return false;
+
     attrs = req.body
     // TODO -> Post.newComment(new models.Comment(attrs)
     attrs.user = res.locals.current_user

@@ -49,12 +49,20 @@ exports.add_model = function(db) {
 
   User.auth = function(username, password) {
     // TODO: not implemented yet
-  }
+  },
 
   User.prototype = {
     posts: function() {
       Timeline.find(this.id)
+    },
+
+    toJSON: function(callback) {
+      callback({
+        id: this.id,
+        username: this.username
+      })
     }
+
   }
   
   return User;
