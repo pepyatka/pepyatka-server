@@ -6,5 +6,3 @@ TODO list
 - do I really need underscore lib just because few methods?
 - load first and last comments with option to expand them all
 - ember data: https://github.com/emberjs/data?
-- https://github.com/JanDupal/Ember.js-example/blob/master/public/javascripts/application.js
-- remove deprecated methods

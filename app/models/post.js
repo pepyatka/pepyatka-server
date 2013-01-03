@@ -101,6 +101,7 @@ exports.add_model = function(db) {
       var commentsRecord = 'post:' + this.id + ':comments'
       db.llen(commentsRecord, function(err, len) {
         if (len < 0) { // If there are more than 3 comments filter them
+          // We can just insert dummy comments like '...'
           db.lindex(commentsRecord, 0, function(err, firstComment) {
             db.lindex(commentsRecord, -1, function(err, lastComment) {
               var comments = [firstComment, lastComment]
