@@ -34,20 +34,30 @@ exports.add_model = function(db) {
 
   Comment.prototype = {
     save: function(callback) {
-      var that = this
-      this.created_at = new Date().getTime()
-      if (this.id === undefined) this.id = uuid.v4()
+      // User us allowed to create a comment if and only if its
+      // post is created and exists.
+      db.exists('post:' + this.post_id, function(err, res) {
+        // post exists
+        if (res == 1) { 
+          var that = this
+          this.created_at = new Date().getTime()
+          if (this.id === undefined) this.id = uuid.v4()
 
-      db.multi()
-        .hset('comment:' + this.id, 'body', this.body)
-        .hset('comment:' + this.id, 'created_at', this.created_at)
-        .hset('comment:' + this.id, 'user_id', this.user_id)
-        .hset('comment:' + this.id, 'post_id', this.post_id)
-        .exec(function(err, res) {
-          models.Post.addComment(that.post_id, that.id, function() {
-            return callback()
-          }) 
-       })
+          db.multi()
+            .hset('comment:' + this.id, 'body', this.body)
+            .hset('comment:' + this.id, 'created_at', this.created_at)
+            .hset('comment:' + this.id, 'user_id', this.user_id)
+            .hset('comment:' + this.id, 'post_id', this.post_id)
+            .exec(function(err, res) {
+              models.Post.addComment(that.post_id, that.id, function() {
+                return callback()
+              }) 
+            })
+        } else {
+          // TODO: pass res=0 argument to the next block
+          callback()
+        }
+      })
     },
 
     toJSON: function(callback) {

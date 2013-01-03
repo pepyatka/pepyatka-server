@@ -42,3 +42,7 @@ input.input-tiny[type="text"] {
 .post .comments .pull-left {
     margin-right: 4px;
 }
+
+.comment-form {
+    font-size: 13px;
+}
