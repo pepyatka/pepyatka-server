@@ -7,12 +7,14 @@ exports.add_model = function(db) {
     this.body = params.body
     this.post_id = params.post_id
 
+    this.created_at = parseInt(params.created_at) ||  null
+
     // TODO: not implemented yet
-    this.created_at = null
-    this.updated_at = null
+    this.updated_at = parseInt(params.updated_at) ||  null
 
     // params to filter
     this.id = params.id
+
     this.user_id = params.user_id
     this.user = params.user
   }
@@ -57,7 +59,8 @@ exports.add_model = function(db) {
             id: that.id,
             body: that.body,
             postId: that.post_id,
-            createdBy: user
+            createdBy: user,
+            createdAt: that.created_at
           })
         })
       }

@@ -1,4 +1,5 @@
 var uuid = require('node-uuid')
+  , models = require('../models');
 
 exports.add_model = function(db) {
   function User(params) {
@@ -59,6 +60,18 @@ exports.add_model = function(db) {
     posts: function() {
       console.log('- user.posts()')
       Timeline.find(this.id)
+    },
+
+    newPost: function(attrs) {
+      attrs.user_id = this.id
+      
+      return new models.Post(attrs)
+    },
+
+    newComment: function(attrs) {
+      attrs.user_id = this.id
+
+      return new models.Comment(attrs)
     },
 
     toJSON: function(callback) {

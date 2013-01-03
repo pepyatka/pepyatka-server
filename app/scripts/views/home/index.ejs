@@ -171,12 +171,13 @@
     var comment = App.Comment.create(data.comment)
    
     var post = App.postsController.find(function(post) {
-      return post.id == data.comment.post_id
+      return post.id == data.comment.postId
     })
 
-    post.set('updated_at', comment.created_at)
-    
-    post.comments.pushObject(comment)
+    if (post) {
+      post.set('updatedAt', comment.createdAt)
+      post.comments.pushObject(comment)
+    }
   });
 
   socket.on('updateComment', function(data) {

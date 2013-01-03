@@ -9,8 +9,8 @@ exports.add_model = function(db) {
 
     // params to filter
     this.id = params.id
-    this.created_at = parseInt(params.created_at)
-    this.updated_at = parseInt(params.updated_at)
+    this.created_at = parseInt(params.created_at) || null
+    this.updated_at = parseInt(params.updated_at) || null
     
     this.comments = params.comments || []
 
