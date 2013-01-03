@@ -7,7 +7,7 @@ exports.add_model = function(db) {
   // User may have one or more timelines. Each timeline is a sorted
   // set. User must has one required timeline which is river of news.
   function Timeline(params, callback) {
-    console.log('new Timeline(' + JSON.stringify(params) + ')')
+    console.log('new Timeline(' + params + ')')
     var that = this;
     this.user_id = params.user_id
 
@@ -39,6 +39,7 @@ exports.add_model = function(db) {
   }
 
   Timeline.newPost = function(user_id, post_id, callback) {
+    console.log('Timeline.newPost("' + user_id + '", "' + post_id + '")')
     var current_time = new Date().getTime()
     db.zadd('timeline:' + user_id, current_time, post_id, function(err, res) {
       Timeline.update(user_id, function() {
@@ -51,6 +52,7 @@ exports.add_model = function(db) {
   }
 
   Timeline.posts = function(user_id, callback) {
+    console.log('Timeline.posts("' + user_id + '")')
     db.zrevrange('timeline:' + user_id, 0, POSTS-1, function(err, posts) {
       var new_posts = []
 

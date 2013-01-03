@@ -157,7 +157,7 @@
 
   socket.on('newPost', function (data) {
     var post = App.Post.create(data.post)
-   
+
     App.postsController.addObject(post)
   });
 

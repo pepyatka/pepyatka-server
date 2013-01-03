@@ -4,7 +4,7 @@ var uuid = require('node-uuid')
 
 exports.add_model = function(db) {
   function Post(params) {
-    console.log('new Post(' + JSON.stringify(params) + ')')
+    console.log('new Post(' + params + ')')
     this.body = params.body
 
     // params to filter
@@ -21,6 +21,7 @@ exports.add_model = function(db) {
   Post.find = function(post_id, callback) {
     console.log('Post.find("' + post_id + '")')
     db.hgetall('post:' + post_id, function(err, attrs) {
+      // TODO: check if we find a post
       attrs.id = post_id
       var post = new Post(attrs)
 
@@ -38,6 +39,7 @@ exports.add_model = function(db) {
   }
 
   Post.destroy = function(post_id, callback) {
+    console.log('Post.destroy("' + post_id + '")')
     db.hget('post:' + post_id, 'user_id', function(err, user_id) {
       db.multi()
         .zrem('timeline:' + user_id, post_id)
@@ -73,6 +75,7 @@ exports.add_model = function(db) {
   Post.prototype = {
     // Return all comments
     getComments: function(callback) {
+      console.log('- post.getComments()')
       var that = this
       db.lrange('post:' + this.id + ':comments', 0, -1, function(err, comments) {
         var new_comments = []
@@ -93,6 +96,7 @@ exports.add_model = function(db) {
     // Get first three comments if they exist or return first and last
     // comments instead
     getLastComments: function(callback) {
+      console.log('- post.getLastComments()')
       var that = this
       var commentsRecord = 'post:' + this.id + ':comments'
       db.llen(commentsRecord, function(err, len) {
@@ -112,6 +116,7 @@ exports.add_model = function(db) {
     },
 
     save: function(callback) {
+      console.log('- post.save()')
       var that = this
       this.created_at = new Date().getTime()
       this.updated_at = new Date().getTime()
@@ -129,6 +134,7 @@ exports.add_model = function(db) {
     },
 
     toJSON: function(callback) {
+      console.log('- post.toJSON()')
       var that = this;
       this.getComments(function(comments) {
         models.User.find(that.user_id, function(user) {

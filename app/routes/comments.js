@@ -3,8 +3,6 @@ var models = require('../models')
 
 exports.add_routes = function(app, connections) {
   app.post('/v1/comments', function(req, res){
-    return false;
-
     attrs = req.body
     // TODO -> Post.newComment(new models.Comment(attrs)
     attrs.user = res.locals.current_user
@@ -15,11 +13,13 @@ exports.add_routes = function(app, connections) {
     comment.save(function() {
       // Routes should know nothing about sockets. Only models can
       // emit a message.
-      _.each(connections, function(socket) {
-        socket.emit('newComment', { comment: comment })
-      })
+      comment.toJSON(function(json) { 
+        _.each(connections, function(socket) {
+          socket.emit('newComment', { comment: json })
+        });
 
-      res.jsonp(comment)
+        res.jsonp(json)
+      })
     })
   });
 }

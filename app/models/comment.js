@@ -3,7 +3,7 @@ var uuid = require('node-uuid')
 
 exports.add_model = function(db) {
   function Comment(params) {
-    console.log('new Comment("' + JSON.stringify(params) + '")')
+    console.log('new Comment("' + params + '")')
     this.body = params.body
     this.post_id = params.post_id
 
@@ -20,6 +20,7 @@ exports.add_model = function(db) {
   Comment.find = function(comment_id, callback) {
     console.log('Comment.find("' + comment_id + '")')
     db.hgetall('comment:' + comment_id, function(err, attrs) {
+      // TODO: check if we find a comment
       attrs.id = comment_id
       var comment = new Comment(attrs)
       models.User.find(attrs.user_id, function(user) {
@@ -48,6 +49,7 @@ exports.add_model = function(db) {
     },
 
     toJSON: function(callback) {
+      console.log("- comment.toJSON()")
       var that = this;
       models.User.find(this.user_id, function(user) {
         user.toJSON(function(user) {

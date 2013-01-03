@@ -11,8 +11,6 @@ exports.add_routes = function(app, connections) {
   })
 
   app.post('/v1/posts', function(req, res){
-    return '';
-
     attrs = req.body
     // TODO -> User.newPost(new models.Post(attrs)
     attrs.user = res.locals.current_user
@@ -23,11 +21,13 @@ exports.add_routes = function(app, connections) {
     post.save(function() {
       // Routes should know nothing about sockets. Only models can
       // emit a message.
-      _.each(connections, function(socket) {
-        socket.emit('newPost', { post: post })
-      })
+      post.toJSON(function(json) {
+        _.each(connections, function(socket) {
+          socket.emit('newPost', { post: json })
+        })
 
-      res.jsonp(post)
+        res.jsonp(json);
+      })
     })
   });
 }

@@ -20,8 +20,8 @@ exports.add_sockets = function(connections) {
     }),
 
     // New message sent
-    socket.on('message', function(data) {
-      console.log('new message')
+    socket.on('post', function(data) {
+      console.log('new post')
     }),
 
     // New comment sent
