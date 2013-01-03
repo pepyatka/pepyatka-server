@@ -26,7 +26,7 @@ exports.add_routes = function(app, connections) {
           socket.emit('newPost', { post: json })
         })
 
-        res.jsonp(json);
+        res.jsonp(json)
       })
     })
   });
