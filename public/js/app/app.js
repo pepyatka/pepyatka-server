@@ -35,6 +35,16 @@ App.PostContainerView = Ember.View.extend({
 
   toggleVisibility: function() {
     this.toggleProperty('isFormVisible');
+  },
+
+  didInsertElement: function() {
+    this.$().hide().slideDown('slow');
+  },
+
+  willDestroyElement: function() {
+    var clone = this.$().clone();
+    this.$().replaceWith(clone);
+    clone.fadeOut('slow')
   }
 });
 
@@ -163,7 +173,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
     }
   },
 
-  removeItem: function(propName, value){
+  removePost: function(propName, value) {
     var obj = this.findProperty(propName, value);
     this.removeObject(obj);
   },

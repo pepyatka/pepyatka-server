@@ -40,7 +40,7 @@
   <li class="media">
     {{#with view.content}}  
       <hr/>
-
+      
       <div class="pull-left">
         <img class="media-object" src="/img/48x48.png">
       </div>
@@ -173,7 +173,7 @@
   })
 
   socket.on('destroyPost', function(data) {
-    App.postsController.removeItem('id', data.postId)
+    App.postsController.removePost('id', data.postId)
   })
 
   socket.on('newComment', function (data) {
