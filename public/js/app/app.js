@@ -48,11 +48,9 @@ App.PostContainerView = Ember.View.extend({
   }
 });
 
-// TODO: create view for CommentContainer and AllCommentsView
-// App.CommentContainer = Ember.View.extend({
-//   tagName: "li",
-//   templateName: 'comment-view'
-// });
+App.CommentContainerView = Ember.View.extend({
+  templateName: 'comment-view'
+})
 
 // Create new post text field. Separate view to be able to bind events
 App.CommentPostView = Ember.View.extend(Ember.TargetActionSupport, {
