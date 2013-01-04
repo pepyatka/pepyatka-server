@@ -49,7 +49,11 @@ App.PostContainerView = Ember.View.extend({
 });
 
 App.CommentContainerView = Ember.View.extend({
-  templateName: 'comment-view'
+  templateName: 'comment-view',
+
+  didInsertElement: function() {
+    this.$().hide().slideDown();
+  }
 })
 
 // Create new post text field. Separate view to be able to bind events
