@@ -41,18 +41,20 @@
 
 <script type="text/x-handlebars" data-template-name="comment-view">
   <li class="media">
-    <div class="pull-left">
-      <i class="icon-comment-alt media-object"></i>
-    </div>
-    <div class="media-body">
-      <span class="body">
-        {{comment.body}}
-      </span>
-      - 
-      <span class="author">
-        {{comment.createdBy.username}}
-      </span>
-    </div>
+    {{#with view.content}}  
+      <div class="pull-left">
+        <i class="icon-comment-alt media-object"></i>
+      </div>
+      <div class="media-body">
+        <span class="body">
+          {{body}}
+        </span>
+        - 
+        <span class="author">
+          {{createdBy.username}}
+        </span>
+      </div>
+    {{/with}}
   </li>
 </script>
 
@@ -81,22 +83,8 @@
         </div>
     
         <ul class="unstyled comments">
-          {{#each comment in comments}}
-            <li class="media">
-              <div class="pull-left">
-                <i class="icon-comment-alt media-object"></i>
-              </div>
-              <div class="media-body">
-                <span class="body">
-                  {{comment.body}}
-                </span>
-                - 
-                <span class="author">
-                  {{comment.createdBy.username}}
-                </span>
-              </div>
-            </li>
-          {{/each}}
+          {{view Ember.CollectionView contentBinding="comments"
+                 itemViewClass="App.CommentContainerView"}}
         </ul>
     
         {{#view App.CommentForm}}
@@ -141,22 +129,8 @@
       </div>
     
       <ul class="unstyled comments">
-        {{#each comment in comments}}
-          <li class="media">
-            <div class="pull-left">
-              <i class="icon-comment-alt"></i>
-            </div>
-            <div class="media-body">
-              <span class="body">
-                {{comment.body}}
-              </span>
-              -
-              <span class="author">
-                {{comment.createdBy.username}}
-              </span>
-            </div>
-          </li>
-        {{/each}}
+        {{view Ember.CollectionView contentBinding="comments"
+               itemViewClass="App.CommentContainerView"}}
       </ul>
     
       {{#view App.CommentForm}}
