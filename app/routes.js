@@ -13,9 +13,6 @@ var helpers = function(req, res, next) {
     return req.session.user_id !== undefined
   };
 
-  res.locals._ = require('underscore');
-  res.locals.moment = require('moment');
-
   next();
 };
 
