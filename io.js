@@ -17,8 +17,8 @@ exports.listen = function(server, connections) {
         // TODO: can return just ID instead of entire record
         console.log('User ' + data.username + ' has connected')
         models.User.find_by_username(data.username, function(user) {
-          // connections[user.id] = socket
-          connections[uuid.v4()] = socket
+          socket.userId = uuid.v4()
+          connections[socket.userId] = socket
         })
 
         sub = redis.createClient();
@@ -44,6 +44,10 @@ exports.listen = function(server, connections) {
       
       // New comment sent
       socket.on('comment', function(data) {
+      }),
+
+      socket.on('disconnect', function() {
+        delete connections[socket.userId]
       })
     }
   )
