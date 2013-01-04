@@ -173,6 +173,7 @@
   })
 
   socket.on('destroyPost', function(data) {
+    App.postsController.removeItem('id', data.postId)
   })
 
   socket.on('newComment', function (data) {

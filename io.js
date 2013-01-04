@@ -1,11 +1,16 @@
 var models = require('./app/models')
   , uuid = require('node-uuid')
+  , redis = require('redis')
+  , _ = require('underscore')
 
 exports.listen = function(server, connections) {
   var io = require('socket.io').listen(server)
+    , pub
+    , sub
   
   io.sockets.on(
-    'connection', 
+    'connection',
+
     function(socket) {
       // User wants to listen to real-time updates
       socket.on('subscribe', function(data) {
@@ -14,6 +19,16 @@ exports.listen = function(server, connections) {
         models.User.find_by_username(data.username, function(user) {
           // connections[user.id] = socket
           connections[uuid.v4()] = socket
+        })
+
+        sub = redis.createClient();
+        pub = redis.createClient();
+
+        sub.subscribe('destroyPost')
+        sub.on('message', function(channel, post_id) {
+          _.each(connections, function(socket) {
+            socket.emit('destroyPost', { postId: post_id })
+          });
         })
       }),
       

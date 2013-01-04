@@ -163,6 +163,11 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
     }
   },
 
+  removeItem: function(propName, value){
+    var obj = this.findProperty(propName, value);
+    this.removeObject(obj);
+  },
+
   createPost: function(body) {
     var post = App.Post.create({ 
       body: body

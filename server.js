@@ -16,6 +16,9 @@ var express = require('express')
 //   log.error('Copy configDefault.js to configLocal.js.');
 // }
 
+// var configPath = path.join(__dirname, "config.json");
+// var config = JSON.parse(fs.readFileSync(configPath));
+
 app.configure(function() {
   app.engine('ejs', engine);
   app.set('view engine', 'ejs');

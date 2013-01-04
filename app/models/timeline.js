@@ -1,6 +1,7 @@
 var _ = require('underscore')
   , models = require('../models')
   , async = require('async')
+  , redis = require('redis')
 
 exports.add_model = function(db) {
   var POSTS = 10
@@ -30,6 +31,9 @@ exports.add_model = function(db) {
     db.zrevrange('timeline:' + user_id, POSTS, -1, function(err, posts) {
       async.forEach(posts, function(post_id, callback) {
         models.Post.destroy(post_id, function(err, res) {
+          pub = redis.createClient();
+          pub.publish('destroyPost', post_id)
+          
           callback(err)
         })
       }, function(err) {
