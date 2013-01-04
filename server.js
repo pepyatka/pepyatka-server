@@ -4,8 +4,6 @@ var express = require('express')
   , path = require('path')
   , engine = require('ejs-locals')
 
-require('./core_ext')
-
 // var path = require('path');
 // if (path.existsSync('./configLocal.js')) {
 //   var configLocal = require('./configLocal.js');
