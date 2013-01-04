@@ -1,5 +1,6 @@
 var _ = require('underscore')
   , models = require('../models')
+  , async = require('async')
 
 exports.add_model = function(db) {
   var POSTS = 10
@@ -38,6 +39,14 @@ exports.add_model = function(db) {
     })
   }
 
+  Timeline.updatePost = function(user_id, post_id, callback) {
+    console.log('Timeline.updatePost("' + user_id + '", "' + post_id + '")')
+    var current_time = new Date().getTime()
+    db.zadd('timeline:' + user_id, current_time, post_id, function(err, res) {
+      callback()
+    })
+  }
+
   Timeline.newPost = function(user_id, post_id, callback) {
     console.log('Timeline.newPost("' + user_id + '", "' + post_id + '")')
     var current_time = new Date().getTime()
@@ -71,29 +80,23 @@ exports.add_model = function(db) {
     toJSON: function(callback) {
       console.log("- timeline.toJSON()")
       var that = this;
-      postsJSON = []
-      this.posts.forEachAsync(
-        function(post_id, next) { 
-          return models.Post.find(post_id, function(post) {
-            post.toJSON(function(item) {
-              return next(item) 
+
+      async.map(this.posts, function(post_id, callback) {
+        models.Post.find(post_id, function(post) {
+          post.toJSON(function(json) {
+            callback(null, json)
+          })
+        })
+      }, function(err, postsJSON) {
+        models.User.find(that.user_id, function(user) {
+          user.toJSON(function(user) {
+            return callback({ 
+              user: user,
+              posts: postsJSON
             })
           })
-        },
-        function(num, post) {
-          postsJSON[num] = post;
-        },
-        function() {
-          models.User.find(that.user_id, function(user) {
-            user.toJSON(function(user) {
-              return callback({ 
-                user: user,
-                posts: postsJSON
-              })
-            })
-          })
-        }
-      )      
+        })
+      })
     }
   }
   

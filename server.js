@@ -65,11 +65,8 @@ app.configure('development', function() {
 var connections = {}
 
 var server = http.createServer(app)
-  , io = require('socket.io').listen(server)
-  , socket = require('./io.js')
+  , socket = require('./io').listen(server, connections)
   , routes = require('./app/routes')(app, connections)
-
-io.sockets.on('connection', socket.add_sockets(connections))
 
 server.listen(app.get('port'), function() {
   console.log("Express server listening on port " + app.get('port'));

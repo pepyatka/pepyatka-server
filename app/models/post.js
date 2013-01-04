@@ -1,6 +1,7 @@
 var uuid = require('node-uuid')
   , models = require('../models')
   , _ = require('underscore')
+  , async = require('async')
 
 exports.add_model = function(db) {
   function Post(params) {
@@ -62,7 +63,7 @@ exports.add_model = function(db) {
         // Can we bump this post
         Post.bumpable(post_id, function(bump) {
           if (bump) {
-            models.Timeline.newPost(user_id, post_id, function() {
+            models.Timeline.updatePost(user_id, post_id, function() {
               return callback();
             })
           } else {
@@ -140,31 +141,22 @@ exports.add_model = function(db) {
       var that = this;
       this.getComments(function(comments) {
         models.User.find(that.user_id, function(user) {
-          commentsJSON = []
-          comments.forEachAsync(
-            function(comment, next) { 
-              return models.Comment.find(comment.id, function(comment) {
-                comment.toJSON(function(item) {
-                  return next(item) 
-                })
+          async.map(comments, function(comment, callback) {
+            comment.toJSON(function(json) {
+              callback(null, json)
+            })
+          }, function(err, commentsJSON) {
+            user.toJSON(function(user) {
+              return callback({ 
+                id: that.id,
+                createdAt: that.created_at,
+                updatedAt: that.updated_at,
+                body: that.body,
+                createdBy: user,
+                comments: commentsJSON
               })
-            },
-            function(num, comment) {
-              commentsJSON[num] = comment;
-            },
-            function() {
-              user.toJSON(function(user) {
-                return callback({ 
-                  id: that.id,
-                  createdAt: that.created_at,
-                  updatedAt: that.updated_at,
-                  body: that.body,
-                  createdBy: user,
-                  comments: commentsJSON
-                })
-              })
-            }
-          )
+            })
+          })
         })
       })
     }
