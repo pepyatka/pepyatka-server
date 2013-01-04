@@ -46,7 +46,9 @@ exports.add_model = function(db) {
     console.log('Timeline.updatePost("' + user_id + '", "' + post_id + '")')
     var current_time = new Date().getTime()
     db.zadd('timeline:' + user_id, current_time, post_id, function(err, res) {
-      callback()
+      db.hset('post:' + post_id, 'updated_at', current_time, function(err, res) {
+        callback()
+      })
     })
   }
 
@@ -66,7 +68,7 @@ exports.add_model = function(db) {
   Timeline.posts = function(user_id, callback) {
     console.log('Timeline.posts("' + user_id + '")')
     db.zrevrange('timeline:' + user_id, 0, POSTS-1, function(err, posts) {
-      async.map(posts, function(post_id, callback) {
+      async.mapSeries(posts, function(post_id, callback) {
         models.Post.find(post_id, function(post) {
           callback(null, post)
         })
@@ -81,7 +83,7 @@ exports.add_model = function(db) {
       console.log("- timeline.toJSON()")
       var that = this;
 
-      async.map(this.posts, function(post_id, callback) {
+      async.mapSeries(this.posts, function(post_id, callback) {
         models.Post.find(post_id, function(post) {
           post.toJSON(function(json) {
             callback(null, json)
