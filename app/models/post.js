@@ -47,7 +47,7 @@ exports.add_model = function(db) {
         .del('post:' + post_id)
         .del('post:' + post_id + ':comments')
         .exec(function(err, res) { 
-          callback(res)
+          callback(err, res)
         })
     })
   }
@@ -80,18 +80,13 @@ exports.add_model = function(db) {
       console.log('- post.getComments()')
       var that = this
       db.lrange('post:' + this.id + ':comments', 0, -1, function(err, comments) {
-        var new_comments = []
-        comments.forEachAsync(
-          function(comment_id, next) { 
-            return models.Comment.find(comment_id, function(item) { return next(item) })
-          },
-          function(num, comment) {
-            new_comments[num] = comment;
-          },
-          function() {
-            return callback(new_comments)
-          }
-        )
+        async.map(comments, function(comment_id, callback) {
+          models.Comment.find(comment_id, function(comment) {
+            callback(null, comment)
+          })
+        }, function(err, comments) {
+          callback(comments)
+        })
       })
     },
 
@@ -143,7 +138,7 @@ exports.add_model = function(db) {
         models.User.find(that.user_id, function(user) {
           async.map(comments, function(comment, callback) {
             comment.toJSON(function(json) {
-              callback(null, json)
+              return callback(null, json)
             })
           }, function(err, commentsJSON) {
             user.toJSON(function(user) {

@@ -28,14 +28,13 @@ exports.add_model = function(db) {
   Timeline.update = function(user_id, callback) {
     console.log('Timeline.update("' + user_id + '")')
     db.zrevrange('timeline:' + user_id, POSTS, -1, function(err, posts) {
-      posts.forEachAsync(
-        function(post_id, next) { 
-          models.Post.destroy(post_id, function(err, res) { return next() }) 
-        }, 
-        function(num, post_id) { },
-        function() {
-          return callback() 
+      async.forEach(posts, function(post_id, callback) {
+        models.Post.destroy(post_id, function(err, res) {
+          callback(err)
         })
+      }, function(err) {
+        callback()
+      })
     })
   }
 
@@ -63,16 +62,13 @@ exports.add_model = function(db) {
   Timeline.posts = function(user_id, callback) {
     console.log('Timeline.posts("' + user_id + '")')
     db.zrevrange('timeline:' + user_id, 0, POSTS-1, function(err, posts) {
-      var new_posts = []
-
-      posts.forEachAsync(
-        function(post_id, next) {
-          models.Post.find(post_id, function(item) { return next(item) }) 
-        }, 
-        function(num, post) { new_posts[num] = post; },
-        function() {
-          return callback(new_posts) 
+      async.map(posts, function(post_id, callback) {
+        models.Post.find(post_id, function(post) {
+          callback(null, post)
         })
+      }, function(err, posts) {
+        callback(posts)
+      })
     })
   }
 
