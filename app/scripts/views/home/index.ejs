@@ -16,6 +16,9 @@
         {{outlet}}
       </div>
     </div>
+
+    <hr/>
+    <footer><s>Всем похiй</s> желающие помочь стучитесь к <a href="http://friendfeed.com/epicmonkey">@epicmonkey</a>. It's already available... for free. For free? We can do anything. That's fucking brilliant, that is. Have you seen this? This is fucking brilliant.</footer>
   </div>
 </script>
 
@@ -34,6 +37,23 @@
     {{view Ember.CollectionView contentBinding="App.postsController"
            itemViewClass="App.PostContainerView"}}
   </ul>
+</script>
+
+<script type="text/x-handlebars" data-template-name="comment-view">
+  <li class="media">
+    <div class="pull-left">
+      <i class="icon-comment-alt media-object"></i>
+    </div>
+    <div class="media-body">
+      <span class="body">
+        {{comment.body}}
+      </span>
+      - 
+      <span class="author">
+        {{comment.createdBy.username}}
+      </span>
+    </div>
+  </li>
 </script>
 
 <script type="text/x-handlebars" data-template-name="post-view">

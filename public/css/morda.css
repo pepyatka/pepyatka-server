@@ -46,3 +46,8 @@ input.input-tiny[type="text"] {
 .comment-form {
     font-size: 13px;
 }
+
+footer {
+    font-size: 10px;
+    color: #aaa;
+}
