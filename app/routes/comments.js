@@ -3,9 +3,9 @@ var models = require('../models')
 
 exports.add_routes = function(app, connections) {
   app.post('/v1/comments', function(req, res){
-    var comment = res.locals.current_user.newComment(req.body)
+    var newComment = res.locals.current_user.newComment(req.body)
 
-    comment.save(function() {
+    newComment.save(function(comment) {
       // Routes should know nothing about sockets. Only models can
       // emit a message.
       comment.toJSON(function(json) { 

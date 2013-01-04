@@ -130,7 +130,7 @@ exports.add_model = function(db) {
         .hset('post:' + this.id, 'user_id', this.user_id)
         .exec(function(err, res) {
           models.Timeline.newPost(that.user_id, that.id, function() {
-            return callback()
+            return callback(that)
           })
         })
     },

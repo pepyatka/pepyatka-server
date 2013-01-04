@@ -50,7 +50,7 @@ exports.add_model = function(db) {
             .hset('comment:' + that.id, 'post_id', that.post_id)
             .exec(function(err, res) {
               models.Post.addComment(that.post_id, that.id, function() {
-                return callback()
+                return callback(that)
               }) 
             })
         } else {
