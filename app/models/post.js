@@ -80,7 +80,7 @@ exports.add_model = function(db) {
       console.log('- post.getComments()')
       var that = this
       db.lrange('post:' + this.id + ':comments', 0, -1, function(err, comments) {
-        async.mapSeries(comments, function(comment_id, callback) {
+        async.map(comments, function(comment_id, callback) {
           models.Comment.find(comment_id, function(comment) {
             callback(null, comment)
           })
@@ -136,7 +136,7 @@ exports.add_model = function(db) {
       var that = this;
       this.getComments(function(comments) {
         models.User.find(that.user_id, function(user) {
-          async.mapSeries(comments, function(comment, callback) {
+          async.map(comments, function(comment, callback) {
             comment.toJSON(function(json) {
               return callback(null, json)
             })
