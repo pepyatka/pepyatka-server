@@ -13,6 +13,8 @@ exports.add_routes = function(app, connections) {
           socket.emit('newComment', { comment: json })
         });
 
+        console.log(json)
+
         res.jsonp(json)
       })
     })

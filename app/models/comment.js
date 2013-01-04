@@ -3,7 +3,7 @@ var uuid = require('node-uuid')
 
 exports.add_model = function(db) {
   function Comment(params) {
-    console.log('new Comment("' + params + '")')
+    console.log('new Comment(' + JSON.stringify(params) + ')')
     this.body = params.body
     this.post_id = params.post_id
 
@@ -34,20 +34,20 @@ exports.add_model = function(db) {
 
   Comment.prototype = {
     save: function(callback) {
+      var that = this
       // User us allowed to create a comment if and only if its
       // post is created and exists.
       db.exists('post:' + this.post_id, function(err, res) {
         // post exists
         if (res == 1) { 
-          var that = this
-          this.created_at = new Date().getTime()
-          if (this.id === undefined) this.id = uuid.v4()
+          that.created_at = new Date().getTime()
+          if (that.id === undefined) that.id = uuid.v4()
 
           db.multi()
-            .hset('comment:' + this.id, 'body', this.body)
-            .hset('comment:' + this.id, 'created_at', this.created_at)
-            .hset('comment:' + this.id, 'user_id', this.user_id)
-            .hset('comment:' + this.id, 'post_id', this.post_id)
+            .hset('comment:' + that.id, 'body', that.body)
+            .hset('comment:' + that.id, 'created_at', that.created_at)
+            .hset('comment:' + that.id, 'user_id', that.user_id)
+            .hset('comment:' + that.id, 'post_id', that.post_id)
             .exec(function(err, res) {
               models.Post.addComment(that.post_id, that.id, function() {
                 return callback()

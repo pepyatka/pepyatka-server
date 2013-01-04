@@ -9,7 +9,6 @@
     "express": "3.0.5",
     "ejs": "0.8.3",
     "redis": "0.8.2",
-    // "hiredis": "0.1.14",
     "ejs-locals": "1.0.2",
     "socket.io": "0.9.13",
     "node-uuid": "1.4.0",

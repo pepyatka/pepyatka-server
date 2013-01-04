@@ -56,6 +56,7 @@ exports.add_model = function(db) {
   }
 
   Post.addComment = function(post_id, comment_id, callback) {
+    console.log('Post.addComment("' + post_id + '", "' + comment_id + '")')
     db.hget('post:' + post_id, 'user_id', function(err, user_id) {
       db.rpush('post:' + post_id + ':comments', comment_id, function() {
         // Can we bump this post
