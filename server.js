@@ -3,6 +3,7 @@ var express = require('express')
   , http = require('http')
   , path = require('path')
   , engine = require('ejs-locals')
+  , fs = require('fs')
 
 // var path = require('path');
 // if (path.existsSync('./configLocal.js')) {
@@ -36,7 +37,7 @@ app.configure(function() {
     uploadDir: __dirname + './tmp',
     keepExtensions: true
   }))
-  app.use(express.limit('5mb'));
+  app.use(express.limit('50mb'));
 
   app.use(express.methodOverride());
   app.use(express.cookieParser('your secret here'));

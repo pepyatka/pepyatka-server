@@ -31,20 +31,21 @@ App.UploadFileView = Ember.TextField.extend({
   attributeBindings: ['name'],
 
   didInsertElement: function() {
-    // Customize input[file] element
     this.$().prettyInput()
   },
 
   change: function(event) {
-    var that = this;
     var input = event.target;
+
     if (input.files && input.files[0]) {
+      var file = input.files[0]
       var reader = new FileReader();
+
       reader.onload = function(e) {
-        var fileToUpload = e.srcElement.result;
-        that.get('controller').set(that.get('name'), fileToUpload);
+        App.postsController.set('attachment', {'filename': file.name, 
+                                               'data': e.target.result})
       }
-      reader.readAsDataURL(input.files[0]);
+      reader.readAsDataURL(file);
     }
   }
 });
@@ -230,7 +231,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
     $.ajax({
       url: '/v1/posts',
       type: 'post',
-      data: { body: body }, // XXX: we've already defined a model above
+      data: { body: body, attachment: this.attachment }, // XXX: we've already defined a model above
       context: post,
       success: function(response) {
         this.setProperties(response);

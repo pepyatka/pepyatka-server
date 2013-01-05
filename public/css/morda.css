@@ -16,10 +16,18 @@ script {
     padding: 0;
 }
 
-input.input-tiny[type="text"] {
+.container input.input-tiny[type="text"] {
     height: 16px;
     font-size: 12px;
     line-height: 16px;
+}
+.container span.file-input-name {
+    display: block;
+    float: right;
+    height: 18px;
+    margin: 4px 0 0 4px;
+    overflow: hidden;
+    width: 300px; /* 450px */
 }
 
 .post .author {
