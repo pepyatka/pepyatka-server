@@ -28,7 +28,6 @@ App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
 
 App.UploadFileView = Ember.TextField.extend({
   type: 'file',
-  attributeBindings: ['name'],
 
   didInsertElement: function() {
     this.$().prettyInput()
@@ -235,6 +234,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
       context: post,
       success: function(response) {
         this.setProperties(response);
+        this.attachment = null
         // We do not insert post right now, but wait for a socket event
         // App.postsController.insertAt(0, post)
       }

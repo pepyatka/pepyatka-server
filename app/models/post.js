@@ -12,6 +12,9 @@ exports.add_model = function(db) {
     this.id = params.id
     this.created_at = parseInt(params.created_at) || null
     this.updated_at = parseInt(params.updated_at) || null
+
+    // TODO: it needs to be an array not just a single value
+    this.imageId = params.imageId || null
     
     this.comments = params.comments || []
 
@@ -131,6 +134,7 @@ exports.add_model = function(db) {
         .hset('post:' + this.id, 'body', this.body)
         .hset('post:' + this.id, 'created_at', this.created_at)
         .hset('post:' + this.id, 'user_id', this.user_id)
+        .hset('post:' + this.id, 'imageId', this.imageId)
         .exec(function(err, res) {
           models.Timeline.newPost(that.user_id, that.id, function() {
             return callback(that)
@@ -156,8 +160,10 @@ exports.add_model = function(db) {
                 body: that.body,
                 createdBy: user,
                 comments: commentsJSON,
-                partial: that.partial,
-                commentsLength: that.commentsLength
+                // TODO: if partial is false do not send commentsLength attribute
+                partial: that.partial, 
+                commentsLength: that.commentsLength,
+                imageId: that.imageId
               })
             })
           })
