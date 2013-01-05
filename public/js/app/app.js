@@ -44,7 +44,7 @@ App.PostContainerView = Ember.View.extend({
   willDestroyElement: function() {
     var clone = this.$().clone();
     this.$().replaceWith(clone);
-    clone.fadeOut('slow')
+    clone.slideUp()
   }
 });
 
