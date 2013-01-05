@@ -85,7 +85,7 @@
         <ul class="unstyled comments">
           {{#if partial}}
             {{view App.CommentContainerView contentBinding="firstComment"}}
-            <li class="media">
+            <li class="media more-comments">
               <a {{action showAllComments target="view"}}>{{skippedCommentsLength}} more comments</a>
             </li>
             {{view App.CommentContainerView contentBinding="lastComment"}}

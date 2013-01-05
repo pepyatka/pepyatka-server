@@ -57,7 +57,7 @@ App.CommentContainerView = Ember.View.extend({
   templateName: 'comment-view',
 
   didInsertElement: function() {
-    this.$().hide().slideDown();
+    this.$().hide().slideDown('fast');
   }
 })
 

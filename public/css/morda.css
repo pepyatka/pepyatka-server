@@ -39,6 +39,9 @@ input.input-tiny[type="text"] {
 .post .comments .media {
     margin: 4px 0 7px 0;
 }
+.post .comments .more-comments {
+    font-style: italic;
+}
 .post .comments .pull-left {
     margin-right: 4px;
 }
