@@ -6,6 +6,7 @@
 <script src="/js/libs/handlebars-1.0.rc.1.js"></script>
 <script src="/js/libs/bootstrap.min.js"></script>
 <script src="/js/libs/ember-1.0.0-pre.2.js"></script>
+<script src="/js/libs/bootstrap.file-input.js"></script>
 
 <script type="text/x-handlebars" data-template-name="application">
   <div class="container">
@@ -27,6 +28,9 @@
     <div>
       {{view App.CreatePostView target="App.postsController" action="submitPost"
             class="span7"}}
+    </div>
+    <div class="pull-left">
+      Add image: {{view App.UploadFileView name="image" contentBinding="content"}}
     </div>
     <div class="pull-right">
       <button {{action submitPost target="App.postsController"}} class="btn pull-right">Post</button>

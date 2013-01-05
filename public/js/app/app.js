@@ -26,6 +26,29 @@ App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
   }
 })
 
+App.UploadFileView = Ember.TextField.extend({
+  type: 'file',
+  attributeBindings: ['name'],
+
+  didInsertElement: function() {
+    // Customize input[file] element
+    this.$().prettyInput()
+  },
+
+  change: function(event) {
+    var that = this;
+    var input = event.target;
+    if (input.files && input.files[0]) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var fileToUpload = e.srcElement.result;
+        that.get('controller').set(that.get('name'), fileToUpload);
+      }
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+});
+
 // View to display single post. Post has following subviews (defined below):
 //  - link to show a comment form
 //  - form to add a new comment

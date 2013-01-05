@@ -29,11 +29,20 @@ app.configure(function() {
   app.enable("jsonp callback");
 
   app.use(express.favicon());
+
   app.use(express.logger('dev'));
-  app.use(express.bodyParser());
+
+  app.use(express.bodyParser({
+    uploadDir: __dirname + './tmp',
+    keepExtensions: true
+  }))
+  app.use(express.limit('5mb'));
+
   app.use(express.methodOverride());
   app.use(express.cookieParser('your secret here'));
+
   app.use(express.session());
+
   app.use(app.router);
   app.use(express.static(path.join(__dirname, 'public')));
   app.use(logErrors);
@@ -60,7 +69,7 @@ function logErrors(err, req, res, next) {
 }
 
 app.configure('development', function() {
-  app.use(express.errorHandler());
+  app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
 });
 
 var connections = {}
