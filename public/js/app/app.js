@@ -48,8 +48,8 @@ App.PostContainerView = Ember.View.extend({
   },
 
   showAllComments: function() {
-    var comment = this.content
-    comment.set('partial', false)
+    var comments = this.content
+    comments.set('partial', false)
   }
 });
 

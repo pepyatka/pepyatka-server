@@ -73,7 +73,7 @@
         <div class="body">{{body}}</div>
 
         <div class="tagline">
-          <a {{action showPost this}} class="datetime">
+          <a {{action showPost this href="true"}} class="datetime">
             <time datetime="{{createdAt}}">{{createdAgo}}</time>
           </a>
           -
@@ -104,7 +104,7 @@
             </div>
             <div>
               <button {{action submitComment target="view"}} class="btn btn-small">Post</button>
-              <a {{action toggleVisibility target="view"}}>Cancel</a>
+              <a {{action toggleVisibility target="parentView"}}>Cancel</a>
             </div>
           </div>
         {{/view}} 
@@ -150,7 +150,7 @@
           </div>
           <div>
             <button {{action submitComment target="view"}} class="btn btn-small">Post</button>
-            <a {{action toggleVisibility target="view"}}>Cancel</a>
+            <a {{action toggleVisibility target="parentView"}}>Cancel</a>
           </div>
         </div>
       {{/view}} 
@@ -188,6 +188,11 @@
     if (post) {
       post.set('updatedAt', comment.createdAt)
       post.comments.pushObject(comment)
+
+      // TODO: do not know how to bind from Ember.JS
+      post.set('lastComment', function() {
+        return post;
+      })
     }
   });
 
