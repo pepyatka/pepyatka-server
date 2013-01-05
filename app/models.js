@@ -1,7 +1,8 @@
 var redis = require('../db')
   , db = redis.connect()
 
-exports.User = require('./models/user').add_model(db);
-exports.Post = require('./models/post').add_model(db);
-exports.Comment = require('./models/comment').add_model(db);
-exports.Timeline = require('./models/timeline').add_model(db);
+exports.User = require('./models/user').addModel(db);
+exports.Post = require('./models/post').addModel(db);
+exports.Comment = require('./models/comment').addModel(db);
+exports.Timeline = require('./models/timeline').addModel(db);
+exports.Attachment = require('./models/attachment').addModel(db);

@@ -16,7 +16,7 @@ exports.listen = function(server, connections) {
       socket.on('subscribe', function(data) {
         // TODO: can return just ID instead of entire record
         console.log('User ' + data.username + ' has connected')
-        models.User.find_by_username(data.username, function(user) {
+        models.User.findByUsername(data.username, function(user) {
           socket.userId = uuid.v4()
           connections[socket.userId] = socket
         })
@@ -25,9 +25,9 @@ exports.listen = function(server, connections) {
         pub = redis.createClient();
 
         sub.subscribe('destroyPost')
-        sub.on('message', function(channel, post_id) {
+        sub.on('message', function(channel, postId) {
           _.each(connections, function(socket) {
-            socket.emit('destroyPost', { postId: post_id })
+            socket.emit('destroyPost', { postId: postId })
           });
         })
       }),

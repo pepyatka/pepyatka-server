@@ -157,13 +157,13 @@ App.CommentsController = Ember.ArrayController.extend({
   createComment: function(post, body) {
     var comment = App.Comment.create({ 
       body: body,
-      post_id: post.id
+      postId: post.id
     });
     
     $.ajax({
       url: '/v1/comments',
       type: 'post',
-      data: { body: body, post_id: post.id }, // XXX: we've already defined a model above
+      data: { body: body, postId: post.id }, // XXX: we've already defined a model above
       context: comment,
       success: function(response) {
         this.setProperties(response);

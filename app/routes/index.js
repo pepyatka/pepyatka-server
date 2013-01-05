@@ -1,6 +1,6 @@
 var models = require('../models');
 
-exports.add_routes = function(app, connections) {
+exports.addRoutes = function(app, connections) {
   app.get('/', function(req, res) {
     res.render('./home')
   });

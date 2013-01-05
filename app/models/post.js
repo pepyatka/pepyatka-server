@@ -1,20 +1,19 @@
 var uuid = require('node-uuid')
   , models = require('../models')
-  , _ = require('underscore')
   , async = require('async')
 
-exports.add_model = function(db) {
+exports.addModel = function(db) {
   function Post(params) {
     console.log('new Post(' + params + ')')
     this.body = params.body
 
     // params to filter
     this.id = params.id
-    this.created_at = parseInt(params.created_at) || null
-    this.updated_at = parseInt(params.updated_at) || null
+    this.createdAt = parseInt(params.createdAt) || null
+    this.updatedAt = parseInt(params.updatedAt) || null
 
     // TODO: it needs to be an array not just a single value
-    this.imageId = params.imageId || null
+    this.imageId = params.imageId
     
     this.comments = params.comments || []
 
@@ -24,22 +23,21 @@ exports.add_model = function(db) {
     this.partial = false 
     this.commentsLength = null
 
-
-    this.user_id = params.user_id
+    this.userId = params.userId
     this.user = params.user
   }
 
-  Post.find = function(post_id, callback) {
-    console.log('Post.find("' + post_id + '")')
-    db.hgetall('post:' + post_id, function(err, attrs) {
+  Post.find = function(postId, callback) {
+    console.log('Post.find("' + postId + '")')
+    db.hgetall('post:' + postId, function(err, attrs) {
       // TODO: check if we find a post
-      attrs.id = post_id
+      attrs.id = postId
       var post = new Post(attrs)
 
       post.getLastComments(function(comments) {
         // TODO: switch comments and user selects
         post.comments = comments
-        models.User.find(attrs.user_id, function(user) {
+        models.User.find(attrs.userId, function(user) {
           post.user = user
           return callback(post)
         })
@@ -47,31 +45,32 @@ exports.add_model = function(db) {
     })
   }
 
-  Post.destroy = function(post_id, callback) {
-    console.log('Post.destroy("' + post_id + '")')
-    db.hget('post:' + post_id, 'user_id', function(err, user_id) {
+  Post.destroy = function(postId, callback) {
+    console.log('Post.destroy("' + postId + '")')
+    db.hget('post:' + postId, 'userId', function(err, userId) {
+      // TODO: async lib
       db.multi()
-        .zrem('timeline:' + user_id, post_id)
-        .del('post:' + post_id)
-        .del('post:' + post_id + ':comments')
+        .zrem('timeline:' + userId, postId)
+        .del('post:' + postId)
+        .del('post:' + postId + ':comments')
         .exec(function(err, res) { 
           callback(err, res)
         })
     })
   }
 
-  Post.bumpable = function(post_id, callback) {
+  Post.bumpable = function(postId, callback) {
     return callback(true);
   }
 
-  Post.addComment = function(post_id, comment_id, callback) {
-    console.log('Post.addComment("' + post_id + '", "' + comment_id + '")')
-    db.hget('post:' + post_id, 'user_id', function(err, user_id) {
-      db.rpush('post:' + post_id + ':comments', comment_id, function() {
+  Post.addComment = function(postId, commentId, callback) {
+    console.log('Post.addComment("' + postId + '", "' + commentId + '")')
+    db.hget('post:' + postId, 'userId', function(err, userId) {
+      db.rpush('post:' + postId + ':comments', commentId, function() {
         // Can we bump this post
-        Post.bumpable(post_id, function(bump) {
+        Post.bumpable(postId, function(bump) {
           if (bump) {
-            models.Timeline.updatePost(user_id, post_id, function() {
+            models.Timeline.updatePost(userId, postId, function() {
               return callback();
             })
           } else {
@@ -88,8 +87,8 @@ exports.add_model = function(db) {
       console.log('- post.getComments()')
       var that = this
       db.lrange('post:' + this.id + ':comments', 0, -1, function(err, comments) {
-        async.map(comments, function(comment_id, callback) {
-          models.Comment.find(comment_id, function(comment) {
+        async.map(comments, function(commentId, callback) {
+          models.Comment.find(commentId, function(comment) {
             callback(null, comment)
           })
         }, function(err, comments) {
@@ -126,17 +125,18 @@ exports.add_model = function(db) {
     save: function(callback) {
       console.log('- post.save()')
       var that = this
-      this.created_at = new Date().getTime()
-      this.updated_at = new Date().getTime()
+      this.createdAt = new Date().getTime()
+      this.updatedAt = new Date().getTime()
       if (this.id === undefined) this.id = uuid.v4()
 
       db.multi()
         .hset('post:' + this.id, 'body', this.body)
-        .hset('post:' + this.id, 'created_at', this.created_at)
-        .hset('post:' + this.id, 'user_id', this.user_id)
-        .hset('post:' + this.id, 'imageId', this.imageId)
+        .hset('post:' + this.id, 'createdAt', this.createdAt)
+        .hset('post:' + this.id, 'userId', this.userId)
+        // TODO: save if and only if imageId is not null
+        .hset('post:' + this.id, 'imageId', this.imageId) 
         .exec(function(err, res) {
-          models.Timeline.newPost(that.user_id, that.id, function() {
+          models.Timeline.newPost(that.userId, that.id, function() {
             return callback(that)
           })
         })
@@ -146,7 +146,7 @@ exports.add_model = function(db) {
       console.log('- post.toJSON()')
       var that = this;
       this.getComments(function(comments) {
-        models.User.find(that.user_id, function(user) {
+        models.User.find(that.userId, function(user) {
           async.map(comments, function(comment, callback) {
             comment.toJSON(function(json) {
               return callback(null, json)
@@ -155,8 +155,8 @@ exports.add_model = function(db) {
             user.toJSON(function(user) {
               return callback({ 
                 id: that.id,
-                createdAt: that.created_at,
-                updatedAt: that.updated_at,
+                createdAt: that.createdAt,
+                updatedAt: that.updatedAt,
                 body: that.body,
                 createdBy: user,
                 comments: commentsJSON,

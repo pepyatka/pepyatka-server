@@ -9,8 +9,8 @@ var home = require('./routes/index')
 var models = require('./models');
 
 var helpers = function(req, res, next) {
-  res.locals.logged_in = function() {
-    return req.session.user_id !== undefined
+  res.locals.loggedIn = function() {
+    return req.session.userId !== undefined
   };
 
   next();
@@ -22,9 +22,9 @@ var noJSONP = function(req, res, next) {
 }
 
 var findUser = function(req, res, next) {
-  if (req.session.user_id === undefined) {
-    models.User.anon(function(user_id) {
-      req.session.user_id = user_id;
+  if (req.session.userId === undefined) {
+    models.User.anon(function(userId) {
+      req.session.userId = userId;
       
       next()
     });
@@ -34,8 +34,8 @@ var findUser = function(req, res, next) {
 }
 
 var getUser = function(req, res, next) {
-  models.User.find(req.session.user_id, function(user) {
-    res.locals.current_user = user
+  models.User.find(req.session.userId, function(user) {
+    res.locals.currentUser = user
 
     next();
   })
@@ -44,12 +44,12 @@ var getUser = function(req, res, next) {
 module.exports = function(app, connections) {
   app.all('/*', helpers, findUser, getUser);
 
-  // user.add_routes(app);
-  // session.add_routes(app);
+  // user.addRoutes(app);
+  // session.addRoutes(app);
 
-  // In theory we can send just right socket based on a user session
-  home.add_routes(app, connections);
-  posts.add_routes(app, connections);
-  comments.add_routes(app, connections);
-  timeline.add_routes(app, connections);
+  // TODO: we do not need connection argument - we can get by with redis pub/sub
+  home.addRoutes(app, connections);
+  posts.addRoutes(app, connections);
+  comments.addRoutes(app, connections);
+  timeline.addRoutes(app, connections);
 };

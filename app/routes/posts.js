@@ -5,7 +5,7 @@ var models = require('../models')
   , uuid = require('node-uuid')
   , path = require('path')
 
-exports.add_routes = function(app, connections) {
+exports.addRoutes = function(app, connections) {
   app.get('/v1/posts/:postId', function(req, res) {
     models.Post.find(req.params.postId, function(post) {
       post.toJSON(function(json) {
@@ -17,7 +17,7 @@ exports.add_routes = function(app, connections) {
   app.post('/v1/posts', function(req, res){
     var savePost = function() {
       // create and save new post
-      newPost = res.locals.current_user.newPost(req.body)
+      newPost = res.locals.currentUser.newPost(req.body)
 
       newPost.save(function(post) {
         // Routes should know close to nothing about sockets. Only

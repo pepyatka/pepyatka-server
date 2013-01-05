@@ -1,8 +1,8 @@
 var models = require('../models');
 
-exports.add_routes = function(app, connections) {
+exports.addRoutes = function(app, connections) {
   app.get('/v1/timeline/:username', function(req, res){
-    models.User.find_by_username(req.params.username, function(user) {
+    models.User.findByUsername(req.params.username, function(user) {
       models.Timeline.find(user.id, function(timeline) {
         timeline.toJSON(function(json) {
           res.jsonp(json);

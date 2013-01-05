@@ -1,9 +1,9 @@
 var uuid = require('node-uuid')
   , models = require('../models');
 
-exports.add_model = function(db) {
+exports.addModel = function(db) {
   function User(params) {
-    console.log('new User(' + params + ')')
+    console.log('new User(' + JSON.stringify(params) + ')')
     this.username = params.username
     this.id = params.id
   }
@@ -12,17 +12,17 @@ exports.add_model = function(db) {
   User.anon = function(callback) {
     console.log('User.anon()')
     // init anonymous user if it doesn't exist yet
-    var user_id = uuid.v4();
+    var userId = uuid.v4();
 
     var returnAnon = function() {
-      User.find_by_username('anonymous', function(user) {
+      User.findByUsername('anonymous', function(user) {
         return callback(user.id);
       })
     }
 
-    db.setnx('username:anonymous:uid', user_id, function(err, res) {
+    db.setnx('username:anonymous:uid', userId, function(err, res) {
       if (res == 1) {
-        db.hsetnx('user:' + user_id, 'username', 'anonymous', function(err, res) {
+        db.hsetnx('user:' + userId, 'username', 'anonymous', function(err, res) {
           returnAnon()
         })
       } else {
@@ -31,23 +31,23 @@ exports.add_model = function(db) {
     })
   }
 
-  User.find_by_username = function(username, callback) {
-    console.log('User.find_by_username("' + username + '")')
-    db.get('username:' + username + ':uid', function (err, user_id) {
-      User.find(user_id, function(user) { 
+  User.findByUsername = function(username, callback) {
+    console.log('User.findByUsername("' + username + '")')
+    db.get('username:' + username + ':uid', function (err, userId) {
+      User.find(userId, function(user) { 
         return callback(user)
       })
     })  
   }
 
-  User.find = function(user_id, callback) {
-    console.log('User.find("' + user_id + '")')
-    db.hgetall('user:' + user_id, function(err, attrs) {
+  User.find = function(userId, callback) {
+    console.log('User.find("' + userId + '")')
+    db.hgetall('user:' + userId, function(err, attrs) {
       // Seems it's either deleted user or broken session. Redirect to
       // auth method
       if (attrs === null) attrs = {}
 
-      attrs.id = user_id
+      attrs.id = userId
       return callback(new User(attrs))
     })
   },
@@ -63,13 +63,13 @@ exports.add_model = function(db) {
     },
 
     newPost: function(attrs) {
-      attrs.user_id = this.id
+      attrs.userId = this.id
       
       return new models.Post(attrs)
     },
 
     newComment: function(attrs) {
-      attrs.user_id = this.id
+      attrs.userId = this.id
 
       return new models.Comment(attrs)
     },
