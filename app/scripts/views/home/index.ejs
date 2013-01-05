@@ -83,8 +83,16 @@
         </div>
     
         <ul class="unstyled comments">
-          {{view Ember.CollectionView contentBinding="comments"
-                 itemViewClass="App.CommentContainerView"}}
+          {{#if partial}}
+            {{view App.CommentContainerView contentBinding="firstComment"}}
+            <li class="media">
+              <a {{action showAllComments target="view"}}>{{skippedCommentsLength}} more comments</a>
+            </li>
+            {{view App.CommentContainerView contentBinding="lastComment"}}
+          {{else}}
+            {{view Ember.CollectionView contentBinding="comments"
+                   itemViewClass="App.CommentContainerView"}}
+          {{/if}}
         </ul>
     
         {{#view App.CommentForm}}

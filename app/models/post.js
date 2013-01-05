@@ -15,6 +15,13 @@ exports.add_model = function(db) {
     
     this.comments = params.comments || []
 
+    // if post has more than X comments, but json returns only a part
+    // of them. Would be nice to merge with comments structure.
+
+    this.partial = false 
+    this.commentsLength = null
+
+
     this.user_id = params.user_id
     this.user = params.user
   }
@@ -26,16 +33,14 @@ exports.add_model = function(db) {
       attrs.id = post_id
       var post = new Post(attrs)
 
-      var addAttributes = function(comments) {
+      post.getLastComments(function(comments) {
         // TODO: switch comments and user selects
         post.comments = comments
         models.User.find(attrs.user_id, function(user) {
           post.user = user
           return callback(post)
         })
-      }
-
-      post.getLastComments(addAttributes)
+      })
     })
   }
 
@@ -97,11 +102,13 @@ exports.add_model = function(db) {
       var that = this
       var commentsRecord = 'post:' + this.id + ':comments'
       db.llen(commentsRecord, function(err, len) {
-        if (len < 0) { // If there are more than 3 comments filter them
-          // We can just insert dummy comments like '...'
+        if (len > 3) { // If there are more than 3 comments filter them
+          // or we can just insert dummy comments like '...'
           db.lindex(commentsRecord, 0, function(err, firstComment) {
             db.lindex(commentsRecord, -1, function(err, lastComment) {
               var comments = [firstComment, lastComment]
+              that.partial = true
+              that.commentsLength = len
               return callback(comments)
             })
           })
@@ -148,7 +155,9 @@ exports.add_model = function(db) {
                 updatedAt: that.updated_at,
                 body: that.body,
                 createdBy: user,
-                comments: commentsJSON
+                comments: commentsJSON,
+                partial: that.partial,
+                commentsLength: that.commentsLength
               })
             })
           })

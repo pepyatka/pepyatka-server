@@ -45,6 +45,11 @@ App.PostContainerView = Ember.View.extend({
     var clone = this.$().clone();
     this.$().replaceWith(clone);
     clone.slideUp()
+  },
+
+  showAllComments: function() {
+    var comment = this.content
+    comment.set('partial', false)
   }
 });
 
@@ -153,11 +158,25 @@ App.Post = Ember.Object.extend({
   createdAt: null,
   updatedAt: null,
   comments: [],
+  commentsLength: 0,
   user: null,
 
   createdAgo: function() {
     return moment(this.get('createdAt')).fromNow();
-  }.property('createdAt')
+  }.property('createdAt'),
+
+  firstComment: function() {
+    return this.get('comments')[0]
+  }.property('comments'),
+
+  lastComment: function() {
+    var comments = this.get('comments')
+    return comments[comments.length-1]
+  }.property('comments'),
+
+  skippedCommentsLength: function() {
+    return this.get('commentsLength')-2 // display first and last comments only
+  }.property('commentsLength')
 });
 
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
