@@ -203,6 +203,10 @@
       post.set('lastComment', function() {
         return post;
       })
+
+      // TODO: do not know how to bind from Ember.JS.
+      var len = post.get('commentsLength')
+      post.set('commentsLength', len + 1)
     }
   });
 
