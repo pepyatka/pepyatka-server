@@ -1,9 +1,0 @@
-TODO list
-=========
-
-- user_id -> createdBy
-- name convention like create_by -> createdBy, user_id -> userId
-- do I really need underscore lib just because few methods?
-- load first and last comments with option to expand them all
-- ember data: https://github.com/emberjs/data?
-- migrate to hiredis

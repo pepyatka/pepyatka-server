@@ -6,10 +6,8 @@ exports.addRoutes = function(app, connections) {
     var newComment = res.locals.currentUser.newComment(req.body)
 
     newComment.save(function(comment) {
-      // Routes should know nothing about sockets. Only models can
-      // emit a message.
       comment.toJSON(function(json) { 
-        // XXX: can we do this with EventEmmiters?
+        // TODO: redis publish event instead
         _.each(connections, function(socket) {
           socket.emit('newComment', { comment: json })
         });

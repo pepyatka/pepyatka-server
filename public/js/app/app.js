@@ -199,7 +199,24 @@ App.Post = Ember.Object.extend({
 
   skippedCommentsLength: function() {
     return this.get('commentsLength')-2 // display first and last comments only
-  }.property('commentsLength')
+  }.property('commentsLength'),
+
+  firstThumbnailSrc: function() {
+    if (this.get('attachments') && this.get('attachments')[0]) {
+      return this.get('attachments')[0].thumbnail.path;
+    } else {
+      return false
+    }
+  }.property('attachments'),
+
+  firstImageSrc: function() {
+    if (this.get('attachments') && this.get('attachments')[0]) {
+      return this.get('attachments')[0].path;
+    } else {
+      return false
+    }
+  }.property('attachments')
+
 });
 
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
@@ -235,6 +252,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
       success: function(response) {
         this.setProperties(response);
         this.attachment = null
+        
         // We do not insert post right now, but wait for a socket event
         // App.postsController.insertAt(0, post)
       }

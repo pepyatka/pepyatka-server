@@ -80,7 +80,12 @@
       <div class="media-body post">
         <h5 class="media-heading author">{{createdBy.username}}</h5>
 
-        <div class="body">{{body}}</div>
+        <div class="body">
+          <div>{{body}}</div>
+          {{#if firstThumbnailSrc}}
+            <div><a {{bindAttr href="firstImageSrc"}}><img {{bindAttr src="firstThumbnailSrc"}} class="img-polaroid" /></a></div>
+          {{/if}}
+        </div>
 
         <div class="tagline">
           <a {{action showPost this href="true"}} class="datetime">

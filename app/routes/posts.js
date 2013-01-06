@@ -14,55 +14,94 @@ exports.addRoutes = function(app, connections) {
     })
   })
 
-  app.post('/v1/posts', function(req, res){
-    var savePost = function() {
-      // create and save new post
-      newPost = res.locals.currentUser.newPost(req.body)
+  app.post('/v1/posts', function(req, res) {
+    // creates and saves new post
+    newPost = res.locals.currentUser.newPost(req.body)
 
-      newPost.save(function(post) {
-        // Routes should know close to nothing about sockets. Only
-        // models can emit a message.
+    newPost.save(function(post) {
+      // process files
+      // TODO: extract to Post model
+      var attachment = req.body.attachment
+
+      if (attachment) {
+        var dataIndex = attachment['data'].indexOf('base64') + 7
+        var fileData = attachment['data'].slice(dataIndex)
+        var decodedFile = new Buffer(fileData, 'base64')
+        var filename = attachment['filename']
+        var ext = path.extname(filename || '').split('.');
+        ext = ext[ext.length - 1];
+        delete req.body['attachment']
+        
+        var thumbnailId = uuid.v4()
+        var thumbnailPath = './public/files/' + thumbnailId + '.' + ext
+        var thumbnailHttpPath = '/files/' + thumbnailId + '.' + ext
+
+        // TODO: currently it works only with images, must work with any
+        // type of uploaded files.
+        gm(decodedFile).format(function(err, value) {
+          if (err) {
+            console.log(err);
+            console.log(value);
+            res.jsonp({'error': 'not an image'})
+          } else {
+            gm(decodedFile, filename)
+              .resize('200', '200')
+              .write(thumbnailPath, function(err) {
+                if (err) {
+                  console.log(err);
+                  res.jsonp({'error': 'not an image'})
+                }
+                
+                var newThumbnail = new models.Attachment({
+                  'ext': ext,
+                  'filename': filename,
+                  'path': thumbnailHttpPath            
+                })
+                
+                newThumbnail.save(function(thumbnail) {
+                  var attachmentId = uuid.v4()
+                  var attachmentPath = './public/files/' + attachmentId + '.' + ext
+                  var attachmentHttpPath = '/files/' + attachmentId + '.' + ext
+                  
+                  var newAttachment = post.newAttachment({
+                    'ext': ext,
+                    'filename': filename,
+                    'path': attachmentHttpPath,
+                    'thumbnailId': thumbnail.id
+                  })
+
+                  newAttachment.save(function(attachment) {
+                    gm(decodedFile, filename)
+                      .write(attachmentPath, function(err) {
+                        if (err) throw err;
+                        
+                        post.attachments.push(attachment)
+                        
+                        post.toJSON(function(json) {
+                          // TODO: redis publish event instead
+                          _.each(connections, function(socket) {
+                            socket.emit('newPost', { post: json })
+                          });
+                          
+                          res.jsonp(json)
+                        })
+                      })
+                  })
+                })       
+              })
+          }
+        })
+      } else {
+        // TODO: this is a dup
         post.toJSON(function(json) {
+          // TODO: redis publish event instead
           _.each(connections, function(socket) {
             socket.emit('newPost', { post: json })
           });
           
           res.jsonp(json)
         })
-      })
-    }
-
-    // process files - extracte to Post model
-    var attachment = req.body.attachment
-
-    if (attachment) {
-      var dataIndex = attachment['data'].indexOf('base64') + 7
-      var fileData = attachment['data'].slice(dataIndex)
-      var decodedFile = new Buffer(fileData, 'base64')
-      var filename = attachment['filename']
-      var fileId = uuid.v4()
-
-      req.body['imageId'] = fileId
-      
-      var ext = path.extname(filename||'').split('.');
-      ext = ext[ext.length - 1];
-
-      delete req.body['attachment']
-
-      gm(decodedFile, filename)
-        .resize('200', '200')
-        .write('./public/files/' + fileId + '.' + ext, function(err) {
-          if (err) {
-            res.jsonp({'error': 'not an image'})
-            return console.log(err);
-          }
-
-          savePost()
-        })
-    } else {
-      // post without attachment
-      savePost()
-    }
-  ;
-          
-})}
+      }
+    })
+  })
+}

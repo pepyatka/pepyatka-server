@@ -68,6 +68,8 @@ exports.addModel = function(db) {
       return new models.Post(attrs)
     },
 
+    // XXX: do not like the design of this method. I'd say better to
+    // put it into Post model
     newComment: function(attrs) {
       attrs.userId = this.id
 

@@ -13,9 +13,11 @@ exports.addModel = function(db) {
     this.updatedAt = parseInt(params.updatedAt) || null
 
     // TODO: it needs to be an array not just a single value
-    this.imageId = params.imageId
+    // this.imageId = params.imageId
+    // attachments model
     
     this.comments = params.comments || []
+    this.attachments = params.attachments || []
 
     // if post has more than X comments, but json returns only a part
     // of them. Would be nice to merge with comments structure.
@@ -39,7 +41,12 @@ exports.addModel = function(db) {
         post.comments = comments
         models.User.find(attrs.userId, function(user) {
           post.user = user
-          return callback(post)
+
+          post.getAttachments(function(attachments) {
+            post.attachments = attachments
+
+            return callback(post)
+          })
         })
       })
     })
@@ -81,7 +88,29 @@ exports.addModel = function(db) {
     })
   }
 
+  Post.addAttachment = function(postId, attachmentId, callback) {
+    console.log('Post.addAttachment("' + postId + '", "' + attachmentId + '")')
+
+    db.rpush('post:' + postId + ':attachments', attachmentId, function() {
+      return callback();
+    })
+  }
+
   Post.prototype = {
+    getAttachments: function(callback) {
+      console.log('- post.getAttachments()')
+      var that = this
+      db.lrange('post:' + this.id + ':attachments', 0, -1, function(err, attachments) {
+        async.map(attachments, function(attachmentId, callback) {
+          models.Attachment.find(attachmentId, function(attachment) {
+            callback(null, attachment)
+          })
+        }, function(err, attachments) {
+          callback(attachments)
+        })
+      })
+    },
+
     // Return all comments
     getComments: function(callback) {
       console.log('- post.getComments()')
@@ -133,13 +162,18 @@ exports.addModel = function(db) {
         .hset('post:' + this.id, 'body', this.body)
         .hset('post:' + this.id, 'createdAt', this.createdAt)
         .hset('post:' + this.id, 'userId', this.userId)
-        // TODO: save if and only if imageId is not null
-        .hset('post:' + this.id, 'imageId', this.imageId) 
         .exec(function(err, res) {
           models.Timeline.newPost(that.userId, that.id, function() {
             return callback(that)
           })
         })
+    },
+
+    newAttachment: function(attrs) {
+      console.log('- post.newAttachment()')
+      attrs.postId = this.id
+      
+      return new models.Attachment(attrs)
     },
 
     toJSON: function(callback) {
@@ -152,18 +186,24 @@ exports.addModel = function(db) {
               return callback(null, json)
             })
           }, function(err, commentsJSON) {
-            user.toJSON(function(user) {
-              return callback({ 
-                id: that.id,
-                createdAt: that.createdAt,
-                updatedAt: that.updatedAt,
-                body: that.body,
-                createdBy: user,
-                comments: commentsJSON,
-                // TODO: if partial is false do not send commentsLength attribute
-                partial: that.partial, 
-                commentsLength: that.commentsLength,
-                imageId: that.imageId
+            async.map(that.attachments, function(attachment, callback) {
+              attachment.toJSON(function(json) {
+                return callback(null, json)
+              })
+            }, function(err, attachmentsJSON) {
+              user.toJSON(function(user) {
+                return callback({ 
+                  id: that.id,
+                  createdAt: that.createdAt,
+                  updatedAt: that.updatedAt,
+                  body: that.body,
+                  createdBy: user,
+                  comments: commentsJSON,
+                  // TODO: if partial is false do not send commentsLength attribute
+                  partial: that.partial, 
+                  commentsLength: that.commentsLength,
+                  attachments: attachmentsJSON
+                })
               })
             })
           })
