@@ -62,3 +62,7 @@ footer {
     font-size: 10px;
     color: #aaa;
 }
+
+.container .submitForm {
+    margin: 0 0 8px 0;
+}

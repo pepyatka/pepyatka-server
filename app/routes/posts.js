@@ -40,9 +40,17 @@ exports.addRoutes = function(app, connections) {
         // type of uploaded files.
         gm(decodedFile).format(function(err, value) {
           if (err) {
-            console.log(err);
-            console.log(value);
-            res.jsonp({'error': 'not an image'})
+            // TODO: this is a dup
+            post.toJSON(function(json) {
+              // TODO: redis publish event instead
+              _.each(connections, function(socket) {
+                socket.emit('newPost', { post: json })
+              });
+              
+              res.jsonp(json)
+            })
+
+            //res.jsonp({'error': 'not an image'})
           } else {
             gm(decodedFile, filename)
               .resize('200', '200')

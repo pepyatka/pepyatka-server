@@ -1,0 +1,3 @@
+[submodule "vendor/emberjs-bootstrap"]
+	path = vendor/emberjs-bootstrap
+	url = git://github.com/emberjs-addons/ember-bootstrap.git

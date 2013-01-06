@@ -7,7 +7,7 @@ App.ApplicationController = Ember.Controller.extend();
 
 // Index view to display all posts on the page
 App.PostsView = Ember.View.extend({
-  templateName: 'post-list-view'
+  templateName: 'post-list-view',
 });
 
 // Create new post text field. Separate view to be able to bind events
@@ -39,11 +39,21 @@ App.UploadFileView = Ember.TextField.extend({
     if (input.files && input.files[0]) {
       var file = input.files[0]
       var reader = new FileReader();
+      var that = this
+
+      App.postsController.set('isProgressBarHidden', 'visible')
+
+      reader.onprogress = function(e) {
+        App.postsController.set('progress', e.loaded / e.total * 100)
+      }
 
       reader.onload = function(e) {
+        App.postsController.set('isProgressBarHidden', 'hidden')
+        App.postsController.set('progress', 100)
         App.postsController.set('attachment', {'filename': file.name, 
                                                'data': e.target.result})
       }
+
       reader.readAsDataURL(file);
     }
   }
@@ -87,6 +97,8 @@ App.CommentContainerView = Ember.View.extend({
 // Create new post text field. Separate view to be able to bind events
 App.CommentPostView = Ember.View.extend(Ember.TargetActionSupport, {
   tagName: "a",
+
+  // valueBinding: 'App.postsController.loading', 
 
   click: function() {
     this.triggerAction();
@@ -222,6 +234,8 @@ App.Post = Ember.Object.extend({
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
   content: [],
   body: '',
+  isLoading: false,
+  isProgressBarHidden: 'hidden',
 
   sortProperties: ['updatedAt'],
   sortAscending: false,
@@ -240,6 +254,8 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
   },
 
   createPost: function(body) {
+    this.loading = true
+
     var post = App.Post.create({ 
       body: body
     });
@@ -252,6 +268,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
       success: function(response) {
         this.setProperties(response);
         this.attachment = null
+        this.loading = false
         
         // We do not insert post right now, but wait for a socket event
         // App.postsController.insertAt(0, post)

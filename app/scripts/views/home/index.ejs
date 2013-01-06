@@ -6,6 +6,7 @@
 <script src="/js/libs/handlebars-1.0.rc.1.js"></script>
 <script src="/js/libs/bootstrap.min.js"></script>
 <script src="/js/libs/ember-1.0.0-pre.2.js"></script>
+<script src="/js/libs/ember-bootstrap.prod.js"></script>
 <script src="/js/libs/bootstrap.file-input.js"></script>
 
 <!-- script src="/js/libs/jquery.ui.widget.js"></script>
@@ -30,7 +31,7 @@
 </script>
 
 <script type="text/x-handlebars" data-template-name="post-list-view">
-  <div class="clearfix">
+  <div class="clearfix submitForm">
     <div>
       {{view App.CreatePostView target="App.postsController" action="submitPost"
             class="span7"}}
@@ -41,6 +42,11 @@
     <div class="pull-right">
       <button {{action submitPost target="App.postsController"}} class="btn pull-right">Post</button>
     </div>
+  </div>
+
+  <div id="progressBar" {{bindAttr class="App.postsController.isProgressBarHidden"}}>
+    {{view Bootstrap.ProgressBar isStriped=true isAnimated=true 
+        progressBinding="App.postsController.progress"}}
   </div>
 
   <ul class="media-list">
