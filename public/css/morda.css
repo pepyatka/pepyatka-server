@@ -41,11 +41,11 @@ script {
     font-size: 13px;
 }
 .post .comments li {
-    line-height: 14px;
+    line-height: 15px;
     margin-bottom: 6px;
 }
 .post .comments .media {
-    margin: 4px 0 7px 0;
+    margin: 4px 0 5px 0;
 }
 .post .comments .more-comments {
     font-style: italic;

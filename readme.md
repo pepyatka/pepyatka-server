@@ -16,12 +16,12 @@ Database
 
 > timeline:<timeline_id> ( <post_id>:<timestamp> <post_id>:<timestamp> ) # not implemented yet - TBD
 
-> attachment:<attachment_id> { filename, extension, path }
+> attachment:<attachment_id> { filetype, filename, extension, path, [thumbnail_id] }
 
 API
 ---
 
-GET /v1/timeline/<userId>
+GET /v1/timeline/<username>
 GET /v1/posts/<postId>
 POST /v1/posts
 POST /v1/comments
