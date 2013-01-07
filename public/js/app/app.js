@@ -41,14 +41,14 @@ App.UploadFileView = Ember.TextField.extend({
       var reader = new FileReader();
       var that = this
 
-      App.postsController.set('isProgressBarHidden', 'visible')
+      // App.postsController.set('isProgressBarHidden', 'visible')
 
-      reader.onprogress = function(e) {
-        App.postsController.set('progress', e.loaded / e.total * 100)
-      }
+      // reader.onprogress = function(e) {
+      //   App.postsController.set('progress', e.loaded / e.total * 100)
+      // }
 
       reader.onload = function(e) {
-        App.postsController.set('isProgressBarHidden', 'hidden')
+        // App.postsController.set('isProgressBarHidden', 'hidden')
         App.postsController.set('progress', 100)
         App.postsController.set('attachment', {'filename': file.name, 
                                                'data': e.target.result})
@@ -242,8 +242,9 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
   sortProperties: ['updatedAt'],
   sortAscending: false,
 
-  // XXX: a bit strange having this method here.
+  // XXX: a bit strange having this method here?
   submitPost: function() {
+    // TODO: Clear file upload field
     if (this.body) {
       App.postsController.createPost(this.body);
       this.set('body', '')

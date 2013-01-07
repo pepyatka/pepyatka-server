@@ -40,7 +40,7 @@ script {
 .post .tagline .datetime {
     color: #666;
 }
-.post .tagline, .post .comments, .post .comments .author {
+.post .tagline, .post .comments, .post .comments .author, .a-post .comments .author {
     font-size: 13px;
 }
 .post .comments li {
