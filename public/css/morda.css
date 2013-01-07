@@ -34,6 +34,9 @@ script {
     margin-bottom: 0;
     font-size: 14px;
 }
+.post .body .image {
+    margin: 3px 0;
+}
 .post .tagline .datetime {
     color: #666;
 }
@@ -65,4 +68,12 @@ footer {
 
 .container .submitForm {
     margin: 0 0 8px 0;
+}
+
+.a-post .post .body .text, .a-post .post .author {
+    font-size: 21px;
+    line-height: normal;
+}
+.a-post .post .author {
+    margin: 0 0 3px 0;
 }

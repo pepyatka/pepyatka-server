@@ -87,9 +87,9 @@
         <h5 class="media-heading author">{{createdBy.username}}</h5>
 
         <div class="body">
-          <div>{{body}}</div>
+          <div class="text">{{body}}</div>
           {{#if firstThumbnailSrc}}
-            <div><a {{bindAttr href="firstImageSrc"}}><img {{bindAttr src="firstThumbnailSrc"}} class="img-polaroid" /></a></div>
+            <div class="image"><a {{bindAttr href="firstImageSrc"}}><img {{bindAttr src="firstThumbnailSrc"}} class="img-polaroid" /></a></div>
           {{/if}}
         </div>
 
@@ -135,20 +135,18 @@
 </script>
 
 <script type="text/x-handlebars" data-template-name="a-post">
-  <p><a {{action showAllPosts}}>All posts</a></p>
-    
-  <div class="media">
+  <div class="media a-post">
     <div class="pull-left">
-      <img class="media-object" src="/img/48x48.png">
+      <img class="media-object" src="/img/64x64.png">
     </div>
     
     <div class="media-body post">
       <h5 class="media-heading author">{{createdBy.username}}</h5>
     
       <div class="body">
-        <div>{{body}}</div>
+        <div class="text">{{body}}</div>
         {{#if firstThumbnailSrc}}
-          <div><a {{bindAttr href="firstImageSrc"}}><img {{bindAttr src="firstThumbnailSrc"}} class="img-polaroid" /></a></div>
+          <div class="image"><a {{bindAttr href="firstImageSrc"}}><img {{bindAttr src="firstThumbnailSrc"}} class="img-polaroid" /></a></div>
         {{/if}}
       </div>
     
