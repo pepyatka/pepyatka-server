@@ -197,7 +197,9 @@ App.Post = Ember.Object.extend({
   user: null,
 
   createdAgo: function() {
-    return moment(this.get('createdAt')).fromNow();
+    if (this.get('createdAt')) {
+      return moment(this.get('createdAt')).fromNow();
+    }
   }.property('createdAt'),
 
   firstComment: function() {

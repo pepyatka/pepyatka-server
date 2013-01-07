@@ -95,7 +95,7 @@
 
         <div class="tagline">
           <a {{action showPost this href="true"}} class="datetime">
-            <time datetime="{{createdAt}}">{{createdAgo}}</time>
+            <time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>
           </a>
           -
           {{#view App.CommentPostView target="parentView" action="toggleVisibility"}}
@@ -154,7 +154,7 @@
     
       <div class="tagline">
         <a {{action showPost this}} class="datetime">
-          <time>{{createdAt}}</time>
+          <time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>
         </a>
         -
         {{#view App.CommentPostView target="parentView" action="toggleVisibility"}}

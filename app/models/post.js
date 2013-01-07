@@ -59,7 +59,8 @@ exports.addModel = function(db) {
       db.multi()
         .zrem('timeline:' + userId, postId)
         .del('post:' + postId)
-        .del('post:' + postId + ':comments')
+        .del('post:' + postId + ':comments') // TODO: delete comments
+        .del('post:' + postId + ':attachments') // TODO: detele attachments
         .exec(function(err, res) { 
           callback(err, res)
         })
