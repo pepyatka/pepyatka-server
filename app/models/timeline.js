@@ -82,6 +82,7 @@ exports.addModel = function(db) {
       console.log("- timeline.toJSON()")
       var that = this;
 
+      // TODO: async.parallel([], function() { ... })
       async.map(this.posts, function(postId, callback) {
         models.Post.find(postId, function(post) {
           post.toJSON(function(json) {

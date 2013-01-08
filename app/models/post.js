@@ -181,6 +181,7 @@ exports.addModel = function(db) {
     toJSON: function(callback) {
       console.log('- post.toJSON()')
       var that = this;
+      // TODO: async.parallel([], function() { ... })
       this.getComments(function(comments) {
         models.User.find(that.userId, function(user) {
           async.map(comments, function(comment, callback) {
