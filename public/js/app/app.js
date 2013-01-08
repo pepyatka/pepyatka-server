@@ -8,6 +8,11 @@ App.ApplicationController = Ember.Controller.extend();
 // Index view to display all posts on the page
 App.PostsView = Ember.View.extend({
   templateName: 'post-list-view',
+
+  submitPost: function() {
+    this.$().find('.file-input-name').html('')
+    App.postsController.submitPost()
+  }
 });
 
 // Create new post text field. Separate view to be able to bind events
@@ -39,7 +44,6 @@ App.UploadFileView = Ember.TextField.extend({
     if (input.files && input.files[0]) {
       var file = input.files[0]
       var reader = new FileReader();
-      var that = this
 
       // App.postsController.set('isProgressBarHidden', 'visible')
 
@@ -244,7 +248,6 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
 
   // XXX: a bit strange having this method here?
   submitPost: function() {
-    // TODO: Clear file upload field
     if (this.body) {
       App.postsController.createPost(this.body);
       this.set('body', '')

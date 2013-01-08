@@ -33,14 +33,14 @@
 <script type="text/x-handlebars" data-template-name="post-list-view">
   <div class="clearfix submitForm">
     <div>
-      {{view App.CreatePostView target="App.postsController" action="submitPost"
+      {{view App.CreatePostView target="parentView" action="submitPost"
             class="span7"}}
     </div>
     <div class="pull-left">
-      Add image: {{view App.UploadFileView name="image" contentBinding="content"}}
+      Add image: {{view App.UploadFileView name="image"}}
     </div>
     <div class="pull-right">
-      <button {{action submitPost target="App.postsController"}} class="btn pull-right">Post</button>
+      <button {{action submitPost target="view"}} class="btn pull-right">Post</button>
     </div>
   </div>
 
