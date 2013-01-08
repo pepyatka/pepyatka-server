@@ -36,6 +36,7 @@ exports.addModel = function(db) {
 
       if (this.id === undefined) this.id = uuid.v4()
 
+      // TODO: async.parallel([], function() { ... })
       db.multi()
         .hset('attachment:' + this.id, 'ext', this.ext)
         .hset('attachment:' + this.id, 'filename', this.filename)

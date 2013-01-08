@@ -55,7 +55,7 @@ exports.addModel = function(db) {
   Post.destroy = function(postId, callback) {
     console.log('Post.destroy("' + postId + '")')
     db.hget('post:' + postId, 'userId', function(err, userId) {
-      // TODO: async lib
+      // TODO: async.parallel([], function() { ... })
       db.multi()
         .zrem('timeline:' + userId, postId)
         .del('post:' + postId)
@@ -159,6 +159,7 @@ exports.addModel = function(db) {
       this.updatedAt = new Date().getTime()
       if (this.id === undefined) this.id = uuid.v4()
 
+      // TODO: async.parallel([], function() { ... })
       db.multi()
         .hset('post:' + this.id, 'body', this.body)
         .hset('post:' + this.id, 'createdAt', this.createdAt)

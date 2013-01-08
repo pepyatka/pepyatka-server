@@ -45,6 +45,7 @@ exports.addModel = function(db) {
           that.createdAt = new Date().getTime()
           if (that.id === undefined) that.id = uuid.v4()
 
+          // TODO: async.parallel([], function() { ... })
           db.multi()
             .hset('comment:' + that.id, 'body', that.body)
             .hset('comment:' + that.id, 'createdAt', that.createdAt)
