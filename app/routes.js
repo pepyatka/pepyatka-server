@@ -29,7 +29,8 @@ var findUser = function(req, res, next) {
       next()
     });
   } else {
-    // TODO: this could be a broken session
+    // TODO: check this could be a broken session
+
     next()
   }
 }
@@ -39,6 +40,7 @@ var getUser = function(req, res, next) {
     if (user) {
       res.locals.currentUser = user
     } else {
+      delete req.session.userId
       // ... redirect to auth page
     }
 

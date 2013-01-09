@@ -102,8 +102,6 @@ App.CommentContainerView = Ember.View.extend({
 App.CommentPostView = Ember.View.extend(Ember.TargetActionSupport, {
   tagName: "a",
 
-  // valueBinding: 'App.postsController.loading', 
-
   click: function() {
     this.triggerAction();
   }
@@ -240,7 +238,6 @@ App.Post = Ember.Object.extend({
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
   content: [],
   body: '',
-  isLoading: false,
   isProgressBarHidden: 'hidden',
 
   sortProperties: ['updatedAt'],
@@ -260,7 +257,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
   },
 
   createPost: function(body) {
-    this.loading = true
+    App.postsController.set('isProgressBarHidden', 'visible')
 
     var post = App.Post.create({
       body: body
@@ -272,26 +269,59 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
     });
     data.append('body', $('.submitForm textarea')[0].value) // XXX: dirty!
 
-    $.ajax({
-      url: '/v1/posts',
-      type: 'post',
-      data: data,
-      cache: false,
-      contentType: false,
-      processData: false,      
-      context: post,
-      success: function(response) {
-        this.setProperties(response);
-        this.attachment = null
-        this.loading = false
-        
-        // We do not insert post right now, but wait for a socket event
-        // App.postsController.insertAt(0, post)
-      },
-      error: function(response) {
-        console.log(response)
+    var xhr = new XMLHttpRequest();
+				
+    // Progress listerner.
+    xhr.upload.addEventListener("progress", function (evt) {
+
+      if (evt.lengthComputable) {
+	var percentComplete = Math.round(evt.loaded * 100 / evt.total);
+        console.log(percentComplete)
+        App.postsController.set('progress', percentComplete)
+      } else {
+        // unable to compute
       }
-    })
+    }, false);
+
+    // On finished.
+    xhr.addEventListener("load", function (evt) {
+      // var obj = $.parseJSON(evt.target.responseText);
+      // TODO: bind properties
+      App.postsController.set('progress', '100')
+      App.postsController.set('isProgressBarHidden', 'hidden')
+    }, false);
+
+    // On failed.
+    xhr.addEventListener("error", function (evt) {
+      App.postsController.set('isProgressBarHidden', 'hidden')
+    }, false);
+
+    // On cancel.
+    xhr.addEventListener("abort", function (evt) {
+      App.postsController.set('isProgressBarHidden', 'hidden')
+    }, false);
+
+    xhr.open("post", "/v1/posts");
+    xhr.send(data);
+
+    // $.ajax({
+    //   url: '/v1/posts',
+    //   type: 'post',
+    //   data: data,
+    //   cache: false,
+    //   contentType: false,
+    //   processData: false,      
+    //   context: post,
+    //   success: function(response) {
+    //     this.setProperties(response);
+    //     this.attachment = null
+    //     this.loading = false
+    //     // We do not insert post right now, but wait for a socket event
+    //     // App.postsController.insertAt(0, post)
+    //   }
+    // })
+
+    // ???
     return post;
   },
 
