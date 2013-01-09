@@ -1,10 +1,6 @@
 a {
     cursor: pointer;
-}
-
-.container {
-    margin: 0 auto;
-    max-width: 700px;
+    color: #000088;
 }
 
 hr {
@@ -14,6 +10,11 @@ hr {
 script {
     margin: 0;
     padding: 0;
+}
+
+.container {
+    margin: 0 auto;
+    max-width: 700px;
 }
 
 .container input.input-tiny[type="text"] {
@@ -34,6 +35,15 @@ script {
     margin-bottom: 0;
     font-size: 14px;
 }
+.post .author a {
+    color: #000088;
+}
+.post a, .post .comments .author a {
+    color: #555599;
+}
+.post .body .text {
+    color: #000
+}
 .post .body .image {
     margin: 3px 0;
 }
@@ -42,6 +52,9 @@ script {
 }
 .post .tagline, .post .comments, .post .comments .author {
     font-size: 13px;
+}
+.post .comments {
+    color: #666;
 }
 .post .comments li {
     line-height: 15px;
