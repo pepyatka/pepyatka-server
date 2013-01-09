@@ -34,7 +34,7 @@ app.configure(function() {
   app.use(express.logger('dev'));
 
   app.use(express.bodyParser({
-    uploadDir: __dirname + './tmp',
+    uploadDir: __dirname + '/tmp',
     keepExtensions: true
   }))
   app.use(express.limit('50mb'));

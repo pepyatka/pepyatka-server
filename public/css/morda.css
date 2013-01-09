@@ -38,7 +38,8 @@ script {
 .post .author a {
     color: #000088;
 }
-.post a, .post .comments .author a {
+.post .tagline a, .post .text a, .post .comments .author a,
+  .post .comments .more-comments a {
     color: #555599;
 }
 .post .body .text {
@@ -65,6 +66,7 @@ script {
 }
 .post .comments .more-comments {
     font-style: italic;
+    padding: 3px 0 3px 20px;
 }
 .post .comments .pull-left {
     margin-right: 4px;
@@ -72,6 +74,9 @@ script {
 
 .comment-form {
     font-size: 13px;
+}
+.comment-form a {
+    color: #000088;
 }
 
 footer {

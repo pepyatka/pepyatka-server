@@ -43,7 +43,7 @@ App.UploadFileView = Ember.TextField.extend({
 
     if (input.files && input.files[0]) {
       var file = input.files[0]
-      var reader = new FileReader();
+      // var reader = new FileReader();
 
       // App.postsController.set('isProgressBarHidden', 'visible')
 
@@ -51,14 +51,14 @@ App.UploadFileView = Ember.TextField.extend({
       //   App.postsController.set('progress', e.loaded / e.total * 100)
       // }
 
-      reader.onload = function(e) {
-        // App.postsController.set('isProgressBarHidden', 'hidden')
-        App.postsController.set('progress', 100)
-        App.postsController.set('attachment', {'filename': file.name, 
-                                               'data': e.target.result})
-      }
+      // reader.onload = function(e) {
+      //   // App.postsController.set('isProgressBarHidden', 'hidden')
+      //   App.postsController.set('progress', 100)
+      //   App.postsController.set('attachment', {'filename': file.name, 
+      //                                          'data': e.target.result})
+      // }
 
-      reader.readAsDataURL(file);
+      // reader.readAsDataURL(file);
     }
   }
 });
@@ -262,14 +262,23 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
   createPost: function(body) {
     this.loading = true
 
-    var post = App.Post.create({ 
+    var post = App.Post.create({
       body: body
     });
+
+    var data = new FormData();
+    $.each($('input[type="file"]')[0].files, function(i, file) {
+      data.append('file-'+i, file);
+    });
+    data.append('body', $('.submitForm textarea')[0].value) // XXX: dirty!
 
     $.ajax({
       url: '/v1/posts',
       type: 'post',
-      data: { body: body, attachment: this.attachment }, // XXX: we've already defined a model above
+      data: data,
+      cache: false,
+      contentType: false,
+      processData: false,      
       context: post,
       success: function(response) {
         this.setProperties(response);
@@ -278,6 +287,9 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
         
         // We do not insert post right now, but wait for a socket event
         // App.postsController.insertAt(0, post)
+      },
+      error: function(response) {
+        console.log(response)
       }
     })
     return post;

@@ -29,13 +29,18 @@ var findUser = function(req, res, next) {
       next()
     });
   } else {
+    // TODO: this could be a broken session
     next()
   }
 }
 
 var getUser = function(req, res, next) {
   models.User.find(req.session.userId, function(user) {
-    res.locals.currentUser = user
+    if (user) {
+      res.locals.currentUser = user
+    } else {
+      // ... redirect to auth page
+    }
 
     next();
   })
