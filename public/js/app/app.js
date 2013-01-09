@@ -257,11 +257,8 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
   },
 
   createPost: function(body) {
+    // TODO: bind to progress property
     App.postsController.set('isProgressBarHidden', 'visible')
-
-    var post = App.Post.create({
-      body: body
-    });
 
     var data = new FormData();
     $.each($('input[type="file"]')[0].files, function(i, file) {
@@ -304,25 +301,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
     xhr.open("post", "/v1/posts");
     xhr.send(data);
 
-    // $.ajax({
-    //   url: '/v1/posts',
-    //   type: 'post',
-    //   data: data,
-    //   cache: false,
-    //   contentType: false,
-    //   processData: false,      
-    //   context: post,
-    //   success: function(response) {
-    //     this.setProperties(response);
-    //     this.attachment = null
-    //     this.loading = false
-    //     // We do not insert post right now, but wait for a socket event
-    //     // App.postsController.insertAt(0, post)
-    //   }
-    // })
-
-    // ???
-    return post;
+    return this
   },
 
   findAll: function() {
