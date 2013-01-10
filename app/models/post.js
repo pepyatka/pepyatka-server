@@ -193,16 +193,18 @@ exports.addModel = function(db) {
       this.updatedAt = new Date().getTime()
       if (this.id === undefined) this.id = uuid.v4()
 
-      // TODO: async.parallel([], function() { ... })
-      db.multi()
-        .hset('post:' + this.id, 'body', this.body)
-        .hset('post:' + this.id, 'createdAt', this.createdAt)
-        .hset('post:' + this.id, 'userId', this.userId)
-        .exec(function(err, res) {
-          models.Timeline.newPost(that.userId, that.id, function() {
-            return callback(that)
-          })
-        })
+      db.hmset('post:' + this.id.toString(),
+               { 'body': this.body.toString(),
+                 'createdAt': this.createdAt.toString(),
+                 'userId': this.userId.toString()
+               }, function(err, res) {
+                 console.log('!!!')
+                 console.log(err)
+                 console.log(res)
+                 models.Timeline.newPost(that.userId, that.id, function() {
+                   return callback(that)
+                 })
+               })
     },
 
     newAttachment: function(attrs) {
@@ -215,7 +217,7 @@ exports.addModel = function(db) {
     toJSON: function(callback) {
       console.log('- post.toJSON()')
       var that = this;
-      // TODO: async.parallel([], function() { ... })
+
       this.getComments(function(comments) {
         models.User.find(that.userId, function(user) {
           async.map(comments, function(comment, callback) {

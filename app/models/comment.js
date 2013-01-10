@@ -51,17 +51,16 @@ exports.addModel = function(db) {
           that.createdAt = new Date().getTime()
           if (that.id === undefined) that.id = uuid.v4()
 
-          // TODO: async.parallel([], function() { ... })
-          db.multi()
-            .hset('comment:' + that.id, 'body', that.body)
-            .hset('comment:' + that.id, 'createdAt', that.createdAt)
-            .hset('comment:' + that.id, 'userId', that.userId)
-            .hset('comment:' + that.id, 'postId', that.postId)
-            .exec(function(err, res) {
-              models.Post.addComment(that.postId, that.id, function() {
-                return callback(that)
-              }) 
-            })
+          db.hmset('comment:' + that.id.toString(), 
+                   { 'body': that.body.toString(),
+                     'createdAt': that.createdAt.toString(),
+                     'userId': that.userId.toString(),
+                     'postId': that.postId.toString()
+                   }, function(err, res) {
+                     models.Post.addComment(that.postId, that.id, function() {
+                       return callback(that)
+                     })
+                   })
         } else {
           // TODO: pass res=0 argument to the next block
           callback()
