@@ -58,15 +58,14 @@ script {
     color: #666;
 }
 .post .comments li {
-    line-height: 15px;
-    margin-bottom: 6px;
+    line-height: 16px;
 }
 .post .comments .media {
-    margin: 4px 0 5px 0;
+    margin: 5px 0 7px 0;
 }
 .post .comments .more-comments {
     font-style: italic;
-    padding: 3px 0 3px 20px;
+    margin: 3px 0 7px 20px;
 }
 .post .comments .pull-left {
     margin-right: 4px;
