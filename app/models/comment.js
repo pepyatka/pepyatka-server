@@ -43,7 +43,7 @@ exports.addModel = function(db) {
   Comment.prototype = {
     save: function(callback) {
       var that = this
-      // User us allowed to create a comment if and only if its
+      // User is allowed to create a comment if and only if its
       // post is created and exists.
       db.exists('post:' + this.postId, function(err, res) {
         // post exists
