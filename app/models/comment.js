@@ -32,6 +32,14 @@ exports.addModel = function(db) {
     })
   }
 
+  // TODO: commentId -> commentsId
+  Comment.destroy = function(commentId, callback) {
+    console.log('Comment.destroy("' + commentId + '")')
+    db.del('comment:' + commentId, function(err, res) {
+      callback(err, res)
+    })
+  }
+
   Comment.prototype = {
     save: function(callback) {
       var that = this

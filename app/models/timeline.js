@@ -3,7 +3,7 @@ var models = require('../models')
   , redis = require('redis')
 
 exports.addModel = function(db) {
-  var POSTS = 10
+  var POSTS = 1
 
   // User may have one or more timelines. Each timeline is a sorted
   // set. User must has one required timeline which is river of news.
@@ -12,7 +12,7 @@ exports.addModel = function(db) {
     var that = this;
     this.userId = params.userId
 
-    db.zrevrange('timeline:' + this.userId, 0, POSTS, function(err, posts) {
+    db.zrevrange('timeline:' + this.userId, 0, POSTS-1, function(err, posts) {
       that.posts = posts
       callback(that)
     })

@@ -22,8 +22,8 @@ exports.addModel = function(db) {
     // if post has more than X comments, but json returns only a part
     // of them. Would be nice to merge with comments structure.
 
-    this.partial = false 
-    this.commentsLength = null
+    // this.partial = false 
+    // this.commentsLength = null
 
     this.userId = params.userId
     this.user = params.user
@@ -36,7 +36,7 @@ exports.addModel = function(db) {
       attrs.id = postId
       var post = new Post(attrs)
 
-      post.getLastComments(function(comments) {
+      post.getComments(function(comments) {
         // TODO: switch comments and user selects
         post.comments = comments
         models.User.find(attrs.userId, function(user) {
@@ -54,16 +54,50 @@ exports.addModel = function(db) {
 
   Post.destroy = function(postId, callback) {
     console.log('Post.destroy("' + postId + '")')
-    db.hget('post:' + postId, 'userId', function(err, userId) {
-      // TODO: async.parallel([], function() { ... })
-      db.multi()
-        .zrem('timeline:' + userId, postId)
-        .del('post:' + postId)
-        .del('post:' + postId + ':comments') // TODO: delete comments
-        .del('post:' + postId + ':attachments') // TODO: detele attachments
-        .exec(function(err, res) { 
-          callback(err, res)
-        })
+
+    models.Post.find(postId, function(post) {
+      async.parallel([
+        // remove post from timeline
+        function(callback) { 
+          db.zrem('timeline:' + post.userId, postId, function(err, res) {
+            callback(err, res)
+          }) 
+        }
+        // delete comments
+        , function(callback) {
+          // delete all comments asynchroniously
+          async.forEach(post.comments, function(comment, callback) {
+            models.Comment.destroy(comment.id, function(err, res) {
+              callback(err, res)
+            })
+          }, function(err) {
+            db.del('post:' + post.id + ':comments', function(err, res) {
+              callback()
+            })
+          })
+        }
+        // delete attachments
+        , function(callback) {
+          // delete all attachments asynchroniously
+          async.forEach(post.attachments, function(attachment, callback) {
+            models.Attachment.destroy(attachment.id, function(err, res) {
+              if (attachment.thumbnailId) {
+                models.Attachment.destroy(attachment.thumbnailId, function(err, res) {
+                  callback(err, res)
+                })
+              } else {
+                callback(err, res)
+              }
+            })
+          }, function(err) {
+            db.del('post:' + post.id + ':attachments', function(err, res) {
+              callback()
+            })
+          })
+        }
+      ], function(err, res) {
+        callback(err, res)
+      })
     })
   }
 
@@ -127,30 +161,30 @@ exports.addModel = function(db) {
       })
     },
 
-    // Get first three comments if they exist or return first and last
-    // comments instead
-    getLastComments: function(callback) {
-      console.log('- post.getLastComments()')
-      var that = this
-      var commentsRecord = 'post:' + this.id + ':comments'
-      db.llen(commentsRecord, function(err, len) {
-        if (len > 3) { // If there are more than 3 comments filter them
-          // or we can just insert dummy comments like '...'
-          db.lindex(commentsRecord, 0, function(err, firstComment) {
-            db.lindex(commentsRecord, -1, function(err, lastComment) {
-              var comments = [firstComment, lastComment]
-              that.partial = true
-              that.commentsLength = len
-              return callback(comments)
-            })
-          })
-        } else {
-          that.getComments(function(comments) { 
-            return callback(comments)
-          })
-        }
-      })
-    },
+    // // Get first three comments if they exist or return first and last
+    // // comments instead
+    // getLastComments: function(callback) {
+    //   console.log('- post.getLastComments()')
+    //   var that = this
+    //   var commentsRecord = 'post:' + this.id + ':comments'
+    //   db.llen(commentsRecord, function(err, len) {
+    //     if (len > 3) { // If there are more than 3 comments filter them
+    //       // or we can just insert dummy comments like '...'
+    //       db.lindex(commentsRecord, 0, function(err, firstComment) {
+    //         db.lindex(commentsRecord, -1, function(err, lastComment) {
+    //           var comments = [firstComment, lastComment]
+    //           that.partial = true
+    //           that.commentsLength = len
+    //           return callback(comments)
+    //         })
+    //       })
+    //     } else {
+    //       that.getComments(function(comments) { 
+    //         return callback(comments)
+    //       })
+    //     }
+    //   })
+    // },
 
     save: function(callback) {
       console.log('- post.save()')
@@ -203,8 +237,8 @@ exports.addModel = function(db) {
                   createdBy: user,
                   comments: commentsJSON,
                   // TODO: if partial is false do not send commentsLength attribute
-                  partial: that.partial, 
-                  commentsLength: that.commentsLength,
+                  // partial: that.partial, 
+                  // commentsLength: that.commentsLength,
                   attachments: attachmentsJSON
                 })
               })

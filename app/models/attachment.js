@@ -1,5 +1,6 @@
 var uuid = require('node-uuid')
-  , models = require('../models');
+  , models = require('../models')
+  , fs = require('fs')
 
 exports.addModel = function(db) {
   function Attachment(params) {
@@ -11,6 +12,7 @@ exports.addModel = function(db) {
     // this.filetype = params.filetype // TODO: mmmagic lib
     this.filename = params.filename
     this.path = params.path
+    this.fsPath = params.fsPath
     this.postId = params.postId
 
     if (params.thumbnailId)
@@ -29,6 +31,20 @@ exports.addModel = function(db) {
     })
   },
 
+  // TODO: attachmentId -> attachmentsId
+  Attachment.destroy = function(attachmentId, callback) {
+    console.log('Attachment.destroy("' + attachmentId + '")')
+    models.Attachment.find(attachmentId, function(attachment) {
+      console.log('!!!')
+      console.log(attachment)
+      fs.unlink(attachment.fsPath, function(err) {
+        db.del('attachment:' + attachment.id, function(err, res) {
+          callback(err, res)
+        })
+      })
+    })
+  }
+
   Attachment.prototype = {
     save: function(callback) {
       console.log('- attachment.save()')
@@ -42,6 +58,7 @@ exports.addModel = function(db) {
         .hset('attachment:' + this.id, 'filename', this.filename)
         .hset('attachment:' + this.id, 'path', this.path)
         .hset('attachment:' + this.id, 'postId', this.postId)
+        .hset('attachment:' + this.id, 'fsPath', this.fsPath)
         // if it's null just skip it
         .hset('attachment:' + this.id, 'thumbnailId', this.thumbnailId)
         .exec(function(err, res) {

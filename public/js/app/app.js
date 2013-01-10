@@ -234,10 +234,11 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
 
   createPost: function(body) {
     // TODO: bind to progress property
-    App.postsController.set('isProgressBarHidden', 'visible')
 
     var data = new FormData();
     $.each($('input[type="file"]')[0].files, function(i, file) {
+      // TODO: can do this just once outside of the loop
+      App.postsController.set('isProgressBarHidden', 'visible')
       data.append('file-'+i, file);
     });
     data.append('body', $('.submitForm textarea')[0].value) // XXX: dirty!

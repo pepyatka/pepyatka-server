@@ -61,7 +61,8 @@ exports.addRoutes = function(app, connections) {
                 var newThumbnail = new models.Attachment({
                   'ext': ext,
                   'filename': filename,
-                  'path': thumbnailHttpPath            
+                  'path': thumbnailHttpPath,
+                  'fsPath': thumbnailPath
                 })
                 
                 newThumbnail.save(function(thumbnail) {
@@ -73,7 +74,8 @@ exports.addRoutes = function(app, connections) {
                     'ext': ext,
                     'filename': filename,
                     'path': attachmentHttpPath,
-                    'thumbnailId': thumbnail.id
+                    'thumbnailId': thumbnail.id,
+                    'fsPath': attachmentPath
                   })
 
                   newAttachment.save(function(attachment) {
