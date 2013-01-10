@@ -3,7 +3,7 @@ var models = require('../models')
   , redis = require('redis')
 
 exports.addModel = function(db) {
-  var POSTS = 1
+  var POSTS = 10
 
   // User may have one or more timelines. Each timeline is a sorted
   // set. User must has one required timeline which is river of news.
