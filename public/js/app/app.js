@@ -170,9 +170,12 @@ App.Post = Ember.Object.extend({
   body: null,
   createdAt: null,
   updatedAt: null,
-  partial: true,
   comments: [],
   user: null,
+
+  partial: function() {
+    return this.get('comments').length > 3
+  }.property('comments'),
 
   createdAgo: function() {
     if (this.get('createdAt')) {

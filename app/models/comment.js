@@ -51,7 +51,7 @@ exports.addModel = function(db) {
           that.createdAt = new Date().getTime()
           if (that.id === undefined) that.id = uuid.v4()
 
-          db.hmset('comment:' + that.id.toString(), 
+          db.hmset('comment:' + that.id, 
                    { 'body': that.body.toString(),
                      'createdAt': that.createdAt.toString(),
                      'userId': that.userId.toString(),

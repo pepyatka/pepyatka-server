@@ -4,7 +4,7 @@ var uuid = require('node-uuid')
 
 exports.addModel = function(db) {
   function Post(params) {
-    console.log('new Post(' + params + ')')
+    console.log('new Post(' + JSON.stringify(params) + ')')
     this.body = params.body
 
     // params to filter
@@ -193,7 +193,7 @@ exports.addModel = function(db) {
       this.updatedAt = new Date().getTime()
       if (this.id === undefined) this.id = uuid.v4()
 
-      db.hmset('post:' + this.id.toString(),
+      db.hmset('post:' + this.id,
                { 'body': this.body.toString(),
                  'createdAt': this.createdAt.toString(),
                  'userId': this.userId.toString()

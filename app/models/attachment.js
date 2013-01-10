@@ -50,19 +50,35 @@ exports.addModel = function(db) {
 
       if (this.id === undefined) this.id = uuid.v4()
 
+      // TODO: workaround
+      if (this.thumbnailId) 
+        this.thumbnailId = this.thumbnailId.toString()
+      else
+        this.thumbnailId = "undefined"
+
+      if (this.postId) 
+        this.postId = this.postId.toString()
+      else
+        this.postId = "undefined"
+
       // TODO: check if postId exists before saving
-      db.hmset('attachment:' + this.id.toString(),
+      db.hmset('attachment:' + this.id,
                { 'ext': this.ext.toString(),
                  'filename': this.filename.toString(),
                  'path': this.path.toString(),
                  'postId': this.postId.toString(),
                  'fsPath': this.fsPath.toString(),
                  // if it's null just skip it
-                 'thumbnailId': this.thumbnailId.toString()
+                 'thumbnailId': this.thumbnailId
                }, function(err, res) {
-                 models.Post.addAttachment(that.postId, that.id, function() {
+                 if (that.postId) {
+                   models.Post.addAttachment(that.postId, that.id, function() {
+                     return callback(that)
+                   })
+                 } else {
+                   // TODO: workaround
                    return callback(that)
-                 }) 
+                 }
                })
     },
     
