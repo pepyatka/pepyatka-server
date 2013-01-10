@@ -36,30 +36,6 @@ App.UploadFileView = Ember.TextField.extend({
 
   didInsertElement: function() {
     this.$().prettyInput()
-  },
-
-  change: function(event) {
-    var input = event.target;
-
-    if (input.files && input.files[0]) {
-      var file = input.files[0]
-      // var reader = new FileReader();
-
-      // App.postsController.set('isProgressBarHidden', 'visible')
-
-      // reader.onprogress = function(e) {
-      //   App.postsController.set('progress', e.loaded / e.total * 100)
-      // }
-
-      // reader.onload = function(e) {
-      //   // App.postsController.set('isProgressBarHidden', 'hidden')
-      //   App.postsController.set('progress', 100)
-      //   App.postsController.set('attachment', {'filename': file.name, 
-      //                                          'data': e.target.result})
-      // }
-
-      // reader.readAsDataURL(file);
-    }
   }
 });
 
@@ -300,6 +276,24 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
 
     xhr.open("post", "/v1/posts");
     xhr.send(data);
+
+    // fallback to simple ajax if xhr is not supported
+    // $.ajax({
+    //   url: '/v1/posts',
+    //   type: 'post',
+    //   data: data,
+    //   cache: false,
+    //   contentType: false,
+    //   processData: false,      
+    //   context: post,
+    //   success: function(response) {
+    //     this.setProperties(response);
+    //     this.attachment = null
+    //     this.loading = false
+    //     // We do not insert post right now, but wait for a socket event
+    //     // App.postsController.insertAt(0, post)
+    //   }
+    // })
 
     return this
   },
