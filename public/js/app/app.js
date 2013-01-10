@@ -61,8 +61,8 @@ App.PostContainerView = Ember.View.extend({
   },
 
   showAllComments: function() {
-    var comments = this.content
-    comments.set('partial', false)
+    console.log(this.content)
+    this.content.set('showAllComments', true)
   }
 });
 
@@ -172,10 +172,14 @@ App.Post = Ember.Object.extend({
   updatedAt: null,
   comments: [],
   user: null,
+  showAllComments: false,
 
   partial: function() {
-    return this.get('comments').length > 3
-  }.property('comments'),
+    if (this.showAllComments)
+      return false
+    else
+      return this.comments.length > 3
+  }.property('showAllComments', 'comments'),
 
   createdAgo: function() {
     if (this.get('createdAt')) {
