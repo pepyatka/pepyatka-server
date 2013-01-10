@@ -6,16 +6,20 @@ exports.addRoutes = function(app, connections) {
     var newComment = res.locals.currentUser.newComment(req.body)
 
     newComment.save(function(comment) {
-      comment.toJSON(function(json) { 
-        // TODO: redis publish event instead
-        _.each(connections, function(socket) {
-          socket.emit('newComment', { comment: json })
-        });
-
-        console.log(json)
-
-        res.jsonp(json)
-      })
+      if (comment) {
+        comment.toJSON(function(json) { 
+          // TODO: redis publish event instead
+          _.each(connections, function(socket) {
+            socket.emit('newComment', { comment: json })
+          });
+          
+          console.log(json)
+          
+          res.jsonp(json)
+        })
+      } else {
+        res.jsonp({'error': 'incorrect postId'})
+      }
     })
   });
 }

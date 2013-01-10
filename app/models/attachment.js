@@ -35,8 +35,6 @@ exports.addModel = function(db) {
   Attachment.destroy = function(attachmentId, callback) {
     console.log('Attachment.destroy("' + attachmentId + '")')
     models.Attachment.find(attachmentId, function(attachment) {
-      console.log('!!!')
-      console.log(attachment)
       fs.unlink(attachment.fsPath, function(err) {
         db.del('attachment:' + attachment.id, function(err, res) {
           callback(err, res)

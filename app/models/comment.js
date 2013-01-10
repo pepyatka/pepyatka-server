@@ -47,8 +47,6 @@ exports.addModel = function(db) {
       // post is created and exists.
       db.exists('post:' + this.postId, function(err, res) {
         // post exists
-        console.log("!!!")
-        console.log(res)
         if (res == 1) { 
           that.createdAt = new Date().getTime()
           if (that.id === undefined) that.id = uuid.v4()
