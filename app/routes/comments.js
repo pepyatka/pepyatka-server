@@ -1,5 +1,5 @@
 var models = require('../models')
-  , _ = require('underscore')
+  , async = require('async')
 
 exports.addRoutes = function(app, connections) {
   app.post('/v1/comments', function(req, res){
@@ -9,13 +9,13 @@ exports.addRoutes = function(app, connections) {
       if (comment) {
         comment.toJSON(function(json) { 
           // TODO: redis publish event instead
-          _.each(connections, function(socket) {
-            socket.emit('newComment', { comment: json })
+          async.forEach(Object.keys(connections), function(socket, callback) {
+            connections[socket].emit('newComment', { comment: json })
+
+            callback(null)
+          }, function() {
+            res.jsonp(json)
           });
-          
-          console.log(json)
-          
-          res.jsonp(json)
         })
       } else {
         res.jsonp({'error': 'incorrect postId'})

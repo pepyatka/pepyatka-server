@@ -198,9 +198,6 @@ exports.addModel = function(db) {
                  'createdAt': this.createdAt.toString(),
                  'userId': this.userId.toString()
                }, function(err, res) {
-                 console.log('!!!')
-                 console.log(err)
-                 console.log(res)
                  models.Timeline.newPost(that.userId, that.id, function() {
                    return callback(that)
                  })

@@ -170,8 +170,8 @@ App.Post = Ember.Object.extend({
   body: null,
   createdAt: null,
   updatedAt: null,
+  partial: true,
   comments: [],
-  commentsLength: 0,
   user: null,
 
   createdAgo: function() {
@@ -190,8 +190,8 @@ App.Post = Ember.Object.extend({
   }.property('comments'),
 
   skippedCommentsLength: function() {
-    return this.get('commentsLength')-2 // display first and last comments only
-  }.property('commentsLength'),
+    return this.get('comments').length-2 // display first and last comments only
+  }.property('comments'),
 
   firstThumbnailSrc: function() {
     if (this.get('attachments') && this.get('attachments')[0]) {

@@ -1,9 +1,9 @@
 var models = require('../models')
-  , _ = require('underscore')
   , fs = require('fs')
   , gm = require('gm')
   , uuid = require('node-uuid')
   , path = require('path')
+  , async = require('async')
 
 exports.addRoutes = function(app, connections) {
   app.get('/v1/posts/:postId', function(req, res) {
@@ -40,11 +40,13 @@ exports.addRoutes = function(app, connections) {
             // TODO: this is a dup
             post.toJSON(function(json) {
               // TODO: redis publish event instead
-              _.each(connections, function(socket) {
-                socket.emit('newPost', { post: json })
+              async.forEach(Object.keys(connections), function(socket, callback) {
+                connections[socket].emit('newPost', { post: json })
+
+                callback(null)
+              }, function(err) {
+                res.jsonp(json)
               });
-              
-              res.jsonp(json)
             })
 
             //res.jsonp({'error': 'not an image'})
@@ -85,11 +87,13 @@ exports.addRoutes = function(app, connections) {
                         
                       post.toJSON(function(json) {
                         // TODO: redis publish event instead
-                        _.each(connections, function(socket) {
-                          socket.emit('newPost', { post: json })
+                        async.forEach(Object.keys(connections), function(socket, callback) {
+                          connections[socket].emit('newPost', { post: json })
+
+                          callback(null)
+                        }, function(err) {
+                          res.jsonp(json)
                         });
-                        
-                        res.jsonp(json)
                       })
                     })
                   })
@@ -101,11 +105,13 @@ exports.addRoutes = function(app, connections) {
         // TODO: this is a dup
         post.toJSON(function(json) {
           // TODO: redis publish event instead
-          _.each(connections, function(socket) {
-            socket.emit('newPost', { post: json })
-          });
-          
-          res.jsonp(json)
+          async.forEach(Object.keys(connections), function(socket, callback) {
+            connections[socket].emit('newPost', { post: json })
+            
+            callback(null)
+          }, function(err) {
+            res.jsonp(json)
+          });          
         })
       }
     })
