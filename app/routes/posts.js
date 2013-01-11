@@ -8,22 +8,29 @@ var models = require('../models')
 exports.addRoutes = function(app, connections) {
   app.get('/v1/posts/:postId', function(req, res) {
     models.Post.find(req.params.postId, function(post) {
-      post.toJSON(function(json) {
-        res.jsonp(json);
-      })
+      if (post) {
+        post.toJSON(function(json) {
+          res.jsonp(json);
+        })
+      } else {
+        res.jsonp({'error': 'Not found'}, 404);
+      }
     })
   })
 
   app.post('/v1/posts', function(req, res) {
     // creates and saves new post
-    newPost = res.locals.currentUser.newPost({body: req.body.body})
+    var newPost = res.locals.currentUser.newPost({body: req.body.body})
 
     newPost.save(function(post) {
       // process files
       // TODO: extract this stuff to Post model!
       // TODO: search for file uploads lib like CarrierWave that could
       // be easily plugged into existing models (kind of models)
-      var attachment = req.files['file-0']
+      var attachment = null
+      if (req.files) {
+        attachment = req.files['file-0']
+      }
 
       if (attachment) {
         var tmpPath = attachment.path

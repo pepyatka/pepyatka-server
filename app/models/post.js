@@ -23,22 +23,25 @@ exports.addModel = function(db) {
   Post.find = function(postId, callback) {
     console.log('Post.find("' + postId + '")')
     db.hgetall('post:' + postId, function(err, attrs) {
-      // TODO: check if we find a post
-      attrs.id = postId
-      var post = new Post(attrs)
+      if (attrs) {
+        attrs.id = postId
+        var post = new Post(attrs)
 
-      post.getComments(function(comments) {
-        post.comments = comments
-        models.User.find(attrs.userId, function(user) {
-          post.user = user
+        post.getComments(function(comments) {
+          post.comments = comments
+          models.User.find(attrs.userId, function(user) {
+            post.user = user
 
-          post.getAttachments(function(attachments) {
-            post.attachments = attachments
+            post.getAttachments(function(attachments) {
+              post.attachments = attachments
 
-            return callback(post)
+              return callback(post)
+            })
           })
         })
-      })
+      } else {
+        return callback(null)
+      }
     })
   }
 
@@ -92,7 +95,7 @@ exports.addModel = function(db) {
         }
       ], function(err, res) {
         // Notify clients that postId has been deleted
-        pub = redis.createClient();
+        var pub = redis.createClient();
         pub.publish('destroyPost', postId)
 
         callback(err, res)
