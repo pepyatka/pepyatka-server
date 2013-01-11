@@ -38,6 +38,7 @@ Phase 1.2
 
 [x] Text parser - links
 [ ] Limit length of parsed link, e.g. 30 symbs
+[ ] Trim post/comment body befor save
 [ ] Move port to config file
 [ ] Replace comment text field to text area
 [ ] Auto-expandable comment and post text areas
