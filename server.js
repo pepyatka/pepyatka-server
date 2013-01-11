@@ -12,7 +12,8 @@ if (fs.existsSync('./conf/envLocal.js')) {
   conf = configLocal.getAppConfig();
 }
 else {
-  log.error('Copy ./conf/envDefault.js to ./conf/envLocal.js.');
+  console.log('Copy ./conf/envDefault.js to ./conf/envLocal.js.');
+  throw new Error('Missing configuration file')
 }
 
 app.configure(function() {

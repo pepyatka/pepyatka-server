@@ -1,7 +1,7 @@
 var models = require('./app/models')
   , uuid = require('node-uuid')
   , redis = require('redis')
-  , _ = require('underscore')
+  , async = require('async')
 
 exports.listen = function(server, connections) {
   var io = require('socket.io').listen(server)
@@ -28,8 +28,8 @@ exports.listen = function(server, connections) {
 
         sub.subscribe('destroyPost')
         sub.on('message', function(channel, postId) {
-          _.each(connections, function(socket) {
-            socket.emit('destroyPost', { postId: postId })
+          async.forEach(Object.keys(connections), function(socket) {
+            connections[socket].emit('destroyPost', { postId: postId })
           });
         })
       }),
