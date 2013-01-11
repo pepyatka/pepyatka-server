@@ -60,7 +60,6 @@ App.PostContainerView = Ember.View.extend({
   },
 
   showAllComments: function() {
-    console.log(this.content)
     this.content.set('showAllComments', true)
   }
 });
@@ -256,7 +255,6 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
 
       if (evt.lengthComputable) {
 	var percentComplete = Math.round(evt.loaded * 100 / evt.total);
-        console.log(percentComplete)
         App.postsController.set('progress', percentComplete)
       } else {
         // unable to compute
