@@ -5,13 +5,13 @@ var server = require('../server')
   , models = require('../app/models')
 
 describe('Post API', function() {
-  it('GET /posts/this-post-does-not-exist should return 404', function(done) {
+  it('GET /v1/posts/this-post-does-not-exist should return 404', function(done) {
     request(server)
       .get('/v1/posts/this-post-does-not-exist')
       .expect(404, done)
   })
 
-  it('GET /posts/:postId should return json post', function(done) {
+  it('GET /v1/posts/:postId should return json post', function(done) {
     var newPost = new models.Post({ 
       body: 'postBody', 
       userId: 'userId' 
@@ -40,7 +40,7 @@ describe('Post API', function() {
     })
   })
 
-  it('POST /posts should create post and return json object', function(done) {
+  it('POST /v1/posts should create post and return json object', function(done) {
     var params = { 
       body: 'postBody',
       userId: 'userId'
@@ -67,7 +67,7 @@ describe('Post API', function() {
       })
   })
 
-  it('POST /posts with gif attachment should create post and return json object', function(done) {
+  it('POST /v1/posts with gif attachment should create post and return json object', function(done) {
     var params = { 
       body: 'postBody',
       userId: 'userId'
@@ -113,7 +113,7 @@ describe('Post API', function() {
       })
   })
 
-  it('POST /posts with zip attachment should create post and return json object without attachment', function(done) {
+  it('POST /v1/posts with zip attachment should create post and return json object without attachment', function(done) {
     var params = { 
       body: 'postBody',
       userId: 'userId'
@@ -142,7 +142,7 @@ describe('Post API', function() {
       })
   })
 
-  it('POST /posts with missing body should return 422'
+  it('POST /v1/posts with missing body should return 422'
      // , function(done) {
      //   var params = { 
      //     userId: 'userId'
@@ -154,7 +154,7 @@ describe('Post API', function() {
      // }
     )
 
-  it('POST /posts with missing userId should return 422'
+  it('POST /v1/posts with missing userId should return 422'
      // , function(done) {
      //   var params = { 
      //     body: 'postBody'
