@@ -36,11 +36,12 @@ Phase 1.1
 Phase 1.2
 ---------
 
+[x] Text parser - links
+[ ] Limit length of parsed link, e.g. 30 symbs
 [ ] Move port to config file
 [ ] Replace comment text field to text area
 [ ] Auto-expandable comment and post text areas
 [ ] Do not apply animation effect for first posts
-[ ] Text parser - links
 [ ] Random file uploads
 [ ] Music player
 [ ] Embed youtube
