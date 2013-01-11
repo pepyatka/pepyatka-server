@@ -51,6 +51,9 @@ App.PostContainerView = Ember.View.extend({
 
   didInsertElement: function() {
     this.$().hide().slideDown('slow');
+
+    // wrap anchor tags around links in post text
+    this.$().find('.text').anchorTextUrls();
   },
 
   willDestroyElement: function() {
@@ -69,6 +72,9 @@ App.CommentContainerView = Ember.View.extend({
 
   didInsertElement: function() {
     this.$().hide().slideDown('fast');
+
+    // wrap anchor tags around links in comments
+    this.$().find('.body').anchorTextUrls();
   }
 })
 

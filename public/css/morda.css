@@ -39,8 +39,11 @@ script {
     color: #000088;
 }
 .post .tagline a, .post .text a, .post .comments .author a,
-  .post .comments .more-comments a {
+  .post .comments .more-comments a, .comments .body a {
     color: #555599;
+}
+.post .text a {
+    color: #000088;
 }
 .post .body .text {
     color: #000
