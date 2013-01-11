@@ -1,6 +1,21 @@
 FF/B
 ====
 
+FF/B is another attempt to open source FriendFeed social
+network/aggregator. At this stage it's just a stupid anonymous (sort
+of) image board.
+
+Configuration
+-------------
+
+- Install redis
+- Install graphicsmagick (ensure jpeg and png flags are set)
+- Install nodejs
+- cp ./conf/envDefault.js to ./conf/envLocal.js. Make sure to update
+  secret token
+- npm install
+- node ./server.js
+
 Database
 --------
 
