@@ -1,6 +1,7 @@
 var uuid = require('node-uuid')
   , models = require('../models')
   , async = require('async')
+  , redis = require('redis')
 
 exports.addModel = function(db) {
   function Post(params) {
@@ -12,18 +13,8 @@ exports.addModel = function(db) {
     this.createdAt = parseInt(params.createdAt) || null
     this.updatedAt = parseInt(params.updatedAt) || null
 
-    // TODO: it needs to be an array not just a single value
-    // this.imageId = params.imageId
-    // attachments model
-    
     this.comments = params.comments || []
     this.attachments = params.attachments || []
-
-    // if post has more than X comments, but json returns only a part
-    // of them. Would be nice to merge with comments structure.
-
-    // this.partial = false 
-    // this.commentsLength = null
 
     this.userId = params.userId
     this.user = params.user
@@ -37,7 +28,6 @@ exports.addModel = function(db) {
       var post = new Post(attrs)
 
       post.getComments(function(comments) {
-        // TODO: switch comments and user selects
         post.comments = comments
         models.User.find(attrs.userId, function(user) {
           post.user = user
@@ -52,10 +42,15 @@ exports.addModel = function(db) {
     })
   }
 
+  // XXX: this is the longest method in the app. Review it once you have time
   Post.destroy = function(postId, callback) {
     console.log('Post.destroy("' + postId + '")')
 
     models.Post.find(postId, function(post) {
+      // This is a parallel process: 
+      // - deletes post from user's timeline
+      // - deletes comments entities and comments array
+      // - deletes attachments entities and attachments array
       async.parallel([
         // remove post from timeline
         function(callback) { 
@@ -96,11 +91,16 @@ exports.addModel = function(db) {
           })
         }
       ], function(err, res) {
+        // Notify clients that postId has been deleted
+        pub = redis.createClient();
+        pub.publish('destroyPost', postId)
+
         callback(err, res)
       })
     })
   }
 
+  // TBD: smart bump
   Post.bumpable = function(postId, callback) {
     return callback(true);
   }
@@ -109,7 +109,7 @@ exports.addModel = function(db) {
     console.log('Post.addComment("' + postId + '", "' + commentId + '")')
     db.hget('post:' + postId, 'userId', function(err, userId) {
       db.rpush('post:' + postId + ':comments', commentId, function() {
-        // Can we bump this post
+        // Can we bump this post?
         Post.bumpable(postId, function(bump) {
           if (bump) {
             models.Timeline.updatePost(userId, postId, function() {
@@ -161,35 +161,11 @@ exports.addModel = function(db) {
       })
     },
 
-    // // Get first three comments if they exist or return first and last
-    // // comments instead
-    // getLastComments: function(callback) {
-    //   console.log('- post.getLastComments()')
-    //   var that = this
-    //   var commentsRecord = 'post:' + this.id + ':comments'
-    //   db.llen(commentsRecord, function(err, len) {
-    //     if (len > 3) { // If there are more than 3 comments filter them
-    //       // or we can just insert dummy comments like '...'
-    //       db.lindex(commentsRecord, 0, function(err, firstComment) {
-    //         db.lindex(commentsRecord, -1, function(err, lastComment) {
-    //           var comments = [firstComment, lastComment]
-    //           that.partial = true
-    //           that.commentsLength = len
-    //           return callback(comments)
-    //         })
-    //       })
-    //     } else {
-    //       that.getComments(function(comments) { 
-    //         return callback(comments)
-    //       })
-    //     }
-    //   })
-    // },
-
     save: function(callback) {
       console.log('- post.save()')
       var that = this
-      this.createdAt = new Date().getTime()
+      if (!this.createdAt)
+        this.createdAt = new Date().getTime()
       this.updatedAt = new Date().getTime()
       if (this.id === undefined) this.id = uuid.v4()
 
@@ -235,9 +211,6 @@ exports.addModel = function(db) {
                   body: that.body,
                   createdBy: user,
                   comments: commentsJSON,
-                  // TODO: if partial is false do not send commentsLength attribute
-                  // partial: that.partial, 
-                  // commentsLength: that.commentsLength,
                   attachments: attachmentsJSON
                 })
               })

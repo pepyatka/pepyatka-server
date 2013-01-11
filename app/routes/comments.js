@@ -3,12 +3,14 @@ var models = require('../models')
 
 exports.addRoutes = function(app, connections) {
   app.post('/v1/comments', function(req, res){
-    var newComment = res.locals.currentUser.newComment(req.body)
+    // TODO: filter body params - known as strong params
+    var newComment = res.locals.currentUser.newComment({body: req.body.body})
 
     newComment.save(function(comment) {
       if (comment) {
         comment.toJSON(function(json) { 
           // TODO: redis publish event instead
+          // TODO: measure perf with async.forEach and plain each method
           async.forEach(Object.keys(connections), function(socket, callback) {
             connections[socket].emit('newComment', { comment: json })
 
@@ -18,6 +20,7 @@ exports.addRoutes = function(app, connections) {
           });
         })
       } else {
+        // Just a stupid case - strong parameters will make it cleaner
         res.jsonp({'error': 'incorrect postId'})
       }
     })

@@ -3,3 +3,4 @@ node_modules
 public/files/*
 !public/files/.gitkeep
 tmp/*
+/conf/envLocal.js

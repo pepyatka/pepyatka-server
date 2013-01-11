@@ -1,0 +1,68 @@
+FF/B
+====
+
+Phase 1.0
+---------
+
+[x] Collapsible comments
+[x] Clickable close link
+[x] Fix deprecated EmberJS functions
+[x] Clear input field on submit
+[x] Bootstrap UI
+[x] Insert comment if and only if post exists
+[x] Review REST requests
+[x] Name convention: created_at -> createdAt
+[x] Delete post event
+[x] Animation effect on new comment
+[x] Animation effect on sort
+[x] Broken sessions after db flush
+[x] Async library
+
+Phase 1.1
+---------
+
+[x] Images uploads
+[x] Attachments model
+[x] Clear filename on submit
+[x] Upload progress bar
+[x] Delete comments and image file on post deletion
+[x] Async library - delete functions
+[x] Remove underscore library
+[x] Config file
+[x] Publish to Githib
+[ ] Performance tests, ab metrics
+[ ] Unit or whatever testing - mocha?
+
+Phase 1.2
+---------
+
+[ ] Replace comment text field to text area
+[ ] Auto-expandable comment and post text areas
+[ ] Do not apply animation effect for first posts
+[ ] Text parser - links
+[ ] Random file uploads
+[ ] Music player
+[ ] Embed youtube
+
+Phase 1.x
+[ ] Embed vimeo
+[ ] Render Not found page if user follows deleted post
+[ ] Check single post view and delete post event
+[ ] First and last comments as two extra post fields
+[ ] Migration to hiredis
+
+Phase 2
+[ ] Signup page
+[ ] Public timelines and URLs
+[ ] Direct messages
+[ ] Socket collection refactoring
+[ ] R&D: Ember.Data, Ember.Resource
+[ ] user.createdAt field
+[ ] Private feed
+[ ] Subscribers
+[ ] Subscriptions
+
+Phase 3
+[ ] Background jobs
+[ ] Rss parser
+[ ] Import a service

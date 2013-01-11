@@ -16,11 +16,6 @@ var helpers = function(req, res, next) {
   next();
 };
 
-var noJSONP = function(req, res, next) {
-  delete req.query.callback;
-  next();
-}
-
 var findUser = function(req, res, next) {
   if (req.session.userId === undefined) {
     models.User.anon(function(userId) {
@@ -29,7 +24,8 @@ var findUser = function(req, res, next) {
       next()
     });
   } else {
-    // TODO: check this could be a broken session
+    // XXX: this could be a broken session as we restart server and
+    // flush data quite frequently
 
     next()
   }
@@ -39,12 +35,14 @@ var getUser = function(req, res, next) {
   models.User.find(req.session.userId, function(user) {
     if (user) {
       res.locals.currentUser = user
+      next();
     } else {
       delete req.session.userId
-      // ... redirect to auth page
-    }
+      // and redirect user to auth page. 
 
-    next();
+      // however for the time being let's just call findUser one more time
+      findUser(req, res, next())
+    }
   })
 }
 
@@ -54,7 +52,8 @@ module.exports = function(app, connections) {
   // user.addRoutes(app);
   // session.addRoutes(app);
 
-  // TODO: we do not need connection argument - we can get by with redis pub/sub
+  // TODO: refactor to remove connection argument - we can get by with
+  // redis pub/sub
   home.addRoutes(app, connections);
   posts.addRoutes(app, connections);
   comments.addRoutes(app, connections);

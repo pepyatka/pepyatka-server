@@ -11,6 +11,7 @@ db.on("error", function (err) {
 });
 
 exports.disconnect = function() {
+  // TODO: have never tested this function
   redis.end();
   db = null
 }

@@ -16,11 +16,13 @@ exports.addRoutes = function(app, connections) {
 
   app.post('/v1/posts', function(req, res) {
     // creates and saves new post
-    newPost = res.locals.currentUser.newPost(req.body)
+    newPost = res.locals.currentUser.newPost({body: req.body.body})
 
     newPost.save(function(post) {
       // process files
-      // TODO: extract to Post model
+      // TODO: extract this stuff to Post model!
+      // TODO: search for file uploads lib like CarrierWave that could
+      // be easily plugged into existing models (kind of models)
       var attachment = req.files['file-0']
 
       if (attachment) {
@@ -86,6 +88,7 @@ exports.addRoutes = function(app, connections) {
                       post.attachments.push(attachment)
                         
                       post.toJSON(function(json) {
+                        // TODO: this is a dup
                         // TODO: redis publish event instead
                         async.forEach(Object.keys(connections), function(socket, callback) {
                           connections[socket].emit('newPost', { post: json })

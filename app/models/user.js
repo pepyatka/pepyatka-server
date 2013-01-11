@@ -43,8 +43,8 @@ exports.addModel = function(db) {
   User.find = function(userId, callback) {
     console.log('User.find("' + userId + '")')
     db.hgetall('user:' + userId, function(err, attrs) {
-      // Seems it's either deleted user or broken session. Redirect to
-      // auth method
+      // XXX: Seems it's either deleted user or broken session. Redirect to
+      // auth method... some day.
       if (attrs === null) attrs = {}
 
       attrs.id = userId
@@ -63,6 +63,7 @@ exports.addModel = function(db) {
     },
 
     newPost: function(attrs) {
+      console.log('- user.newPost()')
       attrs.userId = this.id
       
       return new models.Post(attrs)
@@ -71,6 +72,7 @@ exports.addModel = function(db) {
     // XXX: do not like the design of this method. I'd say better to
     // put it into Post model
     newComment: function(attrs) {
+      console.log('- user.newComment()')
       attrs.userId = this.id
 
       return new models.Comment(attrs)

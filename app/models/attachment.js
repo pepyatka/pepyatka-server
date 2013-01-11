@@ -1,30 +1,34 @@
 var uuid = require('node-uuid')
+  // XXX: do not like the idea of requiring all the models than we
+  // need just one or may be two of them, however it's a oneliner.
   , models = require('../models')
   , fs = require('fs')
 
 exports.addModel = function(db) {
   function Attachment(params) {
+    // XXX: well... current logger is awful.
     console.log('new Attachment(' + JSON.stringify(params) + ')')
 
     this.id = params.id
 
+    // this.mimeType = params.filetype // TODO: mmmagic lib
     this.ext = params.ext
-    // this.filetype = params.filetype // TODO: mmmagic lib
     this.filename = params.filename
     this.path = params.path
     this.fsPath = params.fsPath
     this.postId = params.postId
 
+    // XXX: workaround
     if (params.thumbnailId)
       this.thumbnailId = params.thumbnailId
     if (params.thumbnail)
       this.thumbnail = params.thumbnail
   }
-
+  
   Attachment.find = function(attachmentId, callback) {
     console.log('Attachment.find("' + attachmentId + '")')
     db.hgetall('attachment:' + attachmentId, function(err, attrs) {
-      // TODO: check if we find a attachment
+      // TODO: check if we find an attachment
       attrs.id = attachmentId
       var attachment = new Attachment(attrs)
       return callback(attachment)
@@ -68,14 +72,15 @@ exports.addModel = function(db) {
       else
         this.postId = "undefined"
 
-      // TODO: check if postId exists before saving
+      // TODO: check if postId exists before saving attachment object
       db.hmset('attachment:' + this.id,
                { 'ext': this.ext.toString(),
                  'filename': this.filename.toString(),
                  'path': this.path.toString(),
+                 // if it's null just skip it - currently works with workaround
                  'postId': this.postId.toString(),
                  'fsPath': this.fsPath.toString(),
-                 // if it's null just skip it
+                 // if it's null just skip it - currently works with workaround
                  'thumbnailId': this.thumbnailId
                }, function(err, res) {
                  if (that.postId) {
@@ -83,7 +88,7 @@ exports.addModel = function(db) {
                      return callback(that)
                    })
                  } else {
-                   // TODO: workaround
+                   // TODO: workaround - please read above
                    return callback(that)
                  }
                })

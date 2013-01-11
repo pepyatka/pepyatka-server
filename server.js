@@ -5,20 +5,15 @@ var express = require('express')
   , engine = require('ejs-locals')
   , fs = require('fs')
 
-// var path = require('path');
-// if (path.existsSync('./configLocal.js')) {
-//   var configLocal = require('./configLocal.js');
+if (fs.existsSync('./conf/envLocal.js')) {
+  var configLocal = require('./conf/envLocal.js');
 
-//   // mail = require('mail').Mail(
-//   //   configLocal.getMailConfig());
-//   conf = configLocal.getSiteConfig();
-// }
-// else {
-//   log.error('Copy configDefault.js to configLocal.js.');
-// }
-
-// var configPath = path.join(__dirname, "config.json");
-// var config = JSON.parse(fs.readFileSync(configPath));
+  // global variable
+  conf = configLocal.getAppConfig();
+}
+else {
+  log.error('Copy ./conf/envDefault.js to ./conf/envLocal.js.');
+}
 
 app.configure(function() {
   app.engine('ejs', engine);
@@ -40,8 +35,9 @@ app.configure(function() {
   app.use(express.limit('50mb'));
 
   app.use(express.methodOverride());
-  app.use(express.cookieParser('your secret here'));
+  app.use(express.cookieParser(conf.secret));
 
+  // TODO: use Redis to store sessions
   app.use(express.session());
 
   app.use(app.router);

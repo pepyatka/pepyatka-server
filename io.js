@@ -12,14 +12,16 @@ exports.listen = function(server, connections) {
     'connection',
 
     function(socket) {
-      // User wants to listen to real-time updates
+      // User wants to listen to real-time updates. At this moment we
+      // can get by with this simple push/pull, however once we
+      // introduce real users - needs to be heavily refactored 
       socket.on('subscribe', function(data) {
         // TODO: can return just ID instead of entire record
         console.log('User ' + data.username + ' has connected')
-        models.User.findByUsername(data.username, function(user) {
-          socket.userId = uuid.v4()
-          connections[socket.userId] = socket
-        })
+        
+        // save socket connections to redis to make them persistent
+        socket.userId = uuid.v4()
+        connections[socket.userId] = socket
 
         sub = redis.createClient();
         pub = redis.createClient();
@@ -46,6 +48,10 @@ exports.listen = function(server, connections) {
       socket.on('comment', function(data) {
       }),
 
+      // TODO: frankly speaking we never emit that event. As a result
+      // once client closes its browser we will be sending updates to
+      // nowhere. But for the time being we can skip this - I bet
+      // there are 2.5 anons on that board.
       socket.on('disconnect', function() {
         delete connections[socket.userId]
       })

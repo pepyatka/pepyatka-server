@@ -10,7 +10,6 @@ App.PostsView = Ember.View.extend({
   templateName: 'post-list-view',
 
   submitPost: function() {
-    this.$().find('.file-input-name').html('')
     App.postsController.submitPost()
   }
 });
@@ -266,6 +265,11 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
 
     // On finished.
     xhr.addEventListener("load", function (evt) {
+      // Clear file field
+      var control = $('input[type="file"]')
+      control.replaceWith( control.val('').clone( true ) );
+      $('.file-input-name').html('')
+
       // var obj = $.parseJSON(evt.target.responseText);
       // TODO: bind properties
       App.postsController.set('progress', '100')

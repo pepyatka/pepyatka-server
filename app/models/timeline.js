@@ -5,8 +5,11 @@ var models = require('../models')
 exports.addModel = function(db) {
   var POSTS = 10
 
-  // User may have one or more timelines. Each timeline is a sorted
-  // set. User must has one required timeline which is river of news.
+  // TODO: User may have one or more timelines. Each timeline is a
+  // sorted set. User must has two required timelines:
+  // - river of news - home page
+  // - direct messages
+  // all other timelines are optional
   function Timeline(params, callback) {
     console.log('new Timeline(' + params + ')')
     var that = this;
@@ -25,14 +28,12 @@ exports.addModel = function(db) {
     })
   }
 
+  // If user updates timeline we need to
   Timeline.update = function(userId, callback) {
     console.log('Timeline.update("' + userId + '")')
     db.zrevrange('timeline:' + userId, POSTS, -1, function(err, posts) {
       async.forEach(posts, function(postId, callback) {
-        models.Post.destroy(postId, function(err, res) {
-          pub = redis.createClient();
-          pub.publish('destroyPost', postId)
-          
+        models.Post.destroy(postId, function(err, res) {        
           callback(err)
         })
       }, function(err) {
@@ -56,7 +57,7 @@ exports.addModel = function(db) {
     var currentTime = new Date().getTime()
     db.zadd('timeline:' + userId, currentTime, postId, function(err, res) {
       Timeline.update(userId, function() {
-        // TODO: -> Post.update()
+        // TODO: -> Post.update() ?
         db.hset('post:' + postId, 'updatedAt', currentTime, function(err, res) {
           callback()
         })

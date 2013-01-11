@@ -4,6 +4,7 @@ var uuid = require('node-uuid')
 exports.addModel = function(db) {
   function Comment(params) {
     console.log('new Comment(' + JSON.stringify(params) + ')')
+
     this.body = params.body
     this.postId = params.postId
 
@@ -12,7 +13,7 @@ exports.addModel = function(db) {
     // TODO: not implemented yet
     this.updatedAt = parseInt(params.updatedAt) ||  null
 
-    // params to filter
+    // XXX: params to filter
     this.id = params.id
 
     this.userId = params.userId
