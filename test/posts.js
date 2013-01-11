@@ -59,9 +59,9 @@ describe('Post API', function() {
         assert.equal(params.body, jsonPost.body)
         // XXX: test userId
         assert(Array.isArray(jsonPost.comments))
-        assert(jsonPost.comments.length == 0)
+        assert.equal(jsonPost.comments.length, 0)
         assert(Array.isArray(jsonPost.attachments))
-        assert(jsonPost.attachments.length == 0)
+        assert.equal(jsonPost.attachments.length, 0)
 
         done()
       })
@@ -88,10 +88,10 @@ describe('Post API', function() {
         assert.equal(params.body, jsonPost.body)
         // XXX: test userId
         assert(Array.isArray(jsonPost.comments))
-        assert(jsonPost.comments.length == 0)
+        assert.equal(jsonPost.comments.length, 0)
 
         assert(Array.isArray(jsonPost.attachments))
-        assert(jsonPost.attachments.length == 1)
+        assert.equal(jsonPost.attachments.length, 1)
         var jsonAttachment = jsonPost.attachments[0]
         assert(!!jsonAttachment.id)
         assert.equal(jsonAttachment.ext, 'gif')
@@ -134,9 +134,9 @@ describe('Post API', function() {
         assert.equal(params.body, jsonPost.body)
         // XXX: test userId
         assert(Array.isArray(jsonPost.comments))
-        assert(jsonPost.comments.length == 0)
+        assert.equal(jsonPost.comments.length, 0)
         assert(Array.isArray(jsonPost.attachments))
-        assert(jsonPost.attachments.length == 0)
+        assert.equal(jsonPost.attachments.length, 0)
 
         done()
       })
