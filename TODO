@@ -55,6 +55,7 @@ Phase 1.x
 [ ] Check single post view and delete post event
 [ ] First and last comments as two extra post fields
 [ ] Migration to hiredis
+[ ] Multiple attachments
 
 Phase 2
 -------
