@@ -5,6 +5,8 @@ var express = require('express')
   , engine = require('ejs-locals')
   , fs = require('fs')
 
+module.exports = app;
+
 if (fs.existsSync('./conf/envLocal.js')) {
   var configLocal = require('./conf/envLocal.js');
 
