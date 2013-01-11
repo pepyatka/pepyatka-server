@@ -4,7 +4,7 @@ var request = require('supertest')
 var server = require('../server')
 
 describe('Post API', function(){
-  it('GET /posts/:postId should return 404', function(done) {
+  it('GET /posts/this-post-does-not-exist should return 404', function(done) {
     request(server)
       .get('/v1/posts/this-post-does-not-exist')
       .expect(404, done)
