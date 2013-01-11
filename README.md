@@ -5,6 +5,8 @@ FF/B is another attempt to open source FriendFeed social
 network/aggregator. At this stage it's just a stupid anonymous (sort
 of) image board.
 
+![FF/B screenshot](http://epicmonkey.org/b/ffb_small.png)
+
 Configuration
 -------------
 
