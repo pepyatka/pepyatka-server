@@ -30,49 +30,47 @@ Phase 1.1
 [x] Remove underscore library
 [x] Config file
 [x] Publish to Githib
+[x] Text parser - links
 [ ] Performance tests, ab metrics
+[ ] Move port to config file
 [ ] Unit or whatever testing - mocha?
 
 Phase 1.2
 ---------
 
-[x] Text parser - links
-[ ] Limit length of parsed link, e.g. 30 symbs
-[ ] Trim post/comment body befor save
-[ ] Move port to config file
-[ ] Replace comment text field to text area
-[ ] Auto-expandable comment and post text areas
-[ ] Do not apply animation effect for first posts
-[ ] Random file uploads
-[ ] Music player
-[ ] Embed youtube
+[ ] Trim post/comment body before save
+[ ] Signup page
+[ ] user.createdAt field
+[ ] Public timelines and URLs
+[ ] Socket collection refactoring
 
 Phase 1.x
 ---------
-
-[ ] Embed vimeo
-[ ] Render Not found page if user follows deleted post
-[ ] Check single post view and delete post event
-[ ] First and last comments as two extra post fields
-[ ] Migration to hiredis
-[ ] Multiple attachments
+[ ] Replace comment text field to text area
+[ ] Auto-expandable comment and post text areas
 
 Phase 2
 -------
 
-[ ] Signup page
-[ ] Public timelines and URLs
 [ ] Direct messages
-[ ] Socket collection refactoring
 [ ] R&D: Ember.Data, Ember.Resource
-[ ] user.createdAt field
 [ ] Private feed
 [ ] Subscribers
 [ ] Subscriptions
 
 Phase 2.x
 ---------
-[ ] Amazon s3
+[ ] Embed vimeo
+[ ] Render Not found page if user follows deleted post
+[ ] Check single post view and delete post event
+[ ] First and last comments as two extra post fields
+[ ] Migration to hiredis
+[ ] Multiple attachments
+[ ] Limit length of parsed link, e.g. 30 symbs
+[ ] Do not apply animation effect for first posts
+[ ] Random file uploads
+[ ] Music player
+[ ] Embed youtube
 
 Phase 3
 -------
@@ -80,3 +78,4 @@ Phase 3
 [ ] Background jobs
 [ ] Rss parser
 [ ] Import a service
+[ ] Amazon s3
