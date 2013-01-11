@@ -175,9 +175,11 @@ exports.addModel = function(db) {
       db.hmset('post:' + this.id,
                { 'body': this.body.toString(),
                  'createdAt': this.createdAt.toString(),
+                 'updatedAt': this.updatedAt.toString(),
                  'userId': this.userId.toString()
                }, function(err, res) {
                  models.Timeline.newPost(that.userId, that.id, function() {
+                   // BUG: updatedAt is different now than we set few lines above
                    return callback(that)
                  })
                })
