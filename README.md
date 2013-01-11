@@ -11,10 +11,11 @@ Configuration
 - Install redis
 - Install graphicsmagick (ensure jpeg and png flags are set)
 - Install nodejs
-- cp ./conf/envDefault.js to ./conf/envLocal.js. Make sure to update
-  secret token
-- npm install
-- node ./server.js
+- Make sure to update secret token: cp ./conf/envDefault.js to
+  ./conf/envLocal.js.
+- Check there are no broken tests: ./node_modules/mocha/bin/mocha (or
+  just mocha if you have it install globally)
+- Run server: node ./server.js
 
 Database
 --------
