@@ -36,6 +36,7 @@ Phase 1.1
 Phase 1.2
 ---------
 
+[ ] Move port to config file
 [ ] Replace comment text field to text area
 [ ] Auto-expandable comment and post text areas
 [ ] Do not apply animation effect for first posts
@@ -45,6 +46,8 @@ Phase 1.2
 [ ] Embed youtube
 
 Phase 1.x
+---------
+
 [ ] Embed vimeo
 [ ] Render Not found page if user follows deleted post
 [ ] Check single post view and delete post event
@@ -52,6 +55,8 @@ Phase 1.x
 [ ] Migration to hiredis
 
 Phase 2
+-------
+
 [ ] Signup page
 [ ] Public timelines and URLs
 [ ] Direct messages
@@ -62,7 +67,13 @@ Phase 2
 [ ] Subscribers
 [ ] Subscriptions
 
+Phase 2.x
+---------
+[ ] Amazon s3
+
 Phase 3
+-------
+
 [ ] Background jobs
 [ ] Rss parser
 [ ] Import a service
