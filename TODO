@@ -67,6 +67,7 @@ Phase 2.x
 [ ] Migration to hiredis
 [ ] Multiple attachments
 [ ] Limit length of parsed link, e.g. 30 symbs
+[ ] Limit length of comment and post
 [ ] Do not apply animation effect for first posts
 [ ] Random file uploads
 [ ] Music player
