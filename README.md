@@ -19,6 +19,7 @@ Configuration
 Database
 --------
 
+```
 username:<username>:uid
 user:<user_id> { username: <username> }
 user:<user_id>:timelines [ <timeline_id>, <timeline_id> ] # not implemented yet
@@ -32,11 +33,12 @@ comment:<comment_id> { body: <body>, created_at: <timestamp>, user_id: <user_id>
 timeline:<timeline_id> ( <post_id>:<timestamp> <post_id>:<timestamp> ) # not implemented yet - TBD
 
 attachment:<attachment_id> { mimeType, filename, extension, path, [thumbnail_id] }
+```
 
 API
 ---
 
-GET /v1/timeline/<username>
-GET /v1/posts/<postId>
-POST /v1/posts
-POST /v1/comments
+- GET /v1/timeline/<username>
+- GET /v1/posts/<postId>
+- POST /v1/posts
+- POST /v1/comments
