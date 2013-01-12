@@ -32,7 +32,6 @@ Phase 1.1
 [x] Publish to Githib
 [x] Text parser - links
 [x] Functional testing
-[ ] Performance tests, ab metrics
 [ ] Move port to config file and prepare envTest.js config
 [ ] Console.log to Winston logger
 
@@ -44,15 +43,11 @@ Phase 1.2
 [ ] user.createdAt field
 [ ] Public timelines and URLs
 [ ] Socket collection refactoring
-
-Phase 1.x
----------
-[ ] R&D: Nohm lib
 [ ] Replace comment text field to text area
 [ ] Auto-expandable comment and post text areas
 
-Phase 2
--------
+Phase 2.0
+---------
 
 [ ] Direct messages
 [ ] R&D: Ember.Data, Ember.Resource
@@ -81,6 +76,8 @@ Phase 2.x
 [ ] Music player
 [ ] Embed youtube
 [ ] Show notice if could upload attachment
+[ ] Performance tests, ab metrics
+[ ] R&D: Nohm lib
 
 Phase 3
 -------
