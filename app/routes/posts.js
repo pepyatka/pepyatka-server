@@ -4,8 +4,9 @@ var models = require('../models')
   , uuid = require('node-uuid')
   , path = require('path')
   , async = require('async')
+  , redis = require('redis')
 
-exports.addRoutes = function(app, connections) {
+exports.addRoutes = function(app) {
   app.get('/v1/posts/:postId', function(req, res) {
     models.Post.find(req.params.postId, function(post) {
       if (post) {
@@ -46,17 +47,10 @@ exports.addRoutes = function(app, connections) {
         // type of uploaded files.
         gm(tmpPath).format(function(err, value) {
           if (err) {
-            // TODO: this is a dup
-            post.toJSON(function(json) {
-              // TODO: redis publish event instead
-              async.forEach(Object.keys(connections), function(socket, callback) {
-                connections[socket].emit('newPost', { post: json })
+            var pub = redis.createClient();
+            pub.publish('newPost', post.id)
 
-                callback(null)
-              }, function(err) {
-                res.jsonp(json)
-              });
-            })
+            post.toJSON(function(json) { res.jsonp(json) })
 
             //res.jsonp({'error': 'not an image'})
           } else {
@@ -64,7 +58,6 @@ exports.addRoutes = function(app, connections) {
               .resize('200', '200')
               .write(thumbnailPath, function(err) {
                 if (err) {
-                  console.log(err);
                   res.jsonp({'error': 'not an image'})
                   return
                 }
@@ -96,14 +89,10 @@ exports.addRoutes = function(app, connections) {
                         
                       post.toJSON(function(json) {
                         // TODO: this is a dup
-                        // TODO: redis publish event instead
-                        async.forEach(Object.keys(connections), function(socket, callback) {
-                          connections[socket].emit('newPost', { post: json })
+                        var pub = redis.createClient();
+                        pub.publish('newPost', post.id)
 
-                          callback(null)
-                        }, function(err) {
-                          res.jsonp(json)
-                        });
+                        post.toJSON(function(json) { res.jsonp(json) })
                       })
                     })
                   })
@@ -112,17 +101,10 @@ exports.addRoutes = function(app, connections) {
           }
         })
       } else {
-        // TODO: this is a dup
-        post.toJSON(function(json) {
-          // TODO: redis publish event instead
-          async.forEach(Object.keys(connections), function(socket, callback) {
-            connections[socket].emit('newPost', { post: json })
-            
-            callback(null)
-          }, function(err) {
-            res.jsonp(json)
-          });          
-        })
+        var pub = redis.createClient();
+        pub.publish('newPost', post.id)
+
+        post.toJSON(function(json) { res.jsonp(json) })
       }
     })
   })

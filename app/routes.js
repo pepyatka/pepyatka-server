@@ -46,7 +46,7 @@ var getUser = function(req, res, next) {
   })
 }
 
-module.exports = function(app, connections) {
+module.exports = function(app) {
   app.all('/*', helpers, findUser, getUser);
 
   // user.addRoutes(app);
@@ -54,8 +54,8 @@ module.exports = function(app, connections) {
 
   // TODO: refactor to remove connection argument - we can get by with
   // redis pub/sub
-  home.addRoutes(app, connections);
-  posts.addRoutes(app, connections);
-  comments.addRoutes(app, connections);
-  timeline.addRoutes(app, connections);
+  home.addRoutes(app);
+  posts.addRoutes(app);
+  comments.addRoutes(app);
+  timeline.addRoutes(app);
 };

@@ -1,5 +1,6 @@
 var models = require('../models')
   , async = require('async')
+  , redis = require('redis')
 
 exports.addRoutes = function(app, connections) {
   app.post('/v1/comments', function(req, res){
@@ -11,17 +12,10 @@ exports.addRoutes = function(app, connections) {
 
     newComment.save(function(comment) {
       if (comment) {
-        comment.toJSON(function(json) { 
-          // TODO: redis publish event instead
-          // TODO: measure perf with async.forEach and plain each method
-          async.forEach(Object.keys(connections), function(socket, callback) {
-            connections[socket].emit('newComment', { comment: json })
+        var pub = redis.createClient();
+        pub.publish('newComment', comment.id)
 
-            callback(null)
-          }, function() {
-            res.jsonp(json)
-          });
-        })
+        comment.toJSON(function(json) { res.jsonp(json) })
       } else {
         // Just a stupid case - strong parameters will make it cleaner
         res.jsonp({'error': 'incorrect postId'})

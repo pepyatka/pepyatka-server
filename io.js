@@ -1,12 +1,9 @@
 var models = require('./app/models')
   , uuid = require('node-uuid')
-  , redis = require('redis')
   , async = require('async')
 
 exports.listen = function(server, connections) {
   var io = require('socket.io').listen(server)
-    , pub
-    , sub
   
   io.sockets.on(
     'connection',
@@ -22,16 +19,6 @@ exports.listen = function(server, connections) {
         // save socket connections to redis to make them persistent
         socket.userId = uuid.v4()
         connections[socket.userId] = socket
-
-        sub = redis.createClient();
-        pub = redis.createClient();
-
-        sub.subscribe('destroyPost')
-        sub.on('message', function(channel, postId) {
-          async.forEach(Object.keys(connections), function(socket) {
-            connections[socket].emit('destroyPost', { postId: postId })
-          });
-        })
       }),
       
       // User wants to stop listening to real-time updates

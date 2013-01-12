@@ -1,6 +1,6 @@
 var models = require('../models');
 
-exports.addRoutes = function(app, connections) {
+exports.addRoutes = function(app) {
   app.get('/v1/timeline/:username', function(req, res){
     // XXX: calling model's function affect overall performance, e.g.
     // in this case we need just one user paramers: id, however
