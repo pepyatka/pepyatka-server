@@ -31,6 +31,7 @@ user:<user_id>:timelines [ <timeline_id>, <timeline_id> ] # not implemented yet
 post:<post_id> { body: <body>, created_at: <timestamp>, user_id: <user_id> }
 post:<post_id>:comments [ <comment_id>, <comment_id> ]
 post:<post_id>:attachments [ <attachment_id>, <attachment_id> ]
+post:<post_id>:timelines [ <timeline_id>, <timeline_id> ] # not implemented yet
 
 comment:<comment_id> { body: <body>, created_at: <timestamp>, user_id: <user_id>, post_id: <post_id> }
 
