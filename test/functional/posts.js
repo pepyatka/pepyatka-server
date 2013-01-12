@@ -1,8 +1,8 @@
 var request = require('supertest')
   , assert = require('assert')
 
-var server = require('../server')
-  , models = require('../app/models')
+var server = require('../../server')
+  , models = require('../../app/models')
 
 describe('Post API', function() {
   it('GET /v1/posts/this-post-does-not-exist should return 404', function(done) {

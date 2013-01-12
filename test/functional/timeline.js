@@ -2,11 +2,11 @@ var request = require('supertest')
   , assert = require('assert')
   , async = require('async')
 
-var redis = require('../db')
+var redis = require('../../db')
   , db = redis.connect()
 
-var server = require('../server')
-  , models = require('../app/models')
+var server = require('../../server')
+  , models = require('../../app/models')
 
 describe('Timeline API', function() {
   it('GET /v1/timeline/anonymous should return json list of posts', function(done) {

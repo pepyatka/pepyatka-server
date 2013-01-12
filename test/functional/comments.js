@@ -1,8 +1,8 @@
 var request = require('supertest')
   , assert = require('assert')
 
-var server = require('../server')
-  , models = require('../app/models')
+var server = require('../../server')
+  , models = require('../../app/models')
 
 describe('Comment API', function() {
   var post = null

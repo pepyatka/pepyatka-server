@@ -15,8 +15,9 @@ Configuration
 - Install nodejs
 - Make sure to update secret token: cp ./conf/envDefault.js to
   ./conf/envLocal.js.
-- Check there are no broken tests: ./node_modules/mocha/bin/mocha (or
-  just run mocha if you have installed it globally)
+- Check there are no broken tests: ./node_modules/mocha/bin/mocha
+  --recursive (or just run mocha --resursive if you have installed it
+  globally)
 - Run server: node ./server.js
 
 Database
