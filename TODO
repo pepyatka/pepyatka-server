@@ -85,6 +85,7 @@ Phase 2.x
 Phase 3
 -------
 
+[ ] R&D Redis store
 [ ] Background jobs
 [ ] Rss parser
 [ ] Import a service
