@@ -34,6 +34,7 @@ Phase 1.1
 [x] Functional testing
 [ ] Performance tests, ab metrics
 [ ] Move port to config file and prepare envTest.js config
+[ ] Console.log to Winston logger
 
 Phase 1.2
 ---------
@@ -59,6 +60,11 @@ Phase 2
 [ ] Subscribers
 [ ] Subscriptions
 [ ] Unit testing
+
+Phase 2.1
+---------
+
+[ ] Nginx and node installation
 
 Phase 2.x
 ---------
