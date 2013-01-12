@@ -16,7 +16,7 @@ exports.addModel = function(db) {
 
     var returnAnon = function() {
       User.findByUsername('anonymous', function(user) {
-        return callback(user.id);
+        callback(user.id);
       })
     }
 
@@ -35,7 +35,7 @@ exports.addModel = function(db) {
     console.log('User.findByUsername("' + username + '")')
     db.get('username:' + username + ':uid', function (err, userId) {
       User.find(userId, function(user) { 
-        return callback(user)
+        callback(user)
       })
     })  
   }
@@ -48,7 +48,7 @@ exports.addModel = function(db) {
       if (attrs === null) attrs = {}
 
       attrs.id = userId
-      return callback(new User(attrs))
+      callback(new User(attrs))
     })
   },
 
@@ -80,7 +80,7 @@ exports.addModel = function(db) {
 
     toJSON: function(callback) {
       console.log('- user.toJSON()')
-      return callback({
+      callback({
         id: this.id,
         username: this.username
       })

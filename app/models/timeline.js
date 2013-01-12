@@ -92,7 +92,7 @@ exports.addModel = function(db) {
       }, function(err, postsJSON) {
         models.User.find(that.userId, function(user) {
           user.toJSON(function(user) {
-            return callback({ 
+            callback({ 
               user: user,
               posts: postsJSON
             })

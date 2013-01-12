@@ -31,7 +31,7 @@ exports.addModel = function(db) {
       // TODO: check if we find an attachment
       attrs.id = attachmentId
       var attachment = new Attachment(attrs)
-      return callback(attachment)
+      callback(attachment)
     })
   },
 
@@ -85,11 +85,11 @@ exports.addModel = function(db) {
                }, function(err, res) {
                  if (that.postId) {
                    models.Post.addAttachment(that.postId, that.id, function() {
-                     return callback(that)
+                     callback(that)
                    })
                  } else {
                    // TODO: workaround - please read above
-                   return callback(that)
+                   callback(that)
                  }
                })
     },
@@ -113,10 +113,10 @@ exports.addModel = function(db) {
             filename: thumbnail.filename,
             path: thumbnail.path
           }
-          return callback(attrs)
+          callback(attrs)
         })
       } else { 
-        return callback(attrs)
+        callback(attrs)
       }
     }
 

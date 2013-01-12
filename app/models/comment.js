@@ -28,7 +28,7 @@ exports.addModel = function(db) {
       var comment = new Comment(attrs)
       models.User.find(attrs.userId, function(user) {
         comment.user = user
-        return callback(comment)
+        callback(comment)
       })
     })
   }
@@ -59,7 +59,7 @@ exports.addModel = function(db) {
                      'postId': that.postId.toString()
                    }, function(err, res) {
                      models.Post.addComment(that.postId, that.id, function() {
-                       return callback(that)
+                       callback(that)
                      })
                    })
         } else {

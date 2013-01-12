@@ -35,12 +35,12 @@ exports.addModel = function(db) {
             post.getAttachments(function(attachments) {
               post.attachments = attachments
 
-              return callback(post)
+              callback(post)
             })
           })
         })
       } else {
-        return callback(null)
+        callback(null)
       }
     })
   }
@@ -105,7 +105,7 @@ exports.addModel = function(db) {
 
   // TBD: smart bump
   Post.bumpable = function(postId, callback) {
-    return callback(true);
+    callback(true);
   }
 
   Post.addComment = function(postId, commentId, callback) {
@@ -116,10 +116,10 @@ exports.addModel = function(db) {
         Post.bumpable(postId, function(bump) {
           if (bump) {
             models.Timeline.updatePost(userId, postId, function() {
-              return callback();
+              callback();
             })
           } else {
-            return callback();
+            callback();
           }
         })
       })
@@ -130,7 +130,7 @@ exports.addModel = function(db) {
     console.log('Post.addAttachment("' + postId + '", "' + attachmentId + '")')
 
     db.rpush('post:' + postId + ':attachments', attachmentId, function() {
-      return callback();
+      callback();
     })
   }
 
@@ -180,7 +180,7 @@ exports.addModel = function(db) {
                }, function(err, res) {
                  models.Timeline.newPost(that.userId, that.id, function() {
                    // BUG: updatedAt is different now than we set few lines above
-                   return callback(that)
+                   callback(that)
                  })
                })
     },
@@ -200,16 +200,16 @@ exports.addModel = function(db) {
         models.User.find(that.userId, function(user) {
           async.map(comments, function(comment, callback) {
             comment.toJSON(function(json) {
-              return callback(null, json)
+              callback(null, json)
             })
           }, function(err, commentsJSON) {
             async.map(that.attachments, function(attachment, callback) {
               attachment.toJSON(function(json) {
-                return callback(null, json)
+                callback(null, json)
               })
             }, function(err, attachmentsJSON) {
               user.toJSON(function(user) {
-                return callback({ 
+                callback({ 
                   id: that.id,
                   createdAt: that.createdAt,
                   updatedAt: that.updatedAt,
