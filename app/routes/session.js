@@ -6,16 +6,20 @@ exports.addRoutes = function(app) {
     res.render('session');
   });
 
-  app.post('/session',
-           passport.authenticate('local', {
-             successRedirect: '/',
-             failureRedirect: '/session',
-             failureFlash: true,
-             successFlash: true
-           }));
+  app.post('/session', function(req, res, next) {
+    passport.authenticate('local', function(err, user, info) {
+      if (err) { return next(err); }
+      if (!user) { return res.redirect('/session'); }
+      req.logIn(user, function(err) {
+        if (err) { return next(err); }
+        req.session.userId = user.id
+        return res.redirect('/');
+      });
+    })(req, res, next);
+  })
 
   app.get('/logout', function(req, res){
-    req.session.destroy();
+    req.logout()
     res.redirect("/")
   });
 }
