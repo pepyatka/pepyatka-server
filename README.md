@@ -25,19 +25,19 @@ Database
 
 ```
 username:<username>:uid
-user:<user_id> { username: <username> }
-user:<user_id>:timelines [ <timeline_id>, <timeline_id> ] # not implemented yet
+user:<userId> { username, hashedPassword, salt, createdAt, updatedAt }
+user:<userId>:timelines [ <timelineId> ] # not implemented yet
 
-post:<post_id> { body: <body>, created_at: <timestamp>, user_id: <user_id> }
-post:<post_id>:comments [ <comment_id>, <comment_id> ]
-post:<post_id>:attachments [ <attachment_id>, <attachment_id> ]
-post:<post_id>:timelines [ <timeline_id>, <timeline_id> ] # not implemented yet
+post:<postId> { body, createdAt, updatedAt, userId }
+post:<postId>:comments [ <commentId> ]
+post:<postId>:attachments [ <attachmentId> ]
+post:<postId>:timelines [ <timelineId> ] # not implemented yet
 
-comment:<comment_id> { body: <body>, created_at: <timestamp>, user_id: <user_id>, post_id: <post_id> }
+comment:<commentId> { body, createdAt, userId, postId }
 
-timeline:<timeline_id> ( <post_id>:<timestamp> <post_id>:<timestamp> ) # not implemented yet - TBD
+timeline:<timelineId> ( <postId>:<timestamp> )
 
-attachment:<attachment_id> { mimeType, filename, extension, path, [thumbnail_id] }
+attachment:<attachmentId> { mimeType, filename, extension, path, [thumbnail_id] }
 ```
 
 API

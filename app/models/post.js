@@ -29,7 +29,7 @@ exports.addModel = function(db) {
 
         post.getComments(function(comments) {
           post.comments = comments
-          models.User.find(attrs.userId, function(user) {
+          models.User.findById(attrs.userId, function(user) {
             post.user = user
 
             post.getAttachments(function(attachments) {
@@ -197,7 +197,7 @@ exports.addModel = function(db) {
       var that = this;
 
       this.getComments(function(comments) {
-        models.User.find(that.userId, function(user) {
+        models.User.findById(that.userId, function(user) {
           async.map(comments, function(comment, callback) {
             comment.toJSON(function(json) {
               callback(null, json)

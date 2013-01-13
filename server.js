@@ -4,6 +4,8 @@ var express = require('express')
   , path = require('path')
   , engine = require('ejs-locals')
   , fs = require('fs')
+  , flash = require('connect-flash')
+  , passport = require('passport')
 
 module.exports = app;
 
@@ -46,6 +48,10 @@ app.configure(function() {
     store: new RedisStore,
     cookie: { secure: false, maxAge:86400000 }
   }));
+  app.use(flash());
+
+  app.use(passport.initialize());
+  app.use(passport.session());
 
   app.use(app.router);
   app.use(express.static(path.join(__dirname, 'public')));

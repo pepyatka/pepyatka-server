@@ -26,7 +26,7 @@ exports.addModel = function(db) {
       // TODO: check if we find a comment
       attrs.id = commentId
       var comment = new Comment(attrs)
-      models.User.find(attrs.userId, function(user) {
+      models.User.findById(attrs.userId, function(user) {
         comment.user = user
         callback(comment)
       })
@@ -72,7 +72,7 @@ exports.addModel = function(db) {
     toJSON: function(callback) {
       console.log("- comment.toJSON()")
       var that = this;
-      models.User.find(this.userId, function(user) {
+      models.User.findById(this.userId, function(user) {
         user.toJSON(function(user) {
           callback({
             id: that.id,

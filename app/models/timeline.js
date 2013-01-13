@@ -90,7 +90,7 @@ exports.addModel = function(db) {
           })
         })
       }, function(err, postsJSON) {
-        models.User.find(that.userId, function(user) {
+        models.User.findById(that.userId, function(user) {
           user.toJSON(function(user) {
             callback({ 
               user: user,

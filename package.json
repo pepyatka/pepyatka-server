@@ -18,6 +18,9 @@
     "supertest": "0.5.1",
     "mocha": "1.8.1",
     "passport": "0.1.15",
-    "connect-redis": "1.4.5"
+    "passport-twitter": "0.1.4",
+    "passport-local": "0.1.6"
+    "connect-redis": "1.4.5",
+    "connect-flash": "0.1.0"
   }
 }
