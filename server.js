@@ -38,10 +38,14 @@ app.configure(function() {
   app.use(express.limit('50mb'));
 
   app.use(express.methodOverride());
-  app.use(express.cookieParser(conf.secret));
 
-  // TODO: use Redis to store sessions
-  app.use(express.session());
+  app.use(express.cookieParser(conf.secret));
+  var RedisStore = require('connect-redis')(express);
+  app.use(express.session({
+    secret: conf.secret,
+    store: new RedisStore,
+    cookie: { secure: false, maxAge:86400000 }
+  }));
 
   app.use(app.router);
   app.use(express.static(path.join(__dirname, 'public')));

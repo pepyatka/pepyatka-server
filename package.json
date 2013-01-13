@@ -16,6 +16,8 @@
     "async": "0.1.22",
     "gm": "1.8.1",
     "supertest": "0.5.1",
-    "mocha": "1.8.1"
+    "mocha": "1.8.1",
+    "passport": "0.1.15",
+    "connect-redis": "1.4.5"
   }
 }
