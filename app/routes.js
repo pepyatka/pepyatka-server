@@ -52,8 +52,6 @@ module.exports = function(app) {
   // user.addRoutes(app);
   // session.addRoutes(app);
 
-  // TODO: refactor to remove connection argument - we can get by with
-  // redis pub/sub
   home.addRoutes(app);
   posts.addRoutes(app);
   comments.addRoutes(app);
