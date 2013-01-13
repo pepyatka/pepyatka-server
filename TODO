@@ -32,19 +32,19 @@ Phase 1.1
 [x] Publish to Githib
 [x] Text parser - links
 [x] Functional testing
-[ ] Move port to config file and prepare envTest.js config
-[ ] Console.log to Winston logger
 
 Phase 1.2
 ---------
 
-[ ] Trim post/comment body before save
-[ ] Signup page
-[ ] user.createdAt field
 [ ] Public timelines and URLs
 [ ] Socket collection refactoring
+[ ] Trim post/comment body before save
 [ ] Replace comment text field to text area
 [ ] Auto-expandable comment and post text areas
+[ ] Move port to config file and prepare envTest.js config
+[ ] Console.log to Winston logger
+[x] Signup page
+[x] user.createdAt field
 
 Phase 2.0
 ---------
