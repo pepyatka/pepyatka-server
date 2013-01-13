@@ -36,6 +36,7 @@ Phase 1.1
 Phase 1.2
 ---------
 
+[ ] Twitter auth instead of our simple signup system
 [ ] Public timelines and URLs
 [ ] Socket collection refactoring
 [ ] Trim post/comment body before save
