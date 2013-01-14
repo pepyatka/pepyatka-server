@@ -100,6 +100,9 @@ footer {
 .container .submitForm {
     margin: 0 0 8px 0;
 }
+.container .submitForm textarea {
+    color: #000;
+}
 
 .a-post .post .body .text, .a-post .post .author {
     font-size: 21px;
