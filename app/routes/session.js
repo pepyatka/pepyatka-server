@@ -12,8 +12,7 @@ exports.addRoutes = function(app) {
       if (!user) { return res.redirect('/session'); }
       req.logIn(user, function(err) {
         if (err) { return next(err); }
-        req.session.userId = user.id
-        return res.redirect('/');
+        return res.redirect('/#/users/' + user.username);
       });
     })(req, res, next);
   })

@@ -13,38 +13,29 @@ var helpers = function(req, res, next) {
   res.locals.loggedIn = function() {
     return req.session.userId !== undefined
   };
+  res.locals.req = req
 
   next();
 };
 
 var findUser = function(req, res, next) {
-  if (req.session.userId === undefined) {
+  if (!req.user) {
     models.User.anon(function(userId) {
-      req.session.userId = userId;
-      
-      next()
+      models.User.findById(req.session.userId, function(user) {
+        if (user) {
+          req.logIn(user, function(err) {
+            next();
+          })
+        } else {
+          // redirect user to auth page.
+
+          next()
+        }
+      })
     });
   } else {
-    // XXX: this could be a broken session as we restart server and
-    // flush data quite frequently
-
     next()
   }
-}
-
-var getUser = function(req, res, next) {
-  models.User.findById(req.session.userId, function(user) {
-    if (user) {
-      res.locals.currentUser = user
-      next();
-    } else {
-      delete req.session.userId
-      // and redirect user to auth page. 
-
-      // however for the time being let's just call findUser one more time
-      findUser(req, res, next())
-    }
-  })
 }
 
 var passport = require('passport')
@@ -84,7 +75,7 @@ module.exports = function(app) {
   user.addRoutes(app);
   session.addRoutes(app);
 
-  app.all('/*', findUser, getUser)
+  app.all('/*', findUser)
 
   home.addRoutes(app);
   posts.addRoutes(app);

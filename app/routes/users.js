@@ -16,7 +16,7 @@ exports.addRoutes = function(app) {
         newUser.save(function(user) {
           req.session.userId = user.id
           
-          res.redirect('/')
+          res.redirect('/#/users/' + user.username)
         })
       } else {
         res.redirect('/signup')

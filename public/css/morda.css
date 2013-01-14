@@ -1,4 +1,4 @@
-a {
+a, a:hover {
     cursor: pointer;
     color: #000088;
 }
@@ -12,11 +12,20 @@ script {
     padding: 0;
 }
 
-.container {
-    margin: 0 auto;
-    max-width: 700px;
+footer {
+    font-size: 10px;
+    color: #aaa;
 }
 
+.container {
+    margin: 0 auto;
+    max-width: 870px;
+}
+
+.container .signin-toolbar {
+    margin: 10px 0 0 0;
+    text-align: right;
+}
 .container input.input-tiny[type="text"] {
     height: 16px;
     font-size: 13px;
@@ -29,6 +38,13 @@ script {
     margin: 4px 0 0 4px;
     overflow: hidden;
     width: 300px; /* 450px */
+}
+
+.profile a {
+    color: #000;
+}
+.profile .author {
+    font-weight: bold
 }
 
 .post .author {
@@ -81,11 +97,6 @@ script {
     color: #000088;
 }
 
-footer {
-    font-size: 10px;
-    color: #aaa;
-}
-
 .container .submitForm {
     margin: 0 0 8px 0;
 }
@@ -100,3 +111,4 @@ footer {
 .a-post .comments .author {
     font-size: 13px;
 }
+
