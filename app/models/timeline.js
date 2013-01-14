@@ -3,7 +3,7 @@ var models = require('../models')
   , redis = require('redis')
 
 exports.addModel = function(db) {
-  var POSTS = 10
+  var POSTS = 25
 
   // TODO: User may have one or more timelines. Each timeline is a
   // sorted set. User must has two required timelines:
