@@ -48,9 +48,19 @@ Phase 1.2
 [x] user.createdAt field
 [x] Limit length of comment and post
 
+Phase 1.3 - improvements
+------------------------
+
+[ ] Display username somewhere in that damn layout
+[ ] Bump post if and only if it's missing on a page
+[ ] Comment link to show form just below all comments
+[ ] Navigation
+[ ] Render Not found page if user follows deleted post
+[ ] Check single post view and delete post event
+[ ] Do not apply animation effect for first posts
+
 Phase 2.0
 ---------
-
 [ ] Direct messages
 [ ] R&D: Ember.Data, Ember.Resource
 [ ] Private feed
@@ -58,31 +68,24 @@ Phase 2.0
 [ ] Subscriptions
 [ ] Unit testing
 [ ] Refactor save function to two separate functions: create and update
+[ ] Nginx and node installation
 
 Phase 2.1
 ---------
 
-[ ] Nginx and node installation
-
 Phase 2.x
 ---------
+[ ] Limit length of parsed link, e.g. 30 symbs
 [ ] Embed vimeo
-[ ] Render Not found page if user follows deleted post
-[ ] Check single post view and delete post event
 [ ] First and last comments as two extra post fields
 [ ] Migration to hiredis
 [ ] Multiple attachments
-[ ] Limit length of parsed link, e.g. 30 symbs
-[ ] Do not apply animation effect for first posts
 [ ] Random file uploads
 [ ] Music player
 [ ] Embed youtube
 [ ] Show notice if could upload attachment
 [ ] Performance tests, ab metrics
 [ ] R&D: Nohm lib
-[ ] Bump post if and only if it's missing on a page
-[ ] Navigation
-[ ] Comment link to show form just below all comments
 
 Phase 3
 -------
