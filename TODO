@@ -86,6 +86,7 @@ Phase 2.x
 [ ] Show notice if could upload attachment
 [ ] Performance tests, ab metrics
 [ ] R&D: Nohm lib
+[ ] Spinner on ajax requests
 
 Phase 3
 -------
