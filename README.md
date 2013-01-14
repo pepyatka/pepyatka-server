@@ -37,7 +37,7 @@ comment:<commentId> { body, createdAt, userId, postId }
 
 timeline:<timelineId> ( <postId>:<timestamp> )
 
-attachment:<attachmentId> { mimeType, filename, extension, path, [thumbnail_id] }
+attachment:<attachmentId> { mimeType, filename, extension, path, [thumbnailId] }
 ```
 
 API
