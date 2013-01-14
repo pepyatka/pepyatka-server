@@ -340,7 +340,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
     this.set('content', [])
 
     $.ajax({
-      url: '/v1/timeline/anonymous',
+      url: '/v1/timeline/' + this.get('timeline'),
       dataType: 'jsonp',
       context: this,
       success: function(response){
@@ -380,16 +380,41 @@ App.Router = Ember.Router.extend({
 
       showPost: Ember.Route.transitionTo('aPost'),
       showAllPosts: Ember.Route.transitionTo('posts'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
       
       connectOutlets: function(router){ 
+        App.postsController.set('timeline', 'anonymous')
         router.get('applicationController').connectOutlet('posts', App.postsController.findAll());
       }
     }),
 
+    // Quite bad design - mostly copy&paste of / route
+    userTimeline: Ember.Route.extend({
+      route: '/users/:username',
+
+      showPost: Ember.Route.transitionTo('aPost'),
+      showAllPosts: Ember.Route.transitionTo('posts'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+
+      connectOutlets: function(router, username) {
+        App.postsController.set('timeline', username)
+        router.get('applicationController').connectOutlet('posts', App.postsController.findAll());
+      },
+
+      serialize: function(router, username) {
+        return {username: username}
+      },
+
+      deserialize: function(router, urlParams) {
+        return urlParams.username
+      }
+    }),
+
     aPost: Ember.Route.extend({
-      route: '/:postId',
+      route: '/posts/:postId',
 
       showAllPosts: Ember.Route.transitionTo('posts'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
       
       connectOutlets: function(router, context) {
         router.get('applicationController').connectOutlet('onePost', context);

@@ -62,7 +62,7 @@
         </span>
         - 
         <span class="author">
-          <a>{{createdBy.username}}</a>
+          <a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a>
         </span>
       </div>
     {{/with}}
@@ -79,7 +79,7 @@
       </div>
 
       <div class="media-body post">
-        <h5 class="media-heading author"><a>{{createdBy.username}}</a></h5>
+        <h5 class="media-heading author"><a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a></h5>
 
         <div class="body">
           <div class="text">{{body}}</div>
@@ -136,7 +136,7 @@
     </div>
     
     <div class="media-body post">
-      <h5 class="media-heading author"><a>{{createdBy.username}}</a></h5>
+      <h5 class="media-heading author"><a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a></h5>
     
       <div class="body">
         <div class="text">{{body}}</div>
