@@ -69,6 +69,7 @@ Phase 2.0
 [ ] Unit testing
 [ ] Refactor save function to two separate functions: create and update
 [ ] Nginx and node installation
+[ ] Owners can edit their posts
 
 Phase 2.1
 ---------
@@ -88,6 +89,7 @@ Phase 2.x
 [ ] R&D: Nohm lib
 [ ] Spinner on ajax requests
 [ ] Do not minimize image if it's already smaller enough
+[ ] Profile picture
 
 Phase 3
 -------
