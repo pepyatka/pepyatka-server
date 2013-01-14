@@ -64,7 +64,8 @@ App.PostContainerView = Ember.View.extend({
       collapseEffect: 'fadeOut'
     })
 
-    this.$().hide().slideDown('slow');
+    if (App.postsController.get('initialCommit'))
+      this.$().hide().slideDown('slow');
   },
 
   willDestroyElement: function() {
@@ -95,8 +96,8 @@ App.CommentContainerView = Ember.View.extend({
       collapseEffect: 'fadeOut'
     })
 
-    this.$().hide().slideDown('fast');
-
+    if (App.postsController.get('initialCommit'))
+      this.$().hide().slideDown('fast');
   }
 })
 
@@ -248,6 +249,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
   content: [],
   body: '',
   isProgressBarHidden: 'hidden',
+  initialCommit: false,
 
   sortProperties: ['updatedAt'],
   sortAscending: false,
@@ -337,6 +339,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
   },
 
   findAll: function() {
+    this.set('initialCommit', false)
     this.set('content', [])
 
     $.ajax({
@@ -348,6 +351,14 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
           var post = App.Post.create(attrs)
           this.addObject(post)
         }, this)
+
+        // Quite dirty solution to disable initial slideDown animation
+        // on newComment and newPost
+        setTimeout(function(that) {
+          return function() {
+            that.set('initialCommit', true)
+          }
+        }(this), 1000)
       }
     })
     return this
