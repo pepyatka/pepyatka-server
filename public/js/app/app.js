@@ -50,10 +50,21 @@ App.PostContainerView = Ember.View.extend({
   },
 
   didInsertElement: function() {
-    this.$().hide().slideDown('slow');
-
     // wrap anchor tags around links in post text
     this.$().find('.text').anchorTextUrls();
+    // please read https://github.com/kswedberg/jquery-expander/issues/24
+    this.$().find('.text').expander({
+      slicePoint: 350,
+      expandPrefix: '&hellip; ',
+      preserveWords: true,
+      expandText: 'More',
+      userCollapseText: '',
+      collapseTimer: 0,
+      expandEffect: 'fadeIn',
+      collapseEffect: 'fadeOut'
+    })
+
+    this.$().hide().slideDown('slow');
   },
 
   willDestroyElement: function() {
@@ -71,10 +82,21 @@ App.CommentContainerView = Ember.View.extend({
   templateName: 'comment-view',
 
   didInsertElement: function() {
-    this.$().hide().slideDown('fast');
-
     // wrap anchor tags around links in comments
     this.$().find('.body').anchorTextUrls();
+    this.$().find('.body').expander({
+      slicePoint: 512,
+      expandPrefix: '&hellip; ',
+      preserveWords: true,
+      expandText: 'More',
+      userCollapseText: '',
+      collapseTimer: 0,
+      expandEffect: 'fadeIn',
+      collapseEffect: 'fadeOut'
+    })
+
+    this.$().hide().slideDown('fast');
+
   }
 })
 

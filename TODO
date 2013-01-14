@@ -46,6 +46,7 @@ Phase 1.2
 [ ] Console.log to Winston logger
 [x] Signup page
 [x] user.createdAt field
+[x] Limit length of comment and post
 
 Phase 2.0
 ---------
@@ -71,7 +72,6 @@ Phase 2.x
 [ ] Migration to hiredis
 [ ] Multiple attachments
 [ ] Limit length of parsed link, e.g. 30 symbs
-[ ] Limit length of comment and post
 [ ] Do not apply animation effect for first posts
 [ ] Random file uploads
 [ ] Music player
