@@ -57,6 +57,7 @@ Phase 2.0
 [ ] Subscribers
 [ ] Subscriptions
 [ ] Unit testing
+[ ] Refactor save function to two separate functions: create and update
 
 Phase 2.1
 ---------
