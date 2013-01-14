@@ -80,6 +80,9 @@ Phase 2.x
 [ ] Show notice if could upload attachment
 [ ] Performance tests, ab metrics
 [ ] R&D: Nohm lib
+[ ] Bump post if and only if it's missing on a page
+[ ] Navigation
+[ ] Comment link to show form just below all comments
 
 Phase 3
 -------
