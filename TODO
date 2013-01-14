@@ -87,6 +87,7 @@ Phase 2.x
 [ ] Performance tests, ab metrics
 [ ] R&D: Nohm lib
 [ ] Spinner on ajax requests
+[ ] Do not minimize image if it's already smaller enough
 
 Phase 3
 -------
