@@ -5,7 +5,7 @@ var models = require('../models')
 exports.addRoutes = function(app, connections) {
   app.post('/v1/comments', function(req, res){
     // TODO: filter body params - known as strong params
-    var newComment = res.locals.currentUser.newComment({
+    var newComment = req.user.newComment({
       body: req.body.body,
       postId: req.body.postId
     })

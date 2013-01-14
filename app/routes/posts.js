@@ -21,7 +21,7 @@ exports.addRoutes = function(app) {
 
   app.post('/v1/posts', function(req, res) {
     // creates and saves new post
-    var newPost = res.locals.currentUser.newPost({body: req.body.body})
+    var newPost = req.user.newPost({body: req.body.body})
 
     newPost.save(function(post) {
       // process files

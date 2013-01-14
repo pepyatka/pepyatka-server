@@ -10,9 +10,6 @@ var session = require('./routes/session')
 var models = require('./models');
 
 var helpers = function(req, res, next) {
-  res.locals.loggedIn = function() {
-    return req.session.userId !== undefined
-  };
   res.locals.req = req
 
   next();
@@ -21,7 +18,7 @@ var helpers = function(req, res, next) {
 var findUser = function(req, res, next) {
   if (!req.user) {
     models.User.anon(function(userId) {
-      models.User.findById(req.session.userId, function(user) {
+      models.User.findById(userId, function(user) {
         if (user) {
           req.logIn(user, function(err) {
             next();

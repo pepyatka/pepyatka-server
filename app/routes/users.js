@@ -14,9 +14,9 @@ exports.addRoutes = function(app) {
     models.User.findByUsername(newUser.username, function(user) {
       if (user == null) {
         newUser.save(function(user) {
-          req.session.userId = user.id
-          
-          res.redirect('/#/users/' + user.username)
+          req.logIn(user, function(err) {
+            res.redirect('/#/users/' + user.username)
+          })
         })
       } else {
         res.redirect('/signup')
