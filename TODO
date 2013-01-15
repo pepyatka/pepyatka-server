@@ -40,8 +40,8 @@ Phase 1.2
 [ ] Socket collection refactoring
 [ ] Replace comment text field to text area
 [ ] Auto-expandable comment and post text areas
-[ ] Move port to config file and prepare envTest.js config
 [ ] Console.log to Winston logger
+[x] Move port to config file and prepare envTest.js config
 [x] Public timelines and URLs
 [x] Trim post/comment body before save
 [x] Signup page

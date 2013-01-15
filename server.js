@@ -24,7 +24,7 @@ app.configure(function() {
   app.engine('ejs', engine);
   app.set('view engine', 'ejs');
 
-  app.set('port', process.env.PORT || 3000);
+  app.set('port', conf.port);
   app.set('views', __dirname + '/app/scripts/views');
 
   app.enable("jsonp callback");
