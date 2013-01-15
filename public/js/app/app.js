@@ -11,6 +11,8 @@ App.PostsView = Ember.View.extend({
 
   submitPost: function() {
     App.postsController.submitPost()
+    // dirty way to restore original height of post textarea
+    this.$().find('textarea').height('56px')
   }
 });
 
@@ -23,6 +25,8 @@ App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
 
   insertNewline: function() {
     this.triggerAction();
+    // dirty way to restore original height of post textarea
+    this.$().find('textarea').height('56px') 
   },
 
   didInsertElement: function() {
@@ -124,7 +128,8 @@ App.CommentForm = Ember.View.extend({
   autoFocus: function () {
     if (this.get('parentView.isFormVisible') == true) {
       this.$().hide().show("fast");
-      this.$('input').focus();
+      this.$('textarea').focus();
+      this.$('textarea').trigger('keyup') // to apply autogrow
     }
   }.observes('parentView.isFormVisible'),
 

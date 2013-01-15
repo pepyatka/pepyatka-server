@@ -9,7 +9,7 @@
       var self = this;
       var $self = $(self);
       var minHeight = $self.height();
-      var noFlickerPad = $self.hasClass('autogrow-short') ? 0 : parseInt($self.css('lineHeight'));
+      var noFlickerPad = $self.hasClass('autogrow-short') ? 0 : parseInt($self.css('lineHeight')) - 3;
 
       var shadow = $('<div></div>').css({
         position: 'absolute',

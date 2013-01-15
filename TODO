@@ -36,7 +36,7 @@ Phase 1.1
 Phase 1.2
 ---------
 
-[ ] Adjust textfield and textarea autogrow and basis heights
+[x] Adjust textfield and textarea autogrow and basis heights
 [x] Socket collection refactoring
 [x] R&D Redis store
 [x] Console.log to Winston logger
