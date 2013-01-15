@@ -27,6 +27,7 @@ App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
 
   didInsertElement: function() {
     this.$().focus();
+    this.$().autogrow();
   }
 })
 
@@ -151,6 +152,10 @@ App.CreateCommentView = Ember.TextArea.extend(Ember.TargetActionSupport, {
 
   insertNewline: function() {
     this.triggerAction();
+  },
+
+  didInsertElement: function() {
+    this.$().autogrow();
   }
 })
 
