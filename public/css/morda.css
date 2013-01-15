@@ -26,9 +26,6 @@ footer {
     margin: 10px 0 0 0;
     text-align: right;
 }
-.container .comment-form {
-    margin-left: 20px;
-}
 .container .comment-area {
     height: 16px;
     font-size: 13px;
@@ -96,10 +93,11 @@ footer {
     margin-right: 4px;
 }
 
-.comment-form {
+.post .comment-form {
     font-size: 13px;
+    margin: 4px 0 0 20px;
 }
-.comment-form a {
+.post .comment-form a {
     color: #000088;
 }
 
