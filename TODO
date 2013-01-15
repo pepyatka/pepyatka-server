@@ -38,6 +38,7 @@ Phase 1.2
 
 [ ] Adjust textfield and textarea autogrow and basis heights
 [x] Socket collection refactoring
+[x] R&D Redis store
 [x] Console.log to Winston logger
 [x] Auto-expandable comment and post text areas
 [x] Replace comment text field to text area
@@ -104,7 +105,6 @@ Phase 2.x
 Phase 3
 -------
 
-[ ] R&D Redis store
 [ ] Background jobs
 [ ] Rss parser
 [ ] Import a service
