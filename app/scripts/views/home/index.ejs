@@ -215,7 +215,7 @@
 <script>
   var socket = io.connect('/');
 
-  socket.emit('subscribe', { });
+  socket.emit('subscribe', { userId: '<%= req.user.id %>' });
 
   socket.on('newPost', function (data) {
     var post = App.Post.create(data.post)

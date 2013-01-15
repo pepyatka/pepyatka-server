@@ -36,8 +36,8 @@ Phase 1.1
 Phase 1.2
 ---------
 
-[ ] Socket collection refactoring
 [ ] Adjust textfield and textarea autogrow and basis heights
+[x] Socket collection refactoring
 [x] Console.log to Winston logger
 [x] Auto-expandable comment and post text areas
 [x] Replace comment text field to text area
@@ -75,6 +75,8 @@ Phase 2.0
 [ ] Refactor save function to two separate functions: create and update
 [ ] Nginx and node installation
 [ ] Owners can edit their posts
+[ ] Passport and socket.io
+[ ] Clear sockets in redis store on restart
 
 Phase 2.1
 ---------

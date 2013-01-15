@@ -2,10 +2,10 @@ var models = require('./app/models')
   , uuid = require('node-uuid')
   , async = require('async')
 
-exports.listen = function(server, connections) {
+exports.listen = function(server) {
   var io = require('socket.io').listen(server)
 
-  io.configure('production', function(){
+  io.configure('production', function() {
     io.enable('browser client etag');
     io.enable('browser client minification');
     io.enable('browser client gzip');
@@ -21,9 +21,21 @@ exports.listen = function(server, connections) {
     ]);
   });
 
-  io.configure('development', function(){
+  io.configure('development', function() {
     io.set('transports', ['websocket']);
   });
+
+  var RedisStore = require('socket.io/lib/stores/redis')
+    , redis = require('redis')
+    , pub = redis.createClient()
+    , sub = redis.createClient()
+    , client = redis.createClient();
+
+  io.set('store', new RedisStore({
+      redisPub: pub
+    , redisSub: sub
+    , redisClient: client
+  }));
 
   io.sockets.on(
     'connection',
@@ -33,35 +45,12 @@ exports.listen = function(server, connections) {
       // can get by with this simple push/pull, however once we
       // introduce real users - needs to be heavily refactored 
       socket.on('subscribe', function(data) {
-        // TODO: can return just ID instead of entire record
-        console.log('User ' + data.username + ' has connected')
+        console.log('User ' + data.userId + ' has connected')
         
-        // save socket connections to redis to make them persistent
-        socket.userId = uuid.v4()
-        connections[socket.userId] = socket
-      }),
-      
-      // User wants to stop listening to real-time updates
-      socket.on('unsubscribe', function(data) {
-        // Nothing to do here yet
-      }),
-      
-      // New message sent
-      socket.on('post', function(data) {
-        console.log('new post')
-      }),
-      
-      // New comment sent
-      socket.on('comment', function(data) {
-      }),
-
-      // TODO: frankly speaking we never emit that event. As a result
-      // once client closes its browser we will be sending updates to
-      // nowhere. But for the time being we can skip this - I bet
-      // there are 2.5 anons on that board.
-      socket.on('disconnect', function() {
-        delete connections[socket.userId]
+        socket.set('userId', data.userId)
       })
     }
   )
+
+  return io;
 }

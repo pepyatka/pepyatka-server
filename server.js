@@ -5,6 +5,7 @@ var express = require('express')
   , engine = require('ejs-locals')
   , fs = require('fs')
   , flash = require('connect-flash')
+  , async = require('async')
   , passport = require('passport')
 
 module.exports = app;
@@ -82,11 +83,9 @@ app.configure('development', function() {
   app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
 });
 
-var connections = {}
-
 var server = http.createServer(app)
-  , socket = require('./io').listen(server, connections)
-  , pubsub = require('./pubsub').listen(connections)
+  , io = require('./io').listen(server)
+  , pubsub = require('./pubsub').listen(io)
   , routes = require('./app/routes')(app)
 
 server.listen(app.get('port'), function() {
