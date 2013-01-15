@@ -35,7 +35,7 @@ post:<postId>:timelines [ <timelineId> ] # not implemented yet
 
 comment:<commentId> { body, createdAt, userId, postId }
 
-timeline:<timelineId> ( <postId>:<timestamp> )
+timeline:<userId> ( <postId>:<timestamp> )
 
 attachment:<attachmentId> { mimeType, filename, extension, path, [thumbnailId] }
 ```
