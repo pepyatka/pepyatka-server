@@ -36,9 +36,8 @@ Phase 1.1
 Phase 1.2
 ---------
 
-[ ] Twitter auth instead of our simple signup system
 [ ] Socket collection refactoring
-[ ] Console.log to Winston logger
+[x] Console.log to Winston logger
 [x] Auto-expandable comment and post text areas
 [x] Replace comment text field to text area
 [x] Move port to config file and prepare envTest.js config
@@ -95,6 +94,8 @@ Phase 2.x
 [ ] Do not minimize image if it's already smaller enough
 [ ] Profile picture
 [ ] Likes
+[ ] Sign in as Ember route and view
+[ ] Twitter auth instead of our simple signup system
 
 Phase 3
 -------

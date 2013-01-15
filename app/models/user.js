@@ -2,10 +2,11 @@ var uuid = require('node-uuid')
   , models = require('../models')
   , async = require('async')
   , crypto = require('crypto')
+  , logger = require('../../logger').create()
 
 exports.addModel = function(db) {
   function User(params) {
-    console.log('new User(' + JSON.stringify(params) + ')')
+    logger.debug('new User(' + JSON.stringify(params) + ')')
 
     this.id = params.id
     this.username = params.username
@@ -18,7 +19,7 @@ exports.addModel = function(db) {
 
   // TODO: create Anonymous model which is inherited from User
   User.anon = function(callback) {
-    console.log('User.anon()')
+    logger.debug('User.anon()')
     // init anonymous user if it doesn't exist yet
     var userId = uuid.v4();
 
@@ -40,7 +41,7 @@ exports.addModel = function(db) {
   }
 
   User.findByUsername = function(username, callback) {
-    console.log('User.findByUsername("' + username + '")')
+    logger.debug('User.findByUsername("' + username + '")')
     db.get('username:' + username + ':uid', function (err, userId) {
       User.findById(userId, function(user) {
         // TODO: callback(err, user)
@@ -53,7 +54,7 @@ exports.addModel = function(db) {
   }
 
   User.findById = function(userId, callback) {
-    console.log('User.findById("' + userId + '")')
+    logger.debug('User.findById("' + userId + '")')
     db.hgetall('user:' + userId, function(err, attrs) {
       // XXX: Seems it's either deleted user or broken session. Redirect to
       // auth method... some day.
@@ -67,7 +68,7 @@ exports.addModel = function(db) {
   },
 
   User.generateSalt = function(callback) {
-    console.log('- User.generateSalt()')
+    logger.debug('- User.generateSalt()')
     // Note: this is an async function - quite interesting
     return crypto.randomBytes(16, function(ex, buf) {
       var token = buf.toString('hex');
@@ -76,7 +77,7 @@ exports.addModel = function(db) {
   }
 
   User.hashPassword = function(clearPassword) {
-    console.log('- User.hashPassword()')
+    logger.debug('- User.hashPassword()')
     // TODO: move this random string to configuration file
     return crypto.createHash("sha1").
       update(conf.saltSecret).
@@ -86,7 +87,7 @@ exports.addModel = function(db) {
 
   User.prototype = {
     updateHashedPassword: function(callback) {
-      console.log('- user.updateHashedPassword()')
+      logger.debug('- user.updateHashedPassword()')
       if (this.password) {
         this.saltPassword(this.password, function() {
           callback()
@@ -95,7 +96,7 @@ exports.addModel = function(db) {
     },
 
     saltPassword: function(clearPassword, callback) {
-      console.log('- user.saltPassword()')
+      logger.debug('- user.saltPassword()')
 
       var that = this
 
@@ -108,15 +109,13 @@ exports.addModel = function(db) {
     },
 
     validPassword: function(clearPassword) {
-      console.log('- user.validPassword()')
+      logger.debug('- user.validPassword()')
       var hashedPassword = User.hashPassword(this.salt + User.hashPassword(clearPassword))
-      console.log(this.hashedPassword)
-      console.log(hashedPassword)
       return hashedPassword == this.hashedPassword
     },
 
     save: function(callback) {
-      console.log('- user.save()')
+      logger.debug('- user.save()')
 
       var that = this
 
@@ -152,12 +151,12 @@ exports.addModel = function(db) {
     },
 
     posts: function() {
-      console.log('- user.posts()')
+      logger.debug('- user.posts()')
       Timeline.find(this.id)
     },
 
     newPost: function(attrs) {
-      console.log('- user.newPost()')
+      logger.debug('- user.newPost()')
       attrs.userId = this.id
       
       return new models.Post(attrs)
@@ -166,14 +165,14 @@ exports.addModel = function(db) {
     // XXX: do not like the design of this method. I'd say better to
     // put it into Post model
     newComment: function(attrs) {
-      console.log('- user.newComment()')
+      logger.debug('- user.newComment()')
       attrs.userId = this.id
 
       return new models.Comment(attrs)
     },
 
     toJSON: function(callback) {
-      console.log('- user.toJSON()')
+      logger.debug('- user.toJSON()')
       callback({
         id: this.id,
         username: this.username

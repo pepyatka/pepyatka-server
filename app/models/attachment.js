@@ -3,11 +3,12 @@ var uuid = require('node-uuid')
   // need just one or may be two of them, however it's a oneliner.
   , models = require('../models')
   , fs = require('fs')
+  , logger = require('../../logger').create()
 
 exports.addModel = function(db) {
   function Attachment(params) {
     // XXX: well... current logger is awful.
-    console.log('new Attachment(' + JSON.stringify(params) + ')')
+    logger.debug('new Attachment(' + JSON.stringify(params) + ')')
 
     this.id = params.id
 
@@ -26,7 +27,7 @@ exports.addModel = function(db) {
   }
   
   Attachment.find = function(attachmentId, callback) {
-    console.log('Attachment.find("' + attachmentId + '")')
+    logger.debug('Attachment.find("' + attachmentId + '")')
     db.hgetall('attachment:' + attachmentId, function(err, attrs) {
       // TODO: check if we find an attachment
       attrs.id = attachmentId
@@ -37,7 +38,7 @@ exports.addModel = function(db) {
 
   // TODO: attachmentId -> attachmentsId
   Attachment.destroy = function(attachmentId, callback) {
-    console.log('Attachment.destroy("' + attachmentId + '")')
+    logger.debug('Attachment.destroy("' + attachmentId + '")')
     models.Attachment.find(attachmentId, function(attachment) {
       // workaround since we are schemaless
       if (attachment.fsPath) {
@@ -56,7 +57,7 @@ exports.addModel = function(db) {
 
   Attachment.prototype = {
     save: function(callback) {
-      console.log('- attachment.save()')
+      logger.debug('- attachment.save()')
       var that = this
 
       if (this.id === undefined) this.id = uuid.v4()
@@ -95,7 +96,7 @@ exports.addModel = function(db) {
     },
     
     toJSON: function(callback) {
-      console.log('- attachment.toJSON()')
+      logger.debug('- attachment.toJSON()')
 
       var attrs = {
         id: this.id,

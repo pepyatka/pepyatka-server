@@ -2,10 +2,11 @@ var uuid = require('node-uuid')
   , models = require('../models')
   , async = require('async')
   , redis = require('redis')
+  , logger = require('../../logger').create()
 
 exports.addModel = function(db) {
   function Post(params) {
-    console.log('new Post(' + JSON.stringify(params) + ')')
+    logger.debug('new Post(' + JSON.stringify(params) + ')')
     this.body = params.body
 
     // params to filter
@@ -21,7 +22,7 @@ exports.addModel = function(db) {
   }
 
   Post.find = function(postId, callback) {
-    console.log('Post.find("' + postId + '")')
+    logger.debug('Post.find("' + postId + '")')
     db.hgetall('post:' + postId, function(err, attrs) {
       if (attrs) {
         attrs.id = postId
@@ -47,7 +48,7 @@ exports.addModel = function(db) {
 
   // XXX: this is the longest method in the app. Review it once you have time
   Post.destroy = function(postId, callback) {
-    console.log('Post.destroy("' + postId + '")')
+    logger.debug('Post.destroy("' + postId + '")')
 
     models.Post.find(postId, function(post) {
       // This is a parallel process: 
@@ -109,7 +110,7 @@ exports.addModel = function(db) {
   }
 
   Post.addComment = function(postId, commentId, callback) {
-    console.log('Post.addComment("' + postId + '", "' + commentId + '")')
+    logger.debug('Post.addComment("' + postId + '", "' + commentId + '")')
     db.hget('post:' + postId, 'userId', function(err, userId) {
       db.rpush('post:' + postId + ':comments', commentId, function() {
         // Can we bump this post?
@@ -127,7 +128,7 @@ exports.addModel = function(db) {
   }
 
   Post.addAttachment = function(postId, attachmentId, callback) {
-    console.log('Post.addAttachment("' + postId + '", "' + attachmentId + '")')
+    logger.debug('Post.addAttachment("' + postId + '", "' + attachmentId + '")')
 
     db.rpush('post:' + postId + ':attachments', attachmentId, function() {
       callback();
@@ -136,7 +137,7 @@ exports.addModel = function(db) {
 
   Post.prototype = {
     getAttachments: function(callback) {
-      console.log('- post.getAttachments()')
+      logger.debug('- post.getAttachments()')
       var that = this
       db.lrange('post:' + this.id + ':attachments', 0, -1, function(err, attachments) {
         async.map(attachments, function(attachmentId, callback) {
@@ -151,7 +152,7 @@ exports.addModel = function(db) {
 
     // Return all comments
     getComments: function(callback) {
-      console.log('- post.getComments()')
+      logger.debug('- post.getComments()')
       var that = this
       db.lrange('post:' + this.id + ':comments', 0, -1, function(err, comments) {
         async.map(comments, function(commentId, callback) {
@@ -165,7 +166,7 @@ exports.addModel = function(db) {
     },
 
     save: function(callback) {
-      console.log('- post.save()')
+      logger.debug('- post.save()')
       var that = this
       if (!this.createdAt)
         this.createdAt = new Date().getTime()
@@ -186,14 +187,14 @@ exports.addModel = function(db) {
     },
 
     newAttachment: function(attrs) {
-      console.log('- post.newAttachment()')
+      logger.debug('- post.newAttachment()')
       attrs.postId = this.id
       
       return new models.Attachment(attrs)
     },
 
     toJSON: function(callback) {
-      console.log('- post.toJSON()')
+      logger.debug('- post.toJSON()')
       var that = this;
 
       this.getComments(function(comments) {

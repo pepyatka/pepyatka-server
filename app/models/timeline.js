@@ -1,6 +1,7 @@
 var models = require('../models')
   , async = require('async')
   , redis = require('redis')
+  , logger = require('../../logger').create()
 
 exports.addModel = function(db) {
   var POSTS = 25
@@ -11,7 +12,7 @@ exports.addModel = function(db) {
   // - direct messages
   // all other timelines are optional
   function Timeline(params, callback) {
-    console.log('new Timeline(' + params + ')')
+    logger.debug('new Timeline(' + params + ')')
     var that = this;
     this.userId = params.userId
 
@@ -22,7 +23,7 @@ exports.addModel = function(db) {
   }
 
   Timeline.find = function(userId, callback) {
-    console.log('Timeline.find("' + userId + '")')
+    logger.debug('Timeline.find("' + userId + '")')
     var timeline = new Timeline({ userId: userId }, function() {
       callback(timeline)
     })
@@ -30,7 +31,7 @@ exports.addModel = function(db) {
 
   // If user updates timeline we need to
   Timeline.update = function(userId, callback) {
-    console.log('Timeline.update("' + userId + '")')
+    logger.debug('Timeline.update("' + userId + '")')
     db.zrevrange('timeline:' + userId, POSTS, -1, function(err, posts) {
       async.forEach(posts, function(postId, callback) {
         models.Post.destroy(postId, function(err, res) {        
@@ -43,7 +44,7 @@ exports.addModel = function(db) {
   }
 
   Timeline.updatePost = function(userId, postId, callback) {
-    console.log('Timeline.updatePost("' + userId + '", "' + postId + '")')
+    logger.debug('Timeline.updatePost("' + userId + '", "' + postId + '")')
     var currentTime = new Date().getTime()
     db.zadd('timeline:' + userId, currentTime, postId, function(err, res) {
       db.hset('post:' + postId, 'updatedAt', currentTime, function(err, res) {
@@ -53,7 +54,7 @@ exports.addModel = function(db) {
   }
 
   Timeline.newPost = function(userId, postId, callback) {
-    console.log('Timeline.newPost("' + userId + '", "' + postId + '")')
+    logger.debug('Timeline.newPost("' + userId + '", "' + postId + '")')
     var currentTime = new Date().getTime()
     db.zadd('timeline:' + userId, currentTime, postId, function(err, res) {
       Timeline.update(userId, function() {
@@ -66,7 +67,7 @@ exports.addModel = function(db) {
   }
 
   Timeline.posts = function(userId, callback) {
-    console.log('Timeline.posts("' + userId + '")')
+    logger.debug('Timeline.posts("' + userId + '")')
     db.zrevrange('timeline:' + userId, 0, POSTS-1, function(err, posts) {
       async.map(posts, function(postId, callback) {
         models.Post.find(postId, function(post) {
@@ -80,7 +81,7 @@ exports.addModel = function(db) {
 
   Timeline.prototype = {
     toJSON: function(callback) {
-      console.log("- timeline.toJSON()")
+      logger.debug("- timeline.toJSON()")
       var that = this;
 
       async.map(this.posts, function(postId, callback) {
