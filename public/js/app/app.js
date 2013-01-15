@@ -19,6 +19,7 @@ App.PostsView = Ember.View.extend({
 // Create new post text field. Separate view to be able to bind events
 App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
   attributeBindings: ['class'],
+  classNames: ['autogrow-short'],
 
   // TODO: Extract value from controller 
   valueBinding: 'App.postsController.body', 
@@ -153,6 +154,7 @@ App.CommentForm = Ember.View.extend({
 // Create new post text field. Separate view to be able to bind events
 App.CreateCommentView = Ember.TextArea.extend(Ember.TargetActionSupport, {
   attributeBindings: ['class'],
+  classNames: ['autogrow-short'],
   rows: 1,
 
   insertNewline: function() {

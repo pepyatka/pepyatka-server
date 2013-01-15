@@ -100,7 +100,8 @@ Phase 2.x
 [ ] Profile picture
 [ ] Likes
 [ ] Sign in as Ember route and view
-[ ] Twitter auth instead of our simple signup system
+[ ] Twitter auth insetead of our simple signup system
+[ ] Autogrow lib is not cross-browser - refactoring
 
 Phase 3
 -------
