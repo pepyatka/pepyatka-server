@@ -38,9 +38,9 @@ Phase 1.2
 
 [ ] Twitter auth instead of our simple signup system
 [ ] Socket collection refactoring
-[ ] Replace comment text field to text area
 [ ] Auto-expandable comment and post text areas
 [ ] Console.log to Winston logger
+[x] Replace comment text field to text area
 [x] Move port to config file and prepare envTest.js config
 [x] Public timelines and URLs
 [x] Trim post/comment body before save

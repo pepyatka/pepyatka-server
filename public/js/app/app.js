@@ -145,8 +145,9 @@ App.CommentForm = Ember.View.extend({
 });
 
 // Create new post text field. Separate view to be able to bind events
-App.CreateCommentView = Ember.TextField.extend(Ember.TargetActionSupport, {
+App.CreateCommentView = Ember.TextArea.extend(Ember.TargetActionSupport, {
   attributeBindings: ['class'],
+  rows: 1,
 
   insertNewline: function() {
     this.triggerAction();
