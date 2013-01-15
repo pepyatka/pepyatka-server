@@ -56,6 +56,10 @@ Phase 1.3 - improvements
 [ ] Navigation
 [ ] Render Not found page if user follows deleted post
 [ ] Check single post view and delete post event
+[ ] Double check underscore functions in the frontend - chances we do
+    not use it anymore
+[ ] review initialCommit var - there is case when it does not work as
+    expected
 [x] Display username somewhere in that damn layout
 [x] Do not apply animation effect for first posts
 
@@ -90,6 +94,7 @@ Phase 2.x
 [ ] Spinner on ajax requests
 [ ] Do not minimize image if it's already smaller enough
 [ ] Profile picture
+[ ] Likes
 
 Phase 3
 -------
