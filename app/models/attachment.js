@@ -7,7 +7,6 @@ var uuid = require('node-uuid')
 
 exports.addModel = function(db) {
   function Attachment(params) {
-    // XXX: well... current logger is awful.
     logger.debug('new Attachment(' + JSON.stringify(params) + ')')
 
     this.id = params.id
