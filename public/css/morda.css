@@ -64,6 +64,9 @@ footer {
 .post .body .text {
     color: #000
 }
+.post .text .read-more a, .comments .body .read-more a {
+    font-style: italic;
+}
 .post .body .image {
     margin: 3px 0;
 }
