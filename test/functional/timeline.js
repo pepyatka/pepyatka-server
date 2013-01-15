@@ -11,7 +11,7 @@ var server = require('../../server')
 describe('Timeline API', function() {
   it('GET /v1/timeline/anonymous should return json list of posts', function(done) {
     var posts = []
-    var length = 20
+    var length = 40
 
     db.flushdb(function(err) {
       var userId = models.User.anon(function(userId) {
@@ -34,9 +34,9 @@ describe('Timeline API', function() {
               assert.equal(err, null)
               
               var jsonTimeline = res.body
-              assert.equal(jsonTimeline.posts.length, 10)
-              assert.equal(jsonTimeline.posts[0].body, 'postBody-19')
-              assert.equal(jsonTimeline.posts[9].body, 'postBody-10')
+              assert.equal(jsonTimeline.posts.length, 25)
+              assert.equal(jsonTimeline.posts[0].body, 'postBody-39')
+              assert.equal(jsonTimeline.posts[24].body, 'postBody-15')
 
               done()
             })      
