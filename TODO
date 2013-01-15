@@ -85,23 +85,28 @@ Phase 2.1
 Phase 2.x
 ---------
 [ ] Limit length of parsed link, e.g. 30 symbs
-[ ] Embed vimeo
 [ ] First and last comments as two extra post fields
-[ ] Migration to hiredis
-[ ] Multiple attachments
-[ ] Random file uploads
-[ ] Music player
-[ ] Embed youtube
 [ ] Show notice if could upload attachment
-[ ] Performance tests, ab metrics
-[ ] R&D: Nohm lib
 [ ] Spinner on ajax requests
-[ ] Do not minimize image if it's already smaller enough
+[ ] Do not minimize image if it's already small enough
 [ ] Profile picture
+[ ] User profile popup
 [ ] Likes
 [ ] Sign in as Ember route and view
+
+[ ] Embed vimeo
+[ ] Random file uploads
+[ ] Multiple attachments
+[ ] Music player
+[ ] Embed youtube
 [ ] Twitter auth insetead of our simple signup system
+
+[ ] Migration to hiredis
+[ ] Performance tests, ab metrics
+[ ] R&D: Nohm lib
 [ ] Autogrow lib is not cross-browser - refactoring
+
+[ ] Bookmarklet
 
 Phase 3
 -------
