@@ -135,6 +135,9 @@ App.CommentPostViewSubst = Ember.View.extend(Ember.TargetActionSupport, {
     var post = this.get('parentView.content')
     var comments = post.comments
 
+    if (comments.length < 4)
+      return false
+
     // return false if comments do not include current user
     // var exist = post.createdBy.id == currentUser
     var exist = false
