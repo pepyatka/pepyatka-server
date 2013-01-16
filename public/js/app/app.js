@@ -138,17 +138,20 @@ App.CommentPostViewSubst = Ember.View.extend(Ember.TargetActionSupport, {
     if (comments.length < 4)
       return false
 
-    // return false if comments do not include current user
-    // var exist = post.createdBy.id == currentUser
-    var exist = false
-    comments.forEach(function(comment) {
-      exist = exist || comment.createdBy.id == currentUser
-    })
+    // NOTE: though following approach is a nice once, FF implements
+    // it differently -- just checks number of comments.
 
-    // If user have not commented this post there is no need to
-    // display additional comment link at the bottom of the post.
-    if (!exist)
-      return false
+    // // return false if comments do not include current user
+    // // var exist = post.createdBy.id == currentUser
+    // var exist = false
+    // comments.forEach(function(comment) {
+    //   exist = exist || comment.createdBy.id == currentUser
+    // })
+
+    // // If user have not commented this post there is no need to
+    // // display additional comment link at the bottom of the post.
+    // if (!exist)
+    //   return false
 
     return this.get('parentView.isFormVisible') == false;
   }.property('parentView.isFormVisible'),
