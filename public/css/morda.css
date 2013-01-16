@@ -55,7 +55,7 @@ footer {
     color: #000088;
 }
 .post .tagline a, .post .text a, .post .comments .author a,
-  .post .comments .more-comments a, .comments .body a {
+  .post .comments .more-comments a, .comments .body a, .post .new-comment-link a {
     color: #555599;
 }
 .post .text a {
@@ -89,13 +89,22 @@ footer {
     font-style: italic;
     margin: 3px 0 7px 20px;
 }
-.post .comments .pull-left {
+.post .comments .pull-left, .post .comment-form .pull-left,
+  .post .new-comment-link .pull-left {
     margin-right: 4px;
+}
+
+.post .new-comment-link {
+    margin: 0;
+    font-size: 13px;
+    color: #666;
+    font-style: italic;
 }
 
 .post .comment-form {
     font-size: 13px;
-    margin: 4px 0 0 20px;
+    margin: 4px 0 0 0;
+    color: #666;
 }
 .post .comment-form a {
     color: #000088;

@@ -141,22 +141,34 @@
           {{else}}
             {{view Ember.CollectionView contentBinding="comments"
                    itemViewClass="App.CommentContainerView"}}
+
+            {{#view App.CommentPostViewSubst}}
+              <li class="media new-comment-link">
+                <i class="icon-pencil media-object pull-left"></i>
+                <div class="media-body">
+                    <a {{action toggleVisibility target="view"}}>Add comment</a>
+                </div>
+              </li>
+            {{/view}}
           {{/if}}
         </ul>
     
         {{#view App.CommentForm}}
-          <div class="comment-form">
-            <div>
-              {{view App.CreateCommentView target="parentView" 
-                    action="submitComment" valueBinding="view.body"
-                    class="span6 input-tiny comment-area"}}
-            </div>
-            <div>
-              <button {{action submitComment target="view"}} class="btn btn-small">Post</button>
-              <a {{action toggleVisibility target="parentView"}}>Cancel</a>
+          <div class="comment-form media">
+            <i class="icon-comment-alt media-object pull-left"></i>
+            <div class="media-body">
+              <div>
+                {{view App.CreateCommentView target="parentView"
+                      action="submitComment" valueBinding="view.body"
+                      class="span6 input-tiny comment-area"}}
+              </div>
+              <div>
+                <button {{action submitComment target="view"}} class="btn btn-small">Post</button>
+                <a {{action toggleVisibility target="parentView"}}>Cancel</a>
+              </div>
             </div>
           </div>
-        {{/view}} 
+        {{/view}}
       </div>
     {{/with}}
   </li>
@@ -214,6 +226,7 @@
 
 <script>
   var socket = io.connect('/');
+  var currentUser = '<%= req.user.id %>'
 
   socket.emit('subscribe', { userId: '<%= req.user.id %>' });
 
