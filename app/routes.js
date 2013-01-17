@@ -17,18 +17,16 @@ var helpers = function(req, res, next) {
 
 var findUser = function(req, res, next) {
   if (!req.user) {
-    models.User.anon(function(userId) {
-      models.User.findById(userId, function(user) {
-        if (user) {
-          req.logIn(user, function(err) {
-            next();
-          })
-        } else {
-          // redirect user to auth page.
+    models.User.findAnon(function(user) {
+      if (user) {
+        req.logIn(user, function(err) {
+          next();
+        })
+      } else {
+        // redirect user to auth page.
 
-          next()
-        }
-      })
+        next()
+      }
     });
   } else {
     next()

@@ -19,7 +19,7 @@ exports.listen = function(io) {
       break
 
     case 'newPost':
-      models.Post.find(objId, function(post) {
+      models.Post.findById(objId, function(post) {
         if (post) {
           post.toJSON(function(json) {
             var clients = io.sockets.clients()
@@ -32,7 +32,7 @@ exports.listen = function(io) {
       break
 
     case 'newComment': 
-      models.Comment.find(objId, function(comment) {
+      models.Comment.findById(objId, function(comment) {
         if (comment) {
           comment.toJSON(function(json) {
             var clients = io.sockets.clients()

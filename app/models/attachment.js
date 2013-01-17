@@ -3,30 +3,27 @@ var uuid = require('node-uuid')
   // need just one or may be two of them, however it's a oneliner.
   , models = require('../models')
   , fs = require('fs')
-  , logger = require('../../logger').create()
 
 exports.addModel = function(db) {
   function Attachment(params) {
-    logger.debug('new Attachment(' + JSON.stringify(params) + ')')
-
     this.id = params.id
-
-    // this.mimeType = params.filetype // TODO: mmmagic lib
+    this.mimeType = params.mimeType // TODO: mmmagic lib
     this.ext = params.ext
     this.filename = params.filename
     this.path = params.path
     this.fsPath = params.fsPath
     this.postId = params.postId
 
-    // XXX: workaround
+    if (parseInt(params.createdAt))
+      this.createdAt = parseInt(params.createdAt)
+    if (parseInt(params.updatedAt))
+      this.updatedAt = parseInt(params.updatedAt)
+
     if (params.thumbnailId)
       this.thumbnailId = params.thumbnailId
-    if (params.thumbnail)
-      this.thumbnail = params.thumbnail
   }
   
-  Attachment.find = function(attachmentId, callback) {
-    logger.debug('Attachment.find("' + attachmentId + '")')
+  Attachment.findById = function(attachmentId, callback) {
     db.hgetall('attachment:' + attachmentId, function(err, attrs) {
       // TODO: check if we find an attachment
       attrs.id = attachmentId
@@ -37,8 +34,7 @@ exports.addModel = function(db) {
 
   // TODO: attachmentId -> attachmentsId
   Attachment.destroy = function(attachmentId, callback) {
-    logger.debug('Attachment.destroy("' + attachmentId + '")')
-    models.Attachment.find(attachmentId, function(attachment) {
+    models.Attachment.findById(attachmentId, function(attachment) {
       // workaround since we are schemaless
       if (attachment.fsPath) {
         fs.unlink(attachment.fsPath, function(err) {
@@ -56,7 +52,6 @@ exports.addModel = function(db) {
 
   Attachment.prototype = {
     save: function(callback) {
-      logger.debug('- attachment.save()')
       var that = this
 
       if (this.id === undefined) this.id = uuid.v4()
@@ -95,8 +90,6 @@ exports.addModel = function(db) {
     },
     
     toJSON: function(callback) {
-      logger.debug('- attachment.toJSON()')
-
       var attrs = {
         id: this.id,
         ext: this.ext,
@@ -106,7 +99,7 @@ exports.addModel = function(db) {
 
       // TODO: temp solution to skip parent images
       if (this.thumbnailId && this.thumbnailId != 'undefined') {
-        models.Attachment.find(this.thumbnailId, function(thumbnail) {
+        models.Attachment.findById(this.thumbnailId, function(thumbnail) {
           attrs['thumbnail'] = {
             id: thumbnail.id,
             ext: thumbnail.ext,
