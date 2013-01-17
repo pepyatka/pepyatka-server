@@ -85,9 +85,10 @@ exports.addModel = function(db) {
       if (this.postsIds) {
         callback(this.postsIds)
       } else {
+        var that = this
         db.zrevrange('timeline:' + this.id + ':posts', 0, POSTS-1, function(err, postsIds) {
-          this.postsIds = postsIds
-          callback(postsIds)
+          that.postsIds = postsIds || []
+          callback(that.postsIds)
         })
       }
     },
@@ -96,14 +97,15 @@ exports.addModel = function(db) {
       if (this.posts) {
         callback(this.posts)
       } else {
+        var that = this
         this.getPostsIds(function(postsIds) {
           async.map(postsIds, function(postId, callback) {
             models.Post.findById(postId, function(post) {
               callback(null, post)
             })
           }, function(err, posts) {
-            this.posts = posts || []
-            callback(posts)
+            that.posts = posts
+            callback(that.posts)
           })
         })
       }
@@ -115,7 +117,7 @@ exports.addModel = function(db) {
       } else {
         var that = this;
         db.lrange('timeline:' + this.id + ':users', 0, -1, function(err, usersIds) {
-          that.usersIds = usersIds
+          that.usersIds = usersIds || []
           callback(that.usersIds)
         })
       }

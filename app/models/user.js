@@ -236,15 +236,18 @@ exports.addModel = function(db) {
     },
 
     getTimelinesIds: function(callback) {
-      if (this.timelinesIds) {
-        callback(this.timelinesIds)
-      } else {
+      // TODO: following commented out cache is going to break
+      // preconditions of Timeline functional test
+
+      // if (this.timelinesIds) {
+      //   callback(this.timelinesIds)
+      // } else {
         var that = this
         db.hgetall('user:' + this.id + ':timelines', function(err, timelinesIds) {
-          that.timelinesIds = timelinesIds
+          that.timelinesIds = timelinesIds || []
           callback(that.timelinesIds)
         })
-      }
+      // }
     },
 
     getTimelines: function(callback) {

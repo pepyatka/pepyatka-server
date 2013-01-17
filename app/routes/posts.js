@@ -92,11 +92,11 @@ exports.addRoutes = function(app) {
                           post.getAttachments(function(attachments) {
                             attachments.push(attachment)
 
-                            post.toJSON(function(json) {
-                              // TODO: this is a dup
-                              var pub = redis.createClient();
-                              pub.publish('newPost', post.id)
+                            // TODO: this is a dup
+                            var pub = redis.createClient();
+                            pub.publish('newPost', post.id)
 
+                            models.Post.findById(post.id, function(post) {
                               post.toJSON(function(json) { res.jsonp(json) })
                             })
                           })

@@ -45,32 +45,36 @@ exports.addModel = function(db) {
         // delete comments
         , function(callback) {
           // delete all comments asynchroniously
-          async.forEach(post.comments, function(comment, callback) {
-            models.Comment.destroy(comment.id, function(err, res) {
-              callback(err, res)
-            })
-          }, function(err) {
-            db.del('post:' + post.id + ':comments', function(err, res) {
-              callback()
+          post.getCommentsIds(function(commentsIds) {
+            async.forEach(commentsIds, function(comment, callback) {
+              models.Comment.destroy(comment.id, function(err, res) {
+                callback(err, res)
+              })
+            }, function(err) {
+              db.del('post:' + post.id + ':comments', function(err, res) {
+                callback()
+              })
             })
           })
         }
         // delete attachments
         , function(callback) {
-          // delete all attachments asynchroniously
-          async.forEach(post.attachments, function(attachment, callback) {
-            models.Attachment.destroy(attachment.id, function(err, res) {
-              if (attachment.thumbnailId) {
-                models.Attachment.destroy(attachment.thumbnailId, function(err, res) {
+          post.getAttachments(function(attachmentsIds) {
+            // delete all attachments asynchroniously
+            async.forEach(attachmentsIds, function(attachment, callback) {
+              models.Attachment.destroy(attachment.id, function(err, res) {
+                if (attachment.thumbnailId) {
+                  models.Attachment.destroy(attachment.thumbnailId, function(err, res) {
+                    callback(err, res)
+                  })
+                } else {
                   callback(err, res)
-                })
-              } else {
-                callback(err, res)
-              }
-            })
-          }, function(err) {
-            db.del('post:' + post.id + ':attachments', function(err, res) {
-              callback()
+                }
+              })
+            }, function(err) {
+              db.del('post:' + post.id + ':attachments', function(err, res) {
+                callback()
+              })
             })
           })
         }
@@ -119,7 +123,7 @@ exports.addModel = function(db) {
       } else {
         var that = this
         db.lrange('post:' + this.id + ':attachments', 0, -1, function(err, attachmentsIds) {
-          that.attachmentsIds = attachmentsIds
+          that.attachmentsIds = attachmentsIds || []
           callback(that.attachmentsIds)
         })
       }
@@ -149,7 +153,7 @@ exports.addModel = function(db) {
       } else {
         var that = this
         db.lrange('post:' + this.id + ':comments', 0, -1, function(err, commentIds) {
-          that.commentsIds = commentIds
+          that.commentsIds = commentIds || []
           callback(that.commentsIds)
         })
       }

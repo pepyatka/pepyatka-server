@@ -20,7 +20,7 @@ describe('Timeline API', function() {
           bodies.push('postBody-' + i.toString())
         }
 
-        async.forEachSeries(bodies, function(body, done) {
+        async.mapSeries(bodies, function(body, done) {
           user.newPost({
             body: body
           }, function(post) {
