@@ -47,13 +47,27 @@ exports.addModel = function(db) {
     })
   }
 
-  Timeline.newPost = function(timelineId, postId, callback) {
+  Timeline.newPost = function(postId, callback) {
     var currentTime = new Date().getTime()
-    db.zadd('timeline:' + timelineId + ':posts', currentTime, postId, function(err, res) {
-      Timeline.update(timelineId, function() {
-        // TODO: -> Post.update() ?
-        db.hset('post:' + postId, 'updatedAt', currentTime, function(err, res) {
-          callback()
+
+    models.Post.findById(postId, function(post) {
+      models.User.findById(post.userId, function(user) {
+        var timelinesIds = [post.timelineId]
+
+        user.getRiverOfNewsId(function(timelineId) {
+          timelinesIds.push(timelineId)
+
+          async.forEach(timelinesIds, function(timelineId, callback) {
+            db.zadd('timeline:' + timelineId + ':posts', currentTime, postId, function(err, res) {
+              Timeline.update(post.timelineId, function() {
+                db.hset('post:' + postId, 'updatedAt', currentTime, function(err, res) {
+                  callback(err, res)
+                })
+              })
+            })
+          }, function(err) {
+            callback(err)
+          })
         })
       })
     })

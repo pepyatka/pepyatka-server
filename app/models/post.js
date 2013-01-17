@@ -192,7 +192,7 @@ exports.addModel = function(db) {
                  'createdAt': this.createdAt.toString(),
                  'updatedAt': this.updatedAt.toString()
                }, function(err, res) {
-                 models.Timeline.newPost(that.timelineId, that.id, function() {
+                 models.Timeline.newPost(that.id, function() {
                    // BUG: updatedAt is different now than we set few lines above
                    callback(that)
                  })
