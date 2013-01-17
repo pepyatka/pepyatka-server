@@ -396,8 +396,10 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
     this.set('initialCommit', false)
     this.set('content', [])
 
+    var timeline = this.get('timeline') || ""
+
     $.ajax({
-      url: '/v1/timeline/' + this.get('timeline'),
+      url: '/v1/timeline/' + timeline,
       dataType: 'jsonp',
       context: this,
       success: function(response){
@@ -448,7 +450,6 @@ App.Router = Ember.Router.extend({
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
       
       connectOutlets: function(router){ 
-        App.postsController.set('timeline', 'anonymous')
         router.get('applicationController').connectOutlet('posts', App.postsController.findAll());
       }
     }),
@@ -462,7 +463,6 @@ App.Router = Ember.Router.extend({
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
 
       connectOutlets: function(router, username) {
-        App.postsController.set('timeline', username)
         router.get('applicationController').connectOutlet('posts', App.postsController.findAll());
       },
 

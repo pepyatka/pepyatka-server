@@ -49,7 +49,8 @@ attachment:<attachmentId> { mimeType, filename, extension, path, createdAt, upda
 API
 ---
 
-- GET /v1/timeline/<username>
+- GET /v1/timeline/<username> - returns all posts from user <username>
+- GET /v1/timeline - returns river of news for auth user
 - GET /v1/posts/<postId>
 - GET /v1/posts/<postId>/comments # not implemented yet
 - POST /v1/posts
