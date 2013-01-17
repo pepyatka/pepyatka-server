@@ -1,11 +1,8 @@
 var uuid = require('node-uuid')
   , models = require('../models')
-  , logger = require('../../logger').create()
 
 exports.addModel = function(db) {
   function Comment(params) {
-    logger.debug('new Comment(' + JSON.stringify(params) + ')')
-
     this.id = params.id
     this.body = params.body
     this.postId = params.postId
@@ -18,7 +15,6 @@ exports.addModel = function(db) {
   }
 
   Comment.findById = function(commentId, callback) {
-    logger.debug('Comment.findById("' + commentId + '")')
     db.hgetall('comment:' + commentId, function(err, attrs) {
       // TODO: check if we find a comment
       attrs.id = commentId
@@ -32,7 +28,6 @@ exports.addModel = function(db) {
 
   // TODO: commentId -> commentsId
   Comment.destroy = function(commentId, callback) {
-    logger.debug('Comment.destroy("' + commentId + '")')
     db.del('comment:' + commentId, function(err, res) {
       callback(err, res)
     })
@@ -67,7 +62,6 @@ exports.addModel = function(db) {
     },
 
     toJSON: function(callback) {
-      logger.debug("- comment.toJSON()")
       var that = this;
       models.User.findById(this.userId, function(user) {
         user.toJSON(function(user) {

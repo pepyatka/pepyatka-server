@@ -21,92 +21,99 @@ exports.addRoutes = function(app) {
 
   app.post('/v1/posts', function(req, res) {
     // creates and saves new post
-    req.user.newPost({body: req.body.body}, function(newPost) {
-      newPost.save(function(post) {
-        // process files
-        // TODO: extract this stuff to Post model!
-        // TODO: search for file uploads lib like CarrierWave that could
-        // be easily plugged into existing models (kind of models)
-        var attachment = null
-        if (req.files) {
-          attachment = req.files['file-0']
-        }
+    req.user.getPostsTimelineId(function(timelineId) {
+      req.user.newPost({
+        body: req.body.body,
+        timelineId: timelineId
+      }, function(newPost) {
+        newPost.save(function(post) {
+          // process files
+          // TODO: extract this stuff to Post model!
+          // TODO: search for file uploads lib like CarrierWave that could
+          // be easily plugged into existing models (kind of models)
+          var attachment = null
+          if (req.files) {
+            attachment = req.files['file-0']
+          }
 
-        if (attachment) {
-          var tmpPath = attachment.path
-          var filename = attachment.name
-          var ext = path.extname(filename || '').split('.');
-          ext = ext[ext.length - 1];
+          if (attachment) {
+            var tmpPath = attachment.path
+            var filename = attachment.name
+            var ext = path.extname(filename || '').split('.');
+            ext = ext[ext.length - 1];
 
-          var thumbnailId = uuid.v4()
-          var thumbnailPath = __dirname + '/../../public/files/' + thumbnailId + '.' + ext
-          var thumbnailHttpPath = '/files/' + thumbnailId + '.' + ext
+            var thumbnailId = uuid.v4()
+            var thumbnailPath = __dirname + '/../../public/files/' + thumbnailId + '.' + ext
+            var thumbnailHttpPath = '/files/' + thumbnailId + '.' + ext
 
-          // TODO: currently it works only with images, must work with any
-          // type of uploaded files.
-          gm(tmpPath).format(function(err, value) {
-            if (err) {
-              var pub = redis.createClient();
-              pub.publish('newPost', post.id)
+            // TODO: currently it works only with images, must work with any
+            // type of uploaded files.
+            gm(tmpPath).format(function(err, value) {
+              if (err) {
+                var pub = redis.createClient();
+                pub.publish('newPost', post.id)
 
-              post.toJSON(function(json) { res.jsonp(json) })
+                post.toJSON(function(json) { res.jsonp(json) })
 
-              //res.jsonp({'error': 'not an image'})
-            } else {
-              gm(tmpPath)
-                .resize('200', '200')
-                .write(thumbnailPath, function(err) {
-                  if (err) {
-                    res.jsonp({'error': 'not an image'})
-                    return
-                  }
-                  
-                  var newThumbnail = new models.Attachment({
-                    'ext': ext,
-                    'filename': filename,
-                    'path': thumbnailHttpPath,
-                    'fsPath': thumbnailPath
-                  })
+                //res.jsonp({'error': 'not an image'})
+              } else {
+                gm(tmpPath)
+                  .resize('200', '200')
+                  .write(thumbnailPath, function(err) {
+                    if (err) {
+                      res.jsonp({'error': 'not an image'})
+                      return
+                    }
 
-                  newThumbnail.save(function(thumbnail) {
-                    var attachmentId = uuid.v4()
-                    var attachmentPath = __dirname + '/../../public/files/' + attachmentId + '.' + ext
-                    var attachmentHttpPath = '/files/' + attachmentId + '.' + ext
-
-                    var newAttachment = post.newAttachment({
+                    var newThumbnail = new models.Attachment({
                       'ext': ext,
                       'filename': filename,
-                      'path': attachmentHttpPath,
-                      'thumbnailId': thumbnail.id,
-                      'fsPath': attachmentPath
+                      'path': thumbnailHttpPath,
+                      'fsPath': thumbnailPath
                     })
 
-                    newAttachment.save(function(attachment) {
-                      // move tmp file to a storage
-                      fs.rename(tmpPath, attachmentPath, function(err) {
-                        post.attachments.push(attachment)
-                        
-                        post.toJSON(function(json) {
-                          // TODO: this is a dup
-                          var pub = redis.createClient();
-                          pub.publish('newPost', post.id)
+                    newThumbnail.save(function(thumbnail) {
+                      var attachmentId = uuid.v4()
+                      var attachmentPath = __dirname + '/../../public/files/' + attachmentId + '.' + ext
+                      var attachmentHttpPath = '/files/' + attachmentId + '.' + ext
 
-                          post.toJSON(function(json) { res.jsonp(json) })
+                      var newAttachment = post.newAttachment({
+                        'ext': ext,
+                        'filename': filename,
+                        'path': attachmentHttpPath,
+                        'thumbnailId': thumbnail.id,
+                        'fsPath': attachmentPath
+                      })
+
+                      newAttachment.save(function(attachment) {
+                        // move tmp file to a storage
+                        fs.rename(tmpPath, attachmentPath, function(err) {
+                          // TODO: check method
+                          post.getAttachments(function(attachments) {
+                            attachments.push(attachment)
+
+                            post.toJSON(function(json) {
+                              // TODO: this is a dup
+                              var pub = redis.createClient();
+                              pub.publish('newPost', post.id)
+
+                              post.toJSON(function(json) { res.jsonp(json) })
+                            })
+                          })
                         })
                       })
                     })
                   })
-                })
-            }
-          })
-        } else {
-          var pub = redis.createClient();
-          pub.publish('newPost', post.id)
+              }
+            })
+          } else {
+            var pub = redis.createClient();
+            pub.publish('newPost', post.id)
 
-          post.toJSON(function(json) { res.jsonp(json) })
-        }
+            post.toJSON(function(json) { res.jsonp(json) })
+          }
+        })
       })
-
     })
   })
 }

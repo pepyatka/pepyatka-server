@@ -2,12 +2,9 @@ var uuid = require('node-uuid')
   , models = require('../models')
   , async = require('async')
   , redis = require('redis')
-  , logger = require('../../logger').create()
 
 exports.addModel = function(db) {
   function Post(params) {
-    logger.debug('new Post(' + JSON.stringify(params) + ')')
-
     this.id = params.id
     this.body = params.body
     this.userId = params.userId
@@ -20,8 +17,6 @@ exports.addModel = function(db) {
   }
 
   Post.findById = function(postId, callback) {
-    logger.debug('Post.findById("' + postId + '")')
-
     db.hgetall('post:' + postId, function(err, attrs) {
       if (attrs) {
         attrs.id = postId
@@ -35,8 +30,6 @@ exports.addModel = function(db) {
 
   // XXX: this is the longest method in the app. Review it once you have time
   Post.destroy = function(postId, callback) {
-    logger.debug('Post.destroy("' + postId + '")')
-
     models.Post.findById(postId, function(post) {
       // This is a parallel process: 
       // - deletes post from user's timeline
@@ -97,7 +90,6 @@ exports.addModel = function(db) {
   }
 
   Post.addComment = function(postId, commentId, callback) {
-    logger.debug('Post.addComment("' + postId + '", "' + commentId + '")')
     db.hget('post:' + postId, 'timelineId', function(err, timelineId) {
       db.rpush('post:' + postId + ':comments', commentId, function() {
         // Can we bump this post?
@@ -115,71 +107,73 @@ exports.addModel = function(db) {
   }
 
   Post.addAttachment = function(postId, attachmentId, callback) {
-    logger.debug('Post.addAttachment("' + postId + '", "' + attachmentId + '")')
-
     db.rpush('post:' + postId + ':attachments', attachmentId, function() {
       callback();
     })
   }
 
   Post.prototype = {
-    getAttachments: function(callback) {
-      logger.debug('- post.getAttachments()')
-      var that = this
-      db.lrange('post:' + this.id + ':attachments', 0, -1, function(err, attachments) {
-        async.map(attachments, function(attachmentId, callback) {
-          models.Attachment.findById(attachmentId, function(attachment) {
-            callback(null, attachment)
-          })
-        }, function(err, attachments) {
-          callback(attachments)
-        })
-      })
-    },
-
-    // Return all comments
-    getComments: function(callback) {
-      logger.debug('- post.getComments()')
-      if (this.comments) {
-        callback(this.comments)
+    getAttachmentsIds: function(callback) {
+      if (this.attachmentsIds) {
+        callback(this.attachmentsIds)
       } else {
         var that = this
-        db.lrange('post:' + this.id + ':comments', 0, -1, function(err, comments) {
-          async.map(comments, function(commentId, callback) {
-            models.Comment.findById(commentId, function(comment) {
-              callback(null, comment)
+        db.lrange('post:' + this.id + ':attachments', 0, -1, function(err, attachmentsIds) {
+          that.attachmentsIds = attachmentsIds
+          callback(that.attachmentsIds)
+        })
+      }
+    },
+
+    getAttachments: function(callback) {
+      if (this.attachments) {
+        callback(this.attachments)
+      } else {
+        var that = this
+        this.getAttachmentsIds(function(attachmentsIds) {
+          async.map(attachmentsIds, function(attachmentId, callback) {
+            models.Attachment.findById(attachmentId, function(attachment) {
+              callback(null, attachment)
             })
-          }, function(err, comments) {
-            this.comments = comments
-            callback(comments)
+          }, function(err, attachments) {
+            that.attachments = attachments
+            callback(that.attachments)
           })
         })
       }
     },
 
-    // Return all attachments
-    getAttachments: function(callback) {
-      logger.debug('- post.getAttachments()')
-      if (this.attachments) {
-        callback(this.attachments)
+    getCommentsIds: function(callback) {
+      if (this.commentsIds) {
+        callback(this.commentsIds)
       } else {
         var that = this
-        db.lrange('post:' + this.id + ':attachments', 0, -1, function(err, attachments) {
-          async.map(attachments, function(attachmentId, callback) {
-            models.Attachment.findById(attachmentId, function(attachment) {
-              callback(null, attachment)
+        db.lrange('post:' + this.id + ':comments', 0, -1, function(err, commentIds) {
+          that.commentsIds = commentIds
+          callback(that.commentsIds)
+        })
+      }
+    },
+
+    getComments: function(callback) {
+      if (this.comments) {
+        callback(this.comments)
+      } else {
+        var that = this
+        this.getCommentsIds(function(commentsIds) {
+          async.map(commentsIds, function(commentId, callback) {
+            models.Comment.findById(commentId, function(comment) {
+              callback(null, comment)
             })
-          }, function(err, attachments) {
-            this.attachments = attachments
-            callback(attachments)
+          }, function(err, comments) {
+            that.comments = comments
+            callback(that.comments)
           })
         })
       }
     },
 
     save: function(callback) {
-      logger.debug('- post.save()')
-
       var that = this
 
       if (!this.createdAt)
@@ -202,14 +196,12 @@ exports.addModel = function(db) {
     },
 
     newAttachment: function(attrs) {
-      logger.debug('- post.newAttachment()')
       attrs.postId = this.id
       
       return new models.Attachment(attrs)
     },
 
     toJSON: function(callback) {
-      logger.debug('- post.toJSON()')
       var that = this;
 
       this.getComments(function(comments) {
@@ -219,7 +211,7 @@ exports.addModel = function(db) {
               callback(null, json)
             })
           }, function(err, commentsJSON) {
-            that.getAttachments(function() {
+            that.getAttachments(function(attachments) {
               async.map(attachments, function(attachment, callback) {
                 attachment.toJSON(function(json) {
                   callback(null, json)

@@ -8,20 +8,21 @@ describe('Comment API', function() {
   var post = null
 
   beforeEach(function(done) {
-    var newPost = new models.Post({ 
-      body: 'postBody', 
-      userId: 'userId' 
-    })
-    newPost.save(function(jsonPost) {
-      post = jsonPost
-      done()
+    models.User.findAnon(function(user) {
+      user.newPost({
+        body: 'postBody'
+      }, function(newPost) {
+        newPost.save(function(usersPost) {
+          post = usersPost
+          done()
+        })
+      })
     })
   })
 
   it('POST /v1/comments should return json comment', function(done) {
     var params = { 
       body: 'commentBody',
-      userId: 'userId',
       postId: post.id
     }
     request(server)
@@ -48,7 +49,6 @@ describe('Comment API', function() {
   it('POST /v1/comments with missing body should return 422'
      // , function(done) {
      //   var params = { 
-     //     userId: 'userId',
      //     postId: post.id
      //   }
      //   request(server)
@@ -61,8 +61,7 @@ describe('Comment API', function() {
   it('POST /v1/comments with missing postId should return 422'
      // , function(done) {
      //   var params = { 
-     //     body: 'commentBody',
-     //     userId: 'userId',
+     //     body: 'commentBody'
      //   }
      //   request(server)
      //     .post('/v1/comments')
@@ -75,7 +74,6 @@ describe('Comment API', function() {
      // , function(done) {
      //   var params = { 
      //     body: 'commentBody',
-     //     userId: 'userId',
      //     postId: 'this-post-does-not-exist'
      //   }
      //   request(server)

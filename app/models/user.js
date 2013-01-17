@@ -2,13 +2,9 @@ var uuid = require('node-uuid')
   , models = require('../models')
   , async = require('async')
   , crypto = require('crypto')
-  , logger = require('../../logger').create()
 
 exports.addModel = function(db) {
   function User(params) {
-    // TODO: filter password field and then we can log params
-    logger.debug('new User()')
-
     this.id = params.id
     this.username = params.username
     if (params.password)
@@ -23,17 +19,16 @@ exports.addModel = function(db) {
   }
 
   // TODO: create Anonymous model which is inherited from User
-  User.anon = function(callback) {
-    logger.debug('User.anon()')
+  // TODO: create new function findAnonId
+  User.findAnon = function(callback) {
     // init anonymous user if it doesn't exist yet
-    var userId = uuid.v4();
-
     var returnAnon = function() {
       User.findByUsername('anonymous', function(user) {
-        callback(user.id);
+        callback(user);
       })
     }
 
+    var userId = uuid.v4();
     db.setnx('username:anonymous:uid', userId, function(err, res) {
       if (res == 1) {
         db.hsetnx('user:' + userId, 'username', 'anonymous', function(err, res) {
@@ -46,7 +41,6 @@ exports.addModel = function(db) {
   }
 
   User.findByUsername = function(username, callback) {
-    logger.debug('User.findByUsername("' + username + '")')
     db.get('username:' + username + ':uid', function (err, userId) {
       User.findById(userId, function(user) {
         // TODO: callback(err, user)
@@ -59,7 +53,6 @@ exports.addModel = function(db) {
   }
 
   User.findById = function(userId, callback) {
-    logger.debug('User.findById("' + userId + '")')
     db.hgetall('user:' + userId, function(err, attrs) {
       // XXX: Seems it's either deleted user or broken session. Redirect to
       // auth method... some day.
@@ -79,7 +72,6 @@ exports.addModel = function(db) {
   },
 
   User.generateSalt = function(callback) {
-    logger.debug('- User.generateSalt()')
     // NOTE: this is an async function - quite interesting
     return crypto.randomBytes(16, function(ex, buf) {
       var token = buf.toString('hex');
@@ -88,7 +80,6 @@ exports.addModel = function(db) {
   }
 
   User.hashPassword = function(clearPassword) {
-    logger.debug('- User.hashPassword()')
     // TODO: move this random string to configuration file
     return crypto.createHash("sha1").
       update(conf.saltSecret).
@@ -98,7 +89,6 @@ exports.addModel = function(db) {
 
   User.prototype = {
     updateHashedPassword: function(callback) {
-      logger.debug('- user.updateHashedPassword()')
       if (this.password) {
         this.saltPassword(this.password, function() {
           callback()
@@ -107,8 +97,6 @@ exports.addModel = function(db) {
     },
 
     saltPassword: function(clearPassword, callback) {
-      logger.debug('- user.saltPassword()')
-
       var that = this
 
       User.generateSalt(function(salt) {
@@ -120,14 +108,11 @@ exports.addModel = function(db) {
     },
 
     validPassword: function(clearPassword) {
-      logger.debug('- user.validPassword()')
       var hashedPassword = User.hashPassword(this.salt + User.hashPassword(clearPassword))
       return hashedPassword == this.hashedPassword
     },
 
     save: function(callback) {
-      logger.debug('- user.save()')
-
       var that = this
 
       // XXX: I copy these 4 lines from model to model - define proper
@@ -162,7 +147,6 @@ exports.addModel = function(db) {
     },
 
     newPost: function(attrs, callback) {
-      logger.debug('- user.newPost()')
       attrs.userId = this.id
 
       this.getPostsTimelineId(function(timelineId) {
@@ -175,17 +159,13 @@ exports.addModel = function(db) {
     // XXX: do not like the design of this method. I'd say better to
     // put it into Post model
     newComment: function(attrs) {
-      logger.debug('- user.newComment()')
       attrs.userId = this.id
 
       return new models.Comment(attrs)
     },
 
     getRiverOfNewsId: function(callback) {
-      logger.debug('- user.getRiverOfNews()')
-
       var that = this;
-
       this.getTimelinesIds(function(timelines) {
         if (timelines['RiverOfNews']) {
           callback(timelines['RiverOfNews'])
@@ -193,7 +173,7 @@ exports.addModel = function(db) {
           // somehow this user has deleted its main timeline - let's
           // recreate from the scratch
           var timelineId = uuid.v4();
-          db.hset('user:' + this.id + ':timelines', 'RiverOfNews',
+          db.hset('user:' + that.id + ':timelines', 'RiverOfNews',
                   timelineId, function(err, res) {
                     db.hmset('timeline:' + timelineId,
                              { 'name': 'River of news',
@@ -209,10 +189,11 @@ exports.addModel = function(db) {
       if (this.riverOfNews) {
         callback(this.riverOfNews)
       } else {
+        var that = this
         this.getRiverOfNewsId(function(timelineId) {
           models.Timeline.findById(timelineId, function(timeline) {
-            this.riverOfNews = this.timeline
-            callback(this.riverOfNews)
+            that.riverOfNews = timeline
+            callback(that.riverOfNews)
           })
         })
       }
@@ -220,10 +201,7 @@ exports.addModel = function(db) {
 
     // TODO: DRY - getRiverOfNews
     getPostsTimelineId: function(callback) {
-      logger.debug('- user.getPosts()')
-
       var that = this;
-
       this.getTimelinesIds(function(timelines) {
         if (timelines['Posts']) {
           callback(timelines['Posts'])
@@ -247,10 +225,11 @@ exports.addModel = function(db) {
       if (this.postsTimeline) {
         callback(this.postsTimeline)
       } else {
+        var that = this
         this.getPostsTimelineId(function(timelineId) {
           models.Timeline.findById(timelineId, function(timeline) {
-            this.postsTimeline = timeline
-            callback(this.postsTimeline)
+            that.postsTimeline = timeline
+            callback(that.postsTimeline)
           })
         })
       }
@@ -262,8 +241,8 @@ exports.addModel = function(db) {
       } else {
         var that = this
         db.hgetall('user:' + this.id + ':timelines', function(err, timelinesIds) {
-          this.timelinesIds = timelinesIds || []
-          callback(this.timelinesIds)
+          that.timelinesIds = timelinesIds
+          callback(that.timelinesIds)
         })
       }
     },
@@ -272,19 +251,19 @@ exports.addModel = function(db) {
       if (this.timelines) {
         callback(this.timelines)
       } else {
+        var that = this
         this.getTimelinesIds(function(timelinesIds) {
           async.map(Object.keys(timelinesIds), function(timelineId, callback) {
             callback(null, new models.Timeline(timelinesIds[timelineId]))
           }, function(err, timelines) {
-            this.timelines = timelines
-            callback(timelines)
+            that.timelines = timelines
+            callback(that.timelines)
           })
         })
       }
     },
 
     toJSON: function(callback) {
-      logger.debug('- user.toJSON()')
       callback({
         id: this.id,
         username: this.username

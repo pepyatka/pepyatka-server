@@ -3,12 +3,9 @@ var uuid = require('node-uuid')
   // need just one or may be two of them, however it's a oneliner.
   , models = require('../models')
   , fs = require('fs')
-  , logger = require('../../logger').create()
 
 exports.addModel = function(db) {
   function Attachment(params) {
-    logger.debug('new Attachment(' + JSON.stringify(params) + ')')
-
     this.id = params.id
     this.mimeType = params.mimeType // TODO: mmmagic lib
     this.ext = params.ext
@@ -22,15 +19,11 @@ exports.addModel = function(db) {
     if (parseInt(params.updatedAt))
       this.updatedAt = parseInt(params.updatedAt)
 
-    // XXX: workaround
     if (params.thumbnailId)
       this.thumbnailId = params.thumbnailId
-    if (params.thumbnail)
-      this.thumbnail = params.thumbnail
   }
   
   Attachment.findById = function(attachmentId, callback) {
-    logger.debug('Attachment.findById("' + attachmentId + '")')
     db.hgetall('attachment:' + attachmentId, function(err, attrs) {
       // TODO: check if we find an attachment
       attrs.id = attachmentId
@@ -41,7 +34,6 @@ exports.addModel = function(db) {
 
   // TODO: attachmentId -> attachmentsId
   Attachment.destroy = function(attachmentId, callback) {
-    logger.debug('Attachment.destroy("' + attachmentId + '")')
     models.Attachment.findById(attachmentId, function(attachment) {
       // workaround since we are schemaless
       if (attachment.fsPath) {
@@ -60,7 +52,6 @@ exports.addModel = function(db) {
 
   Attachment.prototype = {
     save: function(callback) {
-      logger.debug('- attachment.save()')
       var that = this
 
       if (this.id === undefined) this.id = uuid.v4()
@@ -99,8 +90,6 @@ exports.addModel = function(db) {
     },
     
     toJSON: function(callback) {
-      logger.debug('- attachment.toJSON()')
-
       var attrs = {
         id: this.id,
         ext: this.ext,

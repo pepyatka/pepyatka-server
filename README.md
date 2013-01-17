@@ -30,7 +30,7 @@ user:<userId> { username, hashedPassword, salt, createdAt, updatedAt }
 user:<userId>:timelines { RiverOfNews, Posts, DirectMessages, [name*] }
 timeline:<timelineId> { name, userId }
 timeline:<timelineId>:posts ( <postId>:<timestamp> )
-# note: River of news, Posts, DirectMessages and Likes timelines have no users
+# note: River of news, Posts, DirectMessages, Likes and Comments timelines have no users
 timeline:<timelineId>:users [ <userId> ]
 
 post:<postId> { body, createdAt, updatedAt, userId }

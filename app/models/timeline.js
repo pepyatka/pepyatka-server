@@ -1,14 +1,11 @@
 var models = require('../models')
   , async = require('async')
   , redis = require('redis')
-  , logger = require('../../logger').create()
 
 exports.addModel = function(db) {
   var POSTS = 25
 
   function Timeline(params) {
-    logger.debug('new Timeline(' + params + ')')
-
     var that = this;
 
     this.id = params.id
@@ -17,8 +14,6 @@ exports.addModel = function(db) {
   }
 
   Timeline.findById = function(timelineId, callback) {
-    logger.debug('Timeline.findById("' + timelineId + '")')
-
     db.hgetall('timeline:' + timelineId, function(err, attrs) {
       if (attrs) {
         attrs.id = timelineId
@@ -32,7 +27,6 @@ exports.addModel = function(db) {
 
   // If user updates timeline we need to
   Timeline.update = function(timelineId, callback) {
-    logger.debug('Timeline.update("' + timelineId + '")')
     db.zrevrange('timeline:' + timelineId + ':posts', POSTS, -1, function(err, posts) {
       async.forEach(posts, function(postId, callback) {
         models.Post.destroy(postId, function(err, res) {        
@@ -45,7 +39,6 @@ exports.addModel = function(db) {
   }
 
   Timeline.updatePost = function(timelineId, postId, callback) {
-    logger.debug('Timeline.updatePost("' + timelineId + '", "' + postId + '")')
     var currentTime = new Date().getTime()
     db.zadd('timeline:' + timelineId + ':posts', currentTime, postId, function(err, res) {
       db.hset('post:' + postId, 'updatedAt', currentTime, function(err, res) {
@@ -55,7 +48,6 @@ exports.addModel = function(db) {
   }
 
   Timeline.newPost = function(timelineId, postId, callback) {
-    logger.debug('Timeline.newPost("' + timelineId + '", "' + postId + '")')
     var currentTime = new Date().getTime()
     db.zadd('timeline:' + timelineId + ':posts', currentTime, postId, function(err, res) {
       Timeline.update(timelineId, function() {
@@ -67,22 +59,8 @@ exports.addModel = function(db) {
     })
   }
 
-  // Timeline.posts = function(userId, callback) {
-  //   logger.debug('Timeline.posts("' + userId + '")')
-  //   db.zrevrange('timeline:' + userId + ':posts', 0, POSTS-1, function(err, posts) {
-  //     async.map(posts, function(postId, callback) {
-  //       models.Post.findById(postId, function(post) {
-  //         callback(null, post)
-  //       })
-  //     }, function(err, posts) {
-  //       callback(posts)
-  //     })
-  //   })
-  // }
-
   Timeline.prototype = {
     toJSON: function(callback) {
-      logger.debug("- timeline.toJSON()")
       var that = this;
 
       this.getPosts(function(posts) {
@@ -131,18 +109,34 @@ exports.addModel = function(db) {
       }
     },
 
-    getUsers: function(callback) {
-      logger.debug('- timeline.getUsers()')
-
-      db.lrange('timeline:' + this.id + ':users', 0, -1, function(err, users) {
-        async.map(users, function(userId, callback) {
-          models.User.findById(userId, function(user) {
-            callback(null, user)
-          })
-        }, function(err, users) {
-          callback(users)
+    getUsersIds: function(callback) {
+      if (this.usersIds) {
+        callback(this.usersIds)
+      } else {
+        var that = this;
+        db.lrange('timeline:' + this.id + ':users', 0, -1, function(err, usersIds) {
+          that.usersIds = usersIds
+          callback(that.usersIds)
         })
-      })
+      }
+    },
+
+    getUsers: function(callback) {
+      if (this.users) {
+        callback(this.users)
+      } else {
+        var that = this
+        this.getUsersIds(function(usersIds) {
+          async.map(usersIds, function(userId, callback) {
+            models.User.findById(userId, function(user) {
+              callback(null, user)
+            })
+          }, function(err, users) {
+            that.users = users
+            callback(that.users)
+          })
+        })
+      }
     }
   }
   
