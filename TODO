@@ -88,8 +88,9 @@ Phase 2.x
 [ ] Limit length of parsed link, e.g. 30 symbs
 [ ] First and last comments as two extra post fields
 [ ] API for comments
-[ ] Smooth animation affect on expanding comments
-[ ] 
+[ ] Smooth animation affect when user expands comments
+[ ] Better animation for findAll, e.g. fade()
+
 [ ] Show notice if could upload attachment
 [ ] Spinner on ajax requests
 [ ] Do not minimize image if it's already small enough
@@ -97,6 +98,7 @@ Phase 2.x
 [ ] User profile popup
 [ ] Likes
 [ ] Sign in as Ember route and view
+[ ] User screen should not display username under each post
 
 [ ] Embed vimeo
 [ ] Random file uploads
