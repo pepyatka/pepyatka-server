@@ -4,9 +4,6 @@ FF/B
 FF/B is another attempt to open source FriendFeed social
 network/aggregator. At this stage it's a semi-anonymous imageboard.
 
-For the improved timelines including likes functionality please look
-into "timelines" branch.
-
 ![FF/B screenshot](http://epicmonkey.org/b/ffb_small.png)
 
 Configuration
@@ -32,13 +29,12 @@ user:<userId> { username, hashedPassword, salt, createdAt, updatedAt }
 user:<userId>:timelines { RiverOfNews, Posts, DirectMessages, [name*] }
 timeline:<timelineId> { name, userId }
 timeline:<timelineId>:posts ( <postId>:<timestamp> )
-# note: River of news, Posts, DirectMessages, Likes and Comments timelines have no users
-timeline:<timelineId>:users [ <userId> ]
+timeline:<timelineId>:subscriptions [ <timelineId> ]
 
 post:<postId> { body, createdAt, updatedAt, userId }
 post:<postId>:comments [ <commentId> ]
 post:<postId>:attachments [ <attachmentId> ]
-post:<postId>:timelines [ <timelineId> ]
+post:<postId>:timelines ( <timelineId> )
 post:<postId>:likes [ <userId> ] # not implemented yet
 
 comment:<commentId> { body, createdAt, userId, postId }
