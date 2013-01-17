@@ -2,7 +2,7 @@ FF/B
 ====
 
 FF/B is another attempt to open source FriendFeed social
-network/aggregator. At this stage a semi-anonymous imageboard.
+network/aggregator. At this stage it's a semi-anonymous imageboard.
 
 For the improved timelines including likes functionality please look
 into "timelines" branch.
