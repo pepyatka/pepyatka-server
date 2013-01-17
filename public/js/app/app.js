@@ -169,7 +169,7 @@ App.CommentForm = Ember.View.extend({
 
   autoFocus: function () {
     if (this.get('parentView.isFormVisible') == true) {
-      this.$().hide().show("fast");
+      this.$().hide().show();
       this.$('textarea').focus();
       this.$('textarea').trigger('keyup') // to apply autogrow
     }
