@@ -26,18 +26,22 @@ Database
 ```
 username:<username>:uid
 user:<userId> { username, hashedPassword, salt, createdAt, updatedAt }
-user:<userId>:timelines [ <timelineId> ] # not implemented yet
+
+user:<userId>:timelines { RiverOfNews, Posts, DirectMessages, [name*] }
+timeline:<timelineId> { name, userId }
+timeline:<timelineId>:posts ( <postId>:<timestamp> )
+# note: River of news, Posts, DirectMessages and Likes timelines have no users
+timeline:<timelineId>:users [ <userId> ]
 
 post:<postId> { body, createdAt, updatedAt, userId }
 post:<postId>:comments [ <commentId> ]
 post:<postId>:attachments [ <attachmentId> ]
-post:<postId>:timelines [ <timelineId> ] # not implemented yet
+post:<postId>:timelines [ <timelineId> ]
+post:<postId>:likes [ <userId> ] # not implemented yet
 
 comment:<commentId> { body, createdAt, userId, postId }
 
-timeline:<userId> ( <postId>:<timestamp> )
-
-attachment:<attachmentId> { mimeType, filename, extension, path, [thumbnailId] }
+attachment:<attachmentId> { mimeType, filename, extension, path, createdAt, updatedAt, thumbnailId* }
 ```
 
 API

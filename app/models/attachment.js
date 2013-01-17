@@ -10,13 +10,17 @@ exports.addModel = function(db) {
     logger.debug('new Attachment(' + JSON.stringify(params) + ')')
 
     this.id = params.id
-
-    // this.mimeType = params.filetype // TODO: mmmagic lib
+    this.mimeType = params.mimeType // TODO: mmmagic lib
     this.ext = params.ext
     this.filename = params.filename
     this.path = params.path
     this.fsPath = params.fsPath
     this.postId = params.postId
+
+    if (parseInt(params.createdAt))
+      this.createdAt = parseInt(params.createdAt)
+    if (parseInt(params.updatedAt))
+      this.updatedAt = parseInt(params.updatedAt)
 
     // XXX: workaround
     if (params.thumbnailId)
@@ -25,8 +29,8 @@ exports.addModel = function(db) {
       this.thumbnail = params.thumbnail
   }
   
-  Attachment.find = function(attachmentId, callback) {
-    logger.debug('Attachment.find("' + attachmentId + '")')
+  Attachment.findById = function(attachmentId, callback) {
+    logger.debug('Attachment.findById("' + attachmentId + '")')
     db.hgetall('attachment:' + attachmentId, function(err, attrs) {
       // TODO: check if we find an attachment
       attrs.id = attachmentId
@@ -38,7 +42,7 @@ exports.addModel = function(db) {
   // TODO: attachmentId -> attachmentsId
   Attachment.destroy = function(attachmentId, callback) {
     logger.debug('Attachment.destroy("' + attachmentId + '")')
-    models.Attachment.find(attachmentId, function(attachment) {
+    models.Attachment.findById(attachmentId, function(attachment) {
       // workaround since we are schemaless
       if (attachment.fsPath) {
         fs.unlink(attachment.fsPath, function(err) {
@@ -106,7 +110,7 @@ exports.addModel = function(db) {
 
       // TODO: temp solution to skip parent images
       if (this.thumbnailId && this.thumbnailId != 'undefined') {
-        models.Attachment.find(this.thumbnailId, function(thumbnail) {
+        models.Attachment.findById(this.thumbnailId, function(thumbnail) {
           attrs['thumbnail'] = {
             id: thumbnail.id,
             ext: thumbnail.ext,

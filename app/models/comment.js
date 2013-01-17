@@ -6,23 +6,19 @@ exports.addModel = function(db) {
   function Comment(params) {
     logger.debug('new Comment(' + JSON.stringify(params) + ')')
 
+    this.id = params.id
     this.body = params.body
     this.postId = params.postId
-
-    this.createdAt = parseInt(params.createdAt) ||  null
-
-    // TODO: not implemented yet
-    this.updatedAt = parseInt(params.updatedAt) ||  null
-
-    // XXX: params to filter
-    this.id = params.id
-
     this.userId = params.userId
-    this.user = params.user
+
+    if (parseInt(params.createdAt))
+      this.createdAt = parseInt(params.createdAt)
+    if (parseInt(params.updatedAt))
+      this.updatedAt = parseInt(params.updatedAt)
   }
 
-  Comment.find = function(commentId, callback) {
-    logger.debug('Comment.find("' + commentId + '")')
+  Comment.findById = function(commentId, callback) {
+    logger.debug('Comment.findById("' + commentId + '")')
     db.hgetall('comment:' + commentId, function(err, attrs) {
       // TODO: check if we find a comment
       attrs.id = commentId

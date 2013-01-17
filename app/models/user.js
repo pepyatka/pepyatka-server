@@ -6,15 +6,20 @@ var uuid = require('node-uuid')
 
 exports.addModel = function(db) {
   function User(params) {
-    logger.debug('new User(' + JSON.stringify(params) + ')')
+    // TODO: filter password field and then we can log params
+    logger.debug('new User()')
 
     this.id = params.id
     this.username = params.username
-    this.password = params.password
+    if (params.password)
+      this.password = params.password // virtual attribute
     this.hashedPassword = params.hashedPassword
     this.salt = params.salt
-    this.createdAt = parseInt(params.createdAt)
-    this.updatedAt = parseInt(params.updatedAt)
+
+    if (parseInt(params.createdAt))
+      this.createdAt = parseInt(params.createdAt)
+    if (parseInt(params.updatedAt))
+      this.updatedAt = parseInt(params.updatedAt)
   }
 
   // TODO: create Anonymous model which is inherited from User
@@ -63,13 +68,19 @@ exports.addModel = function(db) {
       attrs.id = userId
 
       // TODO: callback(err, user)
-      callback(new User(attrs))
+      var newUser = new User(attrs)
+
+      newUser.getTimelines(function(timelines) {
+        newUser.timelines = timelines
+
+        callback(newUser)
+      })
     })
   },
 
   User.generateSalt = function(callback) {
     logger.debug('- User.generateSalt()')
-    // Note: this is an async function - quite interesting
+    // NOTE: this is an async function - quite interesting
     return crypto.randomBytes(16, function(ex, buf) {
       var token = buf.toString('hex');
       callback(token)
@@ -150,16 +161,15 @@ exports.addModel = function(db) {
       })
     },
 
-    posts: function() {
-      logger.debug('- user.posts()')
-      Timeline.find(this.id)
-    },
-
-    newPost: function(attrs) {
+    newPost: function(attrs, callback) {
       logger.debug('- user.newPost()')
       attrs.userId = this.id
-      
-      return new models.Post(attrs)
+
+      this.getPostsTimelineId(function(timelineId) {
+        attrs.timelineId = timelineId
+
+        callback(new models.Post(attrs))
+      })
     },
 
     // XXX: do not like the design of this method. I'd say better to
@@ -169,6 +179,108 @@ exports.addModel = function(db) {
       attrs.userId = this.id
 
       return new models.Comment(attrs)
+    },
+
+    getRiverOfNewsId: function(callback) {
+      logger.debug('- user.getRiverOfNews()')
+
+      var that = this;
+
+      this.getTimelinesIds(function(timelines) {
+        if (timelines['RiverOfNews']) {
+          callback(timelines['RiverOfNews'])
+        } else {
+          // somehow this user has deleted its main timeline - let's
+          // recreate from the scratch
+          var timelineId = uuid.v4();
+          db.hset('user:' + this.id + ':timelines', 'RiverOfNews',
+                  timelineId, function(err, res) {
+                    db.hmset('timeline:' + timelineId,
+                             { 'name': 'River of news',
+                               'userId': that.id }, function(err, res) {
+                                 callback(timelineId);
+                               })
+                  })
+        }
+      })
+    },
+
+    getRiverOfNews: function(callback) {
+      if (this.riverOfNews) {
+        callback(this.riverOfNews)
+      } else {
+        this.getRiverOfNewsId(function(timelineId) {
+          models.Timeline.findById(timelineId, function(timeline) {
+            this.riverOfNews = this.timeline
+            callback(this.riverOfNews)
+          })
+        })
+      }
+    },
+
+    // TODO: DRY - getRiverOfNews
+    getPostsTimelineId: function(callback) {
+      logger.debug('- user.getPosts()')
+
+      var that = this;
+
+      this.getTimelinesIds(function(timelines) {
+        if (timelines['Posts']) {
+          callback(timelines['Posts'])
+        } else {
+          // somehow this user has deleted its main timeline - let's
+          // recreate from the scratch
+          var timelineId = uuid.v4();
+          db.hset('user:' + that.id + ':timelines', 'Posts',
+                  timelineId, function(err, res) {
+                    db.hmset('timeline:' + timelineId,
+                             { 'name': 'Posts',
+                               'userId': that.id }, function(err, res) {
+                                 callback(timelineId);
+                               })
+                  })
+        }
+      })
+    },
+
+    getPostsTimeline: function(callback) {
+      if (this.postsTimeline) {
+        callback(this.postsTimeline)
+      } else {
+        this.getPostsTimelineId(function(timelineId) {
+          models.Timeline.findById(timelineId, function(timeline) {
+            this.postsTimeline = timeline
+            callback(this.postsTimeline)
+          })
+        })
+      }
+    },
+
+    getTimelinesIds: function(callback) {
+      if (this.timelinesIds) {
+        callback(this.timelinesIds)
+      } else {
+        var that = this
+        db.hgetall('user:' + this.id + ':timelines', function(err, timelinesIds) {
+          this.timelinesIds = timelinesIds || []
+          callback(this.timelinesIds)
+        })
+      }
+    },
+
+    getTimelines: function(callback) {
+      if (this.timelines) {
+        callback(this.timelines)
+      } else {
+        this.getTimelinesIds(function(timelinesIds) {
+          async.map(Object.keys(timelinesIds), function(timelineId, callback) {
+            callback(null, new models.Timeline(timelinesIds[timelineId]))
+          }, function(err, timelines) {
+            this.timelines = timelines
+            callback(timelines)
+          })
+        })
+      }
     },
 
     toJSON: function(callback) {

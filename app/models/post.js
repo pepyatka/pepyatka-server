@@ -7,39 +7,26 @@ var uuid = require('node-uuid')
 exports.addModel = function(db) {
   function Post(params) {
     logger.debug('new Post(' + JSON.stringify(params) + ')')
-    this.body = params.body
 
-    // params to filter
     this.id = params.id
-    this.createdAt = parseInt(params.createdAt) || null
-    this.updatedAt = parseInt(params.updatedAt) || null
-
-    this.comments = params.comments || []
-    this.attachments = params.attachments || []
-
+    this.body = params.body
     this.userId = params.userId
-    this.user = params.user
+    this.timelineId = params.timelineId
+
+    if (parseInt(params.createdAt))
+      this.createdAt = parseInt(params.createdAt)
+    if (parseInt(params.updatedAt))
+      this.updatedAt = parseInt(params.updatedAt)
   }
 
-  Post.find = function(postId, callback) {
-    logger.debug('Post.find("' + postId + '")')
+  Post.findById = function(postId, callback) {
+    logger.debug('Post.findById("' + postId + '")')
+
     db.hgetall('post:' + postId, function(err, attrs) {
       if (attrs) {
         attrs.id = postId
-        var post = new Post(attrs)
 
-        post.getComments(function(comments) {
-          post.comments = comments
-          models.User.findById(attrs.userId, function(user) {
-            post.user = user
-
-            post.getAttachments(function(attachments) {
-              post.attachments = attachments
-
-              callback(post)
-            })
-          })
-        })
+        callback(new Post(attrs))
       } else {
         callback(null)
       }
@@ -50,7 +37,7 @@ exports.addModel = function(db) {
   Post.destroy = function(postId, callback) {
     logger.debug('Post.destroy("' + postId + '")')
 
-    models.Post.find(postId, function(post) {
+    models.Post.findById(postId, function(post) {
       // This is a parallel process: 
       // - deletes post from user's timeline
       // - deletes comments entities and comments array
@@ -111,12 +98,12 @@ exports.addModel = function(db) {
 
   Post.addComment = function(postId, commentId, callback) {
     logger.debug('Post.addComment("' + postId + '", "' + commentId + '")')
-    db.hget('post:' + postId, 'userId', function(err, userId) {
+    db.hget('post:' + postId, 'timelineId', function(err, timelineId) {
       db.rpush('post:' + postId + ':comments', commentId, function() {
         // Can we bump this post?
         Post.bumpable(postId, function(bump) {
           if (bump) {
-            models.Timeline.updatePost(userId, postId, function() {
+            models.Timeline.updatePost(timelineId, postId, function() {
               callback();
             })
           } else {
@@ -141,7 +128,7 @@ exports.addModel = function(db) {
       var that = this
       db.lrange('post:' + this.id + ':attachments', 0, -1, function(err, attachments) {
         async.map(attachments, function(attachmentId, callback) {
-          models.Attachment.find(attachmentId, function(attachment) {
+          models.Attachment.findById(attachmentId, function(attachment) {
             callback(null, attachment)
           })
         }, function(err, attachments) {
@@ -153,21 +140,48 @@ exports.addModel = function(db) {
     // Return all comments
     getComments: function(callback) {
       logger.debug('- post.getComments()')
-      var that = this
-      db.lrange('post:' + this.id + ':comments', 0, -1, function(err, comments) {
-        async.map(comments, function(commentId, callback) {
-          models.Comment.find(commentId, function(comment) {
-            callback(null, comment)
+      if (this.comments) {
+        callback(this.comments)
+      } else {
+        var that = this
+        db.lrange('post:' + this.id + ':comments', 0, -1, function(err, comments) {
+          async.map(comments, function(commentId, callback) {
+            models.Comment.findById(commentId, function(comment) {
+              callback(null, comment)
+            })
+          }, function(err, comments) {
+            this.comments = comments
+            callback(comments)
           })
-        }, function(err, comments) {
-          callback(comments)
         })
-      })
+      }
+    },
+
+    // Return all attachments
+    getAttachments: function(callback) {
+      logger.debug('- post.getAttachments()')
+      if (this.attachments) {
+        callback(this.attachments)
+      } else {
+        var that = this
+        db.lrange('post:' + this.id + ':attachments', 0, -1, function(err, attachments) {
+          async.map(attachments, function(attachmentId, callback) {
+            models.Attachment.findById(attachmentId, function(attachment) {
+              callback(null, attachment)
+            })
+          }, function(err, attachments) {
+            this.attachments = attachments
+            callback(attachments)
+          })
+        })
+      }
     },
 
     save: function(callback) {
       logger.debug('- post.save()')
+
       var that = this
+
       if (!this.createdAt)
         this.createdAt = new Date().getTime()
       this.updatedAt = new Date().getTime()
@@ -175,11 +189,12 @@ exports.addModel = function(db) {
 
       db.hmset('post:' + this.id,
                { 'body': this.body.toString().trim(),
+                 'timelineId': this.timelineId.toString(),
+                 'userId': this.userId.toString(),
                  'createdAt': this.createdAt.toString(),
-                 'updatedAt': this.updatedAt.toString(),
-                 'userId': this.userId.toString()
+                 'updatedAt': this.updatedAt.toString()
                }, function(err, res) {
-                 models.Timeline.newPost(that.userId, that.id, function() {
+                 models.Timeline.newPost(that.timelineId, that.id, function() {
                    // BUG: updatedAt is different now than we set few lines above
                    callback(that)
                  })
@@ -204,20 +219,22 @@ exports.addModel = function(db) {
               callback(null, json)
             })
           }, function(err, commentsJSON) {
-            async.map(that.attachments, function(attachment, callback) {
-              attachment.toJSON(function(json) {
-                callback(null, json)
-              })
-            }, function(err, attachmentsJSON) {
-              user.toJSON(function(user) {
-                callback({ 
-                  id: that.id,
-                  createdAt: that.createdAt,
-                  updatedAt: that.updatedAt,
-                  body: that.body,
-                  createdBy: user,
-                  comments: commentsJSON,
-                  attachments: attachmentsJSON
+            that.getAttachments(function() {
+              async.map(attachments, function(attachment, callback) {
+                attachment.toJSON(function(json) {
+                  callback(null, json)
+                })
+              }, function(err, attachmentsJSON) {
+                user.toJSON(function(user) {
+                  callback({
+                    id: that.id,
+                    createdAt: that.createdAt,
+                    updatedAt: that.updatedAt,
+                    body: that.body,
+                    createdBy: user,
+                    comments: commentsJSON,
+                    attachments: attachmentsJSON
+                  })
                 })
               })
             })
