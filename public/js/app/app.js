@@ -450,6 +450,7 @@ App.Router = Ember.Router.extend({
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
       
       connectOutlets: function(router){ 
+        App.postsController.set('timeline', null)
         router.get('applicationController').connectOutlet('posts', App.postsController.findAll());
       }
     }),
@@ -463,6 +464,7 @@ App.Router = Ember.Router.extend({
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
 
       connectOutlets: function(router, username) {
+        App.postsController.set('timeline', username)
         router.get('applicationController').connectOutlet('posts', App.postsController.findAll());
       },
 

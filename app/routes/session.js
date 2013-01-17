@@ -12,7 +12,8 @@ exports.addRoutes = function(app) {
       if (!user) { return res.redirect('/session'); }
       req.logIn(user, function(err) {
         if (err) { return next(err); }
-        return res.redirect('/#/users/' + user.username);
+        // everything is OK - let's redirect user to river of news
+        return res.redirect('/');
       });
     })(req, res, next);
   })

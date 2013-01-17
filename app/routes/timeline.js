@@ -10,15 +10,19 @@ exports.addRoutes = function(app) {
     // additional assoc array as a second parameter
 
     models.User.findByUsername(req.params.username, function(user) {
-      user.getPostsTimeline(function(timeline) {
-        if (timeline) {
-          timeline.toJSON(function(json) {
-            res.jsonp(json);
-          })
-        } else {
-          res.jsonp({});
-        }
-      })
+      if (user) {
+        user.getPostsTimeline(function(timeline) {
+          if (timeline) {
+            timeline.toJSON(function(json) {
+              res.jsonp(json);
+            })
+          } else {
+            res.jsonp({});
+          }
+        })
+      } else {
+        res.jsonp({})
+      }
     })
   }),
 

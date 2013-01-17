@@ -94,17 +94,35 @@ exports.addModel = function(db) {
   }
 
   Post.addComment = function(postId, commentId, callback) {
-    db.hget('post:' + postId, 'timelineId', function(err, timelineId) {
-      db.rpush('post:' + postId + ':comments', commentId, function() {
-        // Can we bump this post?
-        Post.bumpable(postId, function(bump) {
-          if (bump) {
-            models.Timeline.updatePost(timelineId, postId, function() {
-              callback();
+    models.Post.findById(postId, function(post) {
+      models.Comment.findById(commentId, function(comment) {
+        models.User.findById(comment.userId, function(commentUser) {
+          models.User.findById(post.userId, function(postUser) {
+            // update post in all connected timelines
+            postUser.getTimelinesIds(function(timelinesIds) {
+              // and additionally add this post to comment's author
+              // river of news
+              commentUser.getRiverOfNewsId(function(riverId) {
+                timelinesIds[riverId] = riverId
+
+                Post.bumpable(postId, function(bumpable) {
+                  db.rpush('post:' + postId + ':comments', commentId, function() {
+                    async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
+                      if (bumpable) {
+                        models.Timeline.updatePost(timelinesIds[timelineId], postId, function() {
+                          callback(null);
+                        })
+                      } else {
+                        callback(null);
+                      }
+                    }, function(err) {
+                      callback(err)
+                    })
+                  })
+                })
+              })
             })
-          } else {
-            callback();
-          }
+          })
         })
       })
     })

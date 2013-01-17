@@ -25,17 +25,17 @@ Database
 ```
 username:<username>:uid
 user:<userId> { username, hashedPassword, salt, createdAt, updatedAt }
-
 user:<userId>:timelines { RiverOfNews, Posts, DirectMessages, [name*] }
+
 timeline:<timelineId> { name, userId }
 timeline:<timelineId>:posts ( <postId>:<timestamp> )
-timeline:<timelineId>:subscriptions [ <timelineId> ]
+timeline:<timelineId>:subscriptions ( <timelineId> )
 
 post:<postId> { body, createdAt, updatedAt, userId }
 post:<postId>:comments [ <commentId> ]
 post:<postId>:attachments [ <attachmentId> ]
 post:<postId>:timelines ( <timelineId> )
-post:<postId>:likes [ <userId> ] # not implemented yet
+post:<postId>:likes ( <userId> ) # not implemented yet
 
 comment:<commentId> { body, createdAt, userId, postId }
 
