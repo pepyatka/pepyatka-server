@@ -52,6 +52,8 @@ exports.addModel = function(db) {
 
     models.Post.findById(postId, function(post) {
       models.User.findById(post.userId, function(user) {
+        // TODO: save this postId to all connected timelines for all
+        // subscribed users
         var timelinesIds = [post.timelineId]
 
         user.getRiverOfNewsId(function(timelineId) {
@@ -61,7 +63,9 @@ exports.addModel = function(db) {
             db.zadd('timeline:' + timelineId + ':posts', currentTime, postId, function(err, res) {
               Timeline.update(post.timelineId, function() {
                 db.hset('post:' + postId, 'updatedAt', currentTime, function(err, res) {
-                  callback(err, res)
+                  db.sadd('post:' + postId + ':timelines', timelineId, function(err, res) {
+                    callback(err, res)
+                  })
                 })
               })
             })
