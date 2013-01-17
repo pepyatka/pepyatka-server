@@ -51,5 +51,6 @@ API
 
 - GET /v1/timeline/<username>
 - GET /v1/posts/<postId>
+- GET /v1/posts/<postId>/comments # not implemented yet
 - POST /v1/posts
 - POST /v1/comments

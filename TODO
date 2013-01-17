@@ -75,6 +75,7 @@ Phase 2.0
 [ ] Unit testing
 [ ] Refactor save function to two separate functions: create and update
 [ ] Nginx and node installation
+[ ] Minify/uglify js and css file - production mode
 [ ] Owners can edit their posts
 [ ] Passport and socket.io
 [ ] Clear sockets in redis store on restart
@@ -86,6 +87,9 @@ Phase 2.x
 ---------
 [ ] Limit length of parsed link, e.g. 30 symbs
 [ ] First and last comments as two extra post fields
+[ ] API for comments
+[ ] Smooth animation affect on expanding comments
+[ ] 
 [ ] Show notice if could upload attachment
 [ ] Spinner on ajax requests
 [ ] Do not minimize image if it's already small enough
@@ -105,8 +109,11 @@ Phase 2.x
 [ ] Performance tests, ab metrics
 [ ] R&D: Nohm lib
 [ ] Autogrow lib is not cross-browser - refactoring
+[ ] Extract pub/sub variables to server level
 
 [ ] Bookmarklet
+
+[ ] Favicon
 
 Phase 3
 -------
