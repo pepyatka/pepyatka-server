@@ -82,6 +82,10 @@ App.PostContainerView = Ember.View.extend({
 
   showAllComments: function() {
     this.content.set('showAllComments', true)
+  },
+
+  unlikePost: function() {
+    App.postsController.unlikePost(this.content.id)
   }
 });
 
@@ -109,10 +113,25 @@ App.CommentContainerView = Ember.View.extend({
 
 // Create new post text field. Separate view to be able to bind events
 App.CommentPostView = Ember.View.extend(Ember.TargetActionSupport, {
-  tagName: "a",
-
   click: function() {
     this.triggerAction();
+  },
+
+  // XXX: this is a dup of App.PostContainerView.toggleVisibility()
+  // function. I just do not know how to access it from UI bindings
+  toggleVisibility: function() {
+    this.toggleProperty('parentView.isFormVisible');
+  }
+})
+
+App.LikePostView = Ember.View.extend(Ember.TargetActionSupport, {
+  click: function() {
+    this.triggerAction();
+  },
+
+  likePost: function() {
+    var post = this.bindingContext
+    App.postsController.likePost(post.id)
   }
 })
 
@@ -224,6 +243,13 @@ App.Comment = Ember.Object.extend({
   user: null
 });
 
+App.User = Ember.Object.extend({
+  id: null,
+  username: null,
+  createdAt: null,
+  updatedAt: null,
+})
+
 App.CommentsController = Ember.ArrayController.extend({
   createComment: function(post, body) {
     var comment = App.Comment.create({ 
@@ -248,11 +274,6 @@ App.CommentsController = Ember.ArrayController.extend({
 App.commentsController = App.CommentsController.create()
 
 App.Post = Ember.Object.extend({
-  body: null,
-  createdAt: null,
-  updatedAt: null,
-  comments: [],
-  user: null,
   showAllComments: false,
 
   partial: function() {
@@ -261,6 +282,23 @@ App.Post = Ember.Object.extend({
     else
       return this.comments.length > 3
   }.property('showAllComments', 'comments'),
+
+  anyLikes: function() {
+    return this.get('likes').length > 0
+  }.property('likes'),
+
+  currentUserLiked: function() {
+    var likes = this.get('likes')
+
+    var found = false
+    likes.forEach(function(like) {
+      if (like.id == currentUser) {
+        found = true
+        return found;
+      }
+    })
+    return found
+  }.property('likes'),
 
   createdAgo: function() {
     if (this.get('createdAt')) {
@@ -319,6 +357,26 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
   removePost: function(propName, value) {
     var obj = this.findProperty(propName, value);
     this.removeObject(obj);
+  },
+
+  likePost: function(postId) {
+    $.ajax({
+      url: '/v1/posts/' + postId + '/like',
+      type: 'post',
+      success: function(response) {
+        console.log(response)
+      }
+    })
+  },
+
+  unlikePost: function(postId) {
+    $.ajax({
+      url: '/v1/posts/' + postId + '/unlike',
+      type: 'post',
+      success: function(response) {
+        console.log(response)
+      }
+    })
   },
 
   createPost: function(body) {

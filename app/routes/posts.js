@@ -19,6 +19,23 @@ exports.addRoutes = function(app) {
     })
   })
 
+  app.post('/v1/posts/:postId/like', function(req, res) {
+    models.Post.addLike(req.params.postId, req.user.id, function(err) {
+      var pub = redis.createClient();
+      pub.publish('newLike', [req.user.id, req.params.postId])
+
+      // post.toJSON(function(json) { res.jsonp(json) })
+
+      res.jsonp({})
+    })
+  })
+
+  app.post('/v1/posts/:postId/unlike', function(req, res) {
+    models.Post.removeLike(req.params.postId, req.user.id, function(err, r) {
+      res.jsonp({})
+    })
+  })
+
   app.post('/v1/posts', function(req, res) {
     // creates and saves new post
     req.user.getPostsTimelineId(function(timelineId) {

@@ -129,11 +129,39 @@
           <a {{action showPost this href="true"}} class="datetime">
             <time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>
           </a>
-          -
-          {{#view App.CommentPostView target="parentView" action="toggleVisibility"}}
-            Comment
+
+          {{#view App.CommentPostView}}
+            -
+            <a {{action toggleVisibility target="parentView"}}>Comment</a>
           {{/view}}
+
+          {{#unless currentUserLiked}}
+            {{#view App.LikePostView}}
+              -
+              <a {{action likePost target="parentView"}}>Like</a>
+            {{/view}}
+          {{/unless}}
         </div>
+
+        {{#if anyLikes}}
+          <div class="media likes">
+            <div class="pull-left">
+              <i class="icon-heart-empty media-object"></i>
+            </div>
+
+            <div class="media-body">
+              <ul class="unstyled inline">
+                {{#each user in likes}}
+                  <a {{action showUserTimeline user.username href="true"}}>{{user.username}}</a>
+                {{/each}}
+                <li>liked this</li>
+                {{#if currentUserLiked}}
+                  <li {{action unlikePost target="parentView"}}>(<a>Un-like</a>)</li>
+                {{/if}}
+              </ul>
+            </div>
+          </div>
+        {{/if}}
     
         <ul class="unstyled comments">
           {{#if partial}}
@@ -198,9 +226,9 @@
         <a {{action showPost this}} class="datetime">
           <time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>
         </a>
-        -
-        {{#view App.CommentPostView target="parentView" action="toggleVisibility"}}
-          Comment
+        {{#view App.CommentPostView}}
+          -
+          <a {{action toggleVisibility target="parentView"}}>Comment</a>
         {{/view}}
       </div>
     
@@ -268,6 +296,24 @@
       post.set('skippedCommentsLength', len + 1)
     }
   });
+
+  socket.on('newLike', function(data) {
+    var user = App.User.create(data.user)
+
+    var post = App.postsController.find(function(post) {
+      return post.id == data.postId
+    })
+
+    if (post) {
+      // TODO: set currentTime to bump the post
+      // post.set('updatedAt', currentTime)
+
+      post.likes.addObject(user)
+    }
+  })
+
+  socket.on('removeLike', function(data) {
+  })
 
   socket.on('updateComment', function(data) {
   })

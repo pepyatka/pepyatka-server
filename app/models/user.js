@@ -269,7 +269,9 @@ exports.addModel = function(db) {
     toJSON: function(callback) {
       callback({
         id: this.id,
-        username: this.username
+        username: this.username,
+        createdAt: this.createdAt,
+        updatedAt: this.updatedAt
       })
     }
 

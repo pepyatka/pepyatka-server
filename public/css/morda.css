@@ -55,7 +55,8 @@ footer {
     color: #000088;
 }
 .post .tagline a, .post .text a, .post .comments .author a,
-  .post .comments .more-comments a, .comments .body a, .post .new-comment-link a {
+  .post .comments .more-comments a, .comments .body a, .post .new-comment-link a,
+  .post .likes a {
     color: #555599;
 }
 .post .text a {
@@ -72,6 +73,9 @@ footer {
 }
 .post .tagline .datetime {
     color: #666;
+}
+.post .tagline div {
+    display: inline;
 }
 .post .tagline, .post .comments, .post .comments .author {
     font-size: 13px;
@@ -90,8 +94,18 @@ footer {
     margin: 3px 0 7px 20px;
 }
 .post .comments .pull-left, .post .comment-form .pull-left,
-  .post .new-comment-link .pull-left {
+  .post .new-comment-link .pull-left, .post .likes .pull-left {
     margin-right: 4px;
+}
+.post .likes {
+    font-size: 13px;
+    margin: 2px 0 0 0;
+}
+.post .likes .media-object {
+    color: #fc4;
+}
+.post .likes li {
+    padding:0;
 }
 
 .post .new-comment-link {

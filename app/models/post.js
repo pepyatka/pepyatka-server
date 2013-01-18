@@ -93,6 +93,47 @@ exports.addModel = function(db) {
     callback(true);
   }
 
+  Post.removeLike = function(postId, userId, callback) {
+    db.srem('post:' + postId + ':likes', userId, function(err, res) {
+      callback(err, res)
+    })
+  }
+
+  // XXX: this function duplicates 80% of addComment function - think
+  // for a moment about this
+  Post.addLike = function(postId, userId, callback) {
+    models.Post.findById(postId, function(post) {
+      models.User.findById(userId, function(user) {
+        models.User.findById(post.userId, function(postUser) {
+          // update post in all connected timelines
+          postUser.getTimelinesIds(function(timelinesIds) {
+            // and additionally add this post to user who liked this
+            // post to its river of news
+            user.getRiverOfNewsId(function(riverId) {
+              timelinesIds[riverId] = riverId
+
+              Post.bumpable(postId, function(bumpable) {
+                db.sadd('post:' + postId + ':likes', userId, function(err, res) {
+                  async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
+                    if (bumpable) {
+                      models.Timeline.updatePost(timelinesIds[timelineId], postId, function() {
+                        callback(null);
+                      })
+                    } else {
+                      callback(null);
+                    }
+                  }, function(err) {
+                    callback(err)
+                  })
+                })
+              })
+            })
+          })
+        })
+      })
+    })
+  },
+
   Post.addComment = function(postId, commentId, callback) {
     models.Post.findById(postId, function(post) {
       models.Comment.findById(commentId, function(comment) {
@@ -106,7 +147,7 @@ exports.addModel = function(db) {
                 timelinesIds[riverId] = riverId
 
                 Post.bumpable(postId, function(bumpable) {
-                  db.rpush('post:' + postId + ':comments', commentId, function() {
+                  db.rpush('post:' + postId + ':comments', commentId, function(err, res) {
                     async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
                       if (bumpable) {
                         models.Timeline.updatePost(timelinesIds[timelineId], postId, function() {
@@ -170,8 +211,8 @@ exports.addModel = function(db) {
         callback(this.commentsIds)
       } else {
         var that = this
-        db.lrange('post:' + this.id + ':comments', 0, -1, function(err, commentIds) {
-          that.commentsIds = commentIds || []
+        db.lrange('post:' + this.id + ':comments', 0, -1, function(err, commentsIds) {
+          that.commentsIds = commentsIds || []
           callback(that.commentsIds)
         })
       }
@@ -190,6 +231,36 @@ exports.addModel = function(db) {
           }, function(err, comments) {
             that.comments = comments
             callback(that.comments)
+          })
+        })
+      }
+    },
+
+    getLikesIds: function(callback) {
+      if (this.likesIds) {
+        callback(this.likesIds)
+      } else {
+        var that = this
+        db.smembers('post:' + this.id + ':likes', function(err, likesIds) {
+          that.likesIds = likesIds || []
+          callback(that.likesIds)
+        })
+      }
+    },
+
+    getLikes: function(callback) {
+      if (this.likes) {
+        callback(this.likes)
+      } else {
+        var that = this
+        this.getLikesIds(function(likesIds) {
+          async.map(likesIds, function(userId, callback) {
+            models.User.findById(userId, function(user) {
+              callback(null, user)
+            })
+          }, function(err, users) {
+            that.likes = users
+            callback(that.likes)
           })
         })
       }
@@ -240,14 +311,23 @@ exports.addModel = function(db) {
                 })
               }, function(err, attachmentsJSON) {
                 user.toJSON(function(user) {
-                  callback({
-                    id: that.id,
-                    createdAt: that.createdAt,
-                    updatedAt: that.updatedAt,
-                    body: that.body,
-                    createdBy: user,
-                    comments: commentsJSON,
-                    attachments: attachmentsJSON
+                  that.getLikes(function(likes) {
+                    async.map(likes, function(like, callback) {
+                      like.toJSON(function(json) {
+                        callback(null, json)
+                      })
+                    }, function(err, likesJSON) {
+                      callback({
+                        id: that.id,
+                        createdAt: that.createdAt,
+                        updatedAt: that.updatedAt,
+                        body: that.body,
+                        createdBy: user,
+                        comments: commentsJSON,
+                        attachments: attachmentsJSON,
+                        likes: likesJSON
+                      })
+                    })
                   })
                 })
               })

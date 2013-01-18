@@ -25,7 +25,7 @@ Database
 ```
 username:<username>:uid
 user:<userId> { username, hashedPassword, salt, createdAt, updatedAt }
-user:<userId>:timelines { RiverOfNews, Posts, DirectMessages, [name*] }
+user:<userId>:timelines { RiverOfNews, Posts, DirectMessages, Likes, Comments, [name*] }
 
 timeline:<timelineId> { name, userId }
 timeline:<timelineId>:posts ( <postId>:<timestamp> )
@@ -45,9 +45,11 @@ attachment:<attachmentId> { mimeType, filename, extension, path, createdAt, upda
 API
 ---
 
-- GET /v1/timeline/<username> - returns all posts from user <username>
+- GET /v1/timeline/:username - returns all posts from user <username>
 - GET /v1/timeline - returns river of news for auth user
-- GET /v1/posts/<postId>
-- GET /v1/posts/<postId>/comments # not implemented yet
+- GET /v1/posts/:postId
+- GET /v1/posts/:postId/comments # not implemented yet
 - POST /v1/posts
+- POST /v1/posts/:postId/like
+- POST /v1/posts/:postId/unlike
 - POST /v1/comments
