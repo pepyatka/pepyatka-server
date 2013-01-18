@@ -31,7 +31,7 @@ timeline:<timelineId> { name, userId }
 timeline:<timelineId>:posts ( <postId>:<timestamp> )
 timeline:<timelineId>:subscriptions ( <timelineId> )
 
-post:<postId> { body, createdAt, updatedAt, userId }
+post:<postId> { body, createdAt, updatedAt, userId, timelineId }
 post:<postId>:comments [ <commentId> ]
 post:<postId>:attachments [ <attachmentId> ]
 post:<postId>:timelines ( <timelineId> )
