@@ -105,7 +105,22 @@ footer {
     color: #fc4;
 }
 .post .likes li {
-    padding:0;
+    padding: 0;
+}
+.post .likes li span.and {
+    display: none;
+}
+/*.post .likes li.last span.and {
+    display: inline;
+}*/
+.post .likes li.last span.comma {
+    display: none;
+}
+.post .likes li.first span.comma {
+    display: none;
+}
+.post .likes ul .pull-left {
+    margin: 0;
 }
 
 .post .new-comment-link {

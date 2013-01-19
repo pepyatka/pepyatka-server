@@ -89,7 +89,7 @@
 
 <script type="text/x-handlebars" data-template-name="comment-view">
   <li class="media">
-    {{#with view.content}}  
+    {{#with view.content}}
       <div class="pull-left">
         <i class="icon-comment-alt media-object"></i>
       </div>
@@ -104,6 +104,12 @@
       </div>
     {{/with}}
   </li>
+</script>
+
+<script type="text/x-handlebars" data-template-name="like-view">
+  {{#with view.content}}
+    <span class="and">and&nbsp;</span><a {{action showUserTimeline username href="true"}}>{{username}}</a><span class="comma">,&nbsp;</span>
+  {{/with}}
 </script>
 
 <script type="text/x-handlebars" data-template-name="post-view">
@@ -146,19 +152,18 @@
         {{#if anyLikes}}
           <div class="media likes">
             <div class="pull-left">
-              <i class="icon-heart-empty media-object"></i>
+              <i class="icon-heart media-object"></i>
             </div>
 
             <div class="media-body">
-              <ul class="unstyled inline">
-                {{#each user in likes}}
-                  <a {{action showUserTimeline user.username href="true"}}>{{user.username}}</a>
-                {{/each}}
-                <li>liked this</li>
-                {{#if currentUserLiked}}
-                  <li {{action unlikePost target="parentView"}}>(<a>Un-like</a>)</li>
-                {{/if}}
+              <ul class="unstyled inline pull-left">
+                {{view Ember.CollectionView contentBinding="likes"
+                       itemViewClass="App.LikeView"}}
               </ul>
+              <span>liked this</span>
+              {{#if currentUserLiked}}
+                <span>(<a {{action unlikePost target="parentView"}}>Un-like</a>)</span>
+              {{/if}}
             </div>
           </div>
         {{/if}}
@@ -285,15 +290,6 @@
     if (post) {
       post.set('updatedAt', comment.createdAt)
       post.comments.pushObject(comment)
-
-      // TODO: do not know how to bind from Ember.JS
-      post.set('lastComment', function() {
-        return post;
-      })
-
-      // TODO: do not know how to bind from Ember.JS.
-      var len = post.get('skippedCommentsLength')
-      post.set('skippedCommentsLength', len + 1)
     }
   });
 
@@ -309,15 +305,12 @@
       // post.set('updatedAt', currentTime)
 
       var like = post.likes.find(function(like) {
-        return like.id == currentUser
+        return like.id == user.id
       })
 
       if (!like) {
         post.likes.pushObject(user)
       }
-
-      post.set('currentUserLiked', function() { return true; })
-      post.set('anyLikes', function() { return true; })
     }
   })
 
@@ -331,12 +324,6 @@
       // post.set('updatedAt', currentTime)
 
       post.removeLike('id', data.userId)
-
-      // TODO: this must be done on emberjs level
-      post.set('currentUserLiked', function() { return false; })
-      if (post.likes.length == 0) {
-        post.set('anyLikes', function() { return false; })
-      }
     }
   })
 

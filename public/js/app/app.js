@@ -135,6 +135,27 @@ App.LikePostView = Ember.View.extend(Ember.TargetActionSupport, {
   }
 })
 
+App.LikeView = Ember.View.extend({
+  templateName: 'like-view',
+  tagName: 'li',
+  classNameBindings: ['isLastAndNotSingle:last', 'isFirstAndSingle:first'],
+  classNames: ['pull-left'],
+
+  isFirstAndSingle: function() {
+    var index = this.get('contentIndex')
+    var length = this.get('parentView.content.length')
+    console.log(index)
+    console.log(length)
+    return index == 0 && length == 1
+  }.property('parentView', 'parentView.content.@each'),
+
+  isLastAndNotSingle: function() {
+    var index = this.get('contentIndex')+1
+    var length = this.get('parentView.content.length')
+    return index == length && length > 1
+  }.property('parentView', 'parentView.content.@each')
+});
+
 App.CommentPostViewSubst = Ember.View.extend(Ember.TargetActionSupport, {
   classNameBindings: 'isVisible visible:invisible',
 
@@ -284,7 +305,7 @@ App.Post = Ember.Object.extend({
   }.property('showAllComments', 'comments'),
 
   removeLike: function(propName, value) {
-    var obj = this.likes.findProperty(propName, value);
+    var obj = this.get('likes').findProperty(propName, value);
     this.likes.removeObject(obj);
   },
 
@@ -299,11 +320,11 @@ App.Post = Ember.Object.extend({
       }
     })
     return found
-  }.property('likes'),
+  }.property('likes', 'likes.@each'),
 
   anyLikes: function() {
     return this.get('likes').length > 0
-  }.property('likes'),
+  }.property('likes', 'likes.@each'),
 
   createdAgo: function() {
     if (this.get('createdAt')) {
@@ -318,11 +339,11 @@ App.Post = Ember.Object.extend({
   lastComment: function() {
     var comments = this.get('comments')
     return comments[comments.length-1]
-  }.property('comments'),
+  }.property('comments', 'comments.@each'),
 
   skippedCommentsLength: function() {
     return this.get('comments').length-2 // display first and last comments only
-  }.property('comments'),
+  }.property('comments', 'comments.@each'),
 
   firstThumbnailSrc: function() {
     if (this.get('attachments') && this.get('attachments')[0]) {
@@ -339,7 +360,6 @@ App.Post = Ember.Object.extend({
       return false
     }
   }.property('attachments')
-
 });
 
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
@@ -562,4 +582,3 @@ App.Router = Ember.Router.extend({
 });
 
 App.initialize();
-
