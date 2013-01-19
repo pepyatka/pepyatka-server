@@ -47,17 +47,26 @@ exports.listen = function(io) {
       break
 
     case 'newLike':
-      console.log(msg[0])
-      models.User.findById(msg[0], function(user) {
+      var data = JSON.parse(msg)
+      models.User.findById(data.userId, function(user) {
         if (user) {
           user.toJSON(function(json) {
             var clients = io.sockets.clients()
             async.forEach(clients, function(socket) {
               socket.emit('newLike', { user: json,
-                                       postId: msg[1] })
+                                       postId: data.postId })
             })
           })
         }
+      })
+      break
+
+    case 'removeLike':
+      var data = JSON.parse(msg)
+      var clients = io.sockets.clients()
+      async.forEach(clients, function(socket) {
+        socket.emit('removeLike', { userId: data.userId,
+                                    postId: data.postId})
       })
       break
     }

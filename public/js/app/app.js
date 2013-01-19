@@ -283,9 +283,10 @@ App.Post = Ember.Object.extend({
       return this.comments.length > 3
   }.property('showAllComments', 'comments'),
 
-  anyLikes: function() {
-    return this.get('likes').length > 0
-  }.property('likes'),
+  removeLike: function(propName, value) {
+    var obj = this.likes.findProperty(propName, value);
+    this.likes.removeObject(obj);
+  },
 
   currentUserLiked: function() {
     var likes = this.get('likes')
@@ -298,6 +299,10 @@ App.Post = Ember.Object.extend({
       }
     })
     return found
+  }.property('likes'),
+
+  anyLikes: function() {
+    return this.get('likes').length > 0
   }.property('likes'),
 
   createdAgo: function() {

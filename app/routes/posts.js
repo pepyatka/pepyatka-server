@@ -22,7 +22,9 @@ exports.addRoutes = function(app) {
   app.post('/v1/posts/:postId/like', function(req, res) {
     models.Post.addLike(req.params.postId, req.user.id, function(err) {
       var pub = redis.createClient();
-      pub.publish('newLike', [req.user.id, req.params.postId])
+      pub.publish('newLike',
+                  JSON.stringify({ userId: req.user.id,
+                                   postId: req.params.postId }))
 
       // post.toJSON(function(json) { res.jsonp(json) })
 
@@ -32,6 +34,11 @@ exports.addRoutes = function(app) {
 
   app.post('/v1/posts/:postId/unlike', function(req, res) {
     models.Post.removeLike(req.params.postId, req.user.id, function(err, r) {
+      var pub = redis.createClient();
+      pub.publish('removeLike',
+                  JSON.stringify({ userId: req.user.id,
+                                   postId: req.params.postId }))
+
       res.jsonp({})
     })
   })

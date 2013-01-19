@@ -308,11 +308,36 @@
       // TODO: set currentTime to bump the post
       // post.set('updatedAt', currentTime)
 
-      post.likes.addObject(user)
+      var like = post.likes.find(function(like) {
+        return like.id == currentUser
+      })
+
+      if (!like) {
+        post.likes.pushObject(user)
+      }
+
+      post.set('currentUserLiked', function() { return true; })
+      post.set('anyLikes', function() { return true; })
     }
   })
 
   socket.on('removeLike', function(data) {
+    var post = App.postsController.find(function(post) {
+      return post.id == data.postId
+    })
+
+    if (post) {
+      // TODO: set currentTime to bump the post
+      // post.set('updatedAt', currentTime)
+
+      post.removeLike('id', data.userId)
+
+      // TODO: this must be done on emberjs level
+      post.set('currentUserLiked', function() { return false; })
+      if (post.likes.length == 0) {
+        post.set('anyLikes', function() { return false; })
+      }
+    }
   })
 
   socket.on('updateComment', function(data) {
