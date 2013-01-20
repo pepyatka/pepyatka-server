@@ -83,12 +83,12 @@
     </div>
   </div>
 
-  {{view App.JustStarted}}
-
   <div id="progressBar" {{bindAttr class="App.postsController.isProgressBarHidden"}}>
     {{view Bootstrap.ProgressBar isStriped=true isAnimated=true 
         progressBinding="App.postsController.progress"}}
   </div>
+
+  {{view App.JustStarted}}
 
   <ul class="media-list">
     {{view Ember.CollectionView contentBinding="App.postsController"
