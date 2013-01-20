@@ -206,7 +206,7 @@
               <div>
                 {{view App.CreateCommentView target="parentView"
                       action="submitComment" valueBinding="view.body"
-                      class="span6 input-tiny comment-area"}}
+                      class="span8 input-tiny comment-area"}}
               </div>
               <div>
                 <button {{action submitComment target="view"}} class="btn btn-small">Post</button>
@@ -252,15 +252,18 @@
       </ul>
     
       {{#view App.CommentForm}}
-        <div class="comment-form">
-          <div>
-            {{view App.CreateCommentView target="parentView" 
-                  action="submitComment" valueBinding="view.body"
-                  class="span6 input-tiny"}}
-          </div>
-          <div>
-            <button {{action submitComment target="view"}} class="btn btn-small">Post</button>
-            <a {{action toggleVisibility target="parentView"}}>Cancel</a>
+        <div class="comment-form media">
+          <i class="icon-comment-alt media-object pull-left"></i>
+          <div class="media-body">
+            <div>
+              {{view App.CreateCommentView target="parentView"
+                    action="submitComment" valueBinding="view.body"
+                    class="span7 input-tiny comment-area"}}
+            </div>
+            <div>
+              <button {{action submitComment target="view"}} class="btn btn-small">Post</button>
+              <a {{action toggleVisibility target="parentView"}}>Cancel</a>
+            </div>
           </div>
         </div>
       {{/view}}

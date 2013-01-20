@@ -32,6 +32,12 @@ footer {
     font-size: 13px;
     line-height: 16px;
 }
+.container .comment-area {
+    width: 600px;
+}
+.container .a-post .comment-area {
+    width: 586px;
+}
 .container span.file-input-name {
     display: block;
     float: right;
