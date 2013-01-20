@@ -19,7 +19,7 @@ footer {
 
 .container {
     margin: 0 auto;
-    max-width: 870px;
+    width: 870px;
 }
 
 .container .title a {
@@ -30,7 +30,7 @@ footer {
     padding: 10px;
 }
 .container .signin-toolbar {
-    margin: 10px 0 0 0;
+    margin-top: 10px;
     text-align: right;
 }
 .container .comment-area {
