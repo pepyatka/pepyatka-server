@@ -15,7 +15,7 @@
 <script type="text/x-handlebars" data-template-name="application">
   <div class="container">
     <div class="row">
-      <div class="span7">
+      <div class="span9">
         <h1 class="title">
           <a {{action showAllPosts href="true"}}>Pepyatka</a>
         </h1>
@@ -23,7 +23,7 @@
       </div>
 
       <% if (!req.user || req.user.username == 'anonymous') { %>
-        <div class="span2 signin-toolbar">
+        <div class="span3 signin-toolbar">
           <a href="/session">Sign in</a>
           or
           <a href="/signup">Join Pepyatka</a>
@@ -32,11 +32,11 @@
     </div>
 
     <div class="row">
-      <div class="span7">
+      <div class="span9">
         {{outlet}}
       </div>
 
-      <div class="span2">
+      <div class="span3">
         <div class="media profile">
           <div class="pull-left">
             <img class="media-object" src="/img/48x48.png">
@@ -73,7 +73,7 @@
   <div class="clearfix submitForm">
     <div>
       {{view App.CreatePostView target="parentView" action="submitPost"
-            class="span7"}}
+            class="span9"}}
     </div>
     <div class="pull-left">
       Add image: {{view App.UploadFileView name="image"}}

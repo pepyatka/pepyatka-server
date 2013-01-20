@@ -17,11 +17,6 @@ footer {
     color: #aaa;
 }
 
-.container {
-    margin: 0 auto;
-    width: 870px;
-}
-
 .container .title a {
     color: #000;
 }
@@ -31,7 +26,6 @@ footer {
 }
 .container .signin-toolbar {
     margin-top: 10px;
-    text-align: right;
 }
 .container .comment-area {
     height: 16px;
