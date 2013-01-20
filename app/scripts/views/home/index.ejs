@@ -16,11 +16,10 @@
   <div class="container">
     <div class="row">
       <div class="span7">
-        <h1>
-          <a {{action showAllPosts href="true"}}>ff/b/</a>
-          - 
-          <a href="/#/users/anonymous">/a</a> 
+        <h1 class="title">
+          <a {{action showAllPosts href="true"}}>Pepyatka</a>
         </h1>
+        <hr/>
       </div>
 
       <% if (!req.user || req.user.username == 'anonymous') { %>
@@ -62,6 +61,14 @@
   </div>
 </script>
 
+<script type="text/x-handlebars" data-template-name="just-started">
+  {{#if view.justStarted}}
+    <div class="well">
+      Seems like you've just started using Pepyatka? Check out <a href="/#/users/anonymous">anonymous posts</a>.
+    </div>
+  {{/if}}
+</script>
+
 <script type="text/x-handlebars" data-template-name="post-list-view">
   <div class="clearfix submitForm">
     <div>
@@ -75,6 +82,8 @@
       <button {{action submitPost target="view"}} class="btn pull-right">Post</button>
     </div>
   </div>
+
+  {{view App.JustStarted}}
 
   <div id="progressBar" {{bindAttr class="App.postsController.isProgressBarHidden"}}>
     {{view Bootstrap.ProgressBar isStriped=true isAnimated=true 

@@ -36,6 +36,14 @@ App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
   }
 })
 
+App.JustStarted = Ember.View.extend({
+  templateName: 'just-started',
+
+  justStarted: function() {
+    return App.router.location.lastSetURL != "/users/anonymous"
+  }.property()
+});
+
 App.UploadFileView = Ember.TextField.extend({
   type: 'file',
 
@@ -534,7 +542,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
       }
     })
     return post;
-  }  
+  }
 })
 App.postsController = App.PostsController.create()
 

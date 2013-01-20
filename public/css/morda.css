@@ -22,6 +22,13 @@ footer {
     max-width: 870px;
 }
 
+.container .title a {
+    color: #000;
+}
+.container .well {
+    margin: 0;
+    padding: 10px;
+}
 .container .signin-toolbar {
     margin: 10px 0 0 0;
     text-align: right;
