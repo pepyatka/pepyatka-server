@@ -74,7 +74,7 @@ exports.addModel = function(db) {
             callback(err, that)
           })
         } else {
-          callback(null, this)
+          callback(null, that)
         }
       })
     },

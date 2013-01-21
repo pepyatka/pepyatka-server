@@ -105,7 +105,7 @@ exports.addRoutes = function(app) {
                         'ext': ext,
                         'filename': filename,
                         'path': attachmentHttpPath,
-                        'thumbnailId': newThumbnail.id,
+                        'thumbnailId': thumbnail.id,
                         'fsPath': attachmentPath
                       })
 
