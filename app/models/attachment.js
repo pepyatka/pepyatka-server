@@ -28,23 +28,18 @@ exports.addModel = function(db) {
       // TODO: check if we find an attachment
       attrs.id = attachmentId
       var attachment = new Attachment(attrs)
-      callback(attachment)
+      callback(err, attachment)
     })
   },
 
   // TODO: attachmentId -> attachmentsId
   Attachment.destroy = function(attachmentId, callback) {
-    models.Attachment.findById(attachmentId, function(attachment) {
-      // workaround since we are schemaless
+    models.Attachment.findById(attachmentId, function(err, attachment) {
       if (attachment.fsPath) {
         fs.unlink(attachment.fsPath, function(err) {
           db.del('attachment:' + attachment.id, function(err, res) {
             callback(err, res)
           })
-        })
-      } else {
-        db.del('attachment:' + attachment.id, function(err, res) {
-          callback(err, res)
         })
       }
     })
@@ -56,37 +51,32 @@ exports.addModel = function(db) {
 
       if (this.id === undefined) this.id = uuid.v4()
 
-      // TODO: workaround
-      if (this.thumbnailId) 
-        this.thumbnailId = this.thumbnailId.toString()
-      else
-        this.thumbnailId = "undefined"
-
-      if (this.postId) 
-        this.postId = this.postId.toString()
-      else
-        this.postId = "undefined"
-
-      // TODO: check if postId exists before saving attachment object
-      db.hmset('attachment:' + this.id,
-               { 'ext': this.ext.toString(),
+      params = { 'ext': this.ext.toString(),
                  'filename': this.filename.toString(),
                  'path': this.path.toString(),
-                 // if it's null just skip it - currently works with workaround
-                 'postId': this.postId.toString(),
                  'fsPath': this.fsPath.toString(),
-                 // if it's null just skip it - currently works with workaround
-                 'thumbnailId': this.thumbnailId
-               }, function(err, res) {
-                 if (that.postId) {
-                   models.Post.addAttachment(that.postId, that.id, function() {
-                     callback(that)
-                   })
-                 } else {
-                   // TODO: workaround - please read above
-                   callback(that)
-                 }
-               })
+               }
+
+      if (this.thumbnailId) {
+        this.thumbnailId = this.thumbnailId.toString()
+        params['thumbnailId'] = this.thumbnailId
+      }
+
+      if (this.postId) {
+        this.postId = this.postId.toString()
+        params['postId'] = this.postId.toString()
+      }
+
+      // TODO: check if postId exists before saving attachment object
+      db.hmset('attachment:' + this.id, params, function(err, res) {
+        if (that.postId) {
+          models.Post.addAttachment(that.postId, that.id, function(err, count) {
+            callback(err, that)
+          })
+        } else {
+          callback(null, this)
+        }
+      })
     },
     
     toJSON: function(callback) {
@@ -99,17 +89,17 @@ exports.addModel = function(db) {
 
       // TODO: temp solution to skip parent images
       if (this.thumbnailId && this.thumbnailId != 'undefined') {
-        models.Attachment.findById(this.thumbnailId, function(thumbnail) {
+        models.Attachment.findById(this.thumbnailId, function(err, thumbnail) {
           attrs['thumbnail'] = {
             id: thumbnail.id,
             ext: thumbnail.ext,
             filename: thumbnail.filename,
             path: thumbnail.path
           }
-          callback(attrs)
+          callback(err, attrs)
         })
       } else { 
-        callback(attrs)
+        callback(null, attrs)
       }
     }
 

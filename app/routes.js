@@ -17,7 +17,7 @@ var helpers = function(req, res, next) {
 
 var findUser = function(req, res, next) {
   if (!req.user) {
-    models.User.findAnon(function(user) {
+    models.User.findAnon(function(err, user) {
       if (user) {
         req.logIn(user, function(err) {
           next();
@@ -41,7 +41,7 @@ passport.use(new LocalStrategy({
     passwordField: 'password'
   },
   function(username, clearPassword, done) {
-    models.User.findByUsername(username, function (user) {
+    models.User.findByUsername(username, function (err, user) {
       // if (err) { return done(err); }
       if (!user) {
         return done(null, false, { message: 'Incorrect username.' });
@@ -59,7 +59,7 @@ passport.serializeUser(function(user, done) {
 });
 
 passport.deserializeUser(function(id, done) {
-  models.User.findById(id, function(user) {
+  models.User.findById(id, function(err, user) {
     done(null, user);
   });
 });

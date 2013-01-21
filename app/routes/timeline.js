@@ -9,11 +9,11 @@ exports.addRoutes = function(app) {
     // priority right now, but must be fixed, for example, with
     // additional assoc array as a second parameter
 
-    models.User.findByUsername(req.params.username, function(user) {
+    models.User.findByUsername(req.params.username, function(err, user) {
       if (user) {
-        user.getPostsTimeline(function(timeline) {
+        user.getPostsTimeline(function(err, timeline) {
           if (timeline) {
-            timeline.toJSON(function(json) {
+            timeline.toJSON(function(err, json) {
               res.jsonp(json);
             })
           } else {
@@ -27,10 +27,10 @@ exports.addRoutes = function(app) {
   }),
 
   app.get('/v1/timeline', function(req, res){
-    models.User.findByUsername(req.user.username, function(user) {
-      user.getRiverOfNews(function(timeline) {
+    models.User.findByUsername(req.user.username, function(err, user) {
+      user.getRiverOfNews(function(err, timeline) {
         if (timeline) {
-          timeline.toJSON(function(json) {
+          timeline.toJSON(function(err, json) {
             res.jsonp(json);
           })
         } else {

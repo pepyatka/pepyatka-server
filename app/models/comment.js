@@ -19,9 +19,9 @@ exports.addModel = function(db) {
       // TODO: check if we find a comment
       attrs.id = commentId
       var comment = new Comment(attrs)
-      models.User.findById(attrs.userId, function(user) {
+      models.User.findById(attrs.userId, function(err, user) {
         comment.user = user
-        callback(comment)
+        callback(err, comment)
       })
     })
   }
@@ -51,21 +51,21 @@ exports.addModel = function(db) {
                      'postId': that.postId.toString()
                    }, function(err, res) {
                      models.Post.addComment(that.postId, that.id, function() {
-                       callback(that)
+                       callback(err, that)
                      })
                    })
         } else {
           // TODO: pass res=0 argument to the next block
-          callback()
+          callback(err)
         }
       })
     },
 
     toJSON: function(callback) {
       var that = this;
-      models.User.findById(this.userId, function(user) {
-        user.toJSON(function(user) {
-          callback({
+      models.User.findById(this.userId, function(err, user) {
+        user.toJSON(function(err, user) {
+          callback(err, {
             id: that.id,
             body: that.body,
             postId: that.postId,

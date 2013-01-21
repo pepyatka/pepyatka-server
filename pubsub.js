@@ -21,9 +21,9 @@ exports.listen = function(io) {
       break
 
     case 'newPost':
-      models.Post.findById(msg, function(post) {
+      models.Post.findById(msg, function(err, post) {
         if (post) {
-          post.toJSON(function(json) {
+          post.toJSON(function(err, json) {
             var clients = io.sockets.clients()
             async.forEach(clients, function(socket) {
               socket.emit('newPost', { post: json })
@@ -34,9 +34,9 @@ exports.listen = function(io) {
       break
 
     case 'newComment': 
-      models.Comment.findById(msg, function(comment) {
+      models.Comment.findById(msg, function(err, comment) {
         if (comment) {
-          comment.toJSON(function(json) {
+          comment.toJSON(function(err, json) {
             var clients = io.sockets.clients()
             async.forEach(clients, function(socket) {
               socket.emit('newComment', { comment: json })
@@ -48,9 +48,9 @@ exports.listen = function(io) {
 
     case 'newLike':
       var data = JSON.parse(msg)
-      models.User.findById(data.userId, function(user) {
+      models.User.findById(data.userId, function(err, user) {
         if (user) {
-          user.toJSON(function(json) {
+          user.toJSON(function(err, json) {
             var clients = io.sockets.clients()
             async.forEach(clients, function(socket) {
               socket.emit('newLike', { user: json,

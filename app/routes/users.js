@@ -11,9 +11,9 @@ exports.addRoutes = function(app) {
       password: req.body.password
     })
 
-    models.User.findByUsername(newUser.username, function(user) {
+    models.User.findByUsername(newUser.username, function(err, user) {
       if (user == null) {
-        newUser.save(function(user) {
+        newUser.save(function(err, user) {
           req.logIn(user, function(err) {
             res.redirect('/#/users/' + user.username)
           })

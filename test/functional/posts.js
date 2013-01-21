@@ -12,11 +12,11 @@ describe('Post API', function() {
   })
 
   it('GET /v1/posts/:postId should return json post', function(done) {
-    models.User.findAnon(function(user) {
+    models.User.findAnon(function(err, user) {
       user.newPost({
         body: 'postBody'
-      }, function(newPost) {
-        newPost.save(function(post) {
+      }, function(err, newPost) {
+        newPost.save(function(err, post) {
           request(server)
             .get('/v1/posts/' + post.id)
             .expect('Content-Type', /json/)

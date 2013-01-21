@@ -21,69 +21,124 @@ exports.addModel = function(db) {
       if (attrs) {
         attrs.id = postId
 
-        callback(new Post(attrs))
+        callback(err, new Post(attrs))
       } else {
-        callback(null)
+        callback(err, null)
       }
     })
   }
 
   // XXX: this is the longest method in the app. Review it once you have time
   Post.destroy = function(postId, callback) {
-    models.Post.findById(postId, function(post) {
+    models.Post.findById(postId, function(err, post) {
       // This is a parallel process: 
-      // - deletes post from user's timeline
+      // - deletes post from all users timelines
       // - deletes comments entities and comments array
       // - deletes attachments entities and attachments array
+      // - delete original post
       async.parallel([
-        // remove post from timeline
-        function(callback) { 
-          db.zrem('timeline:' + post.userId, postId, function(err, res) {
-            callback(err, res)
-          }) 
+        // remove post from all timelines
+        function(callback) {
+          post.getTimelinesIds(function(err, timelinesIds) {
+            async.forEach(timelinesIds, function(timelineId, callback) {
+              db.zrem('timeline:' + timelineId + ':posts', postId, function(err, res) {
+                db.srem('post:' + postId + ':timelines', timelineId, function(err, res) {
+                  callback(err)
+                })
+              })
+            }, function(err) {
+              async.parallel([
+                function(callback) {
+                  db.scard('post:' + postId + ':timelines', function(err, res) {
+                    // post does not belong to any timelines
+                    if (res == 0) {
+                      db.del('post:' + postId + ':timelines', function(err, res) {
+                        callback(err)
+                      })
+                    } else {
+                      callback(err)
+                    }
+                  })
+                },
+                function(callback) {
+                  async.forEach(timelinesIds, function(timelineId, callback) {
+                    db.zcard('timeline:' + timelineId + ':posts', function(err, res) {
+                      // that timeline is empty
+                      if (res == 0) {
+                        db.del('post:' + postId + ':timelines', function(err, res) {
+                          callback(err)
+                        })
+                      } else {
+                        callback(err)
+                      }
+                    })
+                  }, function(err) {
+                    callback(err)
+                  })
+                }
+              ], function(err) {
+                callback(err)
+              })
+            })
+          })
         }
         // delete comments
         , function(callback) {
           // delete all comments asynchroniously
-          post.getCommentsIds(function(commentsIds) {
+          post.getCommentsIds(function(err, commentsIds) {
             async.forEach(commentsIds, function(comment, callback) {
               models.Comment.destroy(comment.id, function(err, res) {
-                callback(err, res)
+                callback(err)
               })
             }, function(err) {
               db.del('post:' + post.id + ':comments', function(err, res) {
-                callback()
+                callback(err)
               })
             })
           })
         }
         // delete attachments
         , function(callback) {
-          post.getAttachments(function(attachmentsIds) {
+          post.getAttachments(function(err, attachments) {
             // delete all attachments asynchroniously
-            async.forEach(attachmentsIds, function(attachment, callback) {
-              models.Attachment.destroy(attachment.id, function(err, res) {
-                if (attachment.thumbnailId) {
-                  models.Attachment.destroy(attachment.thumbnailId, function(err, res) {
-                    callback(err, res)
-                  })
-                } else {
-                  callback(err, res)
-                }
+            async.forEach(attachments, function(attachment, callback) {
+              db.lrem('post:' + postId + ':attachments', 0, attachment.id, function(err, res) {
+                models.Attachment.destroy(attachment.id, function(err, res) {
+                  if (attachment.thumbnailId) {
+                    models.Attachment.destroy(attachment.thumbnailId, function(err, res) {
+                      callback(err)
+                    })
+                  } else {
+                    callback(err)
+                  }
+                })
               })
             }, function(err) {
-              db.del('post:' + post.id + ':attachments', function(err, res) {
-                callback()
+              db.llen('post:' + postId + ':attachments', function(err, res) {
+                if (res == 0) {
+                  // this post do not have any associated with it attachments
+                  db.del('post:' + postId + ':attachments', function(err, res) {
+                    callback(err)
+                  })
+                } else {
+                  callback(err)
+                }
               })
             })
           })
+        },
+        // delete original post
+        function(callback) {
+          db.del('post:' + postId, function(err, res) {
+            callback(err)
+          })
         }
-      ], function(err, res) {
+      ], function(err) {
         // Notify clients that postId has been deleted
         var pub = redis.createClient();
         pub.publish('destroyPost', postId)
 
-        callback(err, res)
+        callback(err)
       })
     })
   }
@@ -102,28 +157,28 @@ exports.addModel = function(db) {
   // XXX: this function duplicates 80% of addComment function - think
   // for a moment about this
   Post.addLike = function(postId, userId, callback) {
-    models.Post.findById(postId, function(post) {
-      models.User.findById(userId, function(user) {
-        models.User.findById(post.userId, function(postUser) {
+    models.Post.findById(postId, function(err, post) {
+      models.User.findById(userId, function(err, user) {
+        models.User.findById(post.userId, function(err, postUser) {
           // update post in all connected timelines
-          postUser.getTimelinesIds(function(timelinesIds) {
+          postUser.getTimelinesIds(function(err, timelinesIds) {
             // and additionally add this post to user who liked this
             // post to its river of news
-            user.getRiverOfNewsId(function(riverId) {
+            user.getRiverOfNewsId(function(err, riverId) {
               timelinesIds[riverId] = riverId
 
               Post.bumpable(postId, function(bumpable) {
                 db.sadd('post:' + postId + ':likes', userId, function(err, res) {
                   async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
                     if (bumpable) {
-                      models.Timeline.updatePost(timelinesIds[timelineId], postId, function() {
-                        callback(null);
+                      models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
+                        callback(err, res);
                       })
                     } else {
-                      callback(null);
+                      callback(err, res);
                     }
                   }, function(err) {
-                    callback(err)
+                    callback(err, res)
                   })
                 })
               })
@@ -135,26 +190,26 @@ exports.addModel = function(db) {
   },
 
   Post.addComment = function(postId, commentId, callback) {
-    models.Post.findById(postId, function(post) {
-      models.Comment.findById(commentId, function(comment) {
-        models.User.findById(comment.userId, function(commentUser) {
-          models.User.findById(post.userId, function(postUser) {
+    models.Post.findById(postId, function(err, post) {
+      models.Comment.findById(commentId, function(err, comment) {
+        models.User.findById(comment.userId, function(err, commentUser) {
+          models.User.findById(post.userId, function(err, postUser) {
             // update post in all connected timelines
-            postUser.getTimelinesIds(function(timelinesIds) {
+            postUser.getTimelinesIds(function(err, timelinesIds) {
               // and additionally add this post to comment's author
               // river of news
-              commentUser.getRiverOfNewsId(function(riverId) {
+              commentUser.getRiverOfNewsId(function(err, riverId) {
                 timelinesIds[riverId] = riverId
 
                 Post.bumpable(postId, function(bumpable) {
                   db.rpush('post:' + postId + ':comments', commentId, function(err, res) {
                     async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
                       if (bumpable) {
-                        models.Timeline.updatePost(timelinesIds[timelineId], postId, function() {
-                          callback(null);
+                        models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
+                          callback(err);
                         })
                       } else {
-                        callback(null);
+                        callback(err);
                       }
                     }, function(err) {
                       callback(err)
@@ -170,37 +225,37 @@ exports.addModel = function(db) {
   }
 
   Post.addAttachment = function(postId, attachmentId, callback) {
-    db.rpush('post:' + postId + ':attachments', attachmentId, function() {
-      callback();
+    db.rpush('post:' + postId + ':attachments', attachmentId, function(err, count) {
+      callback(err, count);
     })
   }
 
   Post.prototype = {
     getAttachmentsIds: function(callback) {
       if (this.attachmentsIds) {
-        callback(this.attachmentsIds)
+        callback(null, this.attachmentsIds)
       } else {
         var that = this
         db.lrange('post:' + this.id + ':attachments', 0, -1, function(err, attachmentsIds) {
           that.attachmentsIds = attachmentsIds || []
-          callback(that.attachmentsIds)
+          callback(err, that.attachmentsIds)
         })
       }
     },
 
     getAttachments: function(callback) {
       if (this.attachments) {
-        callback(this.attachments)
+        callback(null, this.attachments)
       } else {
         var that = this
-        this.getAttachmentsIds(function(attachmentsIds) {
+        this.getAttachmentsIds(function(err, attachmentsIds) {
           async.map(attachmentsIds, function(attachmentId, callback) {
-            models.Attachment.findById(attachmentId, function(attachment) {
-              callback(null, attachment)
+            models.Attachment.findById(attachmentId, function(err, attachment) {
+              callback(err, attachment)
             })
           }, function(err, attachments) {
             that.attachments = attachments
-            callback(that.attachments)
+            callback(err, that.attachments)
           })
         })
       }
@@ -208,59 +263,71 @@ exports.addModel = function(db) {
 
     getCommentsIds: function(callback) {
       if (this.commentsIds) {
-        callback(this.commentsIds)
+        callback(null, this.commentsIds)
       } else {
         var that = this
         db.lrange('post:' + this.id + ':comments', 0, -1, function(err, commentsIds) {
           that.commentsIds = commentsIds || []
-          callback(that.commentsIds)
+          callback(err, that.commentsIds)
         })
       }
     },
 
     getComments: function(callback) {
       if (this.comments) {
-        callback(this.comments)
+        callback(null, this.comments)
       } else {
         var that = this
-        this.getCommentsIds(function(commentsIds) {
+        this.getCommentsIds(function(err, commentsIds) {
           async.map(commentsIds, function(commentId, callback) {
-            models.Comment.findById(commentId, function(comment) {
-              callback(null, comment)
+            models.Comment.findById(commentId, function(err, comment) {
+              callback(err, comment)
             })
           }, function(err, comments) {
             that.comments = comments
-            callback(that.comments)
+            callback(err, that.comments)
           })
+        })
+      }
+    },
+
+    getTimelinesIds: function(callback) {
+      if (this.timelinesIds) {
+        callback(null, this.timelinesIds)
+      } else {
+        var that = this
+        db.smembers('post:' + this.id + ':timelines', function(err, timelinesIds) {
+          that.timelinesIds = timelinesIds || []
+          callback(err, that.timelinesIds)
         })
       }
     },
 
     getLikesIds: function(callback) {
       if (this.likesIds) {
-        callback(this.likesIds)
+        callback(null, this.likesIds)
       } else {
         var that = this
         db.smembers('post:' + this.id + ':likes', function(err, likesIds) {
           that.likesIds = likesIds || []
-          callback(that.likesIds)
+          callback(err, that.likesIds)
         })
       }
     },
 
     getLikes: function(callback) {
       if (this.likes) {
-        callback(this.likes)
+        callback(null, this.likes)
       } else {
         var that = this
-        this.getLikesIds(function(likesIds) {
+        this.getLikesIds(function(err, likesIds) {
           async.map(likesIds, function(userId, callback) {
-            models.User.findById(userId, function(user) {
-              callback(null, user)
+            models.User.findById(userId, function(err, user) {
+              callback(err, user)
             })
           }, function(err, users) {
             that.likes = users
-            callback(that.likes)
+            callback(err, that.likes)
           })
         })
       }
@@ -283,7 +350,7 @@ exports.addModel = function(db) {
                }, function(err, res) {
                  models.Timeline.newPost(that.id, function() {
                    // BUG: updatedAt is different now than we set few lines above
-                   callback(that)
+                   callback(err, that)
                  })
                })
     },
@@ -297,27 +364,27 @@ exports.addModel = function(db) {
     toJSON: function(callback) {
       var that = this;
 
-      this.getComments(function(comments) {
-        models.User.findById(that.userId, function(user) {
+      this.getComments(function(err, comments) {
+        models.User.findById(that.userId, function(err, user) {
           async.map(comments, function(comment, callback) {
-            comment.toJSON(function(json) {
-              callback(null, json)
+            comment.toJSON(function(err, json) {
+              callback(err, json)
             })
           }, function(err, commentsJSON) {
-            that.getAttachments(function(attachments) {
+            that.getAttachments(function(err, attachments) {
               async.map(attachments, function(attachment, callback) {
-                attachment.toJSON(function(json) {
-                  callback(null, json)
+                attachment.toJSON(function(err, json) {
+                  callback(err, json)
                 })
               }, function(err, attachmentsJSON) {
-                user.toJSON(function(user) {
-                  that.getLikes(function(likes) {
+                user.toJSON(function(err, user) {
+                  that.getLikes(function(err, likes) {
                     async.map(likes, function(like, callback) {
                       like.toJSON(function(json) {
                         callback(null, json)
                       })
                     }, function(err, likesJSON) {
-                      callback({
+                      callback(err, {
                         id: that.id,
                         createdAt: that.createdAt,
                         updatedAt: that.updatedAt,

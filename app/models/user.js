@@ -23,8 +23,8 @@ exports.addModel = function(db) {
   User.findAnon = function(callback) {
     // init anonymous user if it doesn't exist yet
     var returnAnon = function() {
-      User.findByUsername('anonymous', function(user) {
-        callback(user);
+      User.findByUsername('anonymous', function(err, user) {
+        callback(err, user);
       })
     }
 
@@ -42,12 +42,12 @@ exports.addModel = function(db) {
 
   User.findByUsername = function(username, callback) {
     db.get('username:' + username + ':uid', function (err, userId) {
-      User.findById(userId, function(user) {
+      User.findById(userId, function(err, user) {
         // TODO: callback(err, user)
         if (user.id)
-          callback(user)
+          callback(err, user)
         else
-          callback(null)
+          callback(err, null)
       })
     })  
   }
@@ -60,13 +60,12 @@ exports.addModel = function(db) {
 
       attrs.id = userId
 
-      // TODO: callback(err, user)
       var newUser = new User(attrs)
 
-      newUser.getTimelines(function(timelines) {
+      newUser.getTimelines(function(err, timelines) {
         newUser.timelines = timelines
 
-        callback(newUser)
+        callback(err, newUser)
       })
     })
   },
@@ -89,11 +88,8 @@ exports.addModel = function(db) {
 
   User.prototype = {
     updateHashedPassword: function(callback) {
-      if (this.password) {
-        this.saltPassword(this.password, function() {
-          callback()
-        })
-      }
+      if (this.password)
+        this.saltPassword(this.password, function() { callback() })
     },
 
     saltPassword: function(clearPassword, callback) {
@@ -141,7 +137,7 @@ exports.addModel = function(db) {
             })
           }
         ], function(err, res) {
-          callback(that)
+          callback(err, that)
         })
       })
     },
@@ -149,10 +145,10 @@ exports.addModel = function(db) {
     newPost: function(attrs, callback) {
       attrs.userId = this.id
 
-      this.getPostsTimelineId(function(timelineId) {
+      this.getPostsTimelineId(function(err, timelineId) {
         attrs.timelineId = timelineId
 
-        callback(new models.Post(attrs))
+        callback(err, new models.Post(attrs))
       })
     },
 
@@ -166,9 +162,9 @@ exports.addModel = function(db) {
 
     getRiverOfNewsId: function(callback) {
       var that = this;
-      this.getTimelinesIds(function(timelines) {
+      this.getTimelinesIds(function(err, timelines) {
         if (timelines['RiverOfNews']) {
-          callback(timelines['RiverOfNews'])
+          callback(null, timelines['RiverOfNews'])
         } else {
           // somehow this user has deleted its main timeline - let's
           // recreate from the scratch
@@ -178,7 +174,7 @@ exports.addModel = function(db) {
                     db.hmset('timeline:' + timelineId,
                              { 'name': 'River of news',
                                'userId': that.id }, function(err, res) {
-                                 callback(timelineId);
+                                 callback(err, timelineId);
                                })
                   })
         }
@@ -187,13 +183,13 @@ exports.addModel = function(db) {
 
     getRiverOfNews: function(callback) {
       if (this.riverOfNews) {
-        callback(this.riverOfNews)
+        callback(null, this.riverOfNews)
       } else {
         var that = this
-        this.getRiverOfNewsId(function(timelineId) {
-          models.Timeline.findById(timelineId, function(timeline) {
+        this.getRiverOfNewsId(function(err, timelineId) {
+          models.Timeline.findById(timelineId, function(err, timeline) {
             that.riverOfNews = timeline
-            callback(that.riverOfNews)
+            callback(err, that.riverOfNews)
           })
         })
       }
@@ -202,9 +198,9 @@ exports.addModel = function(db) {
     // TODO: DRY - getRiverOfNews
     getPostsTimelineId: function(callback) {
       var that = this;
-      this.getTimelinesIds(function(timelines) {
+      this.getTimelinesIds(function(err, timelines) {
         if (timelines['Posts']) {
-          callback(timelines['Posts'])
+          callback(null, timelines['Posts'])
         } else {
           // somehow this user has deleted its main timeline - let's
           // recreate from the scratch
@@ -214,7 +210,7 @@ exports.addModel = function(db) {
                     db.hmset('timeline:' + timelineId,
                              { 'name': 'Posts',
                                'userId': that.id }, function(err, res) {
-                                 callback(timelineId);
+                                 callback(err, timelineId);
                                })
                   })
         }
@@ -223,13 +219,13 @@ exports.addModel = function(db) {
 
     getPostsTimeline: function(callback) {
       if (this.postsTimeline) {
-        callback(this.postsTimeline)
+        callback(null, this.postsTimeline)
       } else {
         var that = this
-        this.getPostsTimelineId(function(timelineId) {
-          models.Timeline.findById(timelineId, function(timeline) {
+        this.getPostsTimelineId(function(err, timelineId) {
+          models.Timeline.findById(timelineId, function(err, timeline) {
             that.postsTimeline = timeline
-            callback(that.postsTimeline)
+            callback(err, that.postsTimeline)
           })
         })
       }
@@ -245,29 +241,31 @@ exports.addModel = function(db) {
         var that = this
         db.hgetall('user:' + this.id + ':timelines', function(err, timelinesIds) {
           that.timelinesIds = timelinesIds || []
-          callback(that.timelinesIds)
+          callback(err, that.timelinesIds)
         })
       // }
     },
 
     getTimelines: function(callback) {
       if (this.timelines) {
-        callback(this.timelines)
+        callback(null, this.timelines)
       } else {
         var that = this
-        this.getTimelinesIds(function(timelinesIds) {
+        this.getTimelinesIds(function(err, timelinesIds) {
           async.map(Object.keys(timelinesIds), function(timelineId, callback) {
-            callback(null, new models.Timeline(timelinesIds[timelineId]))
+            models.Timeline.findById(timelinesIds[timelineId], function(err, timeline) {
+              callback(err, timeline)
+            })
           }, function(err, timelines) {
             that.timelines = timelines
-            callback(that.timelines)
+            callback(err, that.timelines)
           })
         })
       }
     },
 
     toJSON: function(callback) {
-      callback({
+      callback(null, {
         id: this.id,
         username: this.username,
         createdAt: this.createdAt,

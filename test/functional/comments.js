@@ -8,11 +8,11 @@ describe('Comment API', function() {
   var post = null
 
   beforeEach(function(done) {
-    models.User.findAnon(function(user) {
+    models.User.findAnon(function(err, user) {
       user.newPost({
         body: 'postBody'
-      }, function(newPost) {
-        newPost.save(function(usersPost) {
+      }, function(err, newPost) {
+        newPost.save(function(err, usersPost) {
           post = usersPost
           done()
         })

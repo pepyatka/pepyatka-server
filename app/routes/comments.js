@@ -10,12 +10,12 @@ exports.addRoutes = function(app, connections) {
       postId: req.body.postId
     })
 
-    newComment.save(function(comment) {
+    newComment.save(function(err, comment) {
       if (comment) {
         var pub = redis.createClient();
         pub.publish('newComment', comment.id)
 
-        comment.toJSON(function(json) { res.jsonp(json) })
+        comment.toJSON(function(err, json) { res.jsonp(json) })
       } else {
         // Just a stupid case - strong parameters will make it cleaner
         res.jsonp({'error': 'incorrect postId'})

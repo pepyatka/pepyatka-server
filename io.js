@@ -1,5 +1,4 @@
-var models = require('./app/models')
-  , uuid = require('node-uuid')
+var uuid = require('node-uuid')
   , async = require('async')
 
 exports.listen = function(server) {

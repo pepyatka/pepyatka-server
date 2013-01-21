@@ -8,9 +8,9 @@ var models = require('../models')
 
 exports.addRoutes = function(app) {
   app.get('/v1/posts/:postId', function(req, res) {
-    models.Post.findById(req.params.postId, function(post) {
+    models.Post.findById(req.params.postId, function(err, post) {
       if (post) {
-        post.toJSON(function(json) {
+        post.toJSON(function(err, json) {
           res.jsonp(json);
         })
       } else {
@@ -20,13 +20,13 @@ exports.addRoutes = function(app) {
   })
 
   app.post('/v1/posts/:postId/like', function(req, res) {
-    models.Post.addLike(req.params.postId, req.user.id, function(err) {
+    models.Post.addLike(req.params.postId, req.user.id, function(err, r) {
       var pub = redis.createClient();
       pub.publish('newLike',
                   JSON.stringify({ userId: req.user.id,
                                    postId: req.params.postId }))
 
-      // post.toJSON(function(json) { res.jsonp(json) })
+      // post.toJSON(function(err, json) { res.jsonp(json) })
 
       res.jsonp({})
     })
@@ -45,12 +45,12 @@ exports.addRoutes = function(app) {
 
   app.post('/v1/posts', function(req, res) {
     // creates and saves new post
-    req.user.getPostsTimelineId(function(timelineId) {
+    req.user.getPostsTimelineId(function(err, timelineId) {
       req.user.newPost({
         body: req.body.body,
         timelineId: timelineId
-      }, function(newPost) {
-        newPost.save(function(post) {
+      }, function(err, newPost) {
+        newPost.save(function(err, post) {
           // process files
           // TODO: extract this stuff to Post model!
           // TODO: search for file uploads lib like CarrierWave that could
@@ -77,7 +77,7 @@ exports.addRoutes = function(app) {
                 var pub = redis.createClient();
                 pub.publish('newPost', post.id)
 
-                post.toJSON(function(json) { res.jsonp(json) })
+                post.toJSON(function(err, json) { res.jsonp(json) })
 
                 //res.jsonp({'error': 'not an image'})
               } else {
@@ -96,7 +96,7 @@ exports.addRoutes = function(app) {
                       'fsPath': thumbnailPath
                     })
 
-                    newThumbnail.save(function(thumbnail) {
+                    newThumbnail.save(function(err, thumbnail) {
                       var attachmentId = uuid.v4()
                       var attachmentPath = __dirname + '/../../public/files/' + attachmentId + '.' + ext
                       var attachmentHttpPath = '/files/' + attachmentId + '.' + ext
@@ -105,23 +105,23 @@ exports.addRoutes = function(app) {
                         'ext': ext,
                         'filename': filename,
                         'path': attachmentHttpPath,
-                        'thumbnailId': thumbnail.id,
+                        'thumbnailId': newThumbnail.id,
                         'fsPath': attachmentPath
                       })
 
-                      newAttachment.save(function(attachment) {
+                      newAttachment.save(function(err, attachment) {
                         // move tmp file to a storage
                         fs.rename(tmpPath, attachmentPath, function(err) {
                           // TODO: check method
-                          post.getAttachments(function(attachments) {
+                          post.getAttachments(function(err, attachments) {
                             attachments.push(attachment)
 
                             // TODO: this is a dup
                             var pub = redis.createClient();
                             pub.publish('newPost', post.id)
 
-                            models.Post.findById(post.id, function(post) {
-                              post.toJSON(function(json) { res.jsonp(json) })
+                            models.Post.findById(post.id, function(err, post) {
+                              post.toJSON(function(err, json) { res.jsonp(json) })
                             })
                           })
                         })
@@ -134,7 +134,7 @@ exports.addRoutes = function(app) {
             var pub = redis.createClient();
             pub.publish('newPost', post.id)
 
-            post.toJSON(function(json) { res.jsonp(json) })
+            post.toJSON(function(err, json) { res.jsonp(json) })
           }
         })
       })

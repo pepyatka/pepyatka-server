@@ -49,6 +49,7 @@ API
 - GET /v1/timeline - returns river of news for auth user
 - GET /v1/posts/:postId
 - GET /v1/posts/:postId/comments # not implemented yet
+- GET /v1/posts/:postId/likes # not implemented yet
 - POST /v1/posts
 - POST /v1/posts/:postId/like
 - POST /v1/posts/:postId/unlike

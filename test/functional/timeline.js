@@ -14,7 +14,7 @@ describe('Timeline API', function() {
     var length = 40
 
     db.flushdb(function(err) {
-      models.User.findAnon(function(user) {
+      models.User.findAnon(function(err, user) {
         var bodies = []
         for(var i = 0; i < length; i++) {
           bodies.push('postBody-' + i.toString())
@@ -23,13 +23,13 @@ describe('Timeline API', function() {
         async.mapSeries(bodies, function(body, done) {
           user.newPost({
             body: body
-          }, function(post) {
-            done(null, post)
+          }, function(err, post) {
+            done(err, post)
           });
         }, function(err, posts) {
           async.forEachSeries(posts, function(post, callback) {
-            post.save(function() {
-              callback(null)
+            post.save(function(err) {
+              callback(err)
             })
           }, function(err) {
             request(server)
