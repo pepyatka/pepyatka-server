@@ -138,27 +138,13 @@ describe('Post API', function() {
       })
   })
 
-  it('POST /v1/posts with missing body should return 422'
-     // , function(done) {
-     //   var params = { 
-     //     userId: 'userId'
-     //   }
-     //   request(server)
-     //     .post('/v1/posts')
-     //     .send(params)
-     //     .expect(422, done)
-     // }
-    )
-
-  it('POST /v1/posts with missing userId should return 422'
-     // , function(done) {
-     //   var params = { 
-     //     body: 'postBody'
-     //   }
-     //   request(server)
-     //     .post('/v1/posts')
-     //     .send(params)
-     //     .expect(422, done)
-     // }
-    )
+  it('POST /v1/posts with missing body should return 200', function(done) {
+    var params = {
+      userId: 'userId'
+    }
+    request(server)
+      .post('/v1/posts')
+      .send(params)
+      .expect(200, done)
+  })
 })

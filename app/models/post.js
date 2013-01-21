@@ -275,7 +275,7 @@ exports.addModel = function(db) {
       if (this.id === undefined) this.id = uuid.v4()
 
       db.hmset('post:' + this.id,
-               { 'body': this.body.toString().trim(),
+               { 'body': (this.body || "").toString().trim(),
                  'timelineId': this.timelineId.toString(),
                  'userId': this.userId.toString(),
                  'createdAt': this.createdAt.toString(),
