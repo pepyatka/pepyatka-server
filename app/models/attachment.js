@@ -51,7 +51,7 @@ exports.addModel = function(db) {
 
       if (this.id === undefined) this.id = uuid.v4()
 
-      params = { 'ext': this.ext.toString(),
+      var params = { 'ext': this.ext.toString(),
                  'filename': this.filename.toString(),
                  'path': this.path.toString(),
                  'fsPath': this.fsPath.toString(),
