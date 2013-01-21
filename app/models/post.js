@@ -104,6 +104,8 @@ exports.addModel = function(db) {
             async.forEach(attachments, function(attachment, callback) {
               db.lrem('post:' + postId + ':attachments', 0, attachment.id, function(err, res) {
                 models.Attachment.destroy(attachment.id, function(err, res) {
+                  // TODO: encapsulate thumbnail deletion inside of
+                  // Attachment.destroy function
                   if (attachment.thumbnailId) {
                     models.Attachment.destroy(attachment.thumbnailId, function(err, res) {
                       callback(err)
