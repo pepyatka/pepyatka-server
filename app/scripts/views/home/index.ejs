@@ -63,8 +63,8 @@
 
 <script type="text/x-handlebars" data-template-name="just-started">
   {{#if view.justStarted}}
-    <div class="well">
-      Seems like you've just started using Pepyatka? Check out <a href="/#/users/anonymous">anonymous posts</a>.
+    <div class="alert alert-info">
+      Seems like you've just started using Pepyatka? Check out <a href="/#/users/anonymous">anonymous posts</a>.<button class="close" data-dismiss="alert">&times;</button>
     </div>
   {{/if}}
 </script>
@@ -90,10 +90,16 @@
 
   {{view App.JustStarted}}
 
-  <ul class="media-list">
-    {{view Ember.CollectionView contentBinding="App.postsController"
-           itemViewClass="App.PostContainerView"}}
-  </ul>
+  <div class="offset4">
+    <img class="spinner" src="/img/spinner.gif" width="32" height="32" />
+  </div>
+
+  <div class="posts">
+    <ul class="media-list">
+      {{view Ember.CollectionView contentBinding="App.postsController"
+             itemViewClass="App.PostContainerView"}}
+    </ul>
+  </div>
 </script>
 
 <script type="text/x-handlebars" data-template-name="comment-view">

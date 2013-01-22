@@ -20,10 +20,6 @@ footer {
 .container .title a {
     color: #000;
 }
-.container .well {
-    margin: 0;
-    padding: 10px;
-}
 .container .signin-toolbar {
     margin-top: 10px;
 }
@@ -164,3 +160,12 @@ footer {
     font-size: 13px;
 }
 
+.spinner {
+    display: none;
+}
+.loading .posts {
+    display: none;
+}
+.loading .spinner {
+    display: block;
+}

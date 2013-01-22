@@ -1,6 +1,21 @@
 App = Ember.Application.create();
 
-App.ApplicationView = Ember.View.extend({
+App.ShowSpinnerWhileRendering = Ember.Mixin.create({
+  layout: Ember.Handlebars.compile('<div {{bindAttr class="isLoaded"}}>{{ yield }}</div>'),
+
+  classNameBindings: ['isLoaded::loading'],
+
+  isLoaded: function() {
+    return this.get('isInserted') && App.postsController.isLoaded;
+  }.property('isInserted', 'App.postsController.isLoaded'),
+
+  didInsertElement: function() {
+    this.set('isInserted', true);
+    this._super();
+  }
+});
+
+App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
   templateName: 'application'
 });
 App.ApplicationController = Ember.Controller.extend();
@@ -395,6 +410,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
 
   sortProperties: ['updatedAt'],
   sortAscending: false,
+  isLoaded: true,
 
   // XXX: a bit strange having this method here?
   submitPost: function() {
@@ -502,8 +518,9 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
 
   findAll: function() {
     this.set('initialCommit', false)
-    this.set('content', [])
+    this.set('isLoaded', false)
 
+    var that = this
     var timeline = this.get('timeline') || ""
 
     $.ajax({
@@ -511,6 +528,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
       dataType: 'jsonp',
       context: this,
       success: function(response){
+        that.set('content', [])
         response.posts.forEach(function(attrs) {
           var post = App.Post.create(attrs)
           this.addObject(post)
@@ -521,6 +539,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
         setTimeout(function(that) {
           return function() {
             that.set('initialCommit', true)
+            that.set('isLoaded', true)
           }
         }(this), 1000)
       }
