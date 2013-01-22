@@ -54,6 +54,16 @@ App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
 App.JustStarted = Ember.View.extend({
   templateName: 'just-started',
 
+  didInsertElement: function() {
+    this.$().hide().slideDown();
+  },
+
+  // willDestroyElement: function() {
+  //   var clone = this.$().clone();
+  //   this.$().replaceWith(clone);
+  //   clone.slideUp()
+  // },
+
   justStarted: function() {
     return App.router.location.lastSetURL != "/users/anonymous"
   }.property()
