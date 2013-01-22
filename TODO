@@ -92,6 +92,8 @@ Phase 2.x
 [ ] API for comments
 [ ] Smooth animation affect when user expands comments
 [ ] Better animation for findAll, e.g. fade()
+[ ] Remove Emberjs Bootstrap lib and replace progress bar with custom
+    one
 
 [ ] Show notice if could upload attachment
 [ ] Spinner on ajax requests

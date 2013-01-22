@@ -11,7 +11,9 @@ exports.addRoutes = function(app) {
 
     models.User.findByUsername(req.params.username, function(err, user) {
       if (user) {
-        user.getPostsTimeline(function(err, timeline) {
+        user.getPostsTimeline({
+          start: req.query.start
+        }, function(err, timeline) {
           if (timeline) {
             timeline.toJSON(function(err, json) {
               res.jsonp(json);
@@ -26,9 +28,12 @@ exports.addRoutes = function(app) {
     })
   }),
 
-  app.get('/v1/timeline', function(req, res){
+  app.get('/v1/timeline', function(req, res) {
+    console.log()
     models.User.findByUsername(req.user.username, function(err, user) {
-      user.getRiverOfNews(function(err, timeline) {
+      user.getRiverOfNews({
+        start: req.query.start
+      }, function(err, timeline) {
         if (timeline) {
           timeline.toJSON(function(err, json) {
             res.jsonp(json);

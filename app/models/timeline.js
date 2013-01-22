@@ -3,18 +3,23 @@ var models = require('../models')
   , redis = require('redis')
 
 exports.addModel = function(db) {
-  var POSTS = 25
+  var POSTS = 90
 
   function Timeline(params) {
     this.id = params.id
     this.name = params.name
     this.userId = params.userId
+
+    this.start = parseInt(params.start) || 0
+    this.num = parseInt(params.num) || 10
   }
 
-  Timeline.findById = function(timelineId, callback) {
+  Timeline.findById = function(timelineId, params, callback) {
     db.hgetall('timeline:' + timelineId, function(err, attrs) {
       if (attrs) {
         attrs.id = timelineId
+        attrs['start'] = params['start']
+        attrs['num'] = params['num']
 
         callback(err, new Timeline(attrs))
       } else {
@@ -79,7 +84,7 @@ exports.addModel = function(db) {
     toJSON: function(callback) {
       var that = this;
 
-      this.getPosts(function(err, posts) {
+      this.getPosts(this.start, this.num, function(err, posts) {
         async.map(posts, function(post, callback) {
           post.toJSON(function(err, json) {
             callback(err, json)
@@ -97,24 +102,24 @@ exports.addModel = function(db) {
       })
     },
 
-    getPostsIds: function(callback) {
+    getPostsIds: function(start, num, callback) {
       if (this.postsIds) {
         callback(null, this.postsIds)
       } else {
         var that = this
-        db.zrevrange('timeline:' + this.id + ':posts', 0, POSTS-1, function(err, postsIds) {
+        db.zrevrange('timeline:' + this.id + ':posts', start, start+num-1, function(err, postsIds) {
           that.postsIds = postsIds || []
           callback(err, that.postsIds)
         })
       }
     },
 
-    getPosts: function(callback) {
+    getPosts: function(start, num, callback) {
       if (this.posts) {
         callback(null, this.posts)
       } else {
         var that = this
-        this.getPostsIds(function(err, postsIds) {
+        this.getPostsIds(start, num, function(err, postsIds) {
           async.map(postsIds, function(postId, callback) {
             models.Post.findById(postId, function(err, post) {
               callback(err, post)

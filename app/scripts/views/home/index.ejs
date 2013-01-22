@@ -61,6 +61,13 @@
   </div>
 </script>
 
+<script type="text/x-handlebars" data-template-name="pagination">
+  <ul class="pager">
+    <li><a {{action prevPage href="true" target="controller"}}>&larr; Previous</a></li>
+    <li><a {{action nextPage href="true" target="controller"}}>Next &rarr;</a></li>
+  </ul>
+</script>
+
 <script type="text/x-handlebars" data-template-name="just-started">
   {{#if view.justStarted}}
     <div class="alert alert-info">
@@ -99,6 +106,8 @@
       {{view Ember.CollectionView contentBinding="App.postsController"
              itemViewClass="App.PostContainerView"}}
     </ul>
+
+    {{view App.Pagination}}
   </div>
 </script>
 

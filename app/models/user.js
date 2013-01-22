@@ -62,7 +62,7 @@ exports.addModel = function(db) {
 
       var newUser = new User(attrs)
 
-      newUser.getTimelines(function(err, timelines) {
+      newUser.getTimelines({}, function(err, timelines) {
         newUser.timelines = timelines
 
         callback(err, newUser)
@@ -181,13 +181,13 @@ exports.addModel = function(db) {
       })
     },
 
-    getRiverOfNews: function(callback) {
+    getRiverOfNews: function(params, callback) {
       if (this.riverOfNews) {
         callback(null, this.riverOfNews)
       } else {
         var that = this
         this.getRiverOfNewsId(function(err, timelineId) {
-          models.Timeline.findById(timelineId, function(err, timeline) {
+          models.Timeline.findById(timelineId, params, function(err, timeline) {
             that.riverOfNews = timeline
             callback(err, that.riverOfNews)
           })
@@ -217,13 +217,13 @@ exports.addModel = function(db) {
       })
     },
 
-    getPostsTimeline: function(callback) {
+    getPostsTimeline: function(params, callback) {
       if (this.postsTimeline) {
         callback(null, this.postsTimeline)
       } else {
         var that = this
         this.getPostsTimelineId(function(err, timelineId) {
-          models.Timeline.findById(timelineId, function(err, timeline) {
+          models.Timeline.findById(timelineId, params, function(err, timeline) {
             that.postsTimeline = timeline
             callback(err, that.postsTimeline)
           })
@@ -246,14 +246,14 @@ exports.addModel = function(db) {
       // }
     },
 
-    getTimelines: function(callback) {
+    getTimelines: function(params, callback) {
       if (this.timelines) {
         callback(null, this.timelines)
       } else {
         var that = this
         this.getTimelinesIds(function(err, timelinesIds) {
           async.map(Object.keys(timelinesIds), function(timelineId, callback) {
-            models.Timeline.findById(timelinesIds[timelineId], function(err, timeline) {
+            models.Timeline.findById(timelinesIds[timelineId], params, function(err, timeline) {
               callback(err, timeline)
             })
           }, function(err, timelines) {

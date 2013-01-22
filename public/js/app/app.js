@@ -15,6 +15,32 @@ App.ShowSpinnerWhileRendering = Ember.Mixin.create({
   }
 });
 
+App.PaginationHelper = Em.Mixin.create({
+  pageSize: 10,
+  pageStart: 0,
+
+  nextPage: function() {
+    this.incrementProperty('pageStart', this.get('pageSize'))
+  },
+
+  prevPage: function() {
+    this.decrementProperty('pageStart', this.get('pageSize'))
+  },
+
+  resetPage: function() {
+    this.set('pageStart', 0)
+  },
+
+  pageDidChange: function() {
+    this.didRequestRange(this.get('pageStart'));
+  }.observes('pageStart')
+});
+
+App.Pagination = Ember.View.extend({
+  templateName: 'pagination'
+});
+
+
 App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
   templateName: 'application'
 });
@@ -103,14 +129,15 @@ App.PostContainerView = Ember.View.extend({
       collapseEffect: 'fadeOut'
     })
 
-    if (App.postsController.get('initialCommit'))
-      this.$().hide().slideDown('slow');
+    this.$().hide().slideDown('slow');
   },
 
   willDestroyElement: function() {
-    var clone = this.$().clone();
-    this.$().replaceWith(clone);
-    clone.slideUp()
+    if (this.$()) {
+      var clone = this.$().clone();
+      this.$().replaceWith(clone);
+      clone.slideUp()
+    }
   },
 
   showAllComments: function() {
@@ -139,8 +166,7 @@ App.CommentContainerView = Ember.View.extend({
       collapseEffect: 'fadeOut'
     })
 
-    if (App.postsController.get('initialCommit'))
-      this.$().hide().slideDown('fast');
+    this.$().hide().slideDown('fast');
   }
 })
 
@@ -412,11 +438,10 @@ App.Post = Ember.Object.extend({
   }.property('attachments')
 });
 
-App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
+App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.PaginationHelper, {
   content: [],
   body: '',
   isProgressBarHidden: 'hidden',
-  initialCommit: false,
 
   sortProperties: ['updatedAt'],
   sortAscending: false,
@@ -526,8 +551,16 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
     return this
   },
 
-  findAll: function() {
-    this.set('initialCommit', false)
+  didRequestRange: function(pageStart) {
+    App.postsController.findAll(pageStart)
+  },
+
+  // TODO: this function does not reset page no.
+  didTimelineChange: function() {
+    this.resetPage()
+  }.observes('timeline'),
+
+  findAll: function(pageStart) {
     this.set('isLoaded', false)
 
     var that = this
@@ -535,23 +568,16 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, {
 
     $.ajax({
       url: '/v1/timeline/' + timeline,
+      data: { start: pageStart },
       dataType: 'jsonp',
       context: this,
-      success: function(response){
+      success: function(response) {
         that.set('content', [])
         response.posts.forEach(function(attrs) {
           var post = App.Post.create(attrs)
           this.addObject(post)
         }, this)
-
-        // Quite dirty solution to disable initial slideDown animation
-        // on newComment and newPost
-        setTimeout(function(that) {
-          return function() {
-            that.set('initialCommit', true)
-            that.set('isLoaded', true)
-          }
-        }(this), 1000)
+        that.set('isLoaded', true)
       }
     })
     return this
@@ -588,6 +614,7 @@ App.Router = Ember.Router.extend({
       
       connectOutlets: function(router){ 
         App.postsController.set('timeline', null)
+        // TODO: observe timeline to reset pagination
         router.get('applicationController').connectOutlet('posts', App.postsController.findAll());
       }
     }),
