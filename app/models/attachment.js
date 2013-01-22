@@ -87,8 +87,7 @@ exports.addModel = function(db) {
         path: this.path
       }
 
-      // TODO: temp solution to skip parent images
-      if (this.thumbnailId && this.thumbnailId != 'undefined') {
+      if (this.thumbnailId) {
         models.Attachment.findById(this.thumbnailId, function(err, thumbnail) {
           attrs['thumbnail'] = {
             id: thumbnail.id,
