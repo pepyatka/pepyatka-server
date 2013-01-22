@@ -52,15 +52,19 @@ Phase 1.2
 Phase 1.3 - improvements
 ------------------------
 
+[ ] Disable prev page if startPage equals 0
+[ ] Disable next page if startPage + pageSize gte maxPosts
+[ ] Negative page to 0
+[ ] Reset page function does not work
 [ ] Bump post if and only if it's missing on a page
-[ ] Navigation
 [ ] Render Not found page if user follows deleted post
 [ ] Check single post view and delete post event
 [ ] Double check underscore functions in the frontend - chances we do
     not use it anymore
-[ ] review initialCommit var - there is case when it does not work as
-    expected
 [ ] review pending functional tests and use proper sessions
+[x] review initialCommit var - there is case when it does not work as
+    expected
+[x] Navigation
 [x] Comment link to show form just below all comments
 [x] Display username somewhere in that damn layout
 [x] Do not apply animation effect for first posts
@@ -68,18 +72,17 @@ Phase 1.3 - improvements
 Phase 2.0
 ---------
 
-[ ] Direct messages
-[ ] R&D: Ember.Data, Ember.Resource
-[ ] Private feed
+[ ] Remove like should remove post from River of News
 [ ] Subscribers
 [ ] Subscriptions
-[ ] Unit testing
+[ ] Owners can edit their posts
 [ ] Refactor save function to two separate functions: create and update
+[ ] Passport and socket.io
+
+[ ] Unit testing
 [ ] Nginx and node installation
 [ ] Minify/uglify js and css file - production mode
-[ ] Owners can edit their posts
-[ ] Passport and socket.io
-[ ] Clear sockets in redis store on restart
+[x] Likes
 
 Phase 2.1
 ---------
@@ -87,6 +90,9 @@ Phase 2.1
 Phase 2.x
 ---------
 
+[ ] Direct messages
+[ ] R&D: Ember.Data, Ember.Resource
+[ ] Private feed
 [ ] Limit length of parsed link, e.g. 30 symbs
 [ ] First and last comments as two extra post fields
 [ ] API for comments
@@ -94,13 +100,13 @@ Phase 2.x
 [ ] Better animation for findAll, e.g. fade()
 [ ] Remove Emberjs Bootstrap lib and replace progress bar with custom
     one
+[ ] Clear sockets in redis store on restart
 
 [ ] Show notice if could upload attachment
 [ ] Spinner on ajax requests
 [ ] Do not minimize image if it's already small enough
 [ ] Profile picture
 [ ] User profile popup
-[ ] Likes
 [ ] Sign in as Ember route and view
 [ ] User screen should not display username under each post
 
