@@ -27,6 +27,16 @@ App.PaginationHelper = Em.Mixin.create({
     this.decrementProperty('pageStart', this.get('pageSize'))
   },
 
+  prevPageDisabled: function() {
+    return this.get('pageStart') == 0 ? 'disabled' : ''
+  }.property('pageStart'),
+
+  nextPageDisabled: function() {
+    var len = this.get('content.content.length')
+    return len == 0 || len < this.get('pageSize') ? 'disabled' : ''
+    // TODO: bind to generic content
+  }.property('App.postsController.content'),
+
   resetPage: function() {
     this.set('pageStart', 0)
   },
