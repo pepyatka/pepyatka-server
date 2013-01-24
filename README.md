@@ -19,6 +19,11 @@ Configuration
   globally)
 - Run server: node ./server.js
 
+Roadmap
+-------
+
+Trello: https://trello.com/b/uvRkkOTH
+
 Database
 --------
 
