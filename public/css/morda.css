@@ -20,6 +20,9 @@ footer {
 .container .title a {
     color: #000;
 }
+.container .title small {
+    font-size: 12px;
+}
 .container .signin-toolbar {
     margin-top: 10px;
 }
