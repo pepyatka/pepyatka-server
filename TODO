@@ -52,6 +52,7 @@ Phase 1.2
 Phase 1.3 - improvements
 ------------------------
 
+[ ] likes are missing on single post view
 [ ] Negative page to 0
 [ ] Reset page function does not work
 [ ] Bump post if and only if it's missing on a page
