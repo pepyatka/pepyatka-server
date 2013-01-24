@@ -195,7 +195,7 @@
               </ul>
               <span>liked this</span>
               {{#if currentUserLiked}}
-                <span>(<a {{action unlikePost target="parentView"}}>Un-like</a>)</span>
+                <span>(<a {{action unlikePost id target="parentView"}}>Un-like</a>)</span>
               {{/if}}
             </div>
           </div>
@@ -268,8 +268,34 @@
           -
           <a {{action toggleVisibility target="parentView"}}>Comment</a>
         {{/view}}
+
+        {{#unless currentUserLiked}}
+          {{#view App.LikePostView}}
+            -
+            <a {{action likePost target="parentView"}}>Like</a>
+          {{/view}}
+        {{/unless}}
       </div>
     
+      {{#if anyLikes}}
+        <div class="media likes">
+          <div class="pull-left">
+            <i class="icon-heart media-object"></i>
+          </div>
+
+          <div class="media-body">
+            <ul class="unstyled inline pull-left">
+              {{view Ember.CollectionView contentBinding="likes"
+                     itemViewClass="App.LikeView"}}
+            </ul>
+            <span>liked this</span>
+            {{#if currentUserLiked}}
+              <span>(<a {{action unlikePost target="parentView"}}>Un-like</a>)</span>
+            {{/if}}
+          </div>
+        </div>
+      {{/if}}
+
       <ul class="unstyled comments">
         {{view Ember.CollectionView contentBinding="comments"
                itemViewClass="App.CommentContainerView"}}
@@ -298,6 +324,30 @@
 <script src="/js/app/app.js"></script>
 
 <script>
+  function findController() {
+    switch (App.router.currentState.name) {
+      case "aPost":
+        return App.onePostController
+        break;
+      case "posts":
+        return App.postsController
+        break;
+    }
+  }
+
+  function findPost(postId) {
+    switch (App.router.currentState.name) {
+      case "aPost":
+        return App.onePostController.content
+        break;
+      case "posts":
+        return App.postsController.find(function(post) {
+          return post.id == postId
+        })
+        break;
+    }
+  }
+
   var socket = io.connect('/');
   var currentUser = '<%= req.user.id %>'
 
@@ -318,10 +368,8 @@
 
   socket.on('newComment', function (data) {
     var comment = App.Comment.create(data.comment)
-   
-    var post = App.postsController.find(function(post) {
-      return post.id == data.comment.postId
-    })
+
+    var post = findPost(data.comment.postId)
 
     if (post) {
       post.set('updatedAt', comment.createdAt)
@@ -332,9 +380,7 @@
   socket.on('newLike', function(data) {
     var user = App.User.create(data.user)
 
-    var post = App.postsController.find(function(post) {
-      return post.id == data.postId
-    })
+    var post = findPost(data.postId)
 
     if (post) {
       // TODO: set currentTime to bump the post
@@ -351,9 +397,7 @@
   })
 
   socket.on('removeLike', function(data) {
-    var post = App.postsController.find(function(post) {
-      return post.id == data.postId
-    })
+    var post = findPost(data.postId)
 
     if (post) {
       // TODO: set currentTime to bump the post

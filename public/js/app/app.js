@@ -207,7 +207,8 @@ App.LikePostView = Ember.View.extend(Ember.TargetActionSupport, {
   },
 
   likePost: function() {
-    var post = this.bindingContext
+    // XXX: rather strange bit of code here -- potentially a defect
+    var post = this.bindingContext.content || this.bindingContext
     App.postsController.likePost(post.id)
   }
 })
@@ -343,12 +344,18 @@ App.CreateCommentView = Ember.TextArea.extend(Ember.TargetActionSupport, {
 
 // Separate page for a single post
 App.OnePostController = Ember.ObjectController.extend();
+App.onePostController = App.OnePostController.create()
 App.OnePostView = Ember.View.extend({
   templateName: 'a-post',
   isFormVisible: false,
 
   toggleVisibility: function(){
     this.toggleProperty('isFormVisible');
+  },
+
+  // XXX: kind of dup of App.PostContainerView.unlikePost function
+  unlikePost: function() {
+    App.postsController.unlikePost(App.onePostController.content.id)
   }
 });
 
@@ -406,6 +413,10 @@ App.Post = Ember.Object.extend({
   currentUserLiked: function() {
     var likes = this.get('likes')
 
+    // XXX: we have just tried to render a view but have not recevied
+    // anything from the server yet. Ideally we have to wait for this
+    if (!likes) return;
+
     var found = false
     likes.forEach(function(like) {
       if (like.id == currentUser) {
@@ -417,7 +428,13 @@ App.Post = Ember.Object.extend({
   }.property('likes', 'likes.@each'),
 
   anyLikes: function() {
-    return this.get('likes').length > 0
+    var likes = this.get('likes')
+
+    // XXX: we have just tried to render a view but have not recevied
+    // anything from the server yet. Ideally we have to wait for this
+    if (!likes) return;
+
+    return likes.length > 0
   }.property('likes', 'likes.@each'),
 
   createdAgo: function() {
@@ -666,6 +683,8 @@ App.Router = Ember.Router.extend({
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
       
       connectOutlets: function(router, context) {
+        // FIXME: obviouly a defect. content should be set automagically
+        App.onePostController.set('content', context)
         router.get('applicationController').connectOutlet('onePost', context);
       },
 

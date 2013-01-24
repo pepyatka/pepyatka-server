@@ -52,13 +52,13 @@ Phase 1.2
 Phase 1.3 - improvements
 ------------------------
 
-[ ] likes are missing on single post view
 [ ] Negative page to 0
 [ ] Reset page function does not work
 [ ] Bump post if and only if it's missing on a page
 [ ] Render Not found page if user follows deleted post
 [ ] Check single post view and delete post event
 [ ] review pending functional tests and use proper sessions
+[x] likes are missing on single post view
 [x] Double check underscore functions in the frontend - chances we do
     not use it anymore
 [x] Disable prev page if startPage equals 0
