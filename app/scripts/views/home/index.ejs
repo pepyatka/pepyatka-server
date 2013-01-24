@@ -338,7 +338,8 @@
   function findPost(postId) {
     switch (App.router.currentState.name) {
       case "aPost":
-        return App.onePostController.content
+        if (App.onePostController.content.id == postId)
+          return App.onePostController.content
         break;
       case "posts":
         return App.postsController.find(function(post) {
