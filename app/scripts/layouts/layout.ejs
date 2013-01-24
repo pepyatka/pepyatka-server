@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>ff/b/</title>
+    <title>Pepyatka</title>
     <link rel='stylesheet' href='/css/main.css' />
     <link rel='stylesheet' href='/css/bootstrap.min.css' />
     <link rel="stylesheet" href='/css/font-awesome.min.css' />
@@ -11,17 +11,23 @@
   </head>
   <body>
     <div class="container">
-      <h1><a href="/">ff/b/</a></h1>
-
-      <hr/>
-
       <div class="row">
-        <div class="span7">
-          <%- body %>
+        <div class="span9">
+          <h1 class="title">
+            <a href="/">Pepyatka</a> <small class="mutted">0.0.2</small>
+          </h1>
+
+          <hr/>
+
+          <div class="row">
+            <div class="span9">
+              <%- body %>
+            </div>
+          </div>
+
+          <% include _footer %>
         </div>
       </div>
-
-      <% include _footer %>
     </div>
   </body>
 </html>

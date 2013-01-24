@@ -1,10 +1,10 @@
-FF/B
-====
+Pepyatka
+========
 
-FF/B is another attempt to open source FriendFeed social
+Pepyatka is another attempt to open source FriendFeed social
 network/aggregator. At this stage it's a semi-anonymous imageboard.
 
-![FF/B screenshot](http://epicmonkey.org/b/ffb_small.png)
+![Pepyatka screenshot](http://epicmonkey.org/b/ffb_small.png)
 
 Configuration
 -------------
