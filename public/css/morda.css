@@ -107,6 +107,9 @@ footer {
     font-size: 13px;
     margin: 2px 0 0 0;
 }
+.post .likes ul {
+    margin: 0;
+}
 .post .likes .media-object {
     color: #fc4;
 }
