@@ -63,8 +63,17 @@
 
 <script type="text/x-handlebars" data-template-name="pagination">
   <ul class="pager">
-    <li {{bindAttr class="prevPageDisabled"}}><a {{action prevPage href="true" target="controller"}}>&larr; Previous</a></li>
-    <li {{bindAttr class="nextPageDisabled"}}><a {{action nextPage href="true" target="controller"}}>Next &rarr;</a></li>
+    {{#if prevPageVisible}}
+      <li {{bindAttr class="prevPageDisabled"}}><a {{action prevPage href="true" target="controller"}}>&larr; Previous</a></li>
+    {{else}}
+      <li {{bindAttr class="prevPageDisabled"}}><a>&larr; Previous</a></li>
+    {{/if}}
+
+    {{#if nextPageVisible}}
+      <li {{bindAttr class="nextPageDisabled"}}><a {{action nextPage href="true" target="controller"}}>Next &rarr;</a></li>
+    {{else}}
+      <li {{bindAttr class="nextPageDisabled"}}><a>Next &rarr;</a></li>
+    {{/if}}
   </ul>
 </script>
 

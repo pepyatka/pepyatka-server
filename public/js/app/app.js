@@ -31,6 +31,14 @@ App.PaginationHelper = Em.Mixin.create({
     return this.get('pageStart') == 0 ? 'disabled' : ''
   }.property('pageStart'),
 
+  prevPageVisible: function() {
+    return this.get('prevPageDisabled') != 'disabled'
+  }.property('pageStart'),
+
+  nextPageVisible: function() {
+    return this.get('nextPageDisabled') != 'disabled'
+  }.property('App.postsController.content'),
+
   nextPageDisabled: function() {
     var len = this.get('content.content.length')
     return len == 0 || len < this.get('pageSize') ? 'disabled' : ''
