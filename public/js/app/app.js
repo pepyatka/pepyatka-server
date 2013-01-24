@@ -16,7 +16,7 @@ App.ShowSpinnerWhileRendering = Ember.Mixin.create({
 });
 
 App.PaginationHelper = Em.Mixin.create({
-  pageSize: 10,
+  pageSize: 25,
   pageStart: 0,
 
   nextPage: function() {

@@ -9,7 +9,7 @@ exports.addModel = function(db) {
     this.userId = params.userId
 
     this.start = parseInt(params.start) || 0
-    this.num = parseInt(params.num) || 10
+    this.num = parseInt(params.num) || 25
   }
 
   Timeline.findById = function(timelineId, params, callback) {
