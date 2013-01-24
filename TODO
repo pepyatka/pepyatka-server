@@ -57,9 +57,9 @@ Phase 1.3 - improvements
 [ ] Bump post if and only if it's missing on a page
 [ ] Render Not found page if user follows deleted post
 [ ] Check single post view and delete post event
-[ ] Double check underscore functions in the frontend - chances we do
-    not use it anymore
 [ ] review pending functional tests and use proper sessions
+[x] Double check underscore functions in the frontend - chances we do
+    not use it anymore
 [x] Disable prev page if startPage equals 0
 [x] Disable next page if startPage + pageSize gte maxPosts
 [x] review initialCommit var - there is case when it does not work as
