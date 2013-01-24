@@ -3,8 +3,6 @@ var models = require('../models')
   , redis = require('redis')
 
 exports.addModel = function(db) {
-  var POSTS = 90
-
   function Timeline(params) {
     this.id = params.id
     this.name = params.name
@@ -25,19 +23,6 @@ exports.addModel = function(db) {
       } else {
         callback(err, null)
       }
-    })
-  }
-
-  // If user updates timeline we need to
-  Timeline.update = function(timelineId, callback) {
-    db.zrevrange('timeline:' + timelineId + ':posts', POSTS, -1, function(err, posts) {
-      async.forEach(posts, function(postId, callback) {
-        models.Post.destroy(postId, function(err, res) {        
-          callback(err)
-        })
-      }, function(err) {
-        callback(err)
-      })
     })
   }
 
@@ -64,11 +49,9 @@ exports.addModel = function(db) {
 
           async.forEach(timelinesIds, function(timelineId, callback) {
             db.zadd('timeline:' + timelineId + ':posts', currentTime, postId, function(err, res) {
-              Timeline.update(post.timelineId, function(err) {
-                db.hset('post:' + postId, 'updatedAt', currentTime, function(err, res) {
-                  db.sadd('post:' + postId + ':timelines', timelineId, function(err, res) {
-                    callback(err, res)
-                  })
+              db.hset('post:' + postId, 'updatedAt', currentTime, function(err, res) {
+                db.sadd('post:' + postId + ':timelines', timelineId, function(err, res) {
+                  callback(err, res)
                 })
               })
             })
