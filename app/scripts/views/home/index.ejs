@@ -342,6 +342,7 @@
           return App.onePostController.content
         break;
       case "posts":
+      case "userTimeline":
         return App.postsController.find(function(post) {
           return post.id == postId
         })
