@@ -158,34 +158,29 @@ exports.addModel = function(db) {
   Post.removeLike = function(postId, userId, callback) {
     models.Post.findById(postId, function(err, post) {
       models.User.findById(userId, function(err, user) {
-        models.User.findById(post.userId, function(err, postUser) {
-          // update post in all connected timelines
-          postUser.getTimelinesIds(function(err, timelinesIds) {
-            // and additionally add this post to user who liked this
-            // post to its river of news
-            user.getRiverOfNewsId(function(err, riverId) {
-              timelinesIds[riverId] = riverId
+        post.getTimelinesIds(function(err, timelinesIds) {
+          user.getRiverOfNewsId(function(err, riverId) {
+            timelinesIds[riverId] = riverId
 
-              Post.bumpable(postId, function(bumpable) {
-                db.srem('post:' + postId + ':likes', userId, function(err, res) {
-                  var pub = redis.createClient();
-                  timelinesIds = _.uniq(timelinesIds)
-                  async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
-                    if (bumpable) {
-                      models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
-                        pub.publish('removeLike',
-                                    JSON.stringify({ timelineId: timelinesIds[timelineId],
-                                                     userId: userId,
-                                                     postId: postId }))
+            Post.bumpable(postId, function(bumpable) {
+              db.srem('post:' + postId + ':likes', userId, function(err, res) {
+                var pub = redis.createClient();
+                timelinesIds = _.uniq(timelinesIds)
+                async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
+                  if (bumpable) {
+                    models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
+                      pub.publish('removeLike',
+                                  JSON.stringify({ timelineId: timelinesIds[timelineId],
+                                                   userId: userId,
+                                                   postId: postId }))
 
-                        callback(err, res);
-                      })
-                    } else {
                       callback(err, res);
-                    }
-                  }, function(err) {
-                    callback(err, res)
-                  })
+                    })
+                  } else {
+                    callback(err, res);
+                  }
+                }, function(err) {
+                  callback(err, res)
                 })
               })
             })
@@ -200,34 +195,29 @@ exports.addModel = function(db) {
   Post.addLike = function(postId, userId, callback) {
     models.Post.findById(postId, function(err, post) {
       models.User.findById(userId, function(err, user) {
-        models.User.findById(post.userId, function(err, postUser) {
-          // update post in all connected timelines
-          postUser.getTimelinesIds(function(err, timelinesIds) {
-            // and additionally add this post to user who liked this
-            // post to its river of news
-            user.getRiverOfNewsId(function(err, riverId) {
-              timelinesIds[riverId] = riverId
+        post.getTimelinesIds(function(err, timelinesIds) {
+          user.getRiverOfNewsId(function(err, riverId) {
+            timelinesIds[riverId] = riverId
 
-              Post.bumpable(postId, function(bumpable) {
-                db.sadd('post:' + postId + ':likes', userId, function(err, res) {
-                  var pub = redis.createClient();
-                  timelinesIds = _.uniq(timelinesIds)
-                  async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
-                    if (bumpable) {
-                      models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
-                        pub.publish('newLike',
-                                    JSON.stringify({ timelineId: timelinesIds[timelineId],
-                                                     userId: userId,
-                                                     postId: postId }))
+            Post.bumpable(postId, function(bumpable) {
+              db.sadd('post:' + postId + ':likes', userId, function(err, res) {
+                var pub = redis.createClient();
+                timelinesIds = _.uniq(timelinesIds)
+                async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
+                  if (bumpable) {
+                    models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
+                      pub.publish('newLike',
+                                  JSON.stringify({ timelineId: timelinesIds[timelineId],
+                                                   userId: userId,
+                                                   postId: postId }))
 
-                        callback(err, res);
-                      })
-                    } else {
                       callback(err, res);
-                    }
-                  }, function(err) {
-                    callback(err, res)
-                  })
+                    })
+                  } else {
+                    callback(err, res);
+                  }
+                }, function(err) {
+                  callback(err, res)
                 })
               })
             })
@@ -241,32 +231,25 @@ exports.addModel = function(db) {
     models.Post.findById(postId, function(err, post) {
       models.Comment.findById(commentId, function(err, comment) {
         models.User.findById(comment.userId, function(err, commentUser) {
-          models.User.findById(post.userId, function(err, postUser) {
-            // update post in all connected timelines
-            postUser.getTimelinesIds(function(err, timelinesIds) {
-              // and additionally add this post to comment's author
-              // river of news
-              commentUser.getRiverOfNewsId(function(err, riverId) {
-                timelinesIds[riverId] = riverId
-
-                Post.bumpable(postId, function(bumpable) {
-                  db.rpush('post:' + postId + ':comments', commentId, function(err, res) {
-                    var pub = redis.createClient();
-                    timelinesIds = _.uniq(timelinesIds)
-                    async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
-                      if (bumpable) {
-                        models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
-                          pub.publish('newComment', JSON.stringify({ timelineId: timelineId, 
-                                                                     commentId: comment.id }))
-
-                          callback(err);
-                        })
-                      } else {
+          post.getTimelinesIds(function(err, timelinesIds) {
+            commentUser.getRiverOfNewsId(function(err, riverId) {
+              timelinesIds[riverId] = riverId
+              Post.bumpable(postId, function(bumpable) {
+                db.rpush('post:' + postId + ':comments', commentId, function(err, res) {
+                  var pub = redis.createClient();
+                  timelinesIds = _.uniq(timelinesIds)
+                  async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
+                    if (bumpable) {
+                      models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
+                        pub.publish('newComment', JSON.stringify({ timelineId: timelinesIds[timelineId],
+                                                                   commentId: comment.id }))
                         callback(err);
-                      }
-                    }, function(err) {
-                      callback(err)
-                    })
+                        })
+                    } else {
+                      callback(err);
+                    }
+                  }, function(err) {
+                    callback(err)
                   })
                 })
               })

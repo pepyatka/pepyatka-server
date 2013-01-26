@@ -402,7 +402,7 @@ App.Post = Ember.Object.extend({
     if (this.showAllComments)
       return false
     else
-      return this.comments.length > 3
+      return this.comments && this.get('comments').length > 3
   }.property('showAllComments', 'comments'),
 
   removeLike: function(propName, value) {
@@ -693,8 +693,10 @@ socket.on('newComment', function (data) {
   var post = findPost(data.comment.postId)
 
   if (post) {
-    post.set('updatedAt', comment.createdAt)
     post.comments.pushObject(comment)
+  } else {
+    var post = App.postsController.findOne(data.comment.postId)
+    App.postsController.addObject(post)
   }
 });
 
@@ -704,9 +706,6 @@ socket.on('newLike', function(data) {
   var post = findPost(data.postId)
 
   if (post) {
-    // TODO: set currentTime to bump the post
-    // post.set('updatedAt', currentTime)
-
     var like = post.likes.find(function(like) {
       return like.id == user.id
     })
@@ -714,6 +713,9 @@ socket.on('newLike', function(data) {
     if (!like) {
       post.likes.pushObject(user)
     }
+  } else {
+    var post = App.postsController.findOne(data.postId)
+    App.postsController.addObject(post)
   }
 })
 
@@ -721,9 +723,6 @@ socket.on('removeLike', function(data) {
   var post = findPost(data.postId)
 
   if (post) {
-    // TODO: set currentTime to bump the post
-    // post.set('updatedAt', currentTime)
-
     post.removeLike('id', data.userId)
   }
 })

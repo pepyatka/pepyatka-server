@@ -30,8 +30,10 @@ exports.addModel = function(db) {
   Timeline.updatePost = function(timelineId, postId, callback) {
     var currentTime = new Date().getTime()
     db.zadd('timeline:' + timelineId + ':posts', currentTime, postId, function(err, res) {
-      db.hset('post:' + postId, 'updatedAt', currentTime, function(err, res) {
-        callback(err, res)
+      db.sadd('post:' + postId + ':timelines', timelineId, function(err, res) {
+        db.hset('post:' + postId, 'updatedAt', currentTime, function(err, res) {
+          callback(err, res)
+        })
       })
     })
   }
