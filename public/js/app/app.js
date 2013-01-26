@@ -733,6 +733,15 @@ socket.on('updateComment', function(data) {
 socket.on('destroyComment', function(data) {
 })
 
+var reconnect = function() {
+  var timeline = App.postsController.get('timelineId') || ""
+  socket.emit('unsubscribe', { timelineId: timeline });
+  socket.emit('subscribe', { timelineId: timeline });
+}
+
+socket.on('disconnect', function(data) {
+  setTimeout(reconnect, 1000);
+})
 
 App.Router = Ember.Router.extend({
   // enableLogging: true,

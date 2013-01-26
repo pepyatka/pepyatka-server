@@ -1,6 +1,5 @@
 var models = require('./app/models')
   , redis = require('redis')
-  , async = require('async')
 
 exports.listen = function(server) {
   var io = require('socket.io').listen(server)
