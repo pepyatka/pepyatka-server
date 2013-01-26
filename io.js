@@ -1,7 +1,6 @@
 var uuid = require('node-uuid')
   , async = require('async')
 
-
 exports.listen = function(server) {
   var io = require('socket.io').listen(server)
 
@@ -37,9 +36,7 @@ exports.listen = function(server) {
     , redisClient: client
   }));
 
-  io.sockets.on(
-    'connection',
-
+  io.sockets.on('connection',
     function(socket) {
       socket.on('subscribe', function(data) {
         console.log('User ' + data.timelineId + ' has connected')
@@ -49,8 +46,9 @@ exports.listen = function(server) {
 
       socket.on('unsubscribe', function(data) {
         console.log('User ' + data.timelineId + ' has disconnected')
-      })
 
+        socket.leave(data.timelineId);
+      })
     }
   )
 

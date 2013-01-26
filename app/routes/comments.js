@@ -12,9 +12,6 @@ exports.addRoutes = function(app, connections) {
 
     newComment.save(function(err, comment) {
       if (comment) {
-        var pub = redis.createClient();
-        pub.publish('newComment', comment.id)
-
         comment.toJSON(function(err, json) { res.jsonp(json) })
       } else {
         // Just a stupid case - strong parameters will make it cleaner

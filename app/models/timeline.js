@@ -1,6 +1,7 @@
 var models = require('../models')
   , async = require('async')
   , redis = require('redis')
+  , _ = require('underscore')
 
 exports.addModel = function(db) {
   function Timeline(params) {
@@ -48,6 +49,7 @@ exports.addModel = function(db) {
           var pub = redis.createClient();
 
           timelinesIds.push(timelineId)
+          timelinesIds = _.uniq(timelinesIds)
 
           async.forEach(timelinesIds, function(timelineId, callback) {
             db.zadd('timeline:' + timelineId + ':posts', currentTime, postId, function(err, res) {

@@ -21,11 +21,6 @@ exports.addRoutes = function(app) {
 
   app.post('/v1/posts/:postId/like', function(req, res) {
     models.Post.addLike(req.params.postId, req.user.id, function(err, r) {
-      var pub = redis.createClient();
-      pub.publish('newLike',
-                  JSON.stringify({ userId: req.user.id,
-                                   postId: req.params.postId }))
-
       // post.toJSON(function(err, json) { res.jsonp(json) })
 
       res.jsonp({})
@@ -34,11 +29,6 @@ exports.addRoutes = function(app) {
 
   app.post('/v1/posts/:postId/unlike', function(req, res) {
     models.Post.removeLike(req.params.postId, req.user.id, function(err, r) {
-      var pub = redis.createClient();
-      pub.publish('removeLike',
-                  JSON.stringify({ userId: req.user.id,
-                                   postId: req.params.postId }))
-
       res.jsonp({})
     })
   })
@@ -74,9 +64,6 @@ exports.addRoutes = function(app) {
             // type of uploaded files.
             gm(tmpPath).format(function(err, value) {
               if (err) {
-                var pub = redis.createClient();
-                pub.publish('newPost', post.id)
-
                 post.toJSON(function(err, json) { res.jsonp(json) })
 
                 //res.jsonp({'error': 'not an image'})
@@ -116,10 +103,6 @@ exports.addRoutes = function(app) {
                           post.getAttachments(function(err, attachments) {
                             attachments.push(attachment)
 
-                            // TODO: this is a dup
-                            var pub = redis.createClient();
-                            pub.publish('newPost', post.id)
-
                             models.Post.findById(post.id, function(err, post) {
                               post.toJSON(function(err, json) { res.jsonp(json) })
                             })
@@ -131,9 +114,6 @@ exports.addRoutes = function(app) {
               }
             })
           } else {
-            // var pub = redis.createClient();
-            // pub.publish('newPost', post.id)
-
             post.toJSON(function(err, json) { res.jsonp(json) })
           }
         })

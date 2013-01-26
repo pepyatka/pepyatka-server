@@ -595,6 +595,11 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
     this.resetPage()
   }.observes('timeline'),
 
+  didTimelineChange: function() {
+    var timeline = this.get('timelineId') || ""
+    socket.emit('unsubscribe', { timelineId: timeline });
+  }.observesBefore('timeline'),
+
   findAll: function(pageStart) {
     this.set('isLoaded', false)
 
@@ -607,6 +612,8 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       dataType: 'jsonp',
       context: this,
       success: function(response) {
+        // subscribe to a channel
+        this.set('timelineId', response.id)
         socket.emit('subscribe', { timelineId: response.id });
 
         that.set('content', [])

@@ -14,10 +14,9 @@ exports.listen = function(io) {
   sub.on('message', function(channel, msg) {
     switch(channel) {
     case 'destroyPost':
-      var clients = io.sockets.clients()
-      async.forEach(clients, function(socket) {
-        socket.emit('destroyPost', { postId: msg })
-      })
+      var data = JSON.parse(msg)
+
+      io.sockets.in(data.timelineId).emit('destroyPost', { postId: data.postId })
       break
 
     case 'newPost':
@@ -33,13 +32,12 @@ exports.listen = function(io) {
       break
 
     case 'newComment': 
-      models.Comment.findById(msg, function(err, comment) {
+      var data = JSON.parse(msg)
+
+      models.Comment.findById(data.commentId, function(err, comment) {
         if (comment) {
           comment.toJSON(function(err, json) {
-            var clients = io.sockets.clients()
-            async.forEach(clients, function(socket) {
-              socket.emit('newComment', { comment: json })
-            })
+            io.sockets.in(data.timelineId).emit('newComment', { comment: json })
           })
         }
       })
@@ -51,11 +49,8 @@ exports.listen = function(io) {
       models.User.findById(data.userId, function(err, user) {
         if (user) {
           user.toJSON(function(err, json) {
-            var clients = io.sockets.clients()
-            async.forEach(clients, function(socket) {
-              socket.emit('newLike', { user: json,
-                                       postId: data.postId })
-            })
+            io.sockets.in(data.timelineId).emit('newLike', { user: json,
+                                                             postId: data.postId })
           })
         }
       })
@@ -63,11 +58,9 @@ exports.listen = function(io) {
 
     case 'removeLike':
       var data = JSON.parse(msg)
-      var clients = io.sockets.clients()
-      async.forEach(clients, function(socket) {
-        socket.emit('removeLike', { userId: data.userId,
-                                    postId: data.postId})
-      })
+
+      io.sockets.in(data.timelineId).emit('removeLike', { userId: data.userId,
+                                                          postId: data.postId })
       break
     }
   })
