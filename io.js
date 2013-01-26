@@ -1,6 +1,7 @@
 var uuid = require('node-uuid')
   , async = require('async')
 
+
 exports.listen = function(server) {
   var io = require('socket.io').listen(server)
 
@@ -40,14 +41,16 @@ exports.listen = function(server) {
     'connection',
 
     function(socket) {
-      // User wants to listen to real-time updates. At this moment we
-      // can get by with this simple push/pull, however once we
-      // introduce real users - needs to be heavily refactored 
       socket.on('subscribe', function(data) {
-        console.log('User ' + data.userId + ' has connected')
-        
-        socket.set('userId', data.userId)
+        console.log('User ' + data.timelineId + ' has connected')
+
+        socket.join(data.timelineId);
       })
+
+      socket.on('unsubscribe', function(data) {
+        console.log('User ' + data.timelineId + ' has disconnected')
+      })
+
     }
   )
 

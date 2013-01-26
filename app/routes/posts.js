@@ -131,8 +131,8 @@ exports.addRoutes = function(app) {
               }
             })
           } else {
-            var pub = redis.createClient();
-            pub.publish('newPost', post.id)
+            // var pub = redis.createClient();
+            // pub.publish('newPost', post.id)
 
             post.toJSON(function(err, json) { res.jsonp(json) })
           }

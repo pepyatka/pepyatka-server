@@ -607,6 +607,8 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       dataType: 'jsonp',
       context: this,
       success: function(response) {
+        socket.emit('subscribe', { timelineId: response.id });
+
         that.set('content', [])
         response.posts.forEach(function(attrs) {
           var post = App.Post.create(attrs)
@@ -635,6 +637,96 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
   }
 })
 App.postsController = App.PostsController.create()
+
+function findController() {
+  switch (App.router.currentState.name) {
+  case "aPost":
+    return App.onePostController
+    break;
+  case "posts":
+  case "userTimeline":
+    return App.postsController
+    break;
+  }
+}
+
+function findPost(postId) {
+  switch (App.router.currentState.name) {
+  case "aPost":
+    if (App.onePostController.content.id == postId)
+      return App.onePostController.content
+    break;
+  case "posts":
+  case "userTimeline":
+    return App.postsController.find(function(post) {
+      return post.id == postId
+    })
+    break;
+  }
+}
+
+var socket = io.connect('/');
+
+socket.on('newPost', function (data) {
+  var post = App.Post.create(data.post)
+
+  App.postsController.addObject(post)
+});
+
+socket.on('updatePost', function(data) {
+})
+
+socket.on('destroyPost', function(data) {
+  App.postsController.removePost('id', data.postId)
+})
+
+socket.on('newComment', function (data) {
+  var comment = App.Comment.create(data.comment)
+
+  var post = findPost(data.comment.postId)
+
+  if (post) {
+    post.set('updatedAt', comment.createdAt)
+    post.comments.pushObject(comment)
+  }
+});
+
+socket.on('newLike', function(data) {
+  var user = App.User.create(data.user)
+
+  var post = findPost(data.postId)
+
+  if (post) {
+    // TODO: set currentTime to bump the post
+    // post.set('updatedAt', currentTime)
+
+    var like = post.likes.find(function(like) {
+      return like.id == user.id
+    })
+
+    if (!like) {
+      post.likes.pushObject(user)
+    }
+  }
+})
+
+socket.on('removeLike', function(data) {
+  var post = findPost(data.postId)
+
+  if (post) {
+    // TODO: set currentTime to bump the post
+    // post.set('updatedAt', currentTime)
+
+    post.removeLike('id', data.userId)
+  }
+})
+
+socket.on('updateComment', function(data) {
+})
+
+socket.on('destroyComment', function(data) {
+})
+
 
 App.Router = Ember.Router.extend({
   // enableLogging: true,
