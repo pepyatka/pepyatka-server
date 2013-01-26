@@ -2,6 +2,7 @@ var uuid = require('node-uuid')
   , models = require('../models')
   , async = require('async')
   , redis = require('redis')
+  , _ = require('underscore')
 
 exports.addModel = function(db) {
   function Post(params) {
@@ -168,7 +169,7 @@ exports.addModel = function(db) {
               Post.bumpable(postId, function(bumpable) {
                 db.srem('post:' + postId + ':likes', userId, function(err, res) {
                   var pub = redis.createClient();
-                  timelinesIds = _.uniq(timelineIds)
+                  timelinesIds = _.uniq(timelinesIds)
                   async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
                     if (bumpable) {
                       models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
@@ -210,7 +211,7 @@ exports.addModel = function(db) {
               Post.bumpable(postId, function(bumpable) {
                 db.sadd('post:' + postId + ':likes', userId, function(err, res) {
                   var pub = redis.createClient();
-                  timelinesIds = _.uniq(timelineIds)
+                  timelinesIds = _.uniq(timelinesIds)
                   async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
                     if (bumpable) {
                       models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
@@ -251,7 +252,7 @@ exports.addModel = function(db) {
                 Post.bumpable(postId, function(bumpable) {
                   db.rpush('post:' + postId + ':comments', commentId, function(err, res) {
                     var pub = redis.createClient();
-                    timelinesIds = _.uniq(timelineIds)
+                    timelinesIds = _.uniq(timelinesIds)
                     async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
                       if (bumpable) {
                         models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {

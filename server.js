@@ -84,8 +84,7 @@ app.configure('development', function() {
 });
 
 var server = http.createServer(app)
-  , io = require('./io').listen(server)
-  , pubsub = require('./pubsub').listen(io)
+  , pubsub = require('./pubsub').listen(server)
   , routes = require('./app/routes')(app)
 
 server.listen(app.get('port'), function() {  
