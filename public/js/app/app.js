@@ -58,11 +58,108 @@ App.Pagination = Ember.View.extend({
   templateName: 'pagination'
 });
 
+App.Subscription = Ember.Object.extend({
+  socket: null,
+
+  init: function() {
+    var findPost = function(postId) {
+      switch (App.router.currentState.name) {
+      case "aPost":
+        if (App.onePostController.content.id == postId)
+          return App.onePostController.content
+        break;
+      case "posts":
+      case "userTimeline":
+        return App.postsController.find(function(post) {
+          return post.id == postId
+        })
+        break;
+      }
+    }
+
+    this.socket = io.connect('/');
+
+    this.socket.on('newPost', function (data) {
+      var post = App.Post.create(data.post)
+
+      App.postsController.addObject(post)
+    });
+
+    this.socket.on('updatePost', function(data) {
+    })
+
+    this.socket.on('destroyPost', function(data) {
+      App.postsController.removePost('id', data.postId)
+    })
+
+    this.socket.on('newComment', function (data) {
+      var comment = App.Comment.create(data.comment)
+
+      var post = findPost(data.comment.postId)
+
+      if (post) {
+        post.comments.pushObject(comment)
+      } else {
+        var post = App.postsController.findOne(data.comment.postId)
+        App.postsController.addObject(post)
+      }
+    });
+
+    this.socket.on('newLike', function(data) {
+      var user = App.User.create(data.user)
+
+      var post = findPost(data.postId)
+
+      if (post) {
+        var like = post.likes.find(function(like) {
+          return like.id == user.id
+        })
+
+        if (!like) {
+          post.likes.pushObject(user)
+        }
+      } else {
+        var post = App.postsController.findOne(data.postId)
+        App.postsController.addObject(post)
+      }
+    })
+
+    this.socket.on('removeLike', function(data) {
+      var post = findPost(data.postId)
+
+      if (post) {
+        post.removeLike('id', data.userId)
+      }
+    })
+
+    this.socket.on('updateComment', function(data) {
+    })
+
+    this.socket.on('destroyComment', function(data) {
+    })
+
+    this.socket.on('disconnect', function(data) {
+      setTimeout(this.reconnect, 1000);
+    })
+  },
+
+  reconnect: function() {
+    var timeline = App.postsController.get('timelineId') || ""
+    this.socket.emit('unsubscribe', { timelineId: timeline });
+    this.socket.emit('subscribe', { timelineId: timeline });
+  }
+})
 
 App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
   templateName: 'application'
 });
-App.ApplicationController = Ember.Controller.extend();
+App.ApplicationController = Ember.Controller.extend({
+  subscription: null,
+
+  init: function() {
+    App.ApplicationController.subscription = App.Subscription.create()
+  }
+});
 
 // Index view to display all posts on the page
 App.PostsView = Ember.View.extend({
@@ -597,7 +694,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
 
   didTimelineChange: function() {
     var timeline = this.get('timelineId') || ""
-    socket.emit('unsubscribe', { timelineId: timeline });
+    App.ApplicationController.subscription.socket.emit('unsubscribe', { timelineId: timeline });
   }.observesBefore('timeline'),
 
   findAll: function(pageStart) {
@@ -614,7 +711,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       success: function(response) {
         // subscribe to a channel
         this.set('timelineId', response.id)
-        socket.emit('subscribe', { timelineId: response.id });
+        App.ApplicationController.subscription.socket.emit('subscribe', { timelineId: response.id });
 
         that.set('content', [])
         response.posts.forEach(function(attrs) {
@@ -644,104 +741,6 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
   }
 })
 App.postsController = App.PostsController.create()
-
-function findController() {
-  switch (App.router.currentState.name) {
-  case "aPost":
-    return App.onePostController
-    break;
-  case "posts":
-  case "userTimeline":
-    return App.postsController
-    break;
-  }
-}
-
-function findPost(postId) {
-  switch (App.router.currentState.name) {
-  case "aPost":
-    if (App.onePostController.content.id == postId)
-      return App.onePostController.content
-    break;
-  case "posts":
-  case "userTimeline":
-    return App.postsController.find(function(post) {
-      return post.id == postId
-    })
-    break;
-  }
-}
-
-var socket = io.connect('/');
-
-socket.on('newPost', function (data) {
-  var post = App.Post.create(data.post)
-
-  App.postsController.addObject(post)
-});
-
-socket.on('updatePost', function(data) {
-})
-
-socket.on('destroyPost', function(data) {
-  App.postsController.removePost('id', data.postId)
-})
-
-socket.on('newComment', function (data) {
-  var comment = App.Comment.create(data.comment)
-
-  var post = findPost(data.comment.postId)
-
-  if (post) {
-    post.comments.pushObject(comment)
-  } else {
-    var post = App.postsController.findOne(data.comment.postId)
-    App.postsController.addObject(post)
-  }
-});
-
-socket.on('newLike', function(data) {
-  var user = App.User.create(data.user)
-
-  var post = findPost(data.postId)
-
-  if (post) {
-    var like = post.likes.find(function(like) {
-      return like.id == user.id
-    })
-
-    if (!like) {
-      post.likes.pushObject(user)
-    }
-  } else {
-    var post = App.postsController.findOne(data.postId)
-    App.postsController.addObject(post)
-  }
-})
-
-socket.on('removeLike', function(data) {
-  var post = findPost(data.postId)
-
-  if (post) {
-    post.removeLike('id', data.userId)
-  }
-})
-
-socket.on('updateComment', function(data) {
-})
-
-socket.on('destroyComment', function(data) {
-})
-
-var reconnect = function() {
-  var timeline = App.postsController.get('timelineId') || ""
-  socket.emit('unsubscribe', { timelineId: timeline });
-  socket.emit('subscribe', { timelineId: timeline });
-}
-
-socket.on('disconnect', function(data) {
-  setTimeout(reconnect, 1000);
-})
 
 App.Router = Ember.Router.extend({
   // enableLogging: true,
