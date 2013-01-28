@@ -38,15 +38,27 @@ exports.listen = function(server) {
   io.sockets.on('connection',
     function(socket) {
       socket.on('subscribe', function(data) {
-        console.log('User ' + data.timelineId + ' has connected')
+        if (data.timelineId) {
+          console.log('User has subscribed to ' + data.timelineId + ' timeline')
 
-        socket.join(data.timelineId);
+          socket.join('timeline:' + data.timelineId);
+        } else if (data.postId) {
+          console.log('User has subscribed to ' + data.postId + ' post')
+
+          socket.join('post:' + data.postId);
+        }
       })
 
       socket.on('unsubscribe', function(data) {
-        console.log('User ' + data.timelineId + ' has disconnected')
+        if (data.timelineId) {
+          console.log('User has disconnected from ' + data.timelineId + ' timeline')
 
-        socket.leave(data.timelineId);
+          socket.leave('timeline:' + data.timelineId);
+        } else if (data.postId) {
+          console.log('User has disconnected from ' + data.postId + ' post')
+
+          socket.join('post:' + data.postId);
+        }
       })
     }
   )
@@ -63,8 +75,9 @@ exports.listen = function(server) {
     switch(channel) {
     case 'destroyPost':
       var data = JSON.parse(msg)
+      var event = { postId: data.postId }
 
-      io.sockets.in(data.timelineId).emit('destroyPost', { postId: data.postId })
+      io.sockets.in('timeline:' + data.timelineId).emit('destroyPost', event)
       break
 
     case 'newPost':
@@ -73,7 +86,8 @@ exports.listen = function(server) {
       models.Post.findById(data.postId, function(err, post) {
         if (post) {
           post.toJSON(function(err, json) {
-            io.sockets.in(data.timelineId).emit('newPost', { post: json })
+            var event = { post: json }
+            io.sockets.in('timeline:' + data.timelineId).emit('newPost', event)
           })
         }
       })
@@ -85,7 +99,12 @@ exports.listen = function(server) {
       models.Comment.findById(data.commentId, function(err, comment) {
         if (comment) {
           comment.toJSON(function(err, json) {
-            io.sockets.in(data.timelineId).emit('newComment', { comment: json })
+            var event = { comment: json }
+
+            if (data.timelineId)
+              io.sockets.in('timeline:' + data.timelineId).emit('newComment', event)
+            else
+              io.sockets.in('post:' + data.postId).emit('newComment', event)
           })
         }
       })
@@ -97,8 +116,12 @@ exports.listen = function(server) {
       models.User.findById(data.userId, function(err, user) {
         if (user) {
           user.toJSON(function(err, json) {
-            io.sockets.in(data.timelineId).emit('newLike', { user: json,
-                                                             postId: data.postId })
+            var event = { user: json, postId: data.postId }
+
+            if (data.timelineId)
+              io.sockets.in('timeline:' + data.timelineId).emit('newLike', event)
+            else
+              io.sockets.in('post:' + data.postId).emit('newLike', event)
           })
         }
       })
@@ -106,9 +129,13 @@ exports.listen = function(server) {
 
     case 'removeLike':
       var data = JSON.parse(msg)
+      var event = { userId: data.userId, postId: data.postId }
 
-      io.sockets.in(data.timelineId).emit('removeLike', { userId: data.userId,
-                                                          postId: data.postId })
+      if (data.timelineId)
+        io.sockets.in('timeline:' + data.timelineId).emit('removeLike', event)
+      else
+        io.sockets.in('post:' + data.postId).emit('removeLike', event)
+
       break
     }
   })

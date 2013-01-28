@@ -165,6 +165,11 @@ exports.addModel = function(db) {
             Post.bumpable(postId, function(bumpable) {
               db.srem('post:' + postId + ':likes', userId, function(err, res) {
                 var pub = redis.createClient();
+
+                pub.publish('removeLike',
+                            JSON.stringify({ userId: userId,
+                                             postId: postId }))
+
                 timelinesIds = _.uniq(timelinesIds)
                 async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
                   if (bumpable) {
@@ -202,6 +207,11 @@ exports.addModel = function(db) {
             Post.bumpable(postId, function(bumpable) {
               db.sadd('post:' + postId + ':likes', userId, function(err, res) {
                 var pub = redis.createClient();
+
+                pub.publish('newLike',
+                            JSON.stringify({ userId: userId,
+                                             postId: postId }))
+
                 timelinesIds = _.uniq(timelinesIds)
                 async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
                   if (bumpable) {
@@ -237,12 +247,21 @@ exports.addModel = function(db) {
               Post.bumpable(postId, function(bumpable) {
                 db.rpush('post:' + postId + ':comments', commentId, function(err, res) {
                   var pub = redis.createClient();
+
+                  pub.publish('newComment', JSON.stringify({
+                    postId: postId,
+                    commentId: comment.id
+                  }))
+
                   timelinesIds = _.uniq(timelinesIds)
                   async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
                     if (bumpable) {
                       models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
-                        pub.publish('newComment', JSON.stringify({ timelineId: timelinesIds[timelineId],
-                                                                   commentId: comment.id }))
+                        pub.publish('newComment', JSON.stringify({
+                          timelineId: timelinesIds[timelineId],
+                          commentId: comment.id
+                        }))
+
                         callback(err);
                         })
                     } else {

@@ -719,6 +719,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       dataType: 'jsonp',
       context: this,
       success: function(response) {
+        App.ApplicationController.subscription.unsubscribe()
         App.ApplicationController.subscription.subscribe('timelineId', response.id)
 
         that.set('content', [])
@@ -742,6 +743,8 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       dataType: 'jsonp',
       context: post,
       success: function(response){
+        App.ApplicationController.subscription.unsubscribe()
+        App.ApplicationController.subscription.subscribe('postId', response.id)
         this.setProperties(response)
       }
     })
