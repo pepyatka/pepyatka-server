@@ -703,14 +703,12 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
 
   didTimelineChange: function() {
     App.ApplicationController.subscription.unsubscribe()
-    // TODO: this function does not work
     this.resetPage()
-  }.observesBefore('timeline'),
+  }.observes('timeline'),
 
   findAll: function(pageStart) {
     this.set('isLoaded', false)
 
-    var that = this
     var timeline = this.get('timeline') || ""
 
     $.ajax({
@@ -723,12 +721,12 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
         App.ApplicationController.subscription.unsubscribe()
         App.ApplicationController.subscription.subscribe('timelineId', response.id)
 
-        that.set('content', [])
+        this.set('content', [])
         response.posts.forEach(function(attrs) {
           var post = App.Post.create(attrs)
           this.addObject(post)
         }, this)
-        that.set('isLoaded', true)
+        this.set('isLoaded', true)
       }
     })
     return this
