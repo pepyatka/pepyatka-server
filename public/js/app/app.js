@@ -60,8 +60,10 @@ App.Pagination = Ember.View.extend({
 
 App.Subscription = Ember.Object.extend({
   socket: null,
+  subscribedTo: {},
 
   init: function() {
+    var that = this
     var findPost = function(postId) {
       switch (App.router.currentState.name) {
       case "aPost":
@@ -139,14 +141,23 @@ App.Subscription = Ember.Object.extend({
     })
 
     this.socket.on('disconnect', function(data) {
-      setTimeout(this.reconnect, 1000);
+      that.reconnect()
     })
   },
 
+  subscribe: function(channel, id) {
+    this.subscribedTo[channel] = id;
+    this.socket.emit('subscribe', this.subscribedTo);
+  },
+
+  unsubscribe: function() {
+    this.socket.emit('unsubscribe', this.subscribedTo)
+  },
+
   reconnect: function() {
-    var timeline = App.postsController.get('timelineId') || ""
-    this.socket.emit('unsubscribe', { timelineId: timeline });
-    this.socket.emit('subscribe', { timelineId: timeline });
+    var subscribedTo = this.get('subscribedTo')
+    this.unsubscribe()
+    this.subscribe(subscribedTo)
   }
 })
 
@@ -693,8 +704,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
   }.observes('timeline'),
 
   didTimelineChange: function() {
-    var timeline = this.get('timelineId') || ""
-    App.ApplicationController.subscription.socket.emit('unsubscribe', { timelineId: timeline });
+    App.ApplicationController.subscription.unsubscribe()
   }.observesBefore('timeline'),
 
   findAll: function(pageStart) {
@@ -709,9 +719,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       dataType: 'jsonp',
       context: this,
       success: function(response) {
-        // subscribe to a channel
-        this.set('timelineId', response.id)
-        App.ApplicationController.subscription.socket.emit('subscribe', { timelineId: response.id });
+        App.ApplicationController.subscription.subscribe('timelineId', response.id)
 
         that.set('content', [])
         response.posts.forEach(function(attrs) {
