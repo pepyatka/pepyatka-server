@@ -257,13 +257,13 @@ App.PostContainerView = Ember.View.extend({
     this.$().hide().slideDown('slow');
   },
 
-  willDestroyElement: function() {
-    if (this.$()) {
-      var clone = this.$().clone();
-      this.$().replaceWith(clone);
-      clone.slideUp()
-    }
-  },
+  // willDestroyElement: function() {
+  //   if (this.$()) {
+  //     var clone = this.$().clone();
+  //     this.$().replaceWith(clone);
+  //     clone.slideUp()
+  //   }
+  // },
 
   showAllComments: function() {
     this.content.set('showAllComments', true)
@@ -375,7 +375,7 @@ App.CommentPostViewSubst = Ember.View.extend(Ember.TargetActionSupport, {
   // display additional Add comment link if user does not refresh the page
   isVisible: function() {
     var post = this.get('parentView.content')
-    var comments = post.comments
+    var comments = post.comments || []
 
     if (comments.length < 4)
       return false
