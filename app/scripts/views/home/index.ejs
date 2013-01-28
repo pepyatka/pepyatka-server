@@ -17,7 +17,7 @@
     <div class="row">
       <div class="span9">
         <h1 class="title">
-          <a {{action showAllPosts href="true"}}>Pepyatka</a> <small class="mutted">0.0.2</small>
+          <a href="/">Pepyatka</a> <small class="mutted">0.0.2</small>
         </h1>
         <hr/>
       </div>
@@ -64,13 +64,13 @@
 <script type="text/x-handlebars" data-template-name="pagination">
   <ul class="pager">
     {{#if prevPageVisible}}
-      <li {{bindAttr class="prevPageDisabled"}}><a {{action prevPage href="true" target="controller"}}>&larr; Previous</a></li>
+      <li {{bindAttr class="prevPageDisabled"}}><a {{action prevPage href="true" target="App.postsController"}}>&larr; Previous</a></li>
     {{else}}
       <li {{bindAttr class="prevPageDisabled"}}><a>&larr; Previous</a></li>
     {{/if}}
 
     {{#if nextPageVisible}}
-      <li {{bindAttr class="nextPageDisabled"}}><a {{action nextPage href="true" target="controller"}}>Next &rarr;</a></li>
+      <li {{bindAttr class="nextPageDisabled"}}><a {{action nextPage href="true" target="App.postsController"}}>Next &rarr;</a></li>
     {{else}}
       <li {{bindAttr class="nextPageDisabled"}}><a>Next &rarr;</a></li>
     {{/if}}

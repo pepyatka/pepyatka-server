@@ -28,12 +28,12 @@ App.PaginationHelper = Em.Mixin.create({
   },
 
   prevPageDisabled: function() {
-    return this.get('pageStart') == 0 ? 'disabled' : ''
-  }.property('pageStart'),
+    return App.postsController.get('pageStart') == 0 ? 'disabled' : ''
+  }.property('App.postsController.pageStart'),
 
   prevPageVisible: function() {
     return this.get('prevPageDisabled') != 'disabled'
-  }.property('pageStart'),
+  }.property('App.postsController.pageStart'),
 
   nextPageVisible: function() {
     return this.get('nextPageDisabled') != 'disabled'
@@ -480,6 +480,8 @@ App.User = Ember.Object.extend({
 })
 
 App.CommentsController = Ember.ArrayController.extend({
+  // TODO: extract URL to class level
+  // TODO: extract data to class/model level
   createComment: function(post, body) {
     var comment = App.Comment.create({ 
       body: body,
@@ -602,6 +604,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
     this.removeObject(obj);
   },
 
+  // TODO: like model
   likePost: function(postId) {
     $.ajax({
       url: '/v1/posts/' + postId + '/like',
@@ -612,6 +615,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
     })
   },
 
+  // TODO: like model
   unlikePost: function(postId) {
     $.ajax({
       url: '/v1/posts/' + postId + '/unlike',
@@ -697,13 +701,10 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
     App.postsController.findAll(pageStart)
   },
 
-  // TODO: this function does not reset page no.
-  didTimelineChange: function() {
-    this.resetPage()
-  }.observes('timeline'),
-
   didTimelineChange: function() {
     App.ApplicationController.subscription.unsubscribe()
+    // TODO: this function does not work
+    this.resetPage()
   }.observesBefore('timeline'),
 
   findAll: function(pageStart) {
@@ -718,6 +719,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       dataType: 'jsonp',
       context: this,
       success: function(response) {
+        // TODO: extract to an observer
         App.ApplicationController.subscription.unsubscribe()
         App.ApplicationController.subscription.subscribe('timelineId', response.id)
 
@@ -765,7 +767,6 @@ App.Router = Ember.Router.extend({
       
       connectOutlets: function(router){ 
         App.postsController.set('timeline', null)
-        // TODO: observe timeline to reset pagination
         router.get('applicationController').connectOutlet('posts', App.postsController.findAll());
       }
     }),
