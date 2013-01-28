@@ -198,7 +198,6 @@ App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
   },
 
   didInsertElement: function() {
-    this.$().focus();
     this.$().autogrow();
   }
 })
