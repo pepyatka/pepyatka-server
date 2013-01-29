@@ -61,7 +61,6 @@ exports.addModel = function(db) {
                          })
                        })
             } else {
-              // TODO: pass res=0 argument to the next block
               callback(err, that)
             }
           })
