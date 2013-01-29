@@ -51,6 +51,8 @@ exports.addModel = function(db) {
     },
 
     save: function(callback) {
+      var that = this
+
       if (this.id === undefined) this.id = uuid.v4()
 
       var params = { 'ext': this.ext.toString(),
@@ -71,10 +73,9 @@ exports.addModel = function(db) {
 
       this.validate(function(valid) {
         if (valid) {
-          var that = this
 
           // TODO: check if postId exists before saving attachment object
-          db.hmset('attachment:' + this.id, params, function(err, res) {
+          db.hmset('attachment:' + that.id, params, function(err, res) {
             if (that.postId) {
               models.Post.addAttachment(that.postId, that.id, function(err, count) {
                 callback(err, that)
@@ -84,7 +85,7 @@ exports.addModel = function(db) {
             }
           })
         } else {
-          callback(this.errors, this)
+          callback(that.errors, that)
         }
       })
     },

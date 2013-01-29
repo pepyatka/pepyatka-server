@@ -113,6 +113,8 @@ exports.addModel = function(db) {
     },
 
     save: function(callback) {
+      var that = this
+
       // XXX: I copy these 4 lines from model to model - define proper
       // parent object and inherit all models from it
       if (!this.createdAt)
@@ -122,7 +124,6 @@ exports.addModel = function(db) {
 
       this.validate(function(valid) {
         if (valid) {
-          var that = this
 
           this.updateHashedPassword(function() {
             async.parallel([
@@ -147,7 +148,7 @@ exports.addModel = function(db) {
             })
           })
         } else {
-          callback(this.errors, this)
+          callback(that.errors, that)
         }
       })
     },

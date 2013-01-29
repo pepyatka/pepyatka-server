@@ -39,15 +39,16 @@ exports.addModel = function(db) {
     },
 
     save: function(callback) {
+      var that = this
+
       this.createdAt = new Date().getTime()
       if (this.id === undefined) this.id = uuid.v4()
 
       this.validate(function(valid) {
         if (valid) {
-          var that = this
           // User is allowed to create a comment if and only if its
           // post is created and exists.
-          db.exists('post:' + this.postId, function(err, res) {
+          db.exists('post:' + that.postId, function(err, res) {
             // post exists
             if (res == 1) {
               db.hmset('comment:' + that.id,
@@ -65,7 +66,7 @@ exports.addModel = function(db) {
             }
           })
         } else {
-          callback(this.errors, this)
+          callback(that.errors, that)
         }
       })
     },
