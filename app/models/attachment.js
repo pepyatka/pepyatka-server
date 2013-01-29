@@ -46,16 +46,18 @@ exports.addModel = function(db) {
   }
 
   Attachment.prototype = {
-    save: function(callback) {
-      var that = this
+    validate: function(callback) {
+      callback(true)
+    },
 
+    save: function(callback) {
       if (this.id === undefined) this.id = uuid.v4()
 
       var params = { 'ext': this.ext.toString(),
-                 'filename': this.filename.toString(),
-                 'path': this.path.toString(),
-                 'fsPath': this.fsPath.toString(),
-               }
+                     'filename': this.filename.toString(),
+                     'path': this.path.toString(),
+                     'fsPath': this.fsPath.toString(),
+                   }
 
       if (this.thumbnailId) {
         this.thumbnailId = this.thumbnailId.toString()
@@ -67,14 +69,22 @@ exports.addModel = function(db) {
         params['postId'] = this.postId.toString()
       }
 
-      // TODO: check if postId exists before saving attachment object
-      db.hmset('attachment:' + this.id, params, function(err, res) {
-        if (that.postId) {
-          models.Post.addAttachment(that.postId, that.id, function(err, count) {
-            callback(err, that)
+      this.validate(function(valid) {
+        if (valid) {
+          var that = this
+
+          // TODO: check if postId exists before saving attachment object
+          db.hmset('attachment:' + this.id, params, function(err, res) {
+            if (that.postId) {
+              models.Post.addAttachment(that.postId, that.id, function(err, count) {
+                callback(err, that)
+              })
+            } else {
+              callback(null, that)
+            }
           })
         } else {
-          callback(null, that)
+          callback(this.errors, this)
         }
       })
     },

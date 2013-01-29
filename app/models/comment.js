@@ -34,29 +34,39 @@ exports.addModel = function(db) {
   }
 
   Comment.prototype = {
-    save: function(callback) {
-      var that = this
-      // User is allowed to create a comment if and only if its
-      // post is created and exists.
-      db.exists('post:' + this.postId, function(err, res) {
-        // post exists
-        if (res == 1) { 
-          that.createdAt = new Date().getTime()
-          if (that.id === undefined) that.id = uuid.v4()
+    validate: function(callback) {
+      callback(true)
+    },
 
-          db.hmset('comment:' + that.id, 
-                   { 'body': (that.body || "").toString().trim(),
-                     'createdAt': that.createdAt.toString(),
-                     'userId': that.userId.toString(),
-                     'postId': that.postId.toString()
-                   }, function(err, res) {
-                     models.Post.addComment(that.postId, that.id, function() {
-                       callback(err, that)
-                     })
-                   })
+    save: function(callback) {
+      this.createdAt = new Date().getTime()
+      if (this.id === undefined) this.id = uuid.v4()
+
+      this.validate(function(valid) {
+        if (valid) {
+          var that = this
+          // User is allowed to create a comment if and only if its
+          // post is created and exists.
+          db.exists('post:' + this.postId, function(err, res) {
+            // post exists
+            if (res == 1) {
+              db.hmset('comment:' + that.id,
+                       { 'body': (that.body || "").toString().trim(),
+                         'createdAt': that.createdAt.toString(),
+                         'userId': that.userId.toString(),
+                         'postId': that.postId.toString()
+                       }, function(err, res) {
+                         models.Post.addComment(that.postId, that.id, function() {
+                           callback(err, that)
+                         })
+                       })
+            } else {
+              // TODO: pass res=0 argument to the next block
+              callback(err, that)
+            }
+          })
         } else {
-          // TODO: pass res=0 argument to the next block
-          callback(err)
+          callback(this.errors, this)
         }
       })
     },

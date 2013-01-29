@@ -388,26 +388,36 @@ exports.addModel = function(db) {
       }
     },
 
-    save: function(callback) {
-      var that = this
+    validate: function(callback) {
+      callback(true)
+    },
 
+    save: function(callback) {
       if (!this.createdAt)
         this.createdAt = new Date().getTime()
       this.updatedAt = new Date().getTime()
       if (this.id === undefined) this.id = uuid.v4()
 
-      db.hmset('post:' + this.id,
-               { 'body': (this.body || "").toString().trim(),
-                 'timelineId': this.timelineId.toString(),
-                 'userId': this.userId.toString(),
-                 'createdAt': this.createdAt.toString(),
-                 'updatedAt': this.updatedAt.toString()
-               }, function(err, res) {
-                 models.Timeline.newPost(that.id, function() {
-                   // BUG: updatedAt is different now than we set few lines above
-                   callback(err, that)
-                 })
-               })
+      this.validate(function(valid) {
+        if (valid) {
+          var that = this
+
+          db.hmset('post:' + this.id,
+                   { 'body': (this.body || "").toString().trim(),
+                     'timelineId': this.timelineId.toString(),
+                     'userId': this.userId.toString(),
+                     'createdAt': this.createdAt.toString(),
+                     'updatedAt': this.updatedAt.toString()
+                   }, function(err, res) {
+                     models.Timeline.newPost(that.id, function() {
+                       // BUG: updatedAt is different now than we set few lines above
+                       callback(err, that)
+                     })
+                   })
+        } else {
+          callback(this.errors, this)
+        }
+      })
     },
 
     newAttachment: function(attrs) {
