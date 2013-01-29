@@ -125,7 +125,7 @@ exports.addModel = function(db) {
             }, function(err) {
               db.llen('post:' + postId + ':attachments', function(err, res) {
                 if (res == 0) {
-                  // this post do not have any associated with it attachments
+                  // this post does not have any associated with it attachments
                   db.del('post:' + postId + ':attachments', function(err, res) {
                     callback(err)
                   })
