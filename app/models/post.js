@@ -160,7 +160,7 @@ exports.addModel = function(db) {
       models.User.findById(userId, function(err, user) {
         post.getTimelinesIds(function(err, timelinesIds) {
           user.getRiverOfNewsId(function(err, riverId) {
-            timelinesIds[riverId] = riverId
+            timelinesIds.push(riverId)
 
             Post.bumpable(postId, function(bumpable) {
               db.srem('post:' + postId + ':likes', userId, function(err, res) {
@@ -202,7 +202,7 @@ exports.addModel = function(db) {
       models.User.findById(userId, function(err, user) {
         post.getTimelinesIds(function(err, timelinesIds) {
           user.getRiverOfNewsId(function(err, riverId) {
-            timelinesIds[riverId] = riverId
+            timelinesIds.push(riverId)
 
             Post.bumpable(postId, function(bumpable) {
               db.sadd('post:' + postId + ':likes', userId, function(err, res) {
@@ -243,7 +243,7 @@ exports.addModel = function(db) {
         models.User.findById(comment.userId, function(err, commentUser) {
           post.getTimelinesIds(function(err, timelinesIds) {
             commentUser.getRiverOfNewsId(function(err, riverId) {
-              timelinesIds[riverId] = riverId
+              timelinesIds.push(riverId)
               Post.bumpable(postId, function(bumpable) {
                 db.rpush('post:' + postId + ':comments', commentId, function(err, res) {
                   var pub = redis.createClient();
