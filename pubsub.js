@@ -57,7 +57,7 @@ exports.listen = function(server) {
         } else if (data.postId) {
           console.log('User has disconnected from ' + data.postId + ' post')
 
-          socket.join('post:' + data.postId);
+          socket.leave('post:' + data.postId);
         }
       })
     }
