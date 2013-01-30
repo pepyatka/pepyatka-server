@@ -47,7 +47,19 @@ exports.addModel = function(db) {
 
   Attachment.prototype = {
     validate: function(callback) {
-      callback(true)
+      var that = this
+
+      db.exists('post:' + that.postId, function(err, postExists) {
+        db.exists('attachment' + that.id, function(err, attachmentExists) {
+          // TODO: dirty. we do an extra request to our db
+          callback((postExists == 1 || that.postId == undefined) &&
+                   attachmentExists == 0 &&
+                   that.filename && that.filename.trim().length > 0 &&
+                   that.path && that.path.trim().length > 0 &&
+                   that.fsPath && that.fsPath.trim().length > 0)
+
+        })
+      })
     },
 
     save: function(callback) {

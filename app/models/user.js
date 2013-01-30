@@ -109,7 +109,12 @@ exports.addModel = function(db) {
     },
 
     validate: function(callback) {
-      callback(true)
+      var that = this
+
+      db.exists('user:' + that.userId, function(err, userExists) {
+        callback(userExists == 0 &&
+                 that.username && that.username.length > 1)
+      })
     },
 
     save: function(callback) {
@@ -124,12 +129,11 @@ exports.addModel = function(db) {
 
       this.validate(function(valid) {
         if (valid) {
-
           this.updateHashedPassword(function() {
             async.parallel([
               function(done) {
                 db.hmset('user:' + that.id,
-                         { 'username': that.username.toString(),
+                         { 'username': that.username.toString().trim(),
                            'createdAt': that.createdAt.toString(),
                            'updatedAt': that.updatedAt.toString(),
                            'salt': that.salt.toString(),

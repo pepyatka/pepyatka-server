@@ -35,7 +35,18 @@ exports.addModel = function(db) {
 
   Comment.prototype = {
     validate: function(callback) {
-      callback(true)
+      var that = this
+
+      db.exists('user:' + that.userId, function(err, userExists) {
+        db.exists('post:' + that.postId, function(err, postExists) {
+          db.exists('comment:' + that.id, function(err, commentExists) {
+            callback(postExists == 1 &&
+                     userExists == 1 &&
+                     commentExists == 0 &&
+                     that.body && that.body.trim().length > 0)
+          })
+        })
+      })
     },
 
     save: function(callback) {

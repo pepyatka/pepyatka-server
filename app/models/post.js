@@ -389,7 +389,18 @@ exports.addModel = function(db) {
     },
 
     validate: function(callback) {
-      callback(true)
+      var that = this
+
+      db.exists('user:' + that.userId, function(err, userExists) {
+        db.exists('timeline:' + that.timelineId, function(err, timelineExists) {
+          db.exists('post:' + that.id, function(err, postExists) {
+            callback(postExists == 0 &&
+                     userExists == 1 &&
+                     timelineExists == 1 &&
+                     that.body && that.body.trim().length > 0)
+          })
+        })
+      })
     },
 
     save: function(callback) {
