@@ -9,9 +9,9 @@ exports.addModel = function(db) {
     this.id = params.id
     this.mimeType = params.mimeType // TODO: mmmagic lib
     this.ext = params.ext
-    this.filename = params.filename
-    this.path = params.path
-    this.fsPath = params.fsPath
+    this.filename = params.filename || ""
+    this.path = params.path || ""
+    this.fsPath = params.fsPath || ""
     this.postId = params.postId
 
     if (parseInt(params.createdAt))
@@ -54,9 +54,9 @@ exports.addModel = function(db) {
           // TODO: dirty. we do an extra request to our db
           callback((postExists == 1 || that.postId == undefined) &&
                    attachmentExists == 0 &&
-                   that.filename && that.filename.trim().length > 0 &&
-                   that.path && that.path.trim().length > 0 &&
-                   that.fsPath && that.fsPath.trim().length > 0)
+                   that.filename.trim().length > 0 &&
+                   that.path.trim().length > 0 &&
+                   that.fsPath.trim().length > 0)
 
         })
       })
@@ -97,7 +97,7 @@ exports.addModel = function(db) {
             }
           })
         } else {
-          callback(that.errors, that)
+          callback(1, that)
         }
       })
     },

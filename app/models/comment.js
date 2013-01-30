@@ -4,7 +4,7 @@ var uuid = require('node-uuid')
 exports.addModel = function(db) {
   function Comment(params) {
     this.id = params.id
-    this.body = params.body
+    this.body = params.body || ""
     this.postId = params.postId
     this.userId = params.userId
 
@@ -43,7 +43,7 @@ exports.addModel = function(db) {
             callback(postExists == 1 &&
                      userExists == 1 &&
                      commentExists == 0 &&
-                     that.body && that.body.trim().length > 0)
+                     that.body.trim().length > 0)
           })
         })
       })
@@ -77,7 +77,7 @@ exports.addModel = function(db) {
             }
           })
         } else {
-          callback(that.errors, that)
+          callback(1, that)
         }
       })
     },

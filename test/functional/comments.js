@@ -46,38 +46,34 @@ describe('Comment API', function() {
       })
   })
 
-  it('POST /v1/comments with missing body should return 200', function(done) {
+  it('POST /v1/comments with missing body should return 422', function(done) {
     var params = {
       postId: post.id
     }
     request(server)
       .post('/v1/comments')
       .send(params)
-      .expect(200, done)
+      .expect(422, done)
   })
 
-  it('POST /v1/comments with missing postId should return 422'
-     // , function(done) {
-     //   var params = { 
-     //     body: 'commentBody'
-     //   }
-     //   request(server)
-     //     .post('/v1/comments')
-     //     .send(params)
-     //     .expect(422, done)
-     // }
-    )
+  it('POST /v1/comments with missing postId should return 422', function(done) {
+    var params = { 
+      body: 'commentBody'
+    }
+    request(server)
+      .post('/v1/comments')
+      .send(params)
+      .expect(422, done)
+  })
 
-  it('POST /v1/comments with wrong postId should return 422'
-     // , function(done) {
-     //   var params = { 
-     //     body: 'commentBody',
-     //     postId: 'this-post-does-not-exist'
-     //   }
-     //   request(server)
-     //     .post('/v1/comments')
-     //     .send(params)
-     //     .expect(422, done)
-     // }
-    )
+  it('POST /v1/comments with wrong postId should return 422', function(done) {
+    var params = {
+      body: 'commentBody',
+      postId: 'this-post-does-not-exist'
+    }
+    request(server)
+      .post('/v1/comments')
+      .send(params)
+      .expect(422, done)
+  })
 })

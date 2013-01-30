@@ -41,6 +41,8 @@ exports.addRoutes = function(app) {
         timelineId: timelineId
       }, function(err, newPost) {
         newPost.save(function(err, post) {
+          if (err) return res.jsonp({}, 422)
+
           // process files
           // TODO: extract this stuff to Post model!
           // TODO: search for file uploads lib like CarrierWave that could

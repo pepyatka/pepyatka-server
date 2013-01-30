@@ -145,6 +145,6 @@ describe('Post API', function() {
     request(server)
       .post('/v1/posts')
       .send(params)
-      .expect(200, done)
+      .expect(422, done)
   })
 })

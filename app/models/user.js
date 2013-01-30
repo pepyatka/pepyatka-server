@@ -6,7 +6,7 @@ var uuid = require('node-uuid')
 exports.addModel = function(db) {
   function User(params) {
     this.id = params.id
-    this.username = params.username
+    this.username = params.username || ""
     if (params.password)
       this.password = params.password // virtual attribute
     this.hashedPassword = params.hashedPassword
@@ -113,7 +113,7 @@ exports.addModel = function(db) {
 
       db.exists('user:' + that.userId, function(err, userExists) {
         callback(userExists == 0 &&
-                 that.username && that.username.length > 1)
+                 that.username.length > 1)
       })
     },
 
@@ -152,7 +152,7 @@ exports.addModel = function(db) {
             })
           })
         } else {
-          callback(that.errors, that)
+          callback(1, that)
         }
       })
     },

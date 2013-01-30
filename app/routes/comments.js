@@ -11,12 +11,9 @@ exports.addRoutes = function(app, connections) {
     })
 
     newComment.save(function(err, comment) {
-      if (comment) {
-        comment.toJSON(function(err, json) { res.jsonp(json) })
-      } else {
-        // Just a stupid case - strong parameters will make it cleaner
-        res.jsonp({'error': 'incorrect postId'})
-      }
+      if (err) return res.jsonp({}, 422)
+
+      comment.toJSON(function(err, json) { res.jsonp(json) })
     })
   });
 }
