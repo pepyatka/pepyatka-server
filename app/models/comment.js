@@ -34,29 +34,50 @@ exports.addModel = function(db) {
   }
 
   Comment.prototype = {
+    validate: function(callback) {
+      var that = this
+
+      db.exists('user:' + that.userId, function(err, userExists) {
+        db.exists('post:' + that.postId, function(err, postExists) {
+          db.exists('comment:' + that.id, function(err, commentExists) {
+            callback(postExists == 1 &&
+                     userExists == 1 &&
+                     commentExists == 0 &&
+                     that.body && that.body.trim().length > 0)
+          })
+        })
+      })
+    },
+
     save: function(callback) {
       var that = this
-      // User is allowed to create a comment if and only if its
-      // post is created and exists.
-      db.exists('post:' + this.postId, function(err, res) {
-        // post exists
-        if (res == 1) { 
-          that.createdAt = new Date().getTime()
-          if (that.id === undefined) that.id = uuid.v4()
 
-          db.hmset('comment:' + that.id, 
-                   { 'body': (that.body || "").toString().trim(),
-                     'createdAt': that.createdAt.toString(),
-                     'userId': that.userId.toString(),
-                     'postId': that.postId.toString()
-                   }, function(err, res) {
-                     models.Post.addComment(that.postId, that.id, function() {
-                       callback(err, that)
-                     })
-                   })
+      this.createdAt = new Date().getTime()
+      if (this.id === undefined) this.id = uuid.v4()
+
+      this.validate(function(valid) {
+        if (valid) {
+          // User is allowed to create a comment if and only if its
+          // post is created and exists.
+          db.exists('post:' + that.postId, function(err, res) {
+            // post exists
+            if (res == 1) {
+              db.hmset('comment:' + that.id,
+                       { 'body': (that.body || "").toString().trim(),
+                         'createdAt': that.createdAt.toString(),
+                         'userId': that.userId.toString(),
+                         'postId': that.postId.toString()
+                       }, function(err, res) {
+                         models.Post.addComment(that.postId, that.id, function() {
+                           callback(err, that)
+                         })
+                       })
+            } else {
+              callback(err, that)
+            }
+          })
         } else {
-          // TODO: pass res=0 argument to the next block
-          callback(err)
+          callback(that.errors, that)
         }
       })
     },

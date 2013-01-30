@@ -108,6 +108,15 @@ exports.addModel = function(db) {
       return hashedPassword == this.hashedPassword
     },
 
+    validate: function(callback) {
+      var that = this
+
+      db.exists('user:' + that.userId, function(err, userExists) {
+        callback(userExists == 0 &&
+                 that.username && that.username.length > 1)
+      })
+    },
+
     save: function(callback) {
       var that = this
 
@@ -118,27 +127,33 @@ exports.addModel = function(db) {
       this.updatedAt = new Date().getTime()
       if (this.id === undefined) this.id = uuid.v4()
 
-      this.updateHashedPassword(function() {
-        async.parallel([
-          function(done) {
-            db.hmset('user:' + that.id,
-                     { 'username': that.username.toString(),
-                       'createdAt': that.createdAt.toString(),
-                       'updatedAt': that.updatedAt.toString(),
-                       'salt': that.salt.toString(),
-                       'hashedPassword': that.hashedPassword.toString()
-                     }, function(err, res) {
-                       done(err, res)
-                     })
-          },
-          function(done) {
-            db.set('username:' + that.username + ':uid', that.id, function(err, res) {
-              done(err, res)
+      this.validate(function(valid) {
+        if (valid) {
+          this.updateHashedPassword(function() {
+            async.parallel([
+              function(done) {
+                db.hmset('user:' + that.id,
+                         { 'username': that.username.toString().trim(),
+                           'createdAt': that.createdAt.toString(),
+                           'updatedAt': that.updatedAt.toString(),
+                           'salt': that.salt.toString(),
+                           'hashedPassword': that.hashedPassword.toString()
+                         }, function(err, res) {
+                           done(err, res)
+                         })
+              },
+              function(done) {
+                db.set('username:' + that.username + ':uid', that.id, function(err, res) {
+                  done(err, res)
+                })
+              }
+            ], function(err, res) {
+              callback(err, that)
             })
-          }
-        ], function(err, res) {
-          callback(err, that)
-        })
+          })
+        } else {
+          callback(that.errors, that)
+        }
       })
     },
 

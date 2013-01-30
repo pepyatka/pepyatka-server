@@ -46,16 +46,32 @@ exports.addModel = function(db) {
   }
 
   Attachment.prototype = {
+    validate: function(callback) {
+      var that = this
+
+      db.exists('post:' + that.postId, function(err, postExists) {
+        db.exists('attachment' + that.id, function(err, attachmentExists) {
+          // TODO: dirty. we do an extra request to our db
+          callback((postExists == 1 || that.postId == undefined) &&
+                   attachmentExists == 0 &&
+                   that.filename && that.filename.trim().length > 0 &&
+                   that.path && that.path.trim().length > 0 &&
+                   that.fsPath && that.fsPath.trim().length > 0)
+
+        })
+      })
+    },
+
     save: function(callback) {
       var that = this
 
       if (this.id === undefined) this.id = uuid.v4()
 
       var params = { 'ext': this.ext.toString(),
-                 'filename': this.filename.toString(),
-                 'path': this.path.toString(),
-                 'fsPath': this.fsPath.toString(),
-               }
+                     'filename': this.filename.toString(),
+                     'path': this.path.toString(),
+                     'fsPath': this.fsPath.toString(),
+                   }
 
       if (this.thumbnailId) {
         this.thumbnailId = this.thumbnailId.toString()
@@ -67,14 +83,21 @@ exports.addModel = function(db) {
         params['postId'] = this.postId.toString()
       }
 
-      // TODO: check if postId exists before saving attachment object
-      db.hmset('attachment:' + this.id, params, function(err, res) {
-        if (that.postId) {
-          models.Post.addAttachment(that.postId, that.id, function(err, count) {
-            callback(err, that)
+      this.validate(function(valid) {
+        if (valid) {
+
+          // TODO: check if postId exists before saving attachment object
+          db.hmset('attachment:' + that.id, params, function(err, res) {
+            if (that.postId) {
+              models.Post.addAttachment(that.postId, that.id, function(err, count) {
+                callback(err, that)
+              })
+            } else {
+              callback(null, that)
+            }
           })
         } else {
-          callback(null, that)
+          callback(that.errors, that)
         }
       })
     },

@@ -388,6 +388,21 @@ exports.addModel = function(db) {
       }
     },
 
+    validate: function(callback) {
+      var that = this
+
+      db.exists('user:' + that.userId, function(err, userExists) {
+        db.exists('timeline:' + that.timelineId, function(err, timelineExists) {
+          db.exists('post:' + that.id, function(err, postExists) {
+            callback(postExists == 0 &&
+                     userExists == 1 &&
+                     timelineExists == 1 &&
+                     that.body && that.body.trim().length > 0)
+          })
+        })
+      })
+    },
+
     save: function(callback) {
       var that = this
 
@@ -396,18 +411,24 @@ exports.addModel = function(db) {
       this.updatedAt = new Date().getTime()
       if (this.id === undefined) this.id = uuid.v4()
 
-      db.hmset('post:' + this.id,
-               { 'body': (this.body || "").toString().trim(),
-                 'timelineId': this.timelineId.toString(),
-                 'userId': this.userId.toString(),
-                 'createdAt': this.createdAt.toString(),
-                 'updatedAt': this.updatedAt.toString()
-               }, function(err, res) {
-                 models.Timeline.newPost(that.id, function() {
-                   // BUG: updatedAt is different now than we set few lines above
-                   callback(err, that)
-                 })
-               })
+      this.validate(function(valid) {
+        if (valid) {
+          db.hmset('post:' + that.id,
+                   { 'body': (that.body || "").toString().trim(),
+                     'timelineId': that.timelineId.toString(),
+                     'userId': that.userId.toString(),
+                     'createdAt': that.createdAt.toString(),
+                     'updatedAt': that.updatedAt.toString()
+                   }, function(err, res) {
+                     models.Timeline.newPost(that.id, function() {
+                       // BUG: updatedAt is different now than we set few lines above
+                       callback(err, that)
+                     })
+                   })
+        } else {
+          callback(that.errors, that)
+        }
+      })
     },
 
     newAttachment: function(attrs) {
