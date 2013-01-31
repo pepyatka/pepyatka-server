@@ -1,4 +1,7 @@
 var uuid = require('node-uuid')
+  , fs = require('fs')
+  , gm = require('gm')
+  , path = require('path')
   , models = require('../models')
   , async = require('async')
   , redis = require('redis')
@@ -10,6 +13,7 @@ exports.addModel = function(db) {
     this.body = params.body || ""
     this.userId = params.userId
     this.timelineId = params.timelineId
+    this.files = params.files
 
     if (parseInt(params.createdAt))
       this.createdAt = parseInt(params.createdAt)
@@ -420,14 +424,84 @@ exports.addModel = function(db) {
                      'createdAt': that.createdAt.toString(),
                      'updatedAt': that.updatedAt.toString()
                    }, function(err, res) {
-                     models.Timeline.newPost(that.id, function() {
-                       // BUG: updatedAt is different now than we set few lines above
-                       callback(err, that)
+                     that.saveAttachments(function(err, res) {
+                       models.Timeline.newPost(that.id, function() {
+                         // BUG: updatedAt is different now than we set few lines above
+                         // XXX: we don't care (yet) if attachment wasn't saved
+                         callback(null, that)
+                       })
                      })
                    })
         } else {
           callback(1, that)
         }
+      })
+    },
+
+    saveAttachments: function(callback) {
+      var that = this
+      var attachment
+
+      if (this.files)
+        attachment = this.files['file-0']
+
+      if (!attachment)
+        return callback(null, null)
+
+      var tmpPath = attachment.path
+      var filename = attachment.name
+      var ext = path.extname(filename || '').split('.');
+      ext = ext[ext.length - 1];
+
+      var thumbnailId = uuid.v4()
+      var thumbnailPath = __dirname + '/../../public/files/' + thumbnailId + '.' + ext
+      var thumbnailHttpPath = '/files/' + thumbnailId + '.' + ext
+
+      // TODO: currently it works only with images, must work with any
+      // type of uploaded files.
+      // TODO: encapsulate most if this method into attachments model
+      gm(tmpPath).format(function(err, value) {
+        if (err)
+          return callback(err, value)
+
+        gm(tmpPath)
+          .resize('200', '200')
+          .write(thumbnailPath, function(err) {
+            if (err)
+              return callback(err)
+
+            var newThumbnail = new models.Attachment({
+              'ext': ext,
+              'filename': filename,
+              'path': thumbnailHttpPath,
+              'fsPath': thumbnailPath
+            })
+
+            newThumbnail.save(function(err, thumbnail) {
+              var attachmentId = uuid.v4()
+              var attachmentPath = __dirname + '/../../public/files/' + attachmentId + '.' + ext
+              var attachmentHttpPath = '/files/' + attachmentId + '.' + ext
+
+              var newAttachment = that.newAttachment({
+                'ext': ext,
+                'filename': filename,
+                'path': attachmentHttpPath,
+                'thumbnailId': thumbnail.id,
+                'fsPath': attachmentPath
+              })
+
+              newAttachment.save(function(err, attachment) {
+                if (!that.attachments)
+                  that.attachments = []
+
+                that.attachments.push(attachment)
+                // move tmp file to a storage
+                fs.rename(tmpPath, attachmentPath, function(err) {
+                  callback(err, that)
+                })
+              })
+            })
+          })
       })
     },
 

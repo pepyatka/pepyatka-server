@@ -85,8 +85,6 @@ exports.addModel = function(db) {
 
       this.validate(function(valid) {
         if (valid) {
-
-          // TODO: check if postId exists before saving attachment object
           db.hmset('attachment:' + that.id, params, function(err, res) {
             if (that.postId) {
               models.Post.addAttachment(that.postId, that.id, function(err, count) {
