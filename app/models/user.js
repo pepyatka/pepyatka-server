@@ -54,9 +54,8 @@ exports.addModel = function(db) {
 
   User.findById = function(userId, callback) {
     db.hgetall('user:' + userId, function(err, attrs) {
-      // XXX: Seems it's either deleted user or broken session. Redirect to
-      // auth method... some day.
-      if (attrs === null) attrs = {}
+      if (attrs === null)
+        return callback(1, null)
 
       attrs.id = userId
 

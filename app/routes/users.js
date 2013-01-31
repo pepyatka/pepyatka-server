@@ -1,7 +1,15 @@
 var models = require('../models');
 
 exports.addRoutes = function(app) {
-  app.get('/signup', function(req, res){
+  app.get('/v1/user/:userId', function(req, res) {
+    models.User.findById(req.params.userId, function(err, user) {
+      if (err) return res.jsonp({}, 422)
+
+      user.toJSON(function(err, json) { res.jsonp(json) })
+    })
+  })
+
+  app.get('/signup', function(req, res) {
     res.render('users/signup');
   });
 
