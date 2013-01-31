@@ -156,6 +156,37 @@ exports.addModel = function(db) {
       })
     },
 
+    subscribeTo: function(userId, callback) {
+      var currentTime = new Date().getTime()
+      var that = this
+      models.User.findById(userId, function(err, user) {
+        if (err) return callback(err, null)
+
+        db.zadd('user:' + that.id + ':subscription', currentTime, userId, function(err, res) {
+          callback(err, res)
+        })
+      })
+    },
+
+    unsubscribeTo: function(userId, callback) {
+      var currentTime = new Date().getTime()
+      var that = this
+      models.User.findById(userId, function(err, user) {
+        if (err) return callback(err, null)
+
+        db.zrem('user:' + that.id + ':subscription', userId, function(err, res) {
+          db.zcard('user:' + that.id + ':subscription', function(err, res) {
+            if (res == 0)
+              db.del('user:' + that.id + ':subscription', function(err, res) {
+                callback(err, res)
+              })
+            else
+              callback(err, res)
+          })
+        })
+      })
+    },
+
     newPost: function(attrs, callback) {
       attrs.userId = this.id
 
