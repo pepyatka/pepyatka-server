@@ -65,3 +65,6 @@ API
 - POST /v1/posts/:postId/like
 - POST /v1/posts/:postId/unlike
 - POST /v1/comments
+- GET /v1/users/:userId
+- POST /v1/users/:userId/subscribe
+- POST /v1/users/:userId/unsubscribe

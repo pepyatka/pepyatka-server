@@ -9,7 +9,7 @@ exports.addRoutes = function(app) {
     })
   })
 
-  app.get('/v1/users/:userId/subscribe', function(req, res) {
+  app.post('/v1/users/:userId/subscribe', function(req, res) {
     req.user.subscribeTo(req.params.userId, function(err, r) {
       if (err) return res.jsonp({}, 422)
 
@@ -17,7 +17,7 @@ exports.addRoutes = function(app) {
     })
   })
 
-  app.get('/v1/users/:userId/unsubscribe', function(req, res) {
+  app.post('/v1/users/:userId/unsubscribe', function(req, res) {
     req.user.unsubscribeTo(req.params.userId, function(err, r) {
       if (err) return res.jsonp({}, 422)
 
