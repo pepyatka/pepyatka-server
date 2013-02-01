@@ -8,6 +8,8 @@ var express = require('express')
   , async = require('async')
   , passport = require('passport')
 
+require('./core_ext')
+
 module.exports = app;
 
 if (fs.existsSync('./conf/envLocal.js')) {

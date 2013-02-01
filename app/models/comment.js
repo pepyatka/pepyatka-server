@@ -85,7 +85,7 @@ exports.addModel = function(db) {
     toJSON: function(callback) {
       var that = this;
       models.User.findById(this.userId, function(err, user) {
-        user.toJSON(function(err, user) {
+        user.toJSON({}, function(err, user) {
           callback(err, {
             id: that.id,
             body: that.body,

@@ -527,7 +527,7 @@ exports.addModel = function(db) {
                   callback(err, json)
                 })
               }, function(err, attachmentsJSON) {
-                user.toJSON(function(err, user) {
+                user.toJSON({}, function(err, user) {
                   that.getLikes(function(err, likes) {
                     async.map(likes, function(like, callback) {
                       like.toJSON(function(err, json) {

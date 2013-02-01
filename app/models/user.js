@@ -214,7 +214,7 @@ exports.addModel = function(db) {
                       })
                     })
                   }, function(err) {
-                    db.rem(randomKey, function(err, res) {
+                    db.del(randomKey, function(err, res) {
                       db.zcard('user:' + that.id + ':subscriptions', function(err, res) {
                         if (res == 0)
                           db.del('user:' + that.id + ':subscriptions', function(err, res) {
@@ -384,23 +384,62 @@ exports.addModel = function(db) {
       }
     },
 
-    toJSON: function(callback) {
+    toJSON: function(params, callback) {
       var that = this
-      this.getSubscriptions(function(err, subscriptions) {
-        async.map(subscriptions, function(subscription, callback) {
-          //subscription.toJSON(function(err, json) {
-          //  callback(err, json)
-          //})
-          callback(null, null)
-        }, function(err, subscriptionsJSON) {
-          callback(err, {
-            id: that.id,
-            username: that.username,
-            //subscriptions: subscriptionsJSON,
-            createdAt: that.createdAt,
-            updatedAt: that.updatedAt
-          })
+      var select = params['select'] ||
+        ['id', 'username', 'subscriptions', 'createdAt', 'updatedAt']
+
+      async.parallel([
+        function(done) {
+          if (select.indexOf('id') != -1)
+            done(null, {id: that.id})
+          else
+            done(null, null)
+        },
+
+        function(done) {
+          if (select.indexOf('username') != -1)
+            done(null, {username: that.username})
+          else
+            done(null, null)
+        },
+
+        function(done) {
+          if (select.indexOf('createdAt') != -1)
+            done(null, {createdAt: that.createdAt})
+          else
+            done(null, null)
+        },
+
+        function(done) {
+          if (select.indexOf('updatedAt') != -1)
+            done(null, {updatedAt: that.updatedAt})
+          else
+            done(null, null)
+        },
+
+        function(done) {
+          if (select.indexOf('subscriptions') != -1) {
+            that.getSubscriptions(function(err, subscriptions) {
+              async.map(subscriptions, function(subscription, callback) {
+                subscription.toJSON(function(err, json) {
+                  callback(err, json)
+                })
+              }, function(err, subscriptionsJSON) {
+                done(null, {subscriptions: subscriptionsJSON})
+              })
+            })
+          } else
+            done(null, null)
+        },
+
+      ], function(err, res) {
+        var json = {};
+        res.forEach(function(attr) {
+          Object.extend(json, attr)
         })
+
+        callback(err, json)
       })
     }
 

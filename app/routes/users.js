@@ -5,7 +5,7 @@ exports.addRoutes = function(app) {
     models.User.findById(req.params.userId, function(err, user) {
       if (err) return res.jsonp({}, 422)
 
-      user.toJSON(function(err, json) { res.jsonp(json) })
+      user.toJSON({}, function(err, json) { res.jsonp(json) })
     })
   })
 }
