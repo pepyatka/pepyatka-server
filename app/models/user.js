@@ -43,8 +43,7 @@ exports.addModel = function(db) {
   User.findByUsername = function(username, callback) {
     db.get('username:' + username + ':uid', function (err, userId) {
       User.findById(userId, function(err, user) {
-        // TODO: callback(err, user)
-        if (user.id)
+        if (user)
           callback(err, user)
         else
           callback(err, null)
@@ -128,7 +127,7 @@ exports.addModel = function(db) {
 
       this.validate(function(valid) {
         if (valid) {
-          this.updateHashedPassword(function() {
+          that.updateHashedPassword(function() {
             async.parallel([
               function(done) {
                 db.hmset('user:' + that.id,
@@ -159,10 +158,14 @@ exports.addModel = function(db) {
     subscribeTo: function(userId, callback) {
       var currentTime = new Date().getTime()
       var that = this
+
+      // user cannot subscribe to his or herself
+      if (userId == this.id) callback(1, null)
+
       models.User.findById(userId, function(err, user) {
         if (err) return callback(err, null)
 
-        db.zadd('user:' + that.id + ':subscription', currentTime, userId, function(err, res) {
+        db.zadd('user:' + that.id + ':subscriptions', currentTime, userId, function(err, res) {
           callback(err, res)
         })
       })
@@ -174,10 +177,10 @@ exports.addModel = function(db) {
       models.User.findById(userId, function(err, user) {
         if (err) return callback(err, null)
 
-        db.zrem('user:' + that.id + ':subscription', userId, function(err, res) {
-          db.zcard('user:' + that.id + ':subscription', function(err, res) {
+        db.zrem('user:' + that.id + ':subscriptions', userId, function(err, res) {
+          db.zcard('user:' + that.id + ':subscriptions', function(err, res) {
             if (res == 0)
-              db.del('user:' + that.id + ':subscription', function(err, res) {
+              db.del('user:' + that.id + ':subscriptions', function(err, res) {
                 callback(err, res)
               })
             else
@@ -185,6 +188,36 @@ exports.addModel = function(db) {
           })
         })
       })
+    },
+
+    getSubscriptionsIds: function(callback) {
+      if (this.subscriptionsIds) {
+        callback(null, this.subscriptionsIds)
+      } else {
+        var that = this
+        db.zrevrange('user:' + this.id + ':subscriptions', 0, -1, function(err, subscriptionsIds) {
+          that.subscriptionsIds = subscriptionsIds || []
+          callback(err, that.subscriptionsIds)
+        })
+      }
+    },
+
+    getSubscriptions: function(callback) {
+      if (this.subscriptions) {
+        callback(null, this.subscriptions)
+      } else {
+        var that = this
+        this.getSubscriptionsIds(function(err, subscriptionsIds) {
+          async.map(Object.keys(subscriptionsIds), function(subscriptionId, callback) {
+            models.User.findById(subscriptionsIds[subscriptionId], function(err, subscription) {
+              callback(err, subscription)
+            })
+          }, function(err, subscriptions) {
+            that.subscriptions = subscriptions
+            callback(err, that.subscriptions)
+          })
+        })
+      }
     },
 
     newPost: function(attrs, callback) {
@@ -281,7 +314,7 @@ exports.addModel = function(db) {
       // preconditions of Timeline functional test
 
       // if (this.timelinesIds) {
-      //   callback(this.timelinesIds)
+      //   callback(null, this.timelinesIds)
       // } else {
         var that = this
         db.hgetall('user:' + this.id + ':timelines', function(err, timelinesIds) {
@@ -310,11 +343,21 @@ exports.addModel = function(db) {
     },
 
     toJSON: function(callback) {
-      callback(null, {
-        id: this.id,
-        username: this.username,
-        createdAt: this.createdAt,
-        updatedAt: this.updatedAt
+      var that = this
+      this.getSubscriptions(function(err, subscriptions) {
+        async.map(subscriptions, function(subscription, callback) {
+          subscription.toJSON(function(err, json) {
+            callback(err, json)
+          })
+        }, function(err, subscriptionsJSON) {
+          callback(err, {
+            id: that.id,
+            username: that.username,
+            subscriptions: subscriptionsJSON,
+            createdAt: that.createdAt,
+            updatedAt: that.updatedAt
+          })
+        })
       })
     }
 
