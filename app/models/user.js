@@ -386,63 +386,36 @@ exports.addModel = function(db) {
 
     toJSON: function(params, callback) {
       var that = this
-      var select = params['select'] ||
-        ['id', 'username', 'subscriptions', 'createdAt', 'updatedAt']
+        , json = {}
+        , select = params['select'] ||
+            ['id', 'username', 'subscriptions', 'createdAt', 'updatedAt']
 
-      async.parallel([
-        function(done) {
-          if (select.indexOf('id') != -1)
-            done(null, {id: that.id})
-          else
-            done(null, null)
-        },
+      if (select.indexOf('id') != -1)
+        Object.extend(json, {id: that.id})
 
-        function(done) {
-          if (select.indexOf('username') != -1)
-            done(null, {username: that.username})
-          else
-            done(null, null)
-        },
+      if (select.indexOf('username') != -1)
+        Object.extend(json, {username: that.username})
 
-        function(done) {
-          if (select.indexOf('createdAt') != -1)
-            done(null, {createdAt: that.createdAt})
-          else
-            done(null, null)
-        },
+      if (select.indexOf('createdAt') != -1)
+        Object.extend(json, {createdAt: that.createdAt})
 
-        function(done) {
-          if (select.indexOf('updatedAt') != -1)
-            done(null, {updatedAt: that.updatedAt})
-          else
-            done(null, null)
-        },
+      if (select.indexOf('updatedAt') != -1)
+        Object.extend(json, {updatedAt: that.updatedAt})
 
-        function(done) {
-          if (select.indexOf('subscriptions') != -1) {
-            that.getSubscriptions(function(err, subscriptions) {
-              async.map(subscriptions, function(subscription, callback) {
-                subscription.toJSON(function(err, json) {
-                  callback(err, json)
-                })
-              }, function(err, subscriptionsJSON) {
-                done(null, {subscriptions: subscriptionsJSON})
-              })
+      if (select.indexOf('subscriptions') != -1) {
+        that.getSubscriptions(function(err, subscriptions) {
+          async.map(subscriptions, function(subscription, callback) {
+            subscription.toJSON(function(err, json) {
+              callback(err, json)
             })
-          } else
-            done(null, null)
-        },
-
-      ], function(err, res) {
-        var json = {};
-        res.forEach(function(attr) {
-          Object.extend(json, attr)
+          }, function(err, subscriptionsJSON) {
+            callback(err, Object.extend(json, {subscriptions: subscriptionsJSON}))
+          })
         })
-
-        callback(err, json)
-      })
+      } else {
+        callback(null, json)
+      }
     }
-
   }
   
   return User;
