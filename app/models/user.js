@@ -18,6 +18,10 @@ exports.addModel = function(db) {
       this.updatedAt = parseInt(params.updatedAt)
   }
 
+  User.getAttributes = function() {
+    return ['id', 'username', 'subscriptions', 'createdAt', 'updatedAt']
+  }
+
   // TODO: create Anonymous model which is inherited from User
   // TODO: create new function findAnonId
   User.findAnon = function(callback) {
@@ -388,19 +392,19 @@ exports.addModel = function(db) {
       var that = this
         , json = {}
         , select = params['select'] ||
-            ['id', 'username', 'subscriptions', 'createdAt', 'updatedAt']
+            models.User.getAttributes()
 
-      if (select.indexOf('id') != -1)
-        Object.extend(json, {id: that.id})
+      if (select.indexOf('id') != -1) 
+        json.id = that.id
 
       if (select.indexOf('username') != -1)
-        Object.extend(json, {username: that.username})
+        json.username = that.username
 
       if (select.indexOf('createdAt') != -1)
-        Object.extend(json, {createdAt: that.createdAt})
+        json.createdAt = that.createdAt
 
       if (select.indexOf('updatedAt') != -1)
-        Object.extend(json, {updatedAt: that.updatedAt})
+        json.updatedAt = that.updatedAt
 
       if (select.indexOf('subscriptions') != -1) {
         that.getSubscriptions(function(err, subscriptions) {
@@ -409,7 +413,9 @@ exports.addModel = function(db) {
               callback(err, json)
             })
           }, function(err, subscriptionsJSON) {
-            callback(err, Object.extend(json, {subscriptions: subscriptionsJSON}))
+            json.subscriptions = subscriptionsJSON
+
+            callback(err, json)
           })
         })
       } else {
