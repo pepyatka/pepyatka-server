@@ -8,20 +8,4 @@ exports.addRoutes = function(app) {
       user.toJSON(function(err, json) { res.jsonp(json) })
     })
   })
-
-  app.post('/v1/users/:userId/subscribe', function(req, res) {
-    req.user.subscribeTo(req.params.userId, function(err, r) {
-      if (err) return res.jsonp({}, 422)
-
-      res.jsonp({})
-    })
-  })
-
-  app.post('/v1/users/:userId/unsubscribe', function(req, res) {
-    req.user.unsubscribeTo(req.params.userId, function(err, r) {
-      if (err) return res.jsonp({}, 422)
-
-      res.jsonp({})
-    })
-  })
 }

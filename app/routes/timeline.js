@@ -2,6 +2,22 @@ var models = require('../models')
   , logger = require('../../logger').create()
 
 exports.addRoutes = function(app) {
+  app.post('/v1/timeline/:timelineId/subscribe', function(req, res) {
+    req.user.subscribeTo(req.params.timelineId, function(err, r) {
+      if (err) return res.jsonp({}, 422)
+
+      res.jsonp({})
+    })
+  })
+
+  app.post('/v1/timeline/:timelineId/unsubscribe', function(req, res) {
+    req.user.unsubscribeTo(req.params.timelineId, function(err, r) {
+      if (err) return res.jsonp({}, 422)
+
+      res.jsonp({})
+    })
+  })
+
   app.get('/v1/timeline/:username', function(req, res){
     // XXX: calling model's function affects overall performance, e.g.
     // in this case we need just one user paramers: id, however
@@ -29,7 +45,6 @@ exports.addRoutes = function(app) {
   }),
 
   app.get('/v1/timeline', function(req, res) {
-    console.log()
     models.User.findByUsername(req.user.username, function(err, user) {
       user.getRiverOfNews({
         start: req.query.start
