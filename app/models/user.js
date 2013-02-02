@@ -409,7 +409,7 @@ exports.addModel = function(db) {
       if (select.indexOf('subscriptions') != -1) {
         that.getSubscriptions(function(err, subscriptions) {
           async.map(subscriptions, function(subscription, callback) {
-            subscription.toJSON(function(err, json) {
+            subscription.toJSON({}, function(err, json) {
               callback(err, json)
             })
           }, function(err, subscriptionsJSON) {

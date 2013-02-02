@@ -13,6 +13,10 @@ exports.addModel = function(db) {
     this.num = parseInt(params.num) || 25
   }
 
+  Timeline.getAttributes = function() {
+    return ['id', 'user', 'posts']
+  }
+
   Timeline.findById = function(timelineId, params, callback) {
     db.hgetall('timeline:' + timelineId, function(err, attrs) {
       if (attrs) {
@@ -135,26 +139,40 @@ exports.addModel = function(db) {
       }
     },
 
-    toJSON: function(callback) {
-      var that = this;
+    toJSON: function(params, callback) {
+      var that = this
+        , json = {}
+        , select = params['select'] ||
+            models.Timeline.getAttributes()
 
-      this.getPosts(this.start, this.num, function(err, posts) {
-        async.map(posts, function(post, callback) {
-          post.toJSON(function(err, json) {
-            callback(err, json)
-          })
-        }, function(err, postsJSON) {
-          models.User.findById(that.userId, function(err, user) {
-            user.toJSON({}, function(err, user) {
-              callback(err, {
-                id: that.id,
-                user: user,
-                posts: postsJSON
-              })
+      if (select.indexOf('id') != -1)
+        json.id = that.id
+
+      if (select.indexOf('posts') != -1) {
+        this.getPosts(this.start, this.num, function(err, posts) {
+          async.map(posts, function(post, callback) {
+            post.toJSON({}, function(err, json) {
+              callback(err, json)
             })
+          }, function(err, postsJSON) {
+            json.posts = postsJSON
+
+            if (select.indexOf('user') != -1) {
+              models.User.findById(that.userId, function(err, user) {
+                user.toJSON({}, function(err, userJSON) {
+                  json.user = userJSON
+
+                  callback(err, json)
+                })
+              })
+            } else {
+              callback(err, json)
+            }
           })
         })
-      })
+      } else {
+        callback(null, json)
+      }
     }
   }
   

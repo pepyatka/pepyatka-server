@@ -13,7 +13,7 @@ exports.addRoutes = function(app, connections) {
     newComment.save(function(err, comment) {
       if (err) return res.jsonp({}, 422)
 
-      comment.toJSON(function(err, json) { res.jsonp(json) })
+      comment.toJSON({}, function(err, json) { res.jsonp(json) })
     })
   });
 }

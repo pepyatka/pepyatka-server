@@ -48,7 +48,7 @@ post:<postId>:attachments [ <attachmentId> ]
 post:<postId>:timelines ( <timelineId> )
 post:<postId>:likes ( <userId> )
 
-comment:<commentId> { body, createdAt, userId, postId }
+comment:<commentId> { body, createdAt, updatedAt, createdBy, postId }
 
 attachment:<attachmentId> { mimeType, filename, extension, path, createdAt, updatedAt, postId, thumbnailId* }
 ```

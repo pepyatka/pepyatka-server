@@ -21,6 +21,11 @@ exports.addModel = function(db) {
       this.updatedAt = parseInt(params.updatedAt)
   }
 
+  Post.getAttributes = function() {
+    return ['id', 'body', 'createdAt', 'updatedAt', 'createdBy',
+            'comments', 'attachments', 'likes']
+  }
+
   Post.findById = function(postId, callback) {
     db.hgetall('post:' + postId, function(err, attrs) {
       if (attrs) {
@@ -511,47 +516,77 @@ exports.addModel = function(db) {
       return new models.Attachment(attrs)
     },
 
-    toJSON: function(callback) {
-      var that = this;
+    toJSON: function(params, callback) {
+      var that = this
+        , json = {}
+        , select = params['select'] ||
+            models.Post.getAttributes()
 
-      this.getComments(function(err, comments) {
-        models.User.findById(that.userId, function(err, user) {
+      if (select.indexOf('id') != -1)
+        json.id = that.id
+
+      if (select.indexOf('body') != -1)
+        json.body = that.body
+
+      if (select.indexOf('createdAt') != -1)
+        json.createdAt = that.createdAt
+
+      if (select.indexOf('updatedAt') != -1)
+        json.updatedAt = that.updatedAt
+
+      if (select.indexOf('comments') != -1) {
+        this.getComments(function(err, comments) {
           async.map(comments, function(comment, callback) {
-            comment.toJSON(function(err, json) {
+            comment.toJSON({}, function(err, json) {
               callback(err, json)
             })
           }, function(err, commentsJSON) {
-            that.getAttachments(function(err, attachments) {
-              async.map(attachments, function(attachment, callback) {
-                attachment.toJSON(function(err, json) {
-                  callback(err, json)
-                })
-              }, function(err, attachmentsJSON) {
-                user.toJSON({}, function(err, user) {
-                  that.getLikes(function(err, likes) {
-                    async.map(likes, function(like, callback) {
-                      like.toJSON(function(err, json) {
-                        callback(err, json)
-                      })
-                    }, function(err, likesJSON) {
-                      callback(err, {
-                        id: that.id,
-                        createdAt: that.createdAt,
-                        updatedAt: that.updatedAt,
-                        body: that.body,
-                        createdBy: user,
-                        comments: commentsJSON,
-                        attachments: attachmentsJSON,
-                        likes: likesJSON
+            json.comments = commentsJSON
+
+            if (select.indexOf('attachments') != -1) {
+              that.getAttachments(function(err, attachments) {
+                async.map(attachments, function(attachment, callback) {
+                  attachment.toJSON(function(err, json) {
+                    callback(err, json)
+                  })
+                }, function(err, attachmentsJSON) {
+                  json.attachments = attachmentsJSON
+
+                  if (select.indexOf('attachments') != -1) {
+                    models.User.findById(that.userId, function(err, user) {
+                      user.toJSON({}, function(err, userJSON) {
+                        json.user = userJSON
+
+                        if (select.indexOf('likes') != -1) {
+                          that.getLikes(function(err, likes) {
+                            async.map(likes, function(like, callback) {
+                              like.toJSON({}, function(err, json) {
+                                callback(err, json)
+                              })
+                            }, function(err, likesJSON) {
+                              json.likes = likesJSON
+
+                              callback(err, json)
+                            })
+                          })
+                        } else {
+                          callback(err, json)
+                        }
                       })
                     })
-                  })
+                  } else {
+                    callback(err, json)
+                  }
                 })
               })
-            })
+            } else {
+              callback(err, json)
+            }
           })
         })
-      })
+      } else {
+        callback(null, json)
+      }
     }
 
   }

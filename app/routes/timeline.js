@@ -31,7 +31,7 @@ exports.addRoutes = function(app) {
           start: req.query.start
         }, function(err, timeline) {
           if (timeline) {
-            timeline.toJSON(function(err, json) {
+            timeline.toJSON({}, function(err, json) {
               res.jsonp(json);
             })
           } else {
@@ -50,7 +50,7 @@ exports.addRoutes = function(app) {
         start: req.query.start
       }, function(err, timeline) {
         if (timeline) {
-          timeline.toJSON(function(err, json) {
+          timeline.toJSON({}, function(err, json) {
             res.jsonp(json);
           })
         } else {
