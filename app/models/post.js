@@ -560,7 +560,7 @@ exports.addModel = function(db) {
                         if (select.indexOf('likes') != -1) {
                           that.getLikes(function(err, likes) {
                             async.map(likes, function(like, callback) {
-                              like.toJSON({}, function(err, json) {
+                              like.toJSON(params.likes || {}, function(err, json) {
                                 callback(err, json)
                               })
                             }, function(err, likesJSON) {

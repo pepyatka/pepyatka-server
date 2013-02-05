@@ -19,7 +19,6 @@
         <h1 class="title">
           <a href="/">Pepyatka</a> <small class="mutted">0.0.3</small>
         </h1>
-        <hr/>
       </div>
 
       <% if (!req.user || req.user.username == 'anonymous') { %>
@@ -242,6 +241,122 @@
       </div>
     {{/with}}
   </li>
+</script>
+
+<script type="text/x-handlebars" data-template-name="own-post-view">
+  <li class="media">
+    {{#with view.content}}
+      <hr/>
+
+      <div class="media-body post">
+        <div class="body">
+          <div class="text">{{body}}</div>
+          {{#if firstThumbnailSrc}}
+            <div class="image"><a {{bindAttr href="firstImageSrc"}}><img {{bindAttr src="firstThumbnailSrc"}} class="img-polaroid" /></a></div>
+          {{/if}}
+        </div>
+
+        <div class="tagline">
+          <a {{action showPost this href="true"}} class="datetime">
+            <time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>
+          </a>
+
+          {{#view App.CommentPostView}}
+            -
+            <a {{action toggleVisibility target="parentView"}}>Comment</a>
+          {{/view}}
+
+          {{#unless currentUserLiked}}
+            {{#view App.LikePostView}}
+              -
+              <a {{action likePost target="parentView"}}>Like</a>
+            {{/view}}
+          {{/unless}}
+        </div>
+
+        {{#if anyLikes}}
+          <div class="media likes">
+            <div class="pull-left">
+              <i class="icon-heart media-object"></i>
+            </div>
+
+            <div class="media-body">
+              <ul class="unstyled inline pull-left">
+                {{view Ember.CollectionView contentBinding="likes"
+                       itemViewClass="App.LikeView"}}
+              </ul>
+              <span>liked this</span>
+              {{#if currentUserLiked}}
+                <span>(<a {{action unlikePost id target="parentView"}}>Un-like</a>)</span>
+              {{/if}}
+            </div>
+          </div>
+        {{/if}}
+
+        <ul class="unstyled comments">
+          {{#if partial}}
+            {{view App.CommentContainerView contentBinding="firstComment"}}
+            <li class="media more-comments">
+              <a {{action showAllComments target="view"}}>{{skippedCommentsLength}} more comments</a>
+            </li>
+            {{view App.CommentContainerView contentBinding="lastComment"}}
+          {{else}}
+            {{view Ember.CollectionView contentBinding="comments"
+                   itemViewClass="App.CommentContainerView"}}
+
+            {{#view App.CommentPostViewSubst}}
+              <li class="media new-comment-link">
+                <i class="icon-pencil media-object pull-left"></i>
+                <div class="media-body">
+                    <a {{action toggleVisibility target="view"}}>Add comment</a>
+                </div>
+              </li>
+            {{/view}}
+          {{/if}}
+        </ul>
+
+        {{#view App.CommentForm}}
+          <div class="comment-form media">
+            <i class="icon-comment-alt media-object pull-left"></i>
+            <div class="media-body">
+              <div>
+                {{view App.CreateCommentView target="parentView"
+                      action="submitComment" valueBinding="view.body"
+                      class="span8 input-tiny comment-area"}}
+              </div>
+              <div>
+                <button {{action submitComment target="view"}} class="btn btn-small">Post</button>
+                <a {{action toggleVisibility target="parentView"}}>Cancel</a>
+              </div>
+            </div>
+          </div>
+        {{/view}}
+      </div>
+    {{/with}}
+  </li>
+</script>
+
+<script type="text/x-handlebars" data-template-name="user-timeline">
+  <div class="row">
+    <div class="span9 media">
+      <div class="pull-left">
+        <img class="media-object" src="/img/64x64.png">
+      </div>
+
+      <div class="media-body">
+        <h3>{{content.timeline}}</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="posts">
+    <ul class="media-list">
+      {{view Ember.CollectionView contentBinding="App.postsController"
+             itemViewClass="App.OwnPostContainerView"}}
+    </ul>
+
+    {{view App.Pagination}}
+  </div>
 </script>
 
 <script type="text/x-handlebars" data-template-name="a-post">
