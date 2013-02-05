@@ -103,8 +103,8 @@ exports.addModel = function(db) {
     toJSON: function(callback) {
       var attrs = {
         id: this.id,
-        ext: this.ext,
-        filename: this.filename,
+        // ext: this.ext,
+        // filename: this.filename,
         path: this.path
       }
 
@@ -112,8 +112,8 @@ exports.addModel = function(db) {
         models.Attachment.findById(this.thumbnailId, function(err, thumbnail) {
           attrs['thumbnail'] = {
             id: thumbnail.id,
-            ext: thumbnail.ext,
-            filename: thumbnail.filename,
+            // ext: thumbnail.ext,
+            // filename: thumbnail.filename,
             path: thumbnail.path
           }
           callback(err, attrs)

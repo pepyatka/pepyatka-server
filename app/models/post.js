@@ -537,7 +537,7 @@ exports.addModel = function(db) {
       if (select.indexOf('comments') != -1) {
         this.getComments(function(err, comments) {
           async.map(comments, function(comment, callback) {
-            comment.toJSON({}, function(err, json) {
+            comment.toJSON(params.comments || {}, function(err, json) {
               callback(err, json)
             })
           }, function(err, commentsJSON) {
@@ -552,10 +552,10 @@ exports.addModel = function(db) {
                 }, function(err, attachmentsJSON) {
                   json.attachments = attachmentsJSON
 
-                  if (select.indexOf('attachments') != -1) {
+                  if (select.indexOf('createdBy') != -1) {
                     models.User.findById(that.userId, function(err, user) {
-                      user.toJSON({}, function(err, userJSON) {
-                        json.user = userJSON
+                      user.toJSON(params.createdBy || {}, function(err, userJSON) {
+                        json.createdBy = userJSON
 
                         if (select.indexOf('likes') != -1) {
                           that.getLikes(function(err, likes) {
