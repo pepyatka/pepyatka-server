@@ -112,7 +112,7 @@ exports.addModel = function(db) {
 
       if (select.indexOf('createdBy') != -1) {
         models.User.findById(this.userId, function(err, user) {
-          user.toJSON({}, function(err, userJSON) {
+          user.toJSON(params.createdBy || {}, function(err, userJSON) {
             json.createdBy = userJSON
 
             callback(err, json)

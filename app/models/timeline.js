@@ -151,9 +151,11 @@ exports.addModel = function(db) {
       if (select.indexOf('posts') != -1) {
         this.getPosts(this.start, this.num, function(err, posts) {
           async.map(posts, function(post, callback) {
-            post.toJSON({select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt'],
-                         createdBy: {select: ['id', 'username']},
-                         comments: {select: ['id', 'body', 'createdBy'] }}, function(err, json) {
+            post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt'],
+                          createdBy: { select: ['id', 'username'] },
+                          comments: { select: ['id', 'body', 'createdBy'],
+                                      createdBy: { select: ['id', 'username'] }}
+                        }, function(err, json) {
               callback(err, json)
             })
           }, function(err, postsJSON) {
