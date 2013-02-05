@@ -145,8 +145,8 @@
 </script>
 
 <script type="text/x-handlebars" data-template-name="post-view">
-  <li class="media">
-    {{#with view.content}}  
+  {{#with view.content}}
+    <li class="media">
       <hr/>
       
       <div class="pull-left">
@@ -239,8 +239,8 @@
           </div>
         {{/view}}
       </div>
-    {{/with}}
-  </li>
+    </li>
+  {{/with}}
 </script>
 
 <script type="text/x-handlebars" data-template-name="own-post-view">
@@ -344,9 +344,18 @@
       </div>
 
       <div class="media-body">
-        <h3>{{content.user.username}}</h3>
+        <h3 class="pull-left">{{content.user.username}}</h3>
+
+        <div class="pull-right profile-extra-info">
+          <div>Subscriptions: {{content.user.subscriptionsLength}}</div>
+          <div>Subscribers: {{content.user.subscribersLength}}</div>
+        </div>
       </div>
     </div>
+  </div>
+
+  <div class="row profile-actions">
+    <a {{action subscribeTo target="view"}}>Subscribe</a>
   </div>
 
   <div class="posts">

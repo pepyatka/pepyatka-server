@@ -512,10 +512,24 @@ App.OnePostView = Ember.View.extend({
   }
 });
 
-App.UserTimelineController = Ember.ObjectController.extend();
+App.UserTimelineController = Ember.ObjectController.extend({
+  subscribeTo: function(timelineId) {
+    $.ajax({
+      url: '/v1/timeline/' + timelineId + '/subscribe',
+      type: 'post',
+      success: function(response) {
+        console.log(response)
+      }
+    })
+  }
+});
 App.userTimelineController = App.UserTimelineController.create()
 App.UserTimelineView = Ember.View.extend({
-  templateName: 'user-timeline'
+  templateName: 'user-timeline',
+
+  subscribeTo: function() {
+    App.userTimelineController.subscribeTo(App.postsController.id)
+  }
 })
 
 App.Comment = Ember.Object.extend({
@@ -529,6 +543,14 @@ App.User = Ember.Object.extend({
   username: null,
   createdAt: null,
   updatedAt: null,
+
+  subscriptionsLength: function() {
+    return this.subscriptions.length
+  }.property(),
+
+  subscribersLength: function() {
+    return this.subscribers.length
+  }.property()
 })
 
 App.CommentsController = Ember.ArrayController.extend({
@@ -778,7 +800,8 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
           var post = App.Post.create(attrs)
           this.addObject(post)
         }, this)
-        this.set('user', response.user)
+        this.set('user', App.User.create(response.user))
+        this.set('id', response.id)
         this.set('isLoaded', true)
       }
     })

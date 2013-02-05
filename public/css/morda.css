@@ -6,6 +6,9 @@ a, a:hover {
 hr {
     margin: 10px 0;
 }
+hr.underline {
+    margin: 2px 0 10px 0;
+}
 
 script {
     margin: 0;
@@ -148,6 +151,12 @@ footer {
     color: #000088;
 }
 
+.container .profile-extra-info {
+    text-align: right;
+}
+.container .profile-actions {
+    margin: 10px 0 0 0;
+}
 .container .submitForm {
     margin: 0 0 8px 0;
 }
