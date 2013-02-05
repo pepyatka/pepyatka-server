@@ -778,6 +778,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
           var post = App.Post.create(attrs)
           this.addObject(post)
         }, this)
+        this.set('user', response.user)
         this.set('isLoaded', true)
       }
     })
