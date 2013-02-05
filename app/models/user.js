@@ -19,7 +19,7 @@ exports.addModel = function(db) {
   }
 
   User.getAttributes = function() {
-    return ['id', 'username', 'subscriptions', 'createdAt', 'updatedAt']
+    return ['id', 'username', 'subscriptions', 'subscribers', 'createdAt', 'updatedAt']
   }
 
   // TODO: create Anonymous model which is inherited from User
@@ -167,23 +167,27 @@ exports.addModel = function(db) {
         if (err) return callback(err, null)
 
         db.zadd('user:' + that.id + ':subscriptions', currentTime, timelineId, function(err, res) {
-          that.getRiverOfNewsId(function(err, riverOfNewsId) {
-            db.zunionstore(
-              'timeline:' + riverOfNewsId + ':posts', 2,
-              'timeline:' + riverOfNewsId + ':posts',
-              'timeline:' + timelineId + ':posts',
-              'AGGREGATE', 'MAX', function(err, res) {
-                timeline.getPosts(0, -1, function(err, posts) {
-                  async.forEach(posts, function(post, callback) {
-                    // XXX: kind of dup
-                    db.sadd('post:' + post.id + ':timelines', riverOfNewsId, function(err, res) {
-                      callback(err)
+          db.hget('timeline:' + timelineId, 'userId', function(err, userId) {
+            db.zadd('user:' + userId + ':subscribers', currentTime, userId, function(err, res) {
+              that.getRiverOfNewsId(function(err, riverOfNewsId) {
+                db.zunionstore(
+                  'timeline:' + riverOfNewsId + ':posts', 2,
+                  'timeline:' + riverOfNewsId + ':posts',
+                  'timeline:' + timelineId + ':posts',
+                  'AGGREGATE', 'MAX', function(err, res) {
+                    timeline.getPosts(0, -1, function(err, posts) {
+                      async.forEach(posts, function(post, callback) {
+                        // XXX: kind of dup
+                        db.sadd('post:' + post.id + ':timelines', riverOfNewsId, function(err, res) {
+                          callback(err)
+                        })
+                      }, function(err) {
+                        callback(err, that)
+                      })
                     })
-                  }, function(err) {
-                    callback(err, that)
                   })
-                })
               })
+            })
           })
         })
       })
@@ -196,44 +200,78 @@ exports.addModel = function(db) {
         if (err) return callback(err, null)
 
         db.zrem('user:' + that.id + ':subscriptions', timelineId, function(err, res) {
-          that.getRiverOfNewsId(function(err, riverOfNewsId) {
-            // zinterstore saves results to a key. so we have to
-            // create a temporary storage
-            var randomKey = 'timeline:' + riverOfNewsId + ':random:' + uuid.v4()
+          db.hget('timeline:' + timelineId, 'userId', function(err, userId) {
+            db.zrev('user:' + userId + ':subscribers', currentTime, userId, function(err, res) {
+              that.getRiverOfNewsId(function(err, riverOfNewsId) {
+                // zinterstore saves results to a key. so we have to
+                // create a temporary storage
+                var randomKey = 'timeline:' + riverOfNewsId + ':random:' + uuid.v4()
 
-            db.zinterstore(
-              randomKey, 2,
-              'timeline:' + riverOfNewsId + ':posts',
-              'timeline:' + timelineId + ':posts',
-              'AGGREGATE', 'MAX', function(err, res) {
-                // now we need to delete these posts from RiverOfNews
-                db.zrange(randomKey, 0, -1, function(err, postsIds) {
-                  async.forEach(postsIds, function(postId, callback) {
-                    // XXX: kind of dup
-                    db.srem('post:' + postId + ':timelines', riverOfNewsId, function(err, res) {
-                      // TODO: delete if and only if user (this) is
-                      // not a participant of this discussion
-                      db.zrem('timeline:' + riverOfNewsId + ':posts', postId, function(err, res) {
-                        callback(err)
-                      })
-                    })
-                  }, function(err) {
-                    db.del(randomKey, function(err, res) {
-                      db.zcard('user:' + that.id + ':subscriptions', function(err, res) {
-                        if (res == 0)
-                          db.del('user:' + that.id + ':subscriptions', function(err, res) {
-                            callback(err, res)
+                db.zinterstore(
+                  randomKey, 2,
+                  'timeline:' + riverOfNewsId + ':posts',
+                  'timeline:' + timelineId + ':posts',
+                  'AGGREGATE', 'MAX', function(err, res) {
+                    // now we need to delete these posts from RiverOfNews
+                    db.zrange(randomKey, 0, -1, function(err, postsIds) {
+                      async.forEach(postsIds, function(postId, callback) {
+                        // XXX: kind of dup
+                        db.srem('post:' + postId + ':timelines', riverOfNewsId, function(err, res) {
+                          // TODO: delete if and only if user (this) is
+                          // not a participant of this discussion
+                          db.zrem('timeline:' + riverOfNewsId + ':posts', postId, function(err, res) {
+                            callback(err)
                           })
-                        else
-                          callback(err, res)
+                        })
+                      }, function(err) {
+                        db.del(randomKey, function(err, res) {
+                          db.zcard('user:' + that.id + ':subscriptions', function(err, res) {
+                            if (res == 0)
+                              db.del('user:' + that.id + ':subscriptions', function(err, res) {
+                                callback(err, res)
+                              })
+                            else
+                              callback(err, res)
+                          })
+                        })
                       })
                     })
                   })
-                })
               })
+            })
           })
         })
       })
+    },
+
+    getSubscribersIds: function(callback) {
+      if (this.subscribersIds) {
+        callback(null, this.subscribersIds)
+      } else {
+        var that = this
+        db.zrevrange('user:' + this.id + ':subscribers', 0, -1, function(err, subscribersIds) {
+          that.subscribersIds = subscribersIds || []
+          callback(err, that.subscribersIds)
+        })
+      }
+    },
+
+    getSubscribers: function(callback) {
+      if (this.subscribers) {
+        callback(null, this.subscribers)
+      } else {
+        var that = this
+        this.getSubscribersIds(function(err, subscribersIds) {
+          async.map(Object.keys(subscribersIds), function(subscriberId, callback) {
+            models.Timeline.findById(subscribersIds[subscriberId], {}, function(err, subscriber) {
+              callback(err, subscriber)
+            })
+          }, function(err, subscribers) {
+            that.subscribers = subscribers
+            callback(err, that.subscribers)
+          })
+        })
+      }
     },
 
     getSubscriptionsIds: function(callback) {
@@ -415,7 +453,21 @@ exports.addModel = function(db) {
           }, function(err, subscriptionsJSON) {
             json.subscriptions = subscriptionsJSON
 
-            callback(err, json)
+            if (select.indexOf('subscribers') != -1) {
+              that.getSubscribers(function(err, subscribers) {
+                async.map(subscribers, function(subscriber, callback) {
+                  subscriber.toJSON({}, function(err, json) {
+                    callback(err, json)
+                  })
+                }, function(err, subscribersJSON) {
+                  json.subscribers = subscribersJSON
+
+                  callback(err, json)
+                })
+              })
+            } else {
+              callback(err, json)
+            }
           })
         })
       } else {

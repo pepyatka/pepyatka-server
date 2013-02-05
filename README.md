@@ -37,6 +37,7 @@ user:<userId>:timelines { RiverOfNews, Posts, DirectMessages, Likes, Comments, [
 * Comments not implemented yet
 * Custom lists not implemented yet
 user:<userId>:subscriptions ( <timelineId>:<timestamp> )
+user:<userId>:subscribers ( <timelineId>:<timestamp> )
 
 timeline:<timelineId> { name, userId }
 timeline:<timelineId>:posts ( <postId>:<timestamp> )
