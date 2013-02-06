@@ -95,6 +95,9 @@ footer {
 .post .comments li {
     line-height: 16px;
 }
+.post-container {
+    margin: 0;
+}
 .post .comments .media {
     margin: 5px 0 7px 0;
 }
