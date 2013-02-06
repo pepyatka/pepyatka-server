@@ -355,7 +355,13 @@
   </div>
 
   <div class="row profile-actions">
-    <a {{action subscribeTo target="view"}}>Subscribe</a>
+    {{#if content.user.subscribedTo}}
+      <a {{action unsubscribeTo target="view"}}>Unsubscribe</a>
+    {{/if}}
+
+    {{#unless content.user.subscribedTo}}
+      <a {{action subscribeTo target="view"}}>Subscribe</a>
+    {{/unless}}
   </div>
 
   <div class="posts">

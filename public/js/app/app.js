@@ -521,6 +521,16 @@ App.UserTimelineController = Ember.ObjectController.extend({
         console.log(response)
       }
     })
+  },
+
+  unsubscribeTo: function(timelineId) {
+    $.ajax({
+      url: '/v1/timeline/' + timelineId + '/unsubscribe',
+      type: 'post',
+      success: function(response) {
+        console.log(response)
+      }
+    })
   }
 });
 App.userTimelineController = App.UserTimelineController.create()
@@ -529,6 +539,10 @@ App.UserTimelineView = Ember.View.extend({
 
   subscribeTo: function() {
     App.userTimelineController.subscribeTo(App.postsController.id)
+  },
+
+  unsubscribeTo: function() {
+    App.userTimelineController.unsubscribeTo(App.postsController.id)
   }
 })
 
@@ -550,6 +564,13 @@ App.User = Ember.Object.extend({
 
   subscribersLength: function() {
     return this.subscribers.length
+  }.property(),
+
+  subscribedTo: function() {
+    var subscribed = this.subscriptions.filter(function(subscription) {
+      return subscription.id == App.postsController.id
+    })
+    return subscribed.length > 0 ? true : false
   }.property()
 })
 

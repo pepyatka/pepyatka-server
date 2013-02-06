@@ -201,7 +201,7 @@ exports.addModel = function(db) {
 
         db.zrem('user:' + that.id + ':subscriptions', timelineId, function(err, res) {
           db.hget('timeline:' + timelineId, 'userId', function(err, userId) {
-            db.zrev('user:' + userId + ':subscribers', currentTime, userId, function(err, res) {
+            db.zrem('user:' + userId + ':subscribers', currentTime, userId, function(err, res) {
               that.getRiverOfNewsId(function(err, riverOfNewsId) {
                 // zinterstore saves results to a key. so we have to
                 // create a temporary storage
