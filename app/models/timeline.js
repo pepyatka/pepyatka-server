@@ -148,19 +148,22 @@ exports.addModel = function(db) {
       if (select.indexOf('id') != -1)
         json.id = that.id
 
-      if (select.indexOf('posts') != -1) {
-        this.getPosts(this.start, this.num, function(err, posts) {
-          async.map(posts, function(post, callback) {
-            post.toJSON(params.posts || {}, function(err, json) {
-              callback(err, json)
-            })
-          }, function(err, postsJSON) {
-            json.posts = postsJSON
+      if (select.indexOf('userId') != -1)
+        json.userId = that.userId
 
-            if (select.indexOf('user') != -1) {
-              models.User.findById(that.userId, function(err, user) {
-                user.toJSON(params.user || {}, function(err, userJSON) {
-                  json.user = userJSON
+      if (select.indexOf('user') != -1) {
+        models.User.findById(that.userId, function(err, user) {
+          user.toJSON(params.user || {}, function(err, userJSON) {
+            json.user = userJSON
+
+            if (select.indexOf('posts') != -1) {
+              that.getPosts(that.start, that.num, function(err, posts) {
+                async.map(posts, function(post, callback) {
+                  post.toJSON(params.posts || {}, function(err, json) {
+                    callback(err, json)
+                  })
+                }, function(err, postsJSON) {
+                  json.posts = postsJSON
 
                   callback(err, json)
                 })

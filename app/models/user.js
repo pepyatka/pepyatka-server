@@ -263,7 +263,7 @@ exports.addModel = function(db) {
         var that = this
         this.getSubscribersIds(function(err, subscribersIds) {
           async.map(Object.keys(subscribersIds), function(subscriberId, callback) {
-            models.Timeline.findById(subscribersIds[subscriberId], {}, function(err, subscriber) {
+            models.User.findById(subscribersIds[subscriberId], function(err, subscriber) {
               callback(err, subscriber)
             })
           }, function(err, subscribers) {
@@ -429,7 +429,7 @@ exports.addModel = function(db) {
     toJSON: function(params, callback) {
       var that = this
         , json = {}
-        , select = params['select'] ||
+        , select = params.select ||
             models.User.getAttributes()
 
       if (select.indexOf('id') != -1) 
@@ -447,7 +447,7 @@ exports.addModel = function(db) {
       if (select.indexOf('subscriptions') != -1) {
         that.getSubscriptions(function(err, subscriptions) {
           async.map(subscriptions, function(subscription, callback) {
-            subscription.toJSON({}, function(err, json) {
+            subscription.toJSON(params.subscriptions || {}, function(err, json) {
               callback(err, json)
             })
           }, function(err, subscriptionsJSON) {
@@ -456,7 +456,7 @@ exports.addModel = function(db) {
             if (select.indexOf('subscribers') != -1) {
               that.getSubscribers(function(err, subscribers) {
                 async.map(subscribers, function(subscriber, callback) {
-                  subscriber.toJSON({}, function(err, json) {
+                  subscriber.toJSON(params.subscribers || {}, function(err, json) {
                     callback(err, json)
                   })
                 }, function(err, subscribersJSON) {

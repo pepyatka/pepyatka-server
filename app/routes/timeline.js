@@ -41,7 +41,10 @@ exports.addRoutes = function(app) {
                                 likes: { select: ['id', 'username'] }
                               },
                               user: {
-                                select: ['id', 'username', 'subscribers', 'subscriptions']
+                                select: ['id', 'username', 'subscribers', 'subscriptions'],
+                                subscribers: { select: ['id', 'username'] },
+                                subscriptions: { select: ['id', 'user'],
+                                                 user: { select: ['id', 'username'] } }
                               }
                             }, function(err, json) {
               res.jsonp(json);
@@ -72,7 +75,10 @@ exports.addRoutes = function(app) {
                                 likes: { select: ['id', 'username'] }
                               },
                               user: {
-                                select: ['id', 'username']
+                                select: ['id', 'username'],
+                                subscribers: { select: ['id', 'username'] },
+                                subscriptions: { select: ['id', 'user'],
+                                                 user: { select: ['id', 'username'] } }
                               }
                             }, function(err, json) {
             res.jsonp(json);
