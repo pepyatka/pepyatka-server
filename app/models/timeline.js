@@ -151,12 +151,7 @@ exports.addModel = function(db) {
       if (select.indexOf('posts') != -1) {
         this.getPosts(this.start, this.num, function(err, posts) {
           async.map(posts, function(post, callback) {
-            post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
-                          createdBy: { select: ['id', 'username'] },
-                          comments: { select: ['id', 'body', 'createdBy'],
-                                      createdBy: { select: ['id', 'username'] }},
-                          likes: { select: ['id', 'username']}
-                        }, function(err, json) {
+            post.toJSON(params.posts || {}, function(err, json) {
               callback(err, json)
             })
           }, function(err, postsJSON) {
@@ -164,7 +159,7 @@ exports.addModel = function(db) {
 
             if (select.indexOf('user') != -1) {
               models.User.findById(that.userId, function(err, user) {
-                user.toJSON({select: ['id', 'username']}, function(err, userJSON) {
+                user.toJSON(params.user || {}, function(err, userJSON) {
                   json.user = userJSON
 
                   callback(err, json)

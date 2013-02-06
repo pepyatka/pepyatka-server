@@ -31,7 +31,19 @@ exports.addRoutes = function(app) {
           start: req.query.start
         }, function(err, timeline) {
           if (timeline) {
-            timeline.toJSON({}, function(err, json) {
+            timeline.toJSON({ select: ['id', 'posts', 'user'],
+                              posts: {
+                                select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
+                                createdBy: { select: ['id', 'username'] },
+                                comments: { select: ['id', 'body', 'createdBy'],
+                                            createdBy: { select: ['id', 'username'] }
+                                          },
+                                likes: { select: ['id', 'username'] }
+                              },
+                              user: {
+                                select: ['id', 'username', 'subscribers', 'subscriptions']
+                              }
+                            }, function(err, json) {
               res.jsonp(json);
             })
           } else {
@@ -50,7 +62,19 @@ exports.addRoutes = function(app) {
         start: req.query.start
       }, function(err, timeline) {
         if (timeline) {
-          timeline.toJSON({}, function(err, json) {
+          timeline.toJSON({ select: ['id', 'posts', 'user'],
+                              posts: {
+                                select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
+                                createdBy: { select: ['id', 'username'] },
+                                comments: { select: ['id', 'body', 'createdBy'],
+                                            createdBy: { select: ['id', 'username'] }
+                                          },
+                                likes: { select: ['id', 'username'] }
+                              },
+                              user: {
+                                select: ['id', 'username']
+                              }
+                            }, function(err, json) {
             res.jsonp(json);
           })
         } else {
