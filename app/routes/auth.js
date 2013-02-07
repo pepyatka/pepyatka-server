@@ -15,7 +15,7 @@ exports.addRoutes = function(app) {
       if (user == null) {
         newUser.save(function(err, user) {
           req.logIn(user, function(err) {
-            res.redirect('/#/users/' + user.username)
+            res.redirect('/')
           })
         })
       } else {
