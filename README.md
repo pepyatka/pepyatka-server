@@ -23,7 +23,7 @@ Configuration
 Roadmap
 -------
 
-Trello: https://trello.com/b/uvRkkOTH
+Tasks: https://trello.com/b/uvRkkOTH
 
 Database
 --------
