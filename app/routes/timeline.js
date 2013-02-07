@@ -42,7 +42,8 @@ exports.addRoutes = function(app) {
                               },
                               user: {
                                 select: ['id', 'username', 'subscribers', 'subscriptions'],
-                                subscribers: { select: ['id', 'username'] },
+                                subscribers: { select: ['id', 'user'],
+                                               user: { select: ['id', 'username'] } },
                                 subscriptions: { select: ['id', 'user'],
                                                  user: { select: ['id', 'username'] } }
                               }
@@ -76,7 +77,8 @@ exports.addRoutes = function(app) {
                               },
                               user: {
                                 select: ['id', 'username', 'subscribers', 'subscriptions'],
-                                subscribers: { select: ['id', 'username'] },
+                                subscribers: { select: ['id', 'user'],
+                                               user: { select: ['id', 'username'] } },
                                 subscriptions: { select: ['id', 'user'],
                                                  user: { select: ['id', 'username'] } }
                               }

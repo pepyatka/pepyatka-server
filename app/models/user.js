@@ -165,28 +165,27 @@ exports.addModel = function(db) {
 
       models.Timeline.findById(timelineId, {}, function(err, timeline) {
         if (err) return callback(err, null)
+        if (timeline.userId == that.id) return callback(null, null)
 
         db.zadd('user:' + that.id + ':subscriptions', currentTime, timelineId, function(err, res) {
-          db.hget('timeline:' + timelineId, 'userId', function(err, userId) {
-            db.zadd('user:' + userId + ':subscribers', currentTime, userId, function(err, res) {
-              that.getRiverOfNewsId(function(err, riverOfNewsId) {
-                db.zunionstore(
-                  'timeline:' + riverOfNewsId + ':posts', 2,
-                  'timeline:' + riverOfNewsId + ':posts',
-                  'timeline:' + timelineId + ':posts',
-                  'AGGREGATE', 'MAX', function(err, res) {
-                    timeline.getPosts(0, -1, function(err, posts) {
-                      async.forEach(posts, function(post, callback) {
-                        // XXX: kind of dup
-                        db.sadd('post:' + post.id + ':timelines', riverOfNewsId, function(err, res) {
-                          callback(err)
-                        })
-                      }, function(err) {
-                        callback(err, that)
+          db.zadd('user:' + timeline.userId + ':subscribers', currentTime, timelineId, function(err, res) {
+            that.getRiverOfNewsId(function(err, riverOfNewsId) {
+              db.zunionstore(
+                'timeline:' + riverOfNewsId + ':posts', 2,
+                'timeline:' + riverOfNewsId + ':posts',
+                'timeline:' + timelineId + ':posts',
+                'AGGREGATE', 'MAX', function(err, res) {
+                  timeline.getPosts(0, -1, function(err, posts) {
+                    async.forEach(posts, function(post, callback) {
+                      // XXX: kind of dup
+                      db.sadd('post:' + post.id + ':timelines', riverOfNewsId, function(err, res) {
+                        callback(err)
                       })
+                    }, function(err) {
+                      callback(err, that)
                     })
                   })
-              })
+                })
             })
           })
         })
@@ -196,48 +195,46 @@ exports.addModel = function(db) {
     unsubscribeTo: function(timelineId, callback) {
       var currentTime = new Date().getTime()
       var that = this
-      models.Timeline.findById(timelineId, {}, function(err, user) {
+      models.Timeline.findById(timelineId, {}, function(err, timeline) {
         if (err) return callback(err, null)
 
         db.zrem('user:' + that.id + ':subscriptions', timelineId, function(err, res) {
-          db.hget('timeline:' + timelineId, 'userId', function(err, userId) {
-            db.zrem('user:' + userId + ':subscribers', currentTime, userId, function(err, res) {
-              that.getRiverOfNewsId(function(err, riverOfNewsId) {
-                // zinterstore saves results to a key. so we have to
-                // create a temporary storage
-                var randomKey = 'timeline:' + riverOfNewsId + ':random:' + uuid.v4()
+          db.zrem('user:' + timeline.userId + ':subscribers', currentTime, timelineId, function(err, res) {
+            that.getRiverOfNewsId(function(err, riverOfNewsId) {
+              // zinterstore saves results to a key. so we have to
+              // create a temporary storage
+              var randomKey = 'timeline:' + riverOfNewsId + ':random:' + uuid.v4()
 
-                db.zinterstore(
-                  randomKey, 2,
-                  'timeline:' + riverOfNewsId + ':posts',
-                  'timeline:' + timelineId + ':posts',
-                  'AGGREGATE', 'MAX', function(err, res) {
-                    // now we need to delete these posts from RiverOfNews
-                    db.zrange(randomKey, 0, -1, function(err, postsIds) {
-                      async.forEach(postsIds, function(postId, callback) {
-                        // XXX: kind of dup
-                        db.srem('post:' + postId + ':timelines', riverOfNewsId, function(err, res) {
-                          // TODO: delete if and only if user (this) is
-                          // not a participant of this discussion
-                          db.zrem('timeline:' + riverOfNewsId + ':posts', postId, function(err, res) {
-                            callback(err)
-                          })
+              db.zinterstore(
+                randomKey, 2,
+                'timeline:' + riverOfNewsId + ':posts',
+                'timeline:' + timelineId + ':posts',
+                'AGGREGATE', 'MAX', function(err, res) {
+                  // now we need to delete these posts from RiverOfNews
+                  db.zrange(randomKey, 0, -1, function(err, postsIds) {
+                    async.forEach(postsIds, function(postId, callback) {
+                      // XXX: kind of dup
+                      db.srem('post:' + postId + ':timelines', riverOfNewsId, function(err, res) {
+                        // TODO: delete if and only if user (this) is
+                        // not a participant of this discussion
+                        db.zrem('timeline:' + riverOfNewsId + ':posts', postId, function(err, res) {
+                          callback(err)
                         })
-                      }, function(err) {
-                        db.del(randomKey, function(err, res) {
-                          db.zcard('user:' + that.id + ':subscriptions', function(err, res) {
-                            if (res == 0)
-                              db.del('user:' + that.id + ':subscriptions', function(err, res) {
-                                callback(err, res)
-                              })
-                            else
+                      })
+                    }, function(err) {
+                      db.del(randomKey, function(err, res) {
+                        db.zcard('user:' + that.id + ':subscriptions', function(err, res) {
+                          if (res == 0)
+                            db.del('user:' + that.id + ':subscriptions', function(err, res) {
                               callback(err, res)
-                          })
+                            })
+                          else
+                            callback(err, res)
                         })
                       })
                     })
                   })
-              })
+                })
             })
           })
         })
@@ -263,11 +260,11 @@ exports.addModel = function(db) {
         var that = this
         this.getSubscribersIds(function(err, subscribersIds) {
           async.map(Object.keys(subscribersIds), function(subscriberId, callback) {
-            models.User.findById(subscribersIds[subscriberId], function(err, subscriber) {
+            models.Timeline.findById(subscribersIds[subscriberId], {}, function(err, subscriber) {
               callback(err, subscriber)
             })
           }, function(err, subscribers) {
-            that.subscribers = subscribers
+            that.subscribers = subscribers.compact()
             callback(err, that.subscribers)
           })
         })
@@ -297,7 +294,7 @@ exports.addModel = function(db) {
               callback(err, subscription)
             })
           }, function(err, subscriptions) {
-            that.subscriptions = subscriptions
+            that.subscriptions = subscriptions.compact()
             callback(err, that.subscriptions)
           })
         })

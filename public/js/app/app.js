@@ -567,11 +567,16 @@ App.User = Ember.Object.extend({
   }.property(),
 
   subscribedTo: function() {
-    var subscribed = this.subscriptions.filter(function(subscription) {
-      return subscription.id == App.postsController.id
+    var subscribed = this.subscribers.filter(function(subscriber) {
+      return subscriber.id == App.postsController.id
     })
     return subscribed.length > 0 ? true : false
+  }.property(),
+
+  ownProfile: function() {
+    return App.postsController.user.id == currentUser
   }.property()
+
 })
 
 App.CommentsController = Ember.ArrayController.extend({

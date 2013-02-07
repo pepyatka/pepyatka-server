@@ -354,15 +354,17 @@
     </div>
   </div>
 
-  <div class="row profile-actions">
-    {{#if content.user.subscribedTo}}
-      <a {{action unsubscribeTo target="view"}}>Unsubscribe</a>
-    {{/if}}
+  {{#unless content.user.ownProfile}}
+    <div class="row profile-actions">
+      {{#if content.user.subscribedTo}}
+        <a {{action unsubscribeTo target="view"}}>Unsubscribe</a>
+      {{/if}}
 
-    {{#unless content.user.subscribedTo}}
-      <a {{action subscribeTo target="view"}}>Subscribe</a>
-    {{/unless}}
-  </div>
+      {{#unless content.user.subscribedTo}}
+        <a {{action subscribeTo target="view"}}>Subscribe</a>
+      {{/unless}}
+    </div>
+  {{/unless}}
 
   <div class="posts">
     <ul class="media-list">
