@@ -55,7 +55,7 @@ exports.addRoutes = function(app) {
           }
         })
       } else {
-        res.jsonp({})
+        res.jsonp({}, 404)
       }
     })
   }),
