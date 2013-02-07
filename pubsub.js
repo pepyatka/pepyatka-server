@@ -85,7 +85,12 @@ exports.listen = function(server) {
 
       models.Post.findById(data.postId, function(err, post) {
         if (post) {
-          post.toJSON(function(err, json) {
+          post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
+                        createdBy: { select: ['id', 'username'] },
+                        comments: { select: ['id', 'body', 'createdBy'],
+                                    createdBy: { select: ['id', 'username'] }},
+                        likes: { select: ['id', 'username']}
+                      }, function(err, json) {
             var event = { post: json }
             io.sockets.in('timeline:' + data.timelineId).emit('newPost', event)
           })
@@ -98,7 +103,9 @@ exports.listen = function(server) {
 
       models.Comment.findById(data.commentId, function(err, comment) {
         if (comment) {
-          comment.toJSON(function(err, json) {
+          comment.toJSON({ select: ['id', 'body', 'createdAt', 'updatedAt', 'createdBy', 'postId'],
+                           createdBy: { select: ['id', 'username'] }
+                         }, function(err, json) {
             var event = { comment: json }
 
             if (data.timelineId)
@@ -115,7 +122,7 @@ exports.listen = function(server) {
 
       models.User.findById(data.userId, function(err, user) {
         if (user) {
-          user.toJSON(function(err, json) {
+          user.toJSON({select: ['id', 'username']}, function(err, json) {
             var event = { user: json, postId: data.postId }
 
             if (data.timelineId)

@@ -1,34 +1,20 @@
 var models = require('../models');
 
 exports.addRoutes = function(app) {
-  app.get('/v1/user/:userId', function(req, res) {
+  app.get('/v1/users', function(req, res) {
+    var userId = req.user.id
+
+    if (userId)
+      res.redirect('/v1/users/' + userId)
+    else
+      res.jsonp({}, 404)
+  })
+
+  app.get('/v1/users/:userId', function(req, res) {
     models.User.findById(req.params.userId, function(err, user) {
       if (err) return res.jsonp({}, 422)
 
-      user.toJSON(function(err, json) { res.jsonp(json) })
+      user.toJSON({select: ['id', 'username']}, function(err, json) { res.jsonp(json) })
     })
   })
-
-  app.get('/signup', function(req, res) {
-    res.render('users/signup');
-  });
-
-  app.post('/signup', function(req, res) {
-    var newUser = new models.User( {
-      username: req.body.username,
-      password: req.body.password
-    })
-
-    models.User.findByUsername(newUser.username, function(err, user) {
-      if (user == null) {
-        newUser.save(function(err, user) {
-          req.logIn(user, function(err) {
-            res.redirect('/#/users/' + user.username)
-          })
-        })
-      } else {
-        res.redirect('/signup')
-      }
-    })
-  });
 }

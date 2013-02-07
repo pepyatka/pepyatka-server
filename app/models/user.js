@@ -18,6 +18,10 @@ exports.addModel = function(db) {
       this.updatedAt = parseInt(params.updatedAt)
   }
 
+  User.getAttributes = function() {
+    return ['id', 'username', 'subscriptions', 'subscribers', 'createdAt', 'updatedAt']
+  }
+
   // TODO: create Anonymous model which is inherited from User
   // TODO: create new function findAnonId
   User.findAnon = function(callback) {
@@ -43,8 +47,7 @@ exports.addModel = function(db) {
   User.findByUsername = function(username, callback) {
     db.get('username:' + username + ':uid', function (err, userId) {
       User.findById(userId, function(err, user) {
-        // TODO: callback(err, user)
-        if (user.id)
+        if (user)
           callback(err, user)
         else
           callback(err, null)
@@ -128,7 +131,7 @@ exports.addModel = function(db) {
 
       this.validate(function(valid) {
         if (valid) {
-          this.updateHashedPassword(function() {
+          that.updateHashedPassword(function() {
             async.parallel([
               function(done) {
                 db.hmset('user:' + that.id,
@@ -154,6 +157,148 @@ exports.addModel = function(db) {
           callback(1, that)
         }
       })
+    },
+
+    subscribeTo: function(timelineId, callback) {
+      var currentTime = new Date().getTime()
+      var that = this
+
+      models.Timeline.findById(timelineId, {}, function(err, timeline) {
+        if (err) return callback(err, null)
+        if (timeline.userId == that.id) return callback(null, null)
+
+        db.zadd('user:' + that.id + ':subscriptions', currentTime, timelineId, function(err, res) {
+          db.zadd('user:' + timeline.userId + ':subscribers', currentTime, that.id, function(err, res) {
+            that.getRiverOfNewsId(function(err, riverOfNewsId) {
+              db.zunionstore(
+                'timeline:' + riverOfNewsId + ':posts', 2,
+                'timeline:' + riverOfNewsId + ':posts',
+                'timeline:' + timelineId + ':posts',
+                'AGGREGATE', 'MAX', function(err, res) {
+                  timeline.getPosts(0, -1, function(err, posts) {
+                    async.forEach(posts, function(post, callback) {
+                      // XXX: kind of dup
+                      db.sadd('post:' + post.id + ':timelines', riverOfNewsId, function(err, res) {
+                        callback(err)
+                      })
+                    }, function(err) {
+                      callback(err, that)
+                    })
+                  })
+                })
+            })
+          })
+        })
+      })
+    },
+
+    unsubscribeTo: function(timelineId, callback) {
+      var currentTime = new Date().getTime()
+      var that = this
+      models.Timeline.findById(timelineId, {}, function(err, timeline) {
+        if (err) return callback(err, null)
+
+        db.zrem('user:' + that.id + ':subscriptions', timelineId, function(err, res) {
+          db.zrem('user:' + timeline.userId + ':subscribers', currentTime, that.id, function(err, res) {
+            that.getRiverOfNewsId(function(err, riverOfNewsId) {
+              // zinterstore saves results to a key. so we have to
+              // create a temporary storage
+              var randomKey = 'timeline:' + riverOfNewsId + ':random:' + uuid.v4()
+
+              db.zinterstore(
+                randomKey, 2,
+                'timeline:' + riverOfNewsId + ':posts',
+                'timeline:' + timelineId + ':posts',
+                'AGGREGATE', 'MAX', function(err, res) {
+                  // now we need to delete these posts from RiverOfNews
+                  db.zrange(randomKey, 0, -1, function(err, postsIds) {
+                    async.forEach(postsIds, function(postId, callback) {
+                      // XXX: kind of dup
+                      db.srem('post:' + postId + ':timelines', riverOfNewsId, function(err, res) {
+                        // TODO: delete if and only if user (this) is
+                        // not a participant of this discussion
+                        db.zrem('timeline:' + riverOfNewsId + ':posts', postId, function(err, res) {
+                          callback(err)
+                        })
+                      })
+                    }, function(err) {
+                      db.del(randomKey, function(err, res) {
+                        db.zcard('user:' + that.id + ':subscriptions', function(err, res) {
+                          if (res == 0)
+                            db.del('user:' + that.id + ':subscriptions', function(err, res) {
+                              callback(err, res)
+                            })
+                          else
+                            callback(err, res)
+                        })
+                      })
+                    })
+                  })
+                })
+            })
+          })
+        })
+      })
+    },
+
+    getSubscribersIds: function(callback) {
+      if (this.subscribersIds) {
+        callback(null, this.subscribersIds)
+      } else {
+        var that = this
+        db.zrevrange('user:' + this.id + ':subscribers', 0, -1, function(err, subscribersIds) {
+          that.subscribersIds = subscribersIds || []
+          callback(err, that.subscribersIds)
+        })
+      }
+    },
+
+    getSubscribers: function(callback) {
+      if (this.subscribers) {
+        callback(null, this.subscribers)
+      } else {
+        var that = this
+        this.getSubscribersIds(function(err, subscribersIds) {
+          async.map(Object.keys(subscribersIds), function(subscriberId, callback) {
+            models.User.findById(subscribersIds[subscriberId], function(err, subscriber) {
+              callback(err, subscriber)
+            })
+          }, function(err, subscribers) {
+            that.subscribers = subscribers.compact()
+            callback(err, that.subscribers)
+          })
+        })
+      }
+    },
+
+    getSubscriptionsIds: function(callback) {
+      if (this.subscriptionsIds) {
+        callback(null, this.subscriptionsIds)
+      } else {
+        var that = this
+        db.zrevrange('user:' + this.id + ':subscriptions', 0, -1, function(err, subscriptionsIds) {
+          that.subscriptionsIds = subscriptionsIds || []
+          callback(err, that.subscriptionsIds)
+        })
+      }
+    },
+
+    getSubscriptions: function(callback) {
+      if (this.subscriptions) {
+        callback(null, this.subscriptions)
+      } else {
+        var that = this
+        this.getSubscriptionsIds(function(err, subscriptionsIds) {
+          async.map(Object.keys(subscriptionsIds), function(subscriptionId, callback) {
+            models.Timeline.findById(subscriptionsIds[subscriptionId], {}, function(err, subscription) {
+              callback(err, subscription)
+            })
+          }, function(err, subscriptions) {
+            that.subscriptions = subscriptions.compact()
+            callback(err, that.subscriptions)
+          })
+        })
+      }
     },
 
     newPost: function(attrs, callback) {
@@ -250,7 +395,7 @@ exports.addModel = function(db) {
       // preconditions of Timeline functional test
 
       // if (this.timelinesIds) {
-      //   callback(this.timelinesIds)
+      //   callback(null, this.timelinesIds)
       // } else {
         var that = this
         db.hgetall('user:' + this.id + ':timelines', function(err, timelinesIds) {
@@ -278,15 +423,54 @@ exports.addModel = function(db) {
       }
     },
 
-    toJSON: function(callback) {
-      callback(null, {
-        id: this.id,
-        username: this.username,
-        createdAt: this.createdAt,
-        updatedAt: this.updatedAt
-      })
-    }
+    toJSON: function(params, callback) {
+      var that = this
+        , json = {}
+        , select = params.select ||
+            models.User.getAttributes()
 
+      if (select.indexOf('id') != -1) 
+        json.id = that.id
+
+      if (select.indexOf('username') != -1)
+        json.username = that.username
+
+      if (select.indexOf('createdAt') != -1)
+        json.createdAt = that.createdAt
+
+      if (select.indexOf('updatedAt') != -1)
+        json.updatedAt = that.updatedAt
+
+      if (select.indexOf('subscriptions') != -1) {
+        that.getSubscriptions(function(err, subscriptions) {
+          async.map(subscriptions, function(subscription, callback) {
+            subscription.toJSON(params.subscriptions || {}, function(err, json) {
+              callback(err, json)
+            })
+          }, function(err, subscriptionsJSON) {
+            json.subscriptions = subscriptionsJSON
+
+            if (select.indexOf('subscribers') != -1) {
+              that.getSubscribers(function(err, subscribers) {
+                async.map(subscribers, function(subscriber, callback) {
+                  subscriber.toJSON(params.subscribers || {}, function(err, json) {
+                    callback(err, json)
+                  })
+                }, function(err, subscribersJSON) {
+                  json.subscribers = subscribersJSON
+
+                  callback(err, json)
+                })
+              })
+            } else {
+              callback(err, json)
+            }
+          })
+        })
+      } else {
+        callback(null, json)
+      }
+    }
   }
   
   return User;

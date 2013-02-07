@@ -51,11 +51,9 @@ describe('Timeline API', function() {
     })
   })
 
-  it('GET /v1/timeline/404-user should return 404'
-     // , function(done) {
-     //   request(server)
-     //     .get('/v1/timeline/anonymous')
-     //     .expect(404, done)
-     // }
-    )
+  it('GET /v1/timeline/404-user should return 404', function(done) {
+    request(server)
+      .get('/v1/timeline/404-user')
+      .expect(404, done)
+  })
 })

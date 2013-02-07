@@ -1,11 +1,11 @@
-
 var home = require('./routes/index')
-  , posts = require('./routes/posts')
-  , comments = require('./routes/comments')
-  , timeline = require('./routes/timeline')
+  , auth = require('./routes/auth')
 
 var session = require('./routes/session')
   , user = require('./routes/users')
+  , posts = require('./routes/posts')
+  , comments = require('./routes/comments')
+  , timeline = require('./routes/timeline')
 
 var models = require('./models');
 
@@ -67,12 +67,13 @@ passport.deserializeUser(function(id, done) {
 module.exports = function(app) {
   app.all('/*', helpers);
 
-  user.addRoutes(app);
+  auth.addRoutes(app);
   session.addRoutes(app);
 
   app.all('/*', findUser)
 
   home.addRoutes(app);
+  user.addRoutes(app);
   posts.addRoutes(app);
   comments.addRoutes(app);
   timeline.addRoutes(app);

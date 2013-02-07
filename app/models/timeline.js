@@ -13,6 +13,10 @@ exports.addModel = function(db) {
     this.num = parseInt(params.num) || 25
   }
 
+  Timeline.getAttributes = function() {
+    return ['id', 'user', 'posts']
+  }
+
   Timeline.findById = function(timelineId, params, callback) {
     db.hgetall('timeline:' + timelineId, function(err, attrs) {
       if (attrs) {
@@ -43,29 +47,39 @@ exports.addModel = function(db) {
 
     models.Post.findById(postId, function(err, post) {
       models.User.findById(post.userId, function(err, user) {
-        // TODO: save this postId to all connected timelines for all
-        // subscribed users
-        var timelinesIds = [post.timelineId]
-
-        user.getRiverOfNewsId(function(err, timelineId) {
-          var pub = redis.createClient();
-
-          timelinesIds.push(timelineId)
-          timelinesIds = _.uniq(timelinesIds)
-
-          async.forEach(timelinesIds, function(timelineId, callback) {
-            db.zadd('timeline:' + timelineId + ':posts', currentTime, postId, function(err, res) {
-              db.hset('post:' + postId, 'updatedAt', currentTime, function(err, res) {
-                db.sadd('post:' + postId + ':timelines', timelineId, function(err, res) {
-                  pub.publish('newPost', JSON.stringify({ postId: postId,
-                                                          timelineId: timelineId }))
-
-                  callback(err, res)
-                })
+        user.getSubscribers(function(err, subscribers) {
+          var timelinesIds = [post.timelineId]
+          async.forEach(subscribers, function(subscriber, callback) {
+            models.User.findById(subscriber.id, function(err, subscribedUser) {
+              subscribedUser.getRiverOfNewsId(function(err, timelineId) {
+                timelinesIds.push(timelineId)
+                callback(null)
               })
             })
           }, function(err) {
-            callback(err)
+            user.getRiverOfNewsId(function(err, timelineId) {
+              var pub = redis.createClient();
+
+              timelinesIds.push(timelineId)
+              console.log(timelinesIds)
+              timelinesIds = _.uniq(timelinesIds)
+              console.log(timelinesIds)
+
+              async.forEach(timelinesIds, function(timelineId, callback) {
+                db.zadd('timeline:' + timelineId + ':posts', currentTime, postId, function(err, res) {
+                  db.hset('post:' + postId, 'updatedAt', currentTime, function(err, res) {
+                    db.sadd('post:' + postId + ':timelines', timelineId, function(err, res) {
+                      pub.publish('newPost', JSON.stringify({ postId: postId,
+                                                              timelineId: timelineId }))
+
+                      callback(err, res)
+                    })
+                  })
+                })
+              }, function(err) {
+                callback(err)
+              })
+            })
           })
         })
       })
@@ -135,26 +149,43 @@ exports.addModel = function(db) {
       }
     },
 
-    toJSON: function(callback) {
-      var that = this;
+    toJSON: function(params, callback) {
+      var that = this
+        , json = {}
+        , select = params['select'] ||
+            models.Timeline.getAttributes()
 
-      this.getPosts(this.start, this.num, function(err, posts) {
-        async.map(posts, function(post, callback) {
-          post.toJSON(function(err, json) {
-            callback(err, json)
-          })
-        }, function(err, postsJSON) {
-          models.User.findById(that.userId, function(err, user) {
-            user.toJSON(function(err, user) {
-              callback(err, {
-                id: that.id,
-                user: user,
-                posts: postsJSON
+      if (select.indexOf('id') != -1)
+        json.id = that.id
+
+      if (select.indexOf('userId') != -1)
+        json.userId = that.userId
+
+      if (select.indexOf('user') != -1) {
+        models.User.findById(that.userId, function(err, user) {
+          user.toJSON(params.user || {}, function(err, userJSON) {
+            json.user = userJSON
+
+            if (select.indexOf('posts') != -1) {
+              that.getPosts(that.start, that.num, function(err, posts) {
+                async.map(posts, function(post, callback) {
+                  post.toJSON(params.posts || {}, function(err, json) {
+                    callback(err, json)
+                  })
+                }, function(err, postsJSON) {
+                  json.posts = postsJSON
+
+                  callback(err, json)
+                })
               })
-            })
+            } else {
+              callback(err, json)
+            }
           })
         })
-      })
+      } else {
+        callback(null, json)
+      }
     }
   }
   

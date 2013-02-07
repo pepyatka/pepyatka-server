@@ -274,6 +274,52 @@ App.PostContainerView = Ember.View.extend({
   }
 });
 
+// View to display single post. Post has following subviews (defined below):
+//  - link to show a comment form
+//  - form to add a new comment
+App.OwnPostContainerView = Ember.View.extend({
+  templateName: 'own-post-view',
+  isFormVisible: false,
+
+  toggleVisibility: function() {
+    this.toggleProperty('isFormVisible');
+  },
+
+  didInsertElement: function() {
+    // wrap anchor tags around links in post text
+    this.$().find('.text').anchorTextUrls();
+    // please read https://github.com/kswedberg/jquery-expander/issues/24
+    this.$().find('.text').expander({
+      slicePoint: 350,
+      expandPrefix: '&hellip; ',
+      preserveWords: true,
+      expandText: 'more&hellip;',
+      userCollapseText: '',
+      collapseTimer: 0,
+      expandEffect: 'fadeIn',
+      collapseEffect: 'fadeOut'
+    })
+
+    this.$().hide().slideDown('slow');
+  },
+
+  // willDestroyElement: function() {
+  //   if (this.$()) {
+  //     var clone = this.$().clone();
+  //     this.$().replaceWith(clone);
+  //     clone.slideUp()
+  //   }
+  // },
+
+  showAllComments: function() {
+    this.content.set('showAllComments', true)
+  },
+
+  unlikePost: function() {
+    App.postsController.unlikePost(this.content.id)
+  }
+});
+
 App.CommentContainerView = Ember.View.extend({
   templateName: 'comment-view',
 
@@ -466,6 +512,42 @@ App.OnePostView = Ember.View.extend({
   }
 });
 
+App.UserTimelineController = Ember.ObjectController.extend({
+  subscribeTo: function(timelineId) {
+    $.ajax({
+      url: '/v1/timeline/' + timelineId + '/subscribe',
+      type: 'post',
+      success: function(response) {
+        console.log(response)
+        App.router.transitionTo('posts')
+      }
+    })
+  },
+
+  unsubscribeTo: function(timelineId) {
+    $.ajax({
+      url: '/v1/timeline/' + timelineId + '/unsubscribe',
+      type: 'post',
+      success: function(response) {
+        console.log(response)
+        App.router.transitionTo('posts')
+      }
+    })
+  }
+});
+App.userTimelineController = App.UserTimelineController.create()
+App.UserTimelineView = Ember.View.extend({
+  templateName: 'user-timeline',
+
+  subscribeTo: function() {
+    App.userTimelineController.subscribeTo(App.postsController.id)
+  },
+
+  unsubscribeTo: function() {
+    App.userTimelineController.unsubscribeTo(App.postsController.id)
+  }
+})
+
 App.Comment = Ember.Object.extend({
   body: null,
   createdAt: null,
@@ -477,6 +559,26 @@ App.User = Ember.Object.extend({
   username: null,
   createdAt: null,
   updatedAt: null,
+
+  subscriptionsLength: function() {
+    return this.subscriptions.length
+  }.property(),
+
+  subscribersLength: function() {
+    return this.subscribers.length
+  }.property(),
+
+  subscribedTo: function() {
+    var subscribed = this.subscribers.filter(function(subscriber) {
+      return subscriber.id == currentUser
+    })
+    return subscribed.length > 0 ? true : false
+  }.property(),
+
+  ownProfile: function() {
+    return App.postsController.user.id == currentUser
+  }.property()
+
 })
 
 App.CommentsController = Ember.ArrayController.extend({
@@ -726,6 +828,8 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
           var post = App.Post.create(attrs)
           this.addObject(post)
         }, this)
+        this.set('user', App.User.create(response.user))
+        this.set('id', response.id)
         this.set('isLoaded', true)
       }
     })
@@ -769,7 +873,6 @@ App.Router = Ember.Router.extend({
       }
     }),
 
-    // Quite bad design - mostly copy&paste of / route
     userTimeline: Ember.Route.extend({
       route: '/users/:username',
 
@@ -779,7 +882,7 @@ App.Router = Ember.Router.extend({
 
       connectOutlets: function(router, username) {
         App.postsController.set('timeline', username)
-        router.get('applicationController').connectOutlet('posts', App.postsController.findAll());
+        router.get('applicationController').connectOutlet('userTimeline', App.postsController.findAll());
       },
 
       serialize: function(router, username) {

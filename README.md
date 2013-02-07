@@ -39,7 +39,8 @@ user:<userId>:timelines { RiverOfNews, Posts, DirectMessages, Likes, Comments, [
 
 timeline:<timelineId> { name, userId }
 timeline:<timelineId>:posts ( <postId>:<timestamp> )
-timeline:<timelineId>:subscriptions ( <timelineId> ) # not implemented yet
+timeline:<timelineId>:subscriptions ( <timelineId>:<timestamp> )
+timeline:<timelineId>:subscribers ( <userId>:<timestamp> )
 
 post:<postId> { body, createdAt, updatedAt, userId, timelineId }
 post:<postId>:comments [ <commentId> ]
@@ -47,7 +48,7 @@ post:<postId>:attachments [ <attachmentId> ]
 post:<postId>:timelines ( <timelineId> )
 post:<postId>:likes ( <userId> )
 
-comment:<commentId> { body, createdAt, userId, postId }
+comment:<commentId> { body, createdAt, updatedAt, createdBy, postId }
 
 attachment:<attachmentId> { mimeType, filename, extension, path, createdAt, updatedAt, postId, thumbnailId* }
 ```
@@ -57,6 +58,8 @@ API
 
 - GET /v1/timeline/:username - returns all posts from user <username>
 - GET /v1/timeline - returns river of news for auth user
+- POST /v1/timeline/:userId/subscribe
+- POST /v1/timeline/:userId/unsubscribe
 - GET /v1/posts/:postId
 - GET /v1/posts/:postId/comments # not implemented yet
 - GET /v1/posts/:postId/likes # not implemented yet
@@ -64,3 +67,4 @@ API
 - POST /v1/posts/:postId/like
 - POST /v1/posts/:postId/unlike
 - POST /v1/comments
+- GET /v1/users/:userId

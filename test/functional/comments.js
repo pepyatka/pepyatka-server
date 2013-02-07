@@ -36,6 +36,7 @@ describe('Comment API', function() {
         var jsonComment = res.body
         assert(!!jsonComment.id)
         assert(!!jsonComment.createdAt)
+        assert(!!jsonComment.updatedAt)
         // Not implemented yet
         // assert(!!jsonComment.updatedAt)
         // assert.equal(jsonComment.createdAt, jsonComment.updatedAt)

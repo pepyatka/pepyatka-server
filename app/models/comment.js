@@ -14,6 +14,10 @@ exports.addModel = function(db) {
       this.updatedAt = parseInt(params.updatedAt)
   }
 
+  Comment.getAttributes = function() {
+    return ['id', 'body', 'postId', 'updatedAt', 'createdBy', 'createdAt']
+  }
+
   Comment.findById = function(commentId, callback) {
     db.hgetall('comment:' + commentId, function(err, attrs) {
       // TODO: check if we find a comment
@@ -52,7 +56,9 @@ exports.addModel = function(db) {
     save: function(callback) {
       var that = this
 
-      this.createdAt = new Date().getTime()
+      if (!this.createdAt)
+        this.createdAt = new Date().getTime()
+      this.updatedAt = new Date().getTime()
       if (this.id === undefined) this.id = uuid.v4()
 
       this.validate(function(valid) {
@@ -65,6 +71,7 @@ exports.addModel = function(db) {
               db.hmset('comment:' + that.id,
                        { 'body': (that.body || "").toString().trim(),
                          'createdAt': that.createdAt.toString(),
+                         'updatedAt': that.createdAt.toString(),
                          'userId': that.userId.toString(),
                          'postId': that.postId.toString()
                        }, function(err, res) {
@@ -82,20 +89,39 @@ exports.addModel = function(db) {
       })
     },
 
-    toJSON: function(callback) {
-      var that = this;
-      models.User.findById(this.userId, function(err, user) {
-        user.toJSON(function(err, user) {
-          callback(err, {
-            id: that.id,
-            body: that.body,
-            postId: that.postId,
-            createdBy: user,
-            createdAt: that.createdAt
+    toJSON: function(params, callback) {
+      var that = this
+        , json = {}
+        , select = params['select'] ||
+            models.Comment.getAttributes()
+
+      if (select.indexOf('id') != -1)
+        json.id = that.id
+
+      if (select.indexOf('body') != -1)
+        json.body = that.body
+
+      if (select.indexOf('postId') != -1)
+        json.postId = that.postId
+
+      if (select.indexOf('createdAt') != -1)
+        json.createdAt = that.createdAt
+
+      if (select.indexOf('updatedAt') != -1)
+        json.updatedAt = that.createdAt
+
+      if (select.indexOf('createdBy') != -1) {
+        models.User.findById(this.userId, function(err, user) {
+          user.toJSON(params.createdBy || {}, function(err, userJSON) {
+            json.createdBy = userJSON
+
+            callback(err, json)
           })
         })
+      } else {
+        callback(null, json)
       }
-    )}
+    }
 
   }
   
