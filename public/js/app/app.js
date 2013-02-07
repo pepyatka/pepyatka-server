@@ -519,6 +519,7 @@ App.UserTimelineController = Ember.ObjectController.extend({
       type: 'post',
       success: function(response) {
         console.log(response)
+        App.router.transitionTo('posts')
       }
     })
   },
@@ -529,6 +530,7 @@ App.UserTimelineController = Ember.ObjectController.extend({
       type: 'post',
       success: function(response) {
         console.log(response)
+        App.router.transitionTo('posts')
       }
     })
   }
