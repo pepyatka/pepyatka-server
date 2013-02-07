@@ -58,8 +58,8 @@ API
 
 - GET /v1/timeline/:username - returns all posts from user <username>
 - GET /v1/timeline - returns river of news for auth user
-- POST /v1/timeline/:userId/subscribe
-- POST /v1/timeline/:userId/unsubscribe
+- POST /v1/timeline/:timelineId/subscribe
+- POST /v1/timeline/:timelineId/unsubscribe
 - GET /v1/posts/:postId
 - GET /v1/posts/:postId/comments # not implemented yet
 - GET /v1/posts/:postId/likes # not implemented yet
