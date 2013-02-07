@@ -103,7 +103,7 @@ exports.listen = function(server) {
 
       models.Comment.findById(data.commentId, function(err, comment) {
         if (comment) {
-          comment.toJSON({ select: ['id', 'body', 'createdAt', 'updatedAt', 'createdBy'],
+          comment.toJSON({ select: ['id', 'body', 'createdAt', 'updatedAt', 'createdBy', 'postId'],
                            createdBy: { select: ['id', 'username'] }
                          }, function(err, json) {
             var event = { comment: json }
