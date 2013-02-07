@@ -570,7 +570,7 @@ App.User = Ember.Object.extend({
 
   subscribedTo: function() {
     var subscribed = this.subscribers.filter(function(subscriber) {
-      return subscriber.id == App.postsController.id
+      return subscriber.id == currentUser
     })
     return subscribed.length > 0 ? true : false
   }.property(),

@@ -47,29 +47,39 @@ exports.addModel = function(db) {
 
     models.Post.findById(postId, function(err, post) {
       models.User.findById(post.userId, function(err, user) {
-        // TODO: save this postId to all connected timelines for all
-        // subscribed users
-        var timelinesIds = [post.timelineId]
-
-        user.getRiverOfNewsId(function(err, timelineId) {
-          var pub = redis.createClient();
-
-          timelinesIds.push(timelineId)
-          timelinesIds = _.uniq(timelinesIds)
-
-          async.forEach(timelinesIds, function(timelineId, callback) {
-            db.zadd('timeline:' + timelineId + ':posts', currentTime, postId, function(err, res) {
-              db.hset('post:' + postId, 'updatedAt', currentTime, function(err, res) {
-                db.sadd('post:' + postId + ':timelines', timelineId, function(err, res) {
-                  pub.publish('newPost', JSON.stringify({ postId: postId,
-                                                          timelineId: timelineId }))
-
-                  callback(err, res)
-                })
+        user.getSubscribers(function(err, subscribers) {
+          var timelinesIds = [post.timelineId]
+          async.forEach(subscribers, function(subscriber, callback) {
+            models.User.findById(subscriber.id, function(err, subscribedUser) {
+              subscribedUser.getRiverOfNewsId(function(err, timelineId) {
+                timelinesIds.push(timelineId)
+                callback(null)
               })
             })
           }, function(err) {
-            callback(err)
+            user.getRiverOfNewsId(function(err, timelineId) {
+              var pub = redis.createClient();
+
+              timelinesIds.push(timelineId)
+              console.log(timelinesIds)
+              timelinesIds = _.uniq(timelinesIds)
+              console.log(timelinesIds)
+
+              async.forEach(timelinesIds, function(timelineId, callback) {
+                db.zadd('timeline:' + timelineId + ':posts', currentTime, postId, function(err, res) {
+                  db.hset('post:' + postId, 'updatedAt', currentTime, function(err, res) {
+                    db.sadd('post:' + postId + ':timelines', timelineId, function(err, res) {
+                      pub.publish('newPost', JSON.stringify({ postId: postId,
+                                                              timelineId: timelineId }))
+
+                      callback(err, res)
+                    })
+                  })
+                })
+              }, function(err) {
+                callback(err)
+              })
+            })
           })
         })
       })

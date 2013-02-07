@@ -168,7 +168,7 @@ exports.addModel = function(db) {
         if (timeline.userId == that.id) return callback(null, null)
 
         db.zadd('user:' + that.id + ':subscriptions', currentTime, timelineId, function(err, res) {
-          db.zadd('user:' + timeline.userId + ':subscribers', currentTime, timelineId, function(err, res) {
+          db.zadd('user:' + timeline.userId + ':subscribers', currentTime, that.id, function(err, res) {
             that.getRiverOfNewsId(function(err, riverOfNewsId) {
               db.zunionstore(
                 'timeline:' + riverOfNewsId + ':posts', 2,
@@ -199,7 +199,7 @@ exports.addModel = function(db) {
         if (err) return callback(err, null)
 
         db.zrem('user:' + that.id + ':subscriptions', timelineId, function(err, res) {
-          db.zrem('user:' + timeline.userId + ':subscribers', currentTime, timelineId, function(err, res) {
+          db.zrem('user:' + timeline.userId + ':subscribers', currentTime, that.id, function(err, res) {
             that.getRiverOfNewsId(function(err, riverOfNewsId) {
               // zinterstore saves results to a key. so we have to
               // create a temporary storage
@@ -260,7 +260,7 @@ exports.addModel = function(db) {
         var that = this
         this.getSubscribersIds(function(err, subscribersIds) {
           async.map(Object.keys(subscribersIds), function(subscriberId, callback) {
-            models.Timeline.findById(subscribersIds[subscriberId], {}, function(err, subscriber) {
+            models.User.findById(subscribersIds[subscriberId], function(err, subscriber) {
               callback(err, subscriber)
             })
           }, function(err, subscribers) {
