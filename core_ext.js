@@ -16,3 +16,8 @@ Array.prototype.compact = function(deleteValue) {
   }
   return this;
 };
+
+Array.prototype.flatten = function() {
+  var merged = []
+  return merged.concat.apply(merged, this)
+}

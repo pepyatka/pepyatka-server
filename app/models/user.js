@@ -168,7 +168,7 @@ exports.addModel = function(db) {
         if (timeline.userId == that.id) return callback(null, null)
 
         db.zadd('user:' + that.id + ':subscriptions', currentTime, timelineId, function(err, res) {
-          db.zadd('user:' + timeline.userId + ':subscribers', currentTime, that.id, function(err, res) {
+          db.zadd('timeline:' + timelineId + ':subscribers', currentTime, that.id, function(err, res) {
             that.getRiverOfNewsId(function(err, riverOfNewsId) {
               db.zunionstore(
                 'timeline:' + riverOfNewsId + ':posts', 2,
@@ -199,7 +199,7 @@ exports.addModel = function(db) {
         if (err) return callback(err, null)
 
         db.zrem('user:' + that.id + ':subscriptions', timelineId, function(err, res) {
-          db.zrem('user:' + timeline.userId + ':subscribers', currentTime, that.id, function(err, res) {
+          db.zrem('timeline:' + timelineId + ':subscribers', currentTime, that.id, function(err, res) {
             that.getRiverOfNewsId(function(err, riverOfNewsId) {
               // zinterstore saves results to a key. so we have to
               // create a temporary storage
@@ -239,36 +239,6 @@ exports.addModel = function(db) {
           })
         })
       })
-    },
-
-    getSubscribersIds: function(callback) {
-      if (this.subscribersIds) {
-        callback(null, this.subscribersIds)
-      } else {
-        var that = this
-        db.zrevrange('user:' + this.id + ':subscribers', 0, -1, function(err, subscribersIds) {
-          that.subscribersIds = subscribersIds || []
-          callback(err, that.subscribersIds)
-        })
-      }
-    },
-
-    getSubscribers: function(callback) {
-      if (this.subscribers) {
-        callback(null, this.subscribers)
-      } else {
-        var that = this
-        this.getSubscribersIds(function(err, subscribersIds) {
-          async.map(Object.keys(subscribersIds), function(subscriberId, callback) {
-            models.User.findById(subscribersIds[subscriberId], function(err, subscriber) {
-              callback(err, subscriber)
-            })
-          }, function(err, subscribers) {
-            that.subscribers = subscribers.compact()
-            callback(err, that.subscribers)
-          })
-        })
-      }
     },
 
     getSubscriptionsIds: function(callback) {
@@ -450,21 +420,7 @@ exports.addModel = function(db) {
           }, function(err, subscriptionsJSON) {
             json.subscriptions = subscriptionsJSON
 
-            if (select.indexOf('subscribers') != -1) {
-              that.getSubscribers(function(err, subscribers) {
-                async.map(subscribers, function(subscriber, callback) {
-                  subscriber.toJSON(params.subscribers || {}, function(err, json) {
-                    callback(err, json)
-                  })
-                }, function(err, subscribersJSON) {
-                  json.subscribers = subscribersJSON
-
-                  callback(err, json)
-                })
-              })
-            } else {
-              callback(err, json)
-            }
+            callback(err, json)
           })
         })
       } else {

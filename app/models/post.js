@@ -166,48 +166,31 @@ exports.addModel = function(db) {
   // for a moment about this
   Post.removeLike = function(postId, userId, callback) {
     models.Post.findById(postId, function(err, post) {
-      models.User.findById(userId, function(err, user) {
-        post.getTimelinesIds(function(err, timelinesIds) {
-          user.getSubscribers(function(err, subscribers) {
-            async.forEach(subscribers, function(subscriber, callback) {
-              models.User.findById(subscriber.id, function(err, subscribedUser) {
-                subscribedUser.getRiverOfNewsId(function(err, timelineId) {
-                  timelinesIds.push(timelineId)
-                  callback(null)
+      post.getSubscribedTimelinesIds(function(err, timelinesIds) {
+        Post.bumpable(postId, function(bumpable) {
+          db.srem('post:' + postId + ':likes', userId, function(err, res) {
+            var pub = redis.createClient();
+
+            pub.publish('removeLike',
+                        JSON.stringify({ userId: userId,
+                                         postId: postId }))
+
+            timelinesIds = _.uniq(timelinesIds)
+            async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
+              if (bumpable) {
+                models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
+                  pub.publish('removeLike',
+                              JSON.stringify({ timelineId: timelinesIds[timelineId],
+                                               userId: userId,
+                                               postId: postId }))
+
+                  callback(err, res);
                 })
-              })
+              } else {
+                callback(err, res);
+              }
             }, function(err) {
-              user.getRiverOfNewsId(function(err, riverId) {
-                timelinesIds.push(riverId)
-
-                Post.bumpable(postId, function(bumpable) {
-                  db.srem('post:' + postId + ':likes', userId, function(err, res) {
-                    var pub = redis.createClient();
-
-                    pub.publish('removeLike',
-                                JSON.stringify({ userId: userId,
-                                                 postId: postId }))
-
-                    timelinesIds = _.uniq(timelinesIds)
-                    async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
-                      if (bumpable) {
-                        models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
-                          pub.publish('removeLike',
-                                      JSON.stringify({ timelineId: timelinesIds[timelineId],
-                                                       userId: userId,
-                                                       postId: postId }))
-
-                          callback(err, res);
-                        })
-                      } else {
-                        callback(err, res);
-                      }
-                    }, function(err) {
-                      callback(err, res)
-                    })
-                  })
-                })
-              })
+              callback(err, res)
             })
           })
         })
@@ -219,48 +202,31 @@ exports.addModel = function(db) {
   // for a moment about this
   Post.addLike = function(postId, userId, callback) {
     models.Post.findById(postId, function(err, post) {
-      models.User.findById(userId, function(err, user) {
-        post.getTimelinesIds(function(err, timelinesIds) {
-          user.getSubscribers(function(err, subscribers) {
-            async.forEach(subscribers, function(subscriber, callback) {
-              models.User.findById(subscriber.id, function(err, subscribedUser) {
-                subscribedUser.getRiverOfNewsId(function(err, timelineId) {
-                  timelinesIds.push(timelineId)
-                  callback(null)
+      post.getSubscribedTimelinesIds(function(err, timelinesIds) {
+        Post.bumpable(postId, function(bumpable) {
+          db.sadd('post:' + postId + ':likes', userId, function(err, res) {
+            var pub = redis.createClient();
+
+            pub.publish('newLike',
+                        JSON.stringify({ userId: userId,
+                                         postId: postId }))
+
+            timelinesIds = _.uniq(timelinesIds)
+            async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
+              if (bumpable) {
+                models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
+                  pub.publish('newLike',
+                              JSON.stringify({ timelineId: timelinesIds[timelineId],
+                                               userId: userId,
+                                               postId: postId }))
+
+                  callback(err, res);
                 })
-              })
+              } else {
+                callback(err, res);
+              }
             }, function(err) {
-              user.getRiverOfNewsId(function(err, riverId) {
-                timelinesIds.push(riverId)
-
-                Post.bumpable(postId, function(bumpable) {
-                  db.sadd('post:' + postId + ':likes', userId, function(err, res) {
-                    var pub = redis.createClient();
-
-                    pub.publish('newLike',
-                                JSON.stringify({ userId: userId,
-                                                 postId: postId }))
-
-                    timelinesIds = _.uniq(timelinesIds)
-                    async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
-                      if (bumpable) {
-                        models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
-                          pub.publish('newLike',
-                                      JSON.stringify({ timelineId: timelinesIds[timelineId],
-                                                       userId: userId,
-                                                       postId: postId }))
-
-                          callback(err, res);
-                        })
-                      } else {
-                        callback(err, res);
-                      }
-                    }, function(err) {
-                      callback(err, res)
-                    })
-                  })
-                })
-              })
+              callback(err, res)
             })
           })
         })
@@ -270,50 +236,32 @@ exports.addModel = function(db) {
 
   Post.addComment = function(postId, commentId, callback) {
     models.Post.findById(postId, function(err, post) {
-      models.Comment.findById(commentId, function(err, comment) {
-        models.User.findById(comment.userId, function(err, user) {
-          post.getTimelinesIds(function(err, timelinesIds) {
-            user.getSubscribers(function(err, subscribers) {
-              async.forEach(subscribers, function(subscriber, callback) {
-                models.User.findById(subscriber.id, function(err, subscribedUser) {
-                  subscribedUser.getRiverOfNewsId(function(err, timelineId) {
-                    timelinesIds.push(timelineId)
-                    callback(null)
-                  })
+      post.getSubscribedTimelinesIds(function(err, timelinesIds) {
+        Post.bumpable(postId, function(bumpable) {
+          db.rpush('post:' + postId + ':comments', commentId, function(err, res) {
+            var pub = redis.createClient();
+
+            pub.publish('newComment', JSON.stringify({
+              postId: postId,
+              commentId: commentId
+            }))
+
+            timelinesIds = _.uniq(timelinesIds)
+            async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
+              if (bumpable) {
+                models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
+                  pub.publish('newComment', JSON.stringify({
+                    timelineId: timelinesIds[timelineId],
+                    commentId: commentId
+                  }))
+
+                  callback(err);
                 })
-              }, function(err) {
-                user.getRiverOfNewsId(function(err, riverId) {
-                  timelinesIds.push(riverId)
-                  Post.bumpable(postId, function(bumpable) {
-                    db.rpush('post:' + postId + ':comments', commentId, function(err, res) {
-                      var pub = redis.createClient();
-
-                      pub.publish('newComment', JSON.stringify({
-                        postId: postId,
-                        commentId: comment.id
-                      }))
-
-                      timelinesIds = _.uniq(timelinesIds)
-                      async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
-                        if (bumpable) {
-                          models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
-                            pub.publish('newComment', JSON.stringify({
-                              timelineId: timelinesIds[timelineId],
-                              commentId: comment.id
-                            }))
-
-                            callback(err);
-                          })
-                        } else {
-                          callback(err);
-                        }
-                      }, function(err) {
-                        callback(err)
-                      })
-                    })
-                  })
-                })
-              })
+              } else {
+                callback(err);
+              }
+            }, function(err) {
+              callback(err)
             })
           })
         })
@@ -328,6 +276,40 @@ exports.addModel = function(db) {
   }
 
   Post.prototype = {
+    getSubscribedTimelinesIds: function(callback) {
+      var that = this
+
+      // TODO: double check if we need function here method
+      this.getTimelinesIds(function(err, timelinesIds) {
+        timelinesIds.push(that.timelineId)
+        models.User.findById(that.userId, function(err, user) {
+          user.getRiverOfNewsId(function(err, timelineId) {
+            timelinesIds.push(timelineId)
+            async.map(timelinesIds, function(timelineId, callback) {
+              models.Timeline.findById(timelineId, {}, function(err, timeline) {
+                timeline.getSubscribersIds(function(err, subscribersIds) {
+                  callback(err, subscribersIds)
+                })
+              })
+            }, function(err, subscribersIds) {
+              async.forEach(subscribersIds.flatten(), function(subscriberId, callback) {
+                models.User.findById(subscriberId, function(err, user) {
+                  user.getRiverOfNewsId(function(err, riverId) {
+                    timelinesIds.push(riverId)
+                    callback(err)
+                  })
+                })
+              }, function(err) {
+                timelinesIds = _.uniq(timelinesIds)
+
+                callback(err, timelinesIds)
+              })
+            })
+          })
+        })
+      })
+    },
+
     getAttachmentsIds: function(callback) {
       if (this.attachmentsIds) {
         callback(null, this.attachmentsIds)

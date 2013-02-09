@@ -31,7 +31,7 @@ exports.addRoutes = function(app) {
           start: req.query.start
         }, function(err, timeline) {
           if (timeline) {
-            timeline.toJSON({ select: ['id', 'posts', 'user'],
+            timeline.toJSON({ select: ['id', 'posts', 'user', 'subscribers'],
                               posts: {
                                 select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
                                 createdBy: { select: ['id', 'username'] },
@@ -42,10 +42,10 @@ exports.addRoutes = function(app) {
                               },
                               user: {
                                 select: ['id', 'username', 'subscribers', 'subscriptions'],
-                                subscribers: { select: ['id', 'username'] },
                                 subscriptions: { select: ['id', 'user'],
                                                  user: { select: ['id', 'username'] } }
-                              }
+                              },
+                              subscribers: { select: ['id', 'username'] }
                             }, function(err, json) {
               res.jsonp(json);
             })
@@ -65,22 +65,22 @@ exports.addRoutes = function(app) {
         start: req.query.start
       }, function(err, timeline) {
         if (timeline) {
-          timeline.toJSON({ select: ['id', 'posts', 'user'],
-                              posts: {
-                                select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
-                                createdBy: { select: ['id', 'username'] },
-                                comments: { select: ['id', 'body', 'createdBy'],
-                                            createdBy: { select: ['id', 'username'] }
-                                          },
-                                likes: { select: ['id', 'username'] }
-                              },
-                              user: {
-                                select: ['id', 'username', 'subscribers', 'subscriptions'],
-                                subscribers: { select: ['id', 'username'] },
-                                subscriptions: { select: ['id', 'user'],
-                                                 user: { select: ['id', 'username'] } }
-                              }
-                            }, function(err, json) {
+          timeline.toJSON({ select: ['id', 'posts', 'user', 'subscribers'],
+                            posts: {
+                              select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
+                              createdBy: { select: ['id', 'username'] },
+                              comments: { select: ['id', 'body', 'createdBy'],
+                                          createdBy: { select: ['id', 'username'] }
+                                        },
+                              likes: { select: ['id', 'username'] }
+                            },
+                            user: {
+                              select: ['id', 'username', 'subscribers', 'subscriptions'],
+                              subscriptions: { select: ['id', 'user'],
+                                               user: { select: ['id', 'username'] } }
+                            },
+                            subscribers: { select: ['id', 'username'] }
+                          }, function(err, json) {
             res.jsonp(json);
           })
         } else {

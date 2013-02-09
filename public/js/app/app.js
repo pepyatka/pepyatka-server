@@ -565,11 +565,11 @@ App.User = Ember.Object.extend({
   }.property(),
 
   subscribersLength: function() {
-    return this.subscribers.length
+    return App.postsController.subscribers.length
   }.property(),
 
   subscribedTo: function() {
-    var subscribed = this.subscribers.filter(function(subscriber) {
+    var subscribed = App.postsController.subscribers.filter(function(subscriber) {
       return subscriber.id == currentUser
     })
     return subscribed.length > 0 ? true : false
@@ -829,6 +829,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
           this.addObject(post)
         }, this)
         this.set('user', App.User.create(response.user))
+        this.set('subscribers', response.subscribers)
         this.set('id', response.id)
         this.set('isLoaded', true)
       }

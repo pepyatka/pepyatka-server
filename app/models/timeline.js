@@ -46,47 +46,58 @@ exports.addModel = function(db) {
     var currentTime = new Date().getTime()
 
     models.Post.findById(postId, function(err, post) {
-      models.User.findById(post.userId, function(err, user) {
-        user.getSubscribers(function(err, subscribers) {
-          var timelinesIds = [post.timelineId]
-          async.forEach(subscribers, function(subscriber, callback) {
-            models.User.findById(subscriber.id, function(err, subscribedUser) {
-              subscribedUser.getRiverOfNewsId(function(err, timelineId) {
-                timelinesIds.push(timelineId)
-                callback(null)
-              })
-            })
-          }, function(err) {
-            user.getRiverOfNewsId(function(err, timelineId) {
-              var pub = redis.createClient();
+      post.getSubscribedTimelinesIds(function(err, timelinesIds) {
+        var pub = redis.createClient();
 
-              timelinesIds.push(timelineId)
-              console.log(timelinesIds)
-              timelinesIds = _.uniq(timelinesIds)
-              console.log(timelinesIds)
+        async.forEach(timelinesIds, function(timelineId, callback) {
+          db.zadd('timeline:' + timelineId + ':posts', currentTime, postId, function(err, res) {
+            db.hset('post:' + postId, 'updatedAt', currentTime, function(err, res) {
+              db.sadd('post:' + postId + ':timelines', timelineId, function(err, res) {
+                pub.publish('newPost', JSON.stringify({ postId: postId,
+                                                        timelineId: timelineId }))
 
-              async.forEach(timelinesIds, function(timelineId, callback) {
-                db.zadd('timeline:' + timelineId + ':posts', currentTime, postId, function(err, res) {
-                  db.hset('post:' + postId, 'updatedAt', currentTime, function(err, res) {
-                    db.sadd('post:' + postId + ':timelines', timelineId, function(err, res) {
-                      pub.publish('newPost', JSON.stringify({ postId: postId,
-                                                              timelineId: timelineId }))
-
-                      callback(err, res)
-                    })
-                  })
-                })
-              }, function(err) {
                 callback(err)
               })
             })
           })
+        }, function(err) {
+          callback(err)
         })
       })
     })
   }
 
   Timeline.prototype = {
+    getSubscribersIds: function(callback) {
+      if (this.subscribersIds) {
+        callback(null, this.subscribersIds)
+      } else {
+        var that = this
+        db.zrevrange('timeline:' + this.id + ':subscribers', 0, -1, function(err, subscribersIds) {
+          that.subscribersIds = subscribersIds || []
+          callback(err, that.subscribersIds)
+        })
+      }
+    },
+
+    getSubscribers: function(callback) {
+      if (this.subscribers) {
+        callback(null, this.subscribers)
+      } else {
+        var that = this
+        this.getSubscribersIds(function(err, subscribersIds) {
+          async.map(Object.keys(subscribersIds), function(subscriberId, callback) {
+            models.User.findById(subscribersIds[subscriberId], function(err, subscriber) {
+              callback(err, subscriber)
+            })
+          }, function(err, subscribers) {
+            that.subscribers = subscribers.compact()
+            callback(err, that.subscribers)
+          })
+        })
+      }
+    },
+
     getPostsIds: function(start, num, callback) {
       if (this.postsIds) {
         callback(null, this.postsIds)
@@ -175,7 +186,21 @@ exports.addModel = function(db) {
                 }, function(err, postsJSON) {
                   json.posts = postsJSON
 
-                  callback(err, json)
+                  if (select.indexOf('subscribers') != -1) {
+                    that.getSubscribers(function(err, subscribers) {
+                      async.map(subscribers, function(subscriber, callback) {
+                        subscriber.toJSON(params.subscribers || {}, function(err, json) {
+                          callback(err, json)
+                        })
+                      }, function(err, subscribersJSON) {
+                        json.subscribers = subscribersJSON
+
+                        callback(err, json)
+                      })
+                    })
+                  } else {
+                    callback(err, json)
+                  }
                 })
               })
             } else {
