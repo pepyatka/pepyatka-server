@@ -162,7 +162,10 @@ App.Subscription = Ember.Object.extend({
 })
 
 App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
-  templateName: 'application'
+  templateName: 'application',
+  searchByBody: function(){
+        App.searchController.searchByBody();
+    }
 });
 App.ApplicationController = Ember.Controller.extend({
   subscription: null,
@@ -171,6 +174,15 @@ App.ApplicationController = Ember.Controller.extend({
     App.ApplicationController.subscription = App.Subscription.create()
   }
 });
+
+App.CreateSearchView = Ember.TextField.extend(Ember.TargetActionSupport, {
+    // TODO: Extract value from controller
+    valueBinding: 'App.searchController.body',
+
+    insertNewline: function() {
+        this.triggerAction();
+    }
+})
 
 // Index view to display all posts on the page
 App.PostsView = Ember.View.extend({
@@ -683,6 +695,49 @@ App.Post = Ember.Object.extend({
     }
   }.property('attachments')
 });
+
+App.SearchController = Ember.ArrayController.extend({
+    body: '',
+    searchByBody: function() {
+        if (this.body)
+        {
+            var qryObj = {
+                "sort" : [
+                    {"timestamp" : {"order" : "desc"}}
+                ],
+                "query" : {
+                    "multi_match" : {
+                        "fields" : ["body", "comments.body"],
+                        "query" : {
+                            "match" : {
+                                "message" : {
+                                    "query" : this.body,
+                                    "type" : "phrase"
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            $.ajax({
+                url: '/search',
+                data: {
+                    index: 'pepyatka',
+                    type: 'post',
+                    queryObject: qryObj
+                },
+                dataType: 'jsonp',
+                success: function(response){
+                    console.log(response);
+                }
+            });
+
+            this.set('body', '');
+        }
+    }
+})
+App.searchController = App.SearchController.create()
 
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.PaginationHelper, {
   content: [],

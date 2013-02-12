@@ -19,3 +19,4 @@ public/files/*
 tmp/*
 /conf/envLocal.js
 
+/.idea
