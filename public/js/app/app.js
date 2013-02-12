@@ -254,6 +254,8 @@ App.PostContainerView = Ember.View.extend({
   didInsertElement: function() {
     // wrap anchor tags around links in post text
     this.$().find('.text').anchorTextUrls();
+    // wrap hashtags around text in post text
+    this.$().find('.text').hashTagsUrls();
     // please read https://github.com/kswedberg/jquery-expander/issues/24
     this.$().find('.text').expander({
       slicePoint: 350,
@@ -300,6 +302,8 @@ App.OwnPostContainerView = Ember.View.extend({
   didInsertElement: function() {
     // wrap anchor tags around links in post text
     this.$().find('.text').anchorTextUrls();
+    // wrap hashtags around text in post text
+    this.$().find('.text').hashTagsUrls();
     // please read https://github.com/kswedberg/jquery-expander/issues/24
     this.$().find('.text').expander({
       slicePoint: 350,
@@ -338,6 +342,8 @@ App.CommentContainerView = Ember.View.extend({
   didInsertElement: function() {
     // wrap anchor tags around links in comments
     this.$().find('.body').anchorTextUrls();
+    // wrap hashtags around text in post text
+    this.$().find('.body').hashTagsUrls();
     this.$().find('.body').expander({
       slicePoint: 512,
       expandPrefix: '&hellip; ',
@@ -697,45 +703,51 @@ App.Post = Ember.Object.extend({
 });
 
 App.SearchController = Ember.ArrayController.extend({
-    body: '',
-    searchByBody: function() {
-        if (this.body)
-        {
-            var qryObj = {
-                "sort" : [
-                    {"timestamp" : {"order" : "desc"}}
-                ],
-                "query" : {
-                    "multi_match" : {
-                        "fields" : ["body", "comments.body"],
-                        "query" : {
-                            "match" : {
-                                "message" : {
-                                    "query" : this.body,
-                                    "type" : "phrase"
-                                }
-                            }
-                        }
-                    }
+  body: '',
+  //this method invoke searching in bodies of posts and comments
+  searchInBodies: function(text){
+    if (text)
+    {
+      var qryObj = {
+        "sort" : [
+          {"timestamp" : {"order" : "desc"}}
+        ],
+        "query" : {
+          "multi_match" : {
+            "fields" : ["body", "comments.body"],
+            "query" : {
+              "match" : {
+                "message" : {
+                  "query" : text,
+                  "type" : "phrase"
                 }
-            };
-
-            $.ajax({
-                url: '/search',
-                data: {
-                    index: 'pepyatka',
-                    type: 'post',
-                    queryObject: qryObj
-                },
-                dataType: 'jsonp',
-                success: function(response){
-                    console.log(response);
-                }
-            });
-
-            this.set('body', '');
+              }
+            }
+          }
         }
+      };
+
+      $.ajax({
+        url: '/search',
+        data: {
+          index: 'pepyatka',
+          type: 'post',
+          queryObject: qryObj
+        },
+        dataType: 'jsonp',
+        success: function(response){
+          console.log(response);
+        }
+      });
     }
+  },
+  searchByBody: function() {
+    if (this.body)
+    {
+      this.searchInBodies(this.body);
+      this.set('body', '');
+    }
+  }
 })
 App.searchController = App.SearchController.create()
 

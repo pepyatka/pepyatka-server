@@ -20,7 +20,6 @@ var indexPost = function(post){
                         likes: { select: ['id', 'username']}
                     },
                     function(err, json) {
-                        console.log(json)
                         elasticSearchClient.index('pepyatka', 'post',
                         {
                             id: json.id,
