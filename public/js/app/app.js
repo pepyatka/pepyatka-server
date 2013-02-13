@@ -704,9 +704,55 @@ App.Post = Ember.Object.extend({
 
 App.SearchController = Ember.ArrayController.extend({
   body: '',
-  //this method invoke searching in bodies of posts and comments
-  searchInBodies: function(text){
+  insertPostsIntoMediaList : function(posts){
+    App.ApplicationController.subscription.unsubscribe()
+//    App.ApplicationController.subscription.subscribe('timelineId', response.id)
+
+    App.postsController.set('content', [])
+    posts.forEach(function(attrs) {
+      var post = App.Post.create(attrs)
+      App.postsController.addObject(post)
+    })
+
+    App.postsController.set('isLoaded', true)
+  },
+
+  //this method invoke searching hashtag in bodies of posts and comments
+  searchHashtagInBodies: function(text){
     if (text)
+    {
+      var qryObj = {
+        "sort" : [
+          {"timestamp" : {"order" : "desc"}}
+        ],
+        "query" : {
+          "multi_match" : {
+            "fields" : ["body", "comments.body"],
+            "query" : {
+              "query_string" : {
+                "query" : text
+              }
+            }
+          }
+        }
+      }
+    };
+
+    $.ajax({
+      url: '/search',
+      data: {
+        index: 'pepyatka',
+        type: 'post',
+        queryObject: qryObj
+      },
+      dataType: 'jsonp',
+      success: function(response){
+        App.searchController.insertPostsIntoMediaList(response.posts);
+      }
+    });
+  },
+  searchByBody: function() {
+    if (this.body)
     {
       var qryObj = {
         "sort" : [
@@ -718,7 +764,7 @@ App.SearchController = Ember.ArrayController.extend({
             "query" : {
               "match" : {
                 "message" : {
-                  "query" : text,
+                  "query" : this.body,
                   "type" : "phrase"
                 }
               }
@@ -736,15 +782,9 @@ App.SearchController = Ember.ArrayController.extend({
         },
         dataType: 'jsonp',
         success: function(response){
-          console.log(response);
+          App.searchController.insertPostsIntoMediaList(response.posts);
         }
       });
-    }
-  },
-  searchByBody: function() {
-    if (this.body)
-    {
-      this.searchInBodies(this.body);
       this.set('body', '');
     }
   }

@@ -16,18 +16,16 @@
 <script type="text/x-handlebars" data-template-name="application">
   <div class="container">
     <div class="row">
-      <div class="span6">
+      <div class="span5">
         <h1 class="title">
           <a href="/">Pepyatka</a> <small class="mutted">0.0.3</small>
         </h1>
       </div>
-	  <div class="span3">
+	  <div class="span4">
         <div>
           {{view App.CreateSearchView target="parentView" action="searchByBody"
                 class="span3"}}
-        </div>
-        <div class="pull-right">
-          <button {{action searchByBody target="view"}} class="btn pull-right">Search</button>
+                <button {{action searchByBody target="view"}} class="btn pull-right">Search</button>
         </div>
       </div>
 

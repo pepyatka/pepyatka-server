@@ -14,8 +14,7 @@ var startSearching = function(query, callback){
     elasticSearchClient.search(query.index, query.type, query.queryObject)
     .on('data', function(data) {
         var json =  JSON.parse(data);
-        console.log(json);
-        callback(parser.parse(json));
+        callback({posts: parser.parse(json)});
     })
     .on('done', function(){
         //always returns 0 right now
