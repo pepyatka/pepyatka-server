@@ -1,3 +1,11 @@
+// TODO: it bust be removed from here
+//------
+Array.prototype.append = function(array)
+{
+  this.push.apply(this, array)
+}
+//------
+
 App = Ember.Application.create();
 
 App.ShowSpinnerWhileRendering = Ember.Mixin.create({
@@ -145,13 +153,48 @@ App.Subscription = Ember.Object.extend({
     })
   },
 
-  subscribe: function(channel, id) {
-    this.subscribedTo[channel] = id;
-    this.socket.emit('subscribe', this.subscribedTo);
+  subscribe: function(channel, ids) {
+    var subscribedTo = {};
+    if (!$.isArray(ids)){
+      ids = [ids]
+    }
+    if (this.subscribedTo[channel]){
+      this.subscribedTo[channel].append(ids);
+    } else{
+      this.subscribedTo[channel] = ids;
+    }
+
+    subscribedTo[channel] = ids;
+    this.socket.emit('subscribe', subscribedTo);
   },
 
-  unsubscribe: function() {
-    this.socket.emit('unsubscribe', this.subscribedTo)
+  unsubscribe: function(channel, ids) {
+    var unsubscribedTo = {};
+
+    if (arguments[0] && arguments[1]){
+      if (this.subscribedTo[channel]){
+        if (!$.isArray(ids))
+        {
+          ids = [ids]
+        }
+        ids.forEach(function(id){
+          var indexOfThisId = this.subscribedTo[channel].indexOf(id);
+          if (indexOfThisId)
+          {
+            unsubscribedTo[channel].append(ids);
+            this.subscribedTo[channel].splice(indexOfThisId, 1);
+          }
+        })
+      }
+    }
+    else if(arguments[0] && !arguments[1]){
+      unsubscribedTo[channel] = this.subscribedTo[channel];
+      this.subscribedTo[channel] == null;
+    } else if (arguments.length == 0){
+      unsubscribedTo = this.subscribedTo;
+    }
+
+    this.socket.emit('unsubscribe', unsubscribedTo)
   },
 
   reconnect: function() {
@@ -705,15 +748,17 @@ App.Post = Ember.Object.extend({
 App.SearchController = Ember.ArrayController.extend({
   body: '',
   insertPostsIntoMediaList : function(posts){
-    App.ApplicationController.subscription.unsubscribe()
-//    App.ApplicationController.subscription.subscribe('timelineId', response.id)
+    App.ApplicationController.subscription.unsubscribe();
 
-    App.postsController.set('content', [])
+    App.postsController.set('content', []);
+    var postIds = [];
     posts.forEach(function(attrs) {
-      var post = App.Post.create(attrs)
-      App.postsController.addObject(post)
+      var post = App.Post.create(attrs);
+      App.postsController.addObject(post);
+      postIds.push(post.id)
     })
 
+    App.ApplicationController.subscription.subscribe('post', postIds);
     App.postsController.set('isLoaded', true)
   },
 
@@ -928,7 +973,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       success: function(response) {
         // TODO: extract to an observer
         App.ApplicationController.subscription.unsubscribe()
-        App.ApplicationController.subscription.subscribe('timelineId', response.id)
+        App.ApplicationController.subscription.subscribe('timeline', response.id)
 
         this.set('content', [])
         response.posts.forEach(function(attrs) {
@@ -955,7 +1000,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       context: post,
       success: function(response){
         App.ApplicationController.subscription.unsubscribe()
-        App.ApplicationController.subscription.subscribe('postId', response.id)
+        App.ApplicationController.subscription.subscribe('post', response.id)
         this.setProperties(response)
       }
     })

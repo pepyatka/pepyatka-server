@@ -38,26 +38,26 @@ exports.listen = function(server) {
   io.sockets.on('connection',
     function(socket) {
       socket.on('subscribe', function(data) {
-        if (data.timelineId) {
-          console.log('User has subscribed to ' + data.timelineId + ' timeline')
+        for(var channel in data){
+          if (data[channel]){
+            data[channel].forEach(function(id){
+              console.log('User has subscribed to ' + id + ' ' + channel);
 
-          socket.join('timeline:' + data.timelineId);
-        } else if (data.postId) {
-          console.log('User has subscribed to ' + data.postId + ' post')
-
-          socket.join('post:' + data.postId);
+              socket.join(channel + ':' + id);
+            })
+          }
         }
       })
 
       socket.on('unsubscribe', function(data) {
-        if (data.timelineId) {
-          console.log('User has disconnected from ' + data.timelineId + ' timeline')
+        for(var channel in data){
+          if (data[channel]){
+            data[channel].forEach(function(id){
+              console.log('User has disconnected from ' + id + ' ' + channel);
 
-          socket.leave('timeline:' + data.timelineId);
-        } else if (data.postId) {
-          console.log('User has disconnected from ' + data.postId + ' post')
-
-          socket.leave('post:' + data.postId);
+              socket.leave(channel + ':' + id);
+            })
+          }
         }
       })
     }
