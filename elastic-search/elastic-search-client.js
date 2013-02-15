@@ -1,4 +1,4 @@
-var ElasticSearchClient = require('elasticsearchclient');
+var ElasticSearchClient = require('elasticsearchclient')
   , db = require('../db').connect()
 
 var serverOptions = {
