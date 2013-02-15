@@ -41,9 +41,11 @@ exports.listen = function(server) {
         for(var channel in data){
           if (data[channel]){
             data[channel].forEach(function(id){
-              console.log('User has subscribed to ' + id + ' ' + channel);
+              if (id){
+                console.log('User has subscribed to ' + id + ' ' + channel);
 
-              socket.join(channel + ':' + id);
+                socket.join(channel + ':' + id);
+              }
             })
           }
         }
@@ -53,9 +55,11 @@ exports.listen = function(server) {
         for(var channel in data){
           if (data[channel]){
             data[channel].forEach(function(id){
-              console.log('User has disconnected from ' + id + ' ' + channel);
+              if (id){
+                console.log('User has disconnected from ' + id + ' ' + channel);
 
-              socket.leave(channel + ':' + id);
+                socket.leave(channel + ':' + id);
+              }
             })
           }
         }

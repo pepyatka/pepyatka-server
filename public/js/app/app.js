@@ -1,11 +1,3 @@
-// TODO: it bust be removed from here
-//------
-Array.prototype.append = function(array)
-{
-  this.push.apply(this, array)
-}
-//------
-
 App = Ember.Application.create();
 
 App.ShowSpinnerWhileRendering = Ember.Mixin.create({
@@ -149,14 +141,14 @@ App.Subscription = Ember.Object.extend({
     })
 
     this.socket.on('disconnect', function(data) {
-      that.reconnect()
+      that.reconnect();
     })
   },
 
   subscribe: function(channel, ids) {
     var subscribedTo = {};
     if (!$.isArray(ids)){
-      ids = [ids]
+      ids = [ids];
     }
     if (this.subscribedTo[channel]){
       this.subscribedTo[channel].append(ids);
@@ -175,7 +167,7 @@ App.Subscription = Ember.Object.extend({
       if (this.subscribedTo[channel]){
         if (!$.isArray(ids))
         {
-          ids = [ids]
+          ids = [ids];
         }
         ids.forEach(function(id){
           var indexOfThisId = this.subscribedTo[channel].indexOf(id);
@@ -189,18 +181,18 @@ App.Subscription = Ember.Object.extend({
     }
     else if(arguments[0] && !arguments[1]){
       unsubscribedTo[channel] = this.subscribedTo[channel];
-      this.subscribedTo[channel] == null;
+      this.subscribedTo[channel] == undefined;
     } else if (arguments.length == 0){
       unsubscribedTo = this.subscribedTo;
     }
 
-    this.socket.emit('unsubscribe', unsubscribedTo)
+    this.socket.emit('unsubscribe', unsubscribedTo);
   },
 
   reconnect: function() {
-    var subscribedTo = this.get('subscribedTo')
-    this.unsubscribe()
-    this.subscribe(subscribedTo)
+    var subscribedTo = this.get('subscribedTo');
+    this.unsubscribe();
+    this.socket.emit('subscribe', subscribedTo);
   }
 })
 

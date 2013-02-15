@@ -21,7 +21,7 @@ Configuration
   globally)
 - Run elasticsearch (elasticsearh_download_folder/bin/elasticsearch.bat)
 - Run server: node ./server.js
-- Run search application: node ./bin/searchd.js
+- Run search demon (run_search_demon.cmd)
 
 Roadmap
 -------
