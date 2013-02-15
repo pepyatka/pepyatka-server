@@ -1,5 +1,4 @@
-var models = require('../models'),
-    searchClient = require('../../elasticSearch/elasticSearchClient.js');
+var searchClient = require('../../elastic-search/elastic-search-client.js');
 
 exports.addRoutes = function(app) {
     app.get('/search', function(req, res) {

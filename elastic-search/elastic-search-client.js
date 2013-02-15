@@ -1,12 +1,14 @@
 var ElasticSearchClient = require('elasticsearchclient');
+  , db = require('../db').connect()
+
 var serverOptions = {
     host: 'localhost',
     port: 9200
 };
-var elasticSearchClient = new ElasticSearchClient(serverOptions);
-exports.elasticSearchClient = elasticSearchClient;
 
-var db = require('../db').connect()
+var elasticSearchClient = new ElasticSearchClient(serverOptions);
+
+exports.elasticSearchClient = elasticSearchClient;
 
 var getPostTimestamp = function(post, callback){
   db.zscore('timeline:' + post.timelineId + ':posts', post.id, function(err, timestamp){
