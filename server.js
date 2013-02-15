@@ -8,7 +8,7 @@ var express = require('express')
   , async = require('async')
   , passport = require('passport')
 
-require('./core_ext')
+require('./public/js/libs/core_ext')
 
 module.exports = app;
 

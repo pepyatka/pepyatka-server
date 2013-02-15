@@ -12,13 +12,16 @@ Configuration
 - Install redis
 - Install graphicsmagick (ensure jpeg and png flags are set)
 - Install nodejs
+- Download elasticsearch
 - Make sure to update secret token: cp ./conf/envDefault.js to
   ./conf/envLocal.js.
 - Install dependencies: npm install
 - Check there are no broken tests: ./node_modules/mocha/bin/mocha
   --recursive (or just run mocha --resursive if you have installed it
   globally)
+- Run elasticsearch (elasticsearh_download_folder/bin/elasticsearch.bat)
 - Run server: node ./server.js
+- Run search demon (run_search_demon.cmd)
 
 Roadmap
 -------

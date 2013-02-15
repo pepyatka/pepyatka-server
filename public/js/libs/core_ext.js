@@ -21,3 +21,8 @@ Array.prototype.flatten = function() {
   var merged = []
   return merged.concat.apply(merged, this)
 }
+
+Array.prototype.append = function(array)
+{
+  this.push.apply(this, array)
+}

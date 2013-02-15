@@ -141,28 +141,66 @@ App.Subscription = Ember.Object.extend({
     })
 
     this.socket.on('disconnect', function(data) {
-      that.reconnect()
+      that.reconnect();
     })
   },
 
-  subscribe: function(channel, id) {
-    this.subscribedTo[channel] = id;
-    this.socket.emit('subscribe', this.subscribedTo);
+  subscribe: function(channel, ids) {
+    var subscribedTo = {};
+    if (!$.isArray(ids)){
+      ids = [ids];
+    }
+    if (this.subscribedTo[channel]){
+      this.subscribedTo[channel].append(ids);
+    } else{
+      this.subscribedTo[channel] = ids;
+    }
+
+    subscribedTo[channel] = ids;
+    this.socket.emit('subscribe', subscribedTo);
   },
 
-  unsubscribe: function() {
-    this.socket.emit('unsubscribe', this.subscribedTo)
+  unsubscribe: function(channel, ids) {
+    var unsubscribedTo = {};
+
+    if (arguments[0] && arguments[1]){
+      if (this.subscribedTo[channel]){
+        if (!$.isArray(ids))
+        {
+          ids = [ids];
+        }
+        ids.forEach(function(id){
+          var indexOfThisId = this.subscribedTo[channel].indexOf(id);
+          if (indexOfThisId)
+          {
+            unsubscribedTo[channel].append(ids);
+            this.subscribedTo[channel].splice(indexOfThisId, 1);
+          }
+        })
+      }
+    }
+    else if(arguments[0] && !arguments[1]){
+      unsubscribedTo[channel] = this.subscribedTo[channel];
+      this.subscribedTo[channel] == undefined;
+    } else if (arguments.length == 0){
+      unsubscribedTo = this.subscribedTo;
+    }
+
+    this.socket.emit('unsubscribe', unsubscribedTo);
   },
 
   reconnect: function() {
-    var subscribedTo = this.get('subscribedTo')
-    this.unsubscribe()
-    this.subscribe(subscribedTo)
+    var subscribedTo = this.get('subscribedTo');
+    this.unsubscribe();
+    this.socket.emit('subscribe', subscribedTo);
   }
 })
 
 App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
-  templateName: 'application'
+  templateName: 'application',
+  searchByBody: function(){
+        App.searchController.searchByBody();
+    }
 });
 App.ApplicationController = Ember.Controller.extend({
   subscription: null,
@@ -171,6 +209,15 @@ App.ApplicationController = Ember.Controller.extend({
     App.ApplicationController.subscription = App.Subscription.create()
   }
 });
+
+App.CreateSearchView = Ember.TextField.extend(Ember.TargetActionSupport, {
+    // TODO: Extract value from controller
+    valueBinding: 'App.searchController.body',
+
+    insertNewline: function() {
+        this.triggerAction();
+    }
+})
 
 // Index view to display all posts on the page
 App.PostsView = Ember.View.extend({
@@ -242,6 +289,8 @@ App.PostContainerView = Ember.View.extend({
   didInsertElement: function() {
     // wrap anchor tags around links in post text
     this.$().find('.text').anchorTextUrls();
+    // wrap hashtags around text in post text
+    this.$().find('.text').hashTagsUrls();
     // please read https://github.com/kswedberg/jquery-expander/issues/24
     this.$().find('.text').expander({
       slicePoint: 350,
@@ -288,6 +337,8 @@ App.OwnPostContainerView = Ember.View.extend({
   didInsertElement: function() {
     // wrap anchor tags around links in post text
     this.$().find('.text').anchorTextUrls();
+    // wrap hashtags around text in post text
+    this.$().find('.text').hashTagsUrls();
     // please read https://github.com/kswedberg/jquery-expander/issues/24
     this.$().find('.text').expander({
       slicePoint: 350,
@@ -326,6 +377,8 @@ App.CommentContainerView = Ember.View.extend({
   didInsertElement: function() {
     // wrap anchor tags around links in comments
     this.$().find('.body').anchorTextUrls();
+    // wrap hashtags around text in post text
+    this.$().find('.body').hashTagsUrls();
     this.$().find('.body').expander({
       slicePoint: 512,
       expandPrefix: '&hellip; ',
@@ -684,6 +737,97 @@ App.Post = Ember.Object.extend({
   }.property('attachments')
 });
 
+App.SearchController = Ember.ArrayController.extend({
+  body: '',
+  insertPostsIntoMediaList : function(posts){
+    App.ApplicationController.subscription.unsubscribe();
+
+    App.postsController.set('content', []);
+    var postIds = [];
+    posts.forEach(function(attrs) {
+      var post = App.Post.create(attrs);
+      App.postsController.addObject(post);
+      postIds.push(post.id)
+    })
+
+    App.ApplicationController.subscription.subscribe('post', postIds);
+    App.postsController.set('isLoaded', true)
+  },
+
+  //this method invoke searching hashtag in bodies of posts and comments
+  searchHashtagInBodies: function(text){
+    if (text)
+    {
+      var qryObj = {
+        "sort" : [
+          {"timestamp" : {"order" : "desc"}}
+        ],
+        "query" : {
+          "multi_match" : {
+            "fields" : ["body", "comments.body"],
+            "query" : {
+              "query_string" : {
+                "query" : text
+              }
+            }
+          }
+        }
+      }
+    };
+
+    $.ajax({
+      url: '/search',
+      data: {
+        index: 'pepyatka',
+        type: 'post',
+        queryObject: qryObj
+      },
+      dataType: 'jsonp',
+      success: function(response){
+        App.searchController.insertPostsIntoMediaList(response.posts);
+      }
+    });
+  },
+  searchByBody: function() {
+    if (this.body)
+    {
+      var qryObj = {
+        "sort" : [
+          {"timestamp" : {"order" : "desc"}}
+        ],
+        "query" : {
+          "multi_match" : {
+            "fields" : ["body", "comments.body"],
+            "query" : {
+              "match" : {
+                "message" : {
+                  "query" : this.body,
+                  "type" : "phrase"
+                }
+              }
+            }
+          }
+        }
+      };
+
+      $.ajax({
+        url: '/search',
+        data: {
+          index: 'pepyatka',
+          type: 'post',
+          queryObject: qryObj
+        },
+        dataType: 'jsonp',
+        success: function(response){
+          App.searchController.insertPostsIntoMediaList(response.posts);
+        }
+      });
+      this.set('body', '');
+    }
+  }
+})
+App.searchController = App.SearchController.create()
+
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.PaginationHelper, {
   content: [],
   body: '',
@@ -821,7 +965,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       success: function(response) {
         // TODO: extract to an observer
         App.ApplicationController.subscription.unsubscribe()
-        App.ApplicationController.subscription.subscribe('timelineId', response.id)
+        App.ApplicationController.subscription.subscribe('timeline', response.id)
 
         this.set('content', [])
         response.posts.forEach(function(attrs) {
@@ -848,7 +992,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       context: post,
       success: function(response){
         App.ApplicationController.subscription.unsubscribe()
-        App.ApplicationController.subscription.subscribe('postId', response.id)
+        App.ApplicationController.subscription.subscribe('post', response.id)
         this.setProperties(response)
       }
     })

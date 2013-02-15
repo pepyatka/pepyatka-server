@@ -5,8 +5,10 @@
 <script src="/js/libs/moment.min.js"></script>
 <script src="/js/libs/handlebars-1.0.rc.1.js"></script>
 <script src="/js/libs/jquery.anchorlinks.js"></script>
+<script src="/js/libs/jquery.hashtags.js"></script>
 <script src="/js/libs/jquery.expander.min.js"></script>
 <script src="/js/libs/jquery.autogrow-textarea.js"></script>
+<script src="/js/libs/core_ext.js"></script>
 <script src="/js/libs/bootstrap.min.js"></script>
 <script src="/js/libs/bootstrap.file-input.js"></script>
 <script src="/js/libs/ember-1.0.0-pre.2.js"></script>
@@ -15,10 +17,17 @@
 <script type="text/x-handlebars" data-template-name="application">
   <div class="container">
     <div class="row">
-      <div class="span9">
+      <div class="span5">
         <h1 class="title">
           <a href="/">Pepyatka</a> <small class="mutted">0.0.3</small>
         </h1>
+      </div>
+	  <div class="span4 searchView">
+        <div>
+          {{view App.CreateSearchView target="parentView" action="searchByBody"
+                class="span3"}}
+                <button {{action searchByBody target="view"}} class="btn pull-right">Search</button>
+        </div>
       </div>
 
       <% if (!req.user || req.user.username == 'anonymous') { %>

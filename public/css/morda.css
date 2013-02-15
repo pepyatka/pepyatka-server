@@ -187,3 +187,6 @@ footer {
 .loading .spinner {
     display: block;
 }
+.searchView {
+    margin-top: 17px;
+}
