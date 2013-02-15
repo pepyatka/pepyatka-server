@@ -566,9 +566,11 @@ App.OnePostView = Ember.View.extend({
 });
 
 App.UserTimelineController = Ember.ObjectController.extend({
+  resourceUrl: '/v1/timeline',
+
   subscribeTo: function(timelineId) {
     $.ajax({
-      url: '/v1/timeline/' + timelineId + '/subscribe',
+      url: this.resourceUrl + '/' + timelineId + '/subscribe',
       type: 'post',
       success: function(response) {
         console.log(response)
@@ -579,7 +581,7 @@ App.UserTimelineController = Ember.ObjectController.extend({
 
   unsubscribeTo: function(timelineId) {
     $.ajax({
-      url: '/v1/timeline/' + timelineId + '/unsubscribe',
+      url: this.resourceUrl + '/' + timelineId + '/unsubscribe',
       type: 'post',
       success: function(response) {
         console.log(response)
@@ -635,7 +637,8 @@ App.User = Ember.Object.extend({
 })
 
 App.CommentsController = Ember.ArrayController.extend({
-  // TODO: extract URL to class level
+  resourceUrl: '/v1/comments',
+
   // TODO: extract data to class/model level
   createComment: function(post, body) {
     var comment = App.Comment.create({ 
@@ -644,7 +647,7 @@ App.CommentsController = Ember.ArrayController.extend({
     });
     
     $.ajax({
-      url: '/v1/comments',
+      url: this.resourceUrl,
       type: 'post',
       data: { body: body, postId: post.id }, // XXX: we've already defined a model above
       context: comment,
@@ -829,6 +832,8 @@ App.SearchController = Ember.ArrayController.extend({
 App.searchController = App.SearchController.create()
 
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.PaginationHelper, {
+  resourceUrl: '/v1/posts',
+
   content: [],
   body: '',
   isProgressBarHidden: 'hidden',
@@ -853,7 +858,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
   // TODO: like model
   likePost: function(postId) {
     $.ajax({
-      url: '/v1/posts/' + postId + '/like',
+      url: this.resourceUrl + '/' + postId + '/like',
       type: 'post',
       success: function(response) {
         console.log(response)
@@ -864,7 +869,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
   // TODO: like model
   unlikePost: function(postId) {
     $.ajax({
-      url: '/v1/posts/' + postId + '/unlike',
+      url: this.resourceUrl + '/' + postId + '/unlike',
       type: 'post',
       success: function(response) {
         console.log(response)
@@ -919,12 +924,12 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       App.postsController.set('isProgressBarHidden', 'hidden')
     }, false);
 
-    xhr.open("post", "/v1/posts");
+    xhr.open("post", this.resourceUrl);
     xhr.send(data);
 
     // fallback to simple ajax if xhr is not supported
     // $.ajax({
-    //   url: '/v1/posts',
+    //   url: this.resourceUrl,
     //   type: 'post',
     //   data: data,
     //   cache: false,
@@ -987,7 +992,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
     });
 
     $.ajax({
-      url: '/v1/posts/' + postId,
+      url: this.resourceUrl + '/' + postId,
       dataType: 'jsonp',
       context: post,
       success: function(response){
