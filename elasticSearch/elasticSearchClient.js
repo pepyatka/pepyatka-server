@@ -6,9 +6,7 @@ var serverOptions = {
 var elasticSearchClient = new ElasticSearchClient(serverOptions);
 exports.elasticSearchClient = elasticSearchClient;
 
-var models = require('./../app/models')
-  , redis = require('redis')
-  , db = require('../db').connect()
+var db = require('../db').connect()
 
 var getPostTimestamp = function(post, callback){
   db.zscore('timeline:' + post.timelineId + ':posts', post.id, function(err, timestamp){
