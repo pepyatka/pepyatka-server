@@ -98,9 +98,11 @@ exports.parse = function(elasticSearchData){
   };
 
   var resultArray = [];
-  elasticSearchData.hits.hits.forEach(function(entry){
-    resultArray.push(parser[getParserName(entry._index, entry._type)](entry));
-  });
+
+  if (elasticSearchData && elasticSearchData.hits)
+    elasticSearchData.hits.hits.forEach(function(entry){
+      resultArray.push(parser[getParserName(entry._index, entry._type)](entry));
+    });
 
   return resultArray;
 };
