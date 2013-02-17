@@ -202,29 +202,35 @@ exports.addModel = function(db) {
   Post.addLike = function(postId, userId, callback) {
     models.Post.findById(postId, function(err, post) {
       post.getSubscribedTimelinesIds(function(err, timelinesIds) {
-        Post.bumpable(postId, function(bumpable) {
-          db.sadd('post:' + postId + ':likes', userId, function(err, res) {
-            var pub = redis.createClient();
+        models.User.findById(userId, function(err, user) {
+          user.getLikesTimelineId(function(err, timelineId) {
+            timelinesIds.push(timelineId)
 
-            pub.publish('newLike',
-                        JSON.stringify({ userId: userId,
-                                         postId: postId }))
+            Post.bumpable(postId, function(bumpable) {
+              db.sadd('post:' + postId + ':likes', userId, function(err, res) {
+                var pub = redis.createClient();
 
-            async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
-              if (bumpable) {
-                models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
-                  pub.publish('newLike',
-                              JSON.stringify({ timelineId: timelinesIds[timelineId],
-                                               userId: userId,
-                                               postId: postId }))
+                pub.publish('newLike',
+                            JSON.stringify({ userId: userId,
+                                             postId: postId }))
 
-                  callback(err, res);
+                async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
+                  if (bumpable) {
+                    models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
+                      pub.publish('newLike',
+                                  JSON.stringify({ timelineId: timelinesIds[timelineId],
+                                                   userId: userId,
+                                                   postId: postId }))
+
+                      callback(err, res);
+                    })
+                  } else {
+                    callback(err, res);
+                  }
+                }, function(err) {
+                  callback(err, res)
                 })
-              } else {
-                callback(err, res);
-              }
-            }, function(err) {
-              callback(err, res)
+              })
             })
           })
         })
@@ -235,30 +241,36 @@ exports.addModel = function(db) {
   Post.addComment = function(postId, commentId, callback) {
     models.Post.findById(postId, function(err, post) {
       post.getSubscribedTimelinesIds(function(err, timelinesIds) {
-        Post.bumpable(postId, function(bumpable) {
-          db.rpush('post:' + postId + ':comments', commentId, function(err, res) {
-            var pub = redis.createClient();
+        models.User.findById(userId, function(err, user) {
+          user.getCommentsTimelineId(function(err, timelineId) {
+            timelinesIds.push(timelineId)
 
-            pub.publish('newComment', JSON.stringify({
-              postId: postId,
-              commentId: commentId
-            }))
+            Post.bumpable(postId, function(bumpable) {
+              db.rpush('post:' + postId + ':comments', commentId, function(err, res) {
+                var pub = redis.createClient();
 
-            async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
-              if (bumpable) {
-                models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
-                  pub.publish('newComment', JSON.stringify({
-                    timelineId: timelinesIds[timelineId],
-                    commentId: commentId
-                  }))
+                pub.publish('newComment', JSON.stringify({
+                  postId: postId,
+                  commentId: commentId
+                }))
 
-                  callback(err);
+                async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
+                  if (bumpable) {
+                    models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
+                      pub.publish('newComment', JSON.stringify({
+                        timelineId: timelinesIds[timelineId],
+                        commentId: commentId
+                      }))
+
+                      callback(err);
+                    })
+                  } else {
+                    callback(err);
+                  }
+                }, function(err) {
+                  callback(err)
                 })
-              } else {
-                callback(err);
-              }
-            }, function(err) {
-              callback(err)
+              })
             })
           })
         })
