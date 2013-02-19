@@ -740,7 +740,7 @@ App.Post = Ember.Object.extend({
   }.property('attachments')
 });
 
-App.SearchController = Ember.ArrayController.extend({
+App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.PaginationHelper, {
   body: '',
   insertPostsIntoMediaList : function(posts){
     App.ApplicationController.subscription.unsubscribe();
@@ -765,6 +765,7 @@ App.SearchController = Ember.ArrayController.extend({
         "sort" : [
           {"timestamp" : {"order" : "desc"}}
         ],
+        "size" : 500,
         "query" : {
           "multi_match" : {
             "fields" : ["body", "comments.body"],
@@ -777,7 +778,7 @@ App.SearchController = Ember.ArrayController.extend({
         }
       }
     };
-
+    
     $.ajax({
       url: '/search',
       data: {
@@ -798,6 +799,7 @@ App.SearchController = Ember.ArrayController.extend({
         "sort" : [
           {"timestamp" : {"order" : "desc"}}
         ],
+        "size" : 500,
         "query" : {
           "multi_match" : {
             "fields" : ["body", "comments.body"],
