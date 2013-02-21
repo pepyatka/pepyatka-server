@@ -24,6 +24,7 @@
     "connect-redis": "1.4.5",
     "connect-flash": "0.1.0",
     "winston": "0.6.2",
-    "underscore": "1.4.3"
+    "underscore": "1.4.3",
+    "elasticsearchclient": "0.3.0"
   }
 }

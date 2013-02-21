@@ -20,3 +20,7 @@ tmp/*
 /conf/envLocal.js
 
 /.idea
+/bin/run_reindex_demon.cmd
+/bin/start-search-demon.cmd
+/bin/stop-search-demon.cmd
+/bin/run-reindex-demon.cmd

@@ -12,16 +12,17 @@ Configuration
 - Install redis
 - Install graphicsmagick (ensure jpeg and png flags are set)
 - Install nodejs
-- Download elasticsearch
+- Install elasticsearch
+- Install forever: npm install -g forever
 - Make sure to update secret token: cp ./conf/envDefault.js to
   ./conf/envLocal.js.
 - Install dependencies: npm install
 - Check there are no broken tests: ./node_modules/mocha/bin/mocha
   --recursive (or just run mocha --resursive if you have installed it
   globally)
-- Run elasticsearch (elasticsearh_download_folder/bin/elasticsearch.bat)
+- Run elasticsearch
 - Run server: node ./server.js
-- Run search demon (run_search_demon.cmd)
+- Run search demon: ./bin/start_search_demon
 
 Roadmap
 -------
@@ -34,8 +35,10 @@ Database
 ```
 username:<username>:uid
 user:<userId> { username, hashedPassword, salt, createdAt, updatedAt }
-user:<userId>:timelines { RiverOfNews, Posts, Likes, Comments, DirectMessages, [name*] }
+user:<userId>:timelines { RiverOfNews, Posts, DirectMessages, Likes, Comments, [name*] }
 * DirectMessages not implemented yet
+* Likes not implemented yet
+* Comments not implemented yet
 * Custom lists not implemented yet
 user:<userId>:subscriptions ( <timelineId>:<timestamp> )
 
@@ -69,3 +72,6 @@ API
 - POST /v1/posts/:postId/unlike
 - POST /v1/comments
 - GET /v1/users/:userId
+- GET /search/:searchQuery - returns all posts witch equal searchQuery. 
+			     keywords: intitle:query (search query in post's body), incomment:query (search query in comment's body), from:username),  (search by username).
+			     AND, OR.
