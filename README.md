@@ -72,3 +72,23 @@ API
 - POST /v1/posts/:postId/unlike
 - POST /v1/comments
 - GET /v1/users/:userId
+
+SEARCH API
+---
+
+- GET /search/:searchQuery - returns all posts witch equal searchQuery.
+
+Search query is string.
+Search query can contains keywords.
+Keywords:
+    intitle:query (search query in post's body)
+    incomment:query (search query in comment's body)
+    from:username (search by username)
+    AND
+    OR
+
+If you write word without keyword, it means that elasticSearch will search in post's and comment's bodies.
+
+Example:  this AND intitle:that OR incomment:blabla AND from:user
+ElasticSearch will return you posts which contain 'that' in post's body and 'this' in post's or comment's body.
+And, it will return posts which contain 'blabla' in comment's body and written by 'user'.
