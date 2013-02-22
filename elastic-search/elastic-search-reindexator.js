@@ -1,7 +1,6 @@
 var models = require('./../app/models')
-  , redis = require('redis')
   , db = require('../db').connect()
-  , elasticSearch = require('./elasticSearchClient.js')
+  , elasticSearch = require('./elastic-search-client.js')
 
 var startCheckingPosts = function(){
   db.keys('post:*', function(err, postsIdKeys){

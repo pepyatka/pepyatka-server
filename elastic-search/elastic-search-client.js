@@ -1,14 +1,14 @@
-var ElasticSearchClient = require('elasticsearchclient');
+var ElasticSearchClient = require('elasticsearchclient')
+  , db = require('../db').connect()
+
 var serverOptions = {
     host: 'localhost',
     port: 9200
 };
-var elasticSearchClient = new ElasticSearchClient(serverOptions);
-exports.elasticSearchClient = elasticSearchClient;
 
-var models = require('./../app/models')
-  , redis = require('redis')
-  , db = require('../db').connect()
+var elasticSearchClient = new ElasticSearchClient(serverOptions);
+
+exports.elasticSearchClient = elasticSearchClient;
 
 var getPostTimestamp = function(post, callback){
   db.zscore('timeline:' + post.timelineId + ':posts', post.id, function(err, timestamp){
@@ -98,9 +98,11 @@ exports.parse = function(elasticSearchData){
   };
 
   var resultArray = [];
-  elasticSearchData.hits.hits.forEach(function(entry){
-    resultArray.push(parser[getParserName(entry._index, entry._type)](entry));
-  });
+
+  if (elasticSearchData && elasticSearchData.hits)
+    elasticSearchData.hits.hits.forEach(function(entry){
+      resultArray.push(parser[getParserName(entry._index, entry._type)](entry));
+    });
 
   return resultArray;
 };
