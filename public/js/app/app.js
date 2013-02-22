@@ -194,7 +194,12 @@ App.Subscription = Ember.Object.extend({
       ids = [ids];
     }
     if (this.subscribedTo[channel]){
-      this.subscribedTo[channel].append(ids);
+      ids.forEach(function(id){
+        var indexOfThisId = this.subscribedTo[channel].indexOf(id);
+        if (indexOfThisId == -1){
+          this.subscribedTo[channel].push(id);
+        }
+      })
     } else{
       this.subscribedTo[channel] = ids;
     }
@@ -214,10 +219,10 @@ App.Subscription = Ember.Object.extend({
         }
         ids.forEach(function(id){
           var indexOfThisId = this.subscribedTo[channel].indexOf(id);
-          if (indexOfThisId)
+          if (indexOfThisId != -1)
           {
 //            unsubscribedTo[channel].append(ids)
-            unsubscribedTo[channel].append(id); //TODO Needs tests
+            unsubscribedTo[channel].push(id); //TODO Needs tests
             this.subscribedTo[channel].splice(indexOfThisId, 1);
           }
         })
