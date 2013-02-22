@@ -1,33 +1,42 @@
 var models = require('./../app/models')
   , db = require('../db').connect()
   , elasticSearch = require('./elastic-search-client.js')
+  , async = require('async')
 
 var startCheckingPosts = function(){
   db.keys('post:*', function(err, postsIdKeys){
-    postsIdKeys.forEach(function(postsIdKey){
-      var postId;
-      postsIdKey = postsIdKey.replace(/post:/, '');
-      if (!/:(\w)+/.test(postsIdKey)){
-        postId = postsIdKey;
-      }
+    async.forEach(postsIdKeys
+      ,function(postsIdKey, callback){
+        var postId;
+        postsIdKey = postsIdKey.replace(/post:/, '');
+        if (!/:(\w)+/.test(postsIdKey)){
+          postId = postsIdKey;
 
-      models.Post.findById(postId, function(err, post) {
-        if (post) {
-          post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
-            createdBy: { select: ['id', 'username'] },
-            comments: { select: ['id', 'body', 'createdBy'],
-              createdBy: { select: ['id', 'username'] }},
-            likes: { select: ['id', 'username']}
-          },
-          function(err, json) {
-            checkIndex({
-              index: 'pepyatka',
-              type: 'post',
-              element: json
-            });
-          });
+          models.Post.findById(postId, function(err, post) {
+            if (post) {
+              post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
+                  createdBy: { select: ['id', 'username'] },
+                  comments: { select: ['id', 'body', 'createdBy'],
+                    createdBy: { select: ['id', 'username'] }},
+                  likes: { select: ['id', 'username']}
+                },
+                function(err, json) {
+                  checkIndex({
+                    index: 'pepyatka',
+                    type: 'post',
+                    element: json
+                  }, function(err){
+                    callback(err);
+                  });
+                });
+            }
+          })
+        } else{
+          callback(null)
         }
-      })
+      }
+      , function(err){
+          console.log('Reindexation was complete');//TODO Fix this. Now the message display before reindexation was complete
     });
   });
 }
@@ -36,7 +45,7 @@ var startCheckingIndexes = function(){
   startCheckingPosts();
 }
 
-var checkIndex = function(dbObject){
+var checkIndex = function(dbObject, callback){
   var qryObj = {
     "query" : {
         "term" : {"_id" : dbObject.element.id}
@@ -56,10 +65,11 @@ var checkIndex = function(dbObject){
       }
     })
     .on('done', function(){
-      //always returns 0 right now
+      callback(null)
     })
     .on('error', function(error){
       console.log(error)
+      callback(error)
     })
     .exec();
 }

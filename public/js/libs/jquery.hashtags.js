@@ -14,7 +14,8 @@
         tail.nodeValue = tail.nodeValue.substring(tail.nodeValue.indexOf(m[0]) + m[0].length);
 
         // Rebuild the DOM inserting the new hashtag link between the split text nodes
-        $(el).after(tail).after($("<a></a>").html(m[0]).click(function(){App.searchController.searchHashtagInBodies(m[0])}));
+        var href = '/#/search/' + m[0];
+        $(el).after(tail).after($("<a href=\'" + href + "\'></a>").html(m[0]));
 
         // Recurse on the new tail node to check for more hashtags
         testAndTag(tail);

@@ -1,0 +1,1 @@
+var elasticSearchReindexator = require('./../elastic-search/elastic-search-reindexator.js').startInspection();

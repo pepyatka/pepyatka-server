@@ -54,6 +54,49 @@ App.PaginationHelper = Em.Mixin.create({
   }.observes('pageStart')
 });
 
+App.SearchPaginationHelper = Em.Mixin.create({
+  pageSize: 25,
+  pageStart: 0,
+
+  nextPage: function() {
+    this.incrementProperty('pageStart', this.get('pageSize'))
+  },
+
+  prevPage: function() {
+    this.decrementProperty('pageStart', this.get('pageSize'))
+  },
+
+  prevPageDisabled: function() {
+    return App.searchController.get('pageStart') == 0 ? 'disabled' : ''
+  }.property('App.searchController.pageStart'),
+
+  prevPageVisible: function() {
+    return this.get('prevPageDisabled') != 'disabled'
+  }.property('App.searchController.pageStart'),
+
+  nextPageVisible: function() {
+    return this.get('nextPageDisabled') != 'disabled'
+  }.property('App.searchController.content'),
+
+  nextPageDisabled: function() {
+    var len = App.searchController.content.length;
+    return len == 0 || len < this.get('pageSize') ? 'disabled' : ''
+    // TODO: bind to generic content
+  }.property('App.searchController.content'),
+
+  resetPage: function() {
+    this.set('pageStart', 0)
+  },
+
+  pageDidChange: function() {
+    this.didRequestRange(this.get('pageStart'));
+  }.observes('pageStart')
+});
+
+App.SearchPagination = Ember.View.extend({
+  templateName: 'search-pagination'
+});
+
 App.Pagination = Ember.View.extend({
   templateName: 'pagination'
 });
@@ -151,7 +194,12 @@ App.Subscription = Ember.Object.extend({
       ids = [ids];
     }
     if (this.subscribedTo[channel]){
-      this.subscribedTo[channel].append(ids);
+      ids.forEach(function(id){
+        var indexOfThisId = this.subscribedTo[channel].indexOf(id);
+        if (indexOfThisId == -1){
+          this.subscribedTo[channel].push(id);
+        }
+      })
     } else{
       this.subscribedTo[channel] = ids;
     }
@@ -171,9 +219,9 @@ App.Subscription = Ember.Object.extend({
         }
         ids.forEach(function(id){
           var indexOfThisId = this.subscribedTo[channel].indexOf(id);
-          if (indexOfThisId)
+          if (indexOfThisId != -1)
           {
-            unsubscribedTo[channel].append(ids);
+            unsubscribedTo[channel].push(id);
             this.subscribedTo[channel].splice(indexOfThisId, 1);
           }
         })
@@ -198,9 +246,9 @@ App.Subscription = Ember.Object.extend({
 
 App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
   templateName: 'application',
-  searchByBody: function(){
-        App.searchController.searchByBody();
-    }
+  searchPhrase: function(){
+    App.router.transitionTo('searchPhrase', App.searchController.body);
+  }
 });
 App.ApplicationController = Ember.Controller.extend({
   subscription: null,
@@ -210,7 +258,12 @@ App.ApplicationController = Ember.Controller.extend({
   }
 });
 
-App.CreateSearchView = Ember.TextField.extend(Ember.TargetActionSupport, {
+// Index view to display all posts on the page
+App.SearchView = Ember.View.extend({
+  templateName: 'search-list-view'
+});
+
+App.CreateSearchFieldView = Ember.TextField.extend(Ember.TargetActionSupport, {
     // TODO: Extract value from controller
     valueBinding: 'App.searchController.body',
 
@@ -291,6 +344,8 @@ App.PostContainerView = Ember.View.extend({
     this.$().find('.text').anchorTextUrls();
     // wrap hashtags around text in post text
     this.$().find('.text').hashTagsUrls();
+    // wrap search query around text in post text
+    this.$().find('.text').highlightSearchResults(App.searchController.query);
     // please read https://github.com/kswedberg/jquery-expander/issues/24
     this.$().find('.text').expander({
       slicePoint: 350,
@@ -737,93 +792,66 @@ App.Post = Ember.Object.extend({
   }.property('attachments')
 });
 
-App.SearchController = Ember.ArrayController.extend({
+App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.SearchPaginationHelper, {
   body: '',
+  content: [],
+  sortProperties: ['updatedAt'],
+  query: '',
+
+  sortAscending: false,
+  isLoaded: true,
   insertPostsIntoMediaList : function(posts){
     App.ApplicationController.subscription.unsubscribe();
 
-    App.postsController.set('content', []);
+    App.searchController.set('content', []);
     var postIds = [];
     posts.forEach(function(attrs) {
       var post = App.Post.create(attrs);
-      App.postsController.addObject(post);
+      App.searchController.addObject(post);
       postIds.push(post.id)
     })
 
     App.ApplicationController.subscription.subscribe('post', postIds);
-    App.postsController.set('isLoaded', true)
+    App.searchController.set('isLoaded', true)
   },
 
-  //this method invoke searching hashtag in bodies of posts and comments
-  searchHashtagInBodies: function(text){
-    if (text)
-    {
-      var qryObj = {
-        "sort" : [
-          {"timestamp" : {"order" : "desc"}}
-        ],
-        "query" : {
-          "multi_match" : {
-            "fields" : ["body", "comments.body"],
-            "query" : {
-              "query_string" : {
-                "query" : text
-              }
-            }
-          }
-        }
-      }
-    };
+  showPage: function(pageStart){
+    this.set('isLoaded', false)
+    var query = this.get('query');
+    if (/#/g.test(query)){
+      query = query.replace(/#/g, '%23')
+    }
 
     $.ajax({
-      url: '/search',
-      data: {
-        index: 'pepyatka',
-        type: 'post',
-        queryObject: qryObj
-      },
-      dataType: 'jsonp',
+      url: '/search/' + query,
+      type: 'get',
+      data: {start: pageStart},
       success: function(response){
         App.searchController.insertPostsIntoMediaList(response.posts);
       }
     });
   },
-  searchByBody: function() {
-    if (this.body)
-    {
-      var qryObj = {
-        "sort" : [
-          {"timestamp" : {"order" : "desc"}}
-        ],
-        "query" : {
-          "multi_match" : {
-            "fields" : ["body", "comments.body"],
-            "query" : {
-              "match" : {
-                "message" : {
-                  "query" : this.body,
-                  "type" : "phrase"
-                }
-              }
-            }
-          }
-        }
-      };
 
+  searchByPhrase: function(searchQuery) {
+    this.set('isLoaded', false)
+    if (searchQuery)
+    {
+      if (/#/g.test(searchQuery)){
+        searchQuery = searchQuery.replace(/#/g, '%23')
+      }
       $.ajax({
-        url: '/search',
-        data: {
-          index: 'pepyatka',
-          type: 'post',
-          queryObject: qryObj
-        },
-        dataType: 'jsonp',
+        url: '/search/' + searchQuery,
+        type: 'get',
         success: function(response){
           App.searchController.insertPostsIntoMediaList(response.posts);
         }
       });
       this.set('body', '');
     }
+  },
+
+  didRequestRange: function(pageStart) {
+    App.searchController.showPage(pageStart)
   }
 })
 App.searchController = App.SearchController.create()
@@ -1005,12 +1033,36 @@ App.Router = Ember.Router.extend({
   // enableLogging: true,
 
   root: Ember.Route.extend({
+    searchPhrase: Ember.Route.extend({
+      route: '/search/:searchQuery',
+
+      showPost: Ember.Route.transitionTo('aPost'),
+      showAllPosts: Ember.Route.transitionTo('posts'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+
+      connectOutlets: function(router, searchQuery){
+        router.get('applicationController').connectOutlet('search', App.searchController.searchByPhrase(searchQuery));
+      },
+
+      serialize: function(router, searchQuery) {
+        App.searchController.set('body', searchQuery)
+        App.searchController.set('query', searchQuery)
+        return {searchQuery: searchQuery}
+      },
+
+      deserialize: function(router, urlParams) {
+        return urlParams.searchQuery
+      }
+    }),
+
     posts: Ember.Route.extend({
       route: '/',
 
       showPost: Ember.Route.transitionTo('aPost'),
       showAllPosts: Ember.Route.transitionTo('posts'),
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
       
       connectOutlets: function(router){ 
         App.postsController.set('timeline', null)
@@ -1024,6 +1076,7 @@ App.Router = Ember.Router.extend({
       showPost: Ember.Route.transitionTo('aPost'),
       showAllPosts: Ember.Route.transitionTo('posts'),
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
 
       connectOutlets: function(router, username) {
         App.postsController.set('timeline', username)
@@ -1044,6 +1097,7 @@ App.Router = Ember.Router.extend({
 
       showAllPosts: Ember.Route.transitionTo('posts'),
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
       
       connectOutlets: function(router, context) {
         // FIXME: obviouly a defect. content should be set automagically
