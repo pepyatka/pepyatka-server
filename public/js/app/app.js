@@ -394,6 +394,8 @@ App.OwnPostContainerView = Ember.View.extend({
     this.$().find('.text').anchorTextUrls();
     // wrap hashtags around text in post text
     this.$().find('.text').hashTagsUrls();
+    // wrap search query around text in post text
+    this.$().find('.text').highlightSearchResults(App.searchController.query);
     // please read https://github.com/kswedberg/jquery-expander/issues/24
     this.$().find('.text').expander({
       slicePoint: 350,
@@ -434,6 +436,8 @@ App.CommentContainerView = Ember.View.extend({
     this.$().find('.body').anchorTextUrls();
     // wrap hashtags around text in post text
     this.$().find('.body').hashTagsUrls();
+    // wrap search query around text in post text
+    this.$().find('.body').highlightSearchResults(App.searchController.query);
     this.$().find('.body').expander({
       slicePoint: 512,
       expandPrefix: '&hellip; ',
