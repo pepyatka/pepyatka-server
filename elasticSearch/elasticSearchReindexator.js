@@ -1,42 +1,34 @@
 var models = require('./../app/models')
+  , redis = require('redis')
   , db = require('../db').connect()
-  , elasticSearch = require('./elastic-search-client.js')
-  , async = require('async')
+  , elasticSearch = require('./elasticSearchClient.js')
 
 var startCheckingPosts = function(){
   db.keys('post:*', function(err, postsIdKeys){
-    async.forEach(postsIdKeys
-      ,function(postsIdKey, callback){
-        var postId;
-        postsIdKey = postsIdKey.replace(/post:/, '');
-        if (!/:(\w)+/.test(postsIdKey)){
-          postId = postsIdKey;
-
-          models.Post.findById(postId, function(err, post) {
-            if (post) {
-              post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
-                  createdBy: { select: ['id', 'username'] },
-                  comments: { select: ['id', 'body', 'createdBy'],
-                    createdBy: { select: ['id', 'username'] }},
-                  likes: { select: ['id', 'username']}
-                },
-                function(err, json) {
-                  checkIndex({
-                    index: 'pepyatka',
-                    type: 'post',
-                    element: json
-                  }, function(err){
-                    callback(err);
-                  });
-                });
-            }
-          })
-        } else{
-          callback(null)
-        }
+    postsIdKeys.forEach(function(postsIdKey){
+      var postId;
+      postsIdKey = postsIdKey.replace(/post:/, '');
+      if (!/:(\w)+/.test(postsIdKey)){
+        postId = postsIdKey;
       }
-      , function(err){
-          console.log('Reindexation was complete');//TODO Fix this. Now the message display before reindexation was complete
+
+      models.Post.findById(postId, function(err, post) {
+        if (post) {
+          post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
+            createdBy: { select: ['id', 'username'] },
+            comments: { select: ['id', 'body', 'createdBy'],
+              createdBy: { select: ['id', 'username'] }},
+            likes: { select: ['id', 'username']}
+          },
+          function(err, json) {
+            checkIndex({
+              index: 'pepyatka',
+              type: 'post',
+              element: json
+            });
+          });
+        }
+      })
     });
   });
 }
@@ -45,7 +37,7 @@ var startCheckingIndexes = function(){
   startCheckingPosts();
 }
 
-var checkIndex = function(dbObject, callback){
+var checkIndex = function(dbObject){
   var qryObj = {
     "query" : {
         "term" : {"_id" : dbObject.element.id}
@@ -65,11 +57,10 @@ var checkIndex = function(dbObject, callback){
       }
     })
     .on('done', function(){
-      callback(null)
+      //always returns 0 right now
     })
     .on('error', function(error){
       console.log(error)
-      callback(error)
     })
     .exec();
 }

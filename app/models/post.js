@@ -175,6 +175,7 @@ exports.addModel = function(db) {
                         JSON.stringify({ userId: userId,
                                          postId: postId }))
 
+            timelinesIds = _.uniq(timelinesIds)
             async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
               if (bumpable) {
                 models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
@@ -210,6 +211,7 @@ exports.addModel = function(db) {
                         JSON.stringify({ userId: userId,
                                          postId: postId }))
 
+            timelinesIds = _.uniq(timelinesIds)
             async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
               if (bumpable) {
                 models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
@@ -244,6 +246,7 @@ exports.addModel = function(db) {
               commentId: commentId
             }))
 
+            timelinesIds = _.uniq(timelinesIds)
             async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
               if (bumpable) {
                 models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
@@ -273,9 +276,6 @@ exports.addModel = function(db) {
   }
 
   Post.prototype = {
-    // TODO: getSubscribedTimeline and extra attributes: userId,
-    // postId, commentId, etc to find out a user who liked, commented,
-    // etc this post
     getSubscribedTimelinesIds: function(callback) {
       var that = this
 

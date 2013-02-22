@@ -1,6 +1,7 @@
 var models = require('./../app/models')
-  , redis = require('redis')
-  , searchClient = require('./elastic-search-client.js');
+    , redis = require('redis')
+    , db = require('../db').connect()
+    , searchClient = require('./elasticSearchClient.js');
 
 exports.listen = function() {
     var sub = redis.createClient();

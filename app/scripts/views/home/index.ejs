@@ -6,7 +6,6 @@
 <script src="/js/libs/handlebars-1.0.rc.1.js"></script>
 <script src="/js/libs/jquery.anchorlinks.js"></script>
 <script src="/js/libs/jquery.hashtags.js"></script>
-<script src="/js/libs/jquery.highlight-search-results.js"></script>
 <script src="/js/libs/jquery.expander.min.js"></script>
 <script src="/js/libs/jquery.autogrow-textarea.js"></script>
 <script src="/js/libs/core_ext.js"></script>
@@ -23,11 +22,11 @@
           <a href="/">Pepyatka</a> <small class="mutted">0.0.3</small>
         </h1>
       </div>
-	  <div class="span4 searchFieldView">
+	  <div class="span4 searchView">
         <div>
-          {{view App.CreateSearchFieldView target="parentView" action="searchPhrase"
+          {{view App.CreateSearchView target="parentView" action="searchByBody"
                 class="span3"}}
-          <button {{action searchPhrase target="view"}} class="btn pull-right">Search</button>
+                <button {{action searchByBody target="view"}} class="btn pull-right">Search</button>
         </div>
       </div>
 
@@ -86,43 +85,12 @@
   </ul>
 </script>
 
-<script type="text/x-handlebars" data-template-name="search-pagination">
-  <ul class="pager">
-    {{#if prevPageVisible}}
-      <li {{bindAttr class="prevPageDisabled"}}><a {{action prevPage href="true" target="App.searchController"}}>&larr; Previous</a></li>
-    {{else}}
-      <li {{bindAttr class="prevPageDisabled"}}><a>&larr; Previous</a></li>
-    {{/if}}
-
-    {{#if nextPageVisible}}
-      <li {{bindAttr class="nextPageDisabled"}}><a {{action nextPage href="true" target="App.searchController"}}>Next &rarr;</a></li>
-    {{else}}
-      <li {{bindAttr class="nextPageDisabled"}}><a>Next &rarr;</a></li>
-    {{/if}}
-  </ul>
-</script>
-
 <script type="text/x-handlebars" data-template-name="just-started">
   {{#if view.justStarted}}
     <div class="alert alert-info">
       Seems like you've just started using Pepyatka? Check out <a href="/#/users/anonymous">anonymous posts</a>.<button class="close" data-dismiss="alert">&times;</button>
     </div>
   {{/if}}
-</script>
-
-<script type="text/x-handlebars" data-template-name="search-list-view">
-  <div class="offset4 spinner">
-    <img src="/img/spinner.gif" width="32" height="32" />
-  </div>
-
-  <div class="posts">
-    <ul class="media-list">
-      {{view Ember.CollectionView contentBinding="App.searchController"
-             itemViewClass="App.PostContainerView"}}
-    </ul>
-
-    {{view App.SearchPagination}}
-  </div>
 </script>
 
 <script type="text/x-handlebars" data-template-name="post-list-view">

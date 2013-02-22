@@ -1,1 +1,2 @@
-var elasticSearch = require('./../elastic-search/elastic-search-sub.js').listen();
+var elasticSearch = require('./../elasticSearch/elasticSearchSub.js').listen();
+var elasticSearchReindexator = require('./../elasticSearch/elasticSearchReindexator.js').startInspection();
