@@ -190,17 +190,18 @@ App.Subscription = Ember.Object.extend({
 
   subscribe: function(channel, ids) {
     var subscribedTo = {};
+    var that = this
     if (!$.isArray(ids)){
       ids = [ids];
     }
     if (this.subscribedTo[channel]){
       ids.forEach(function(id){
-        var indexOfThisId = this.subscribedTo[channel].indexOf(id);
+        var indexOfThisId = that.subscribedTo[channel].indexOf(id);
         if (indexOfThisId == -1){
-          this.subscribedTo[channel].push(id);
+          that.subscribedTo[channel].push(id);
         }
       })
-    } else{
+    } else {
       this.subscribedTo[channel] = ids;
     }
 
@@ -210,6 +211,7 @@ App.Subscription = Ember.Object.extend({
 
   unsubscribe: function(channel, ids) {
     var unsubscribedTo = {};
+    var that = this;
 
     if (arguments[0] && arguments[1]){
       if (this.subscribedTo[channel]){
@@ -218,17 +220,18 @@ App.Subscription = Ember.Object.extend({
           ids = [ids];
         }
         ids.forEach(function(id){
-          var indexOfThisId = this.subscribedTo[channel].indexOf(id);
+          var indexOfThisId = that.subscribedTo[channel].indexOf(id);
           if (indexOfThisId != -1)
           {
             unsubscribedTo[channel].push(id);
-            this.subscribedTo[channel].splice(indexOfThisId, 1);
+            that.subscribedTo[channel].splice(indexOfThisId, 1);
           }
         })
       }
     }
     else if(arguments[0] && !arguments[1]){
       unsubscribedTo[channel] = this.subscribedTo[channel];
+      // FIXME: this code does not work
       this.subscribedTo[channel] == undefined;
     } else if (arguments.length == 0){
       unsubscribedTo = this.subscribedTo;
