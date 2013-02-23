@@ -85,7 +85,7 @@ exports.parse = function(elasticSearchData){
   var parser = {
     pepyatka_post_parse : function(elasticSearchDataItem){
       return {
-        id: elasticSearchDataItem._id,
+        id: elasticSearchDataItem._source.id,
         createdAt: elasticSearchDataItem._source.createdAt,
         updatedAt: elasticSearchDataItem._source.updatedAt,
         body: elasticSearchDataItem._source.body,
