@@ -22,7 +22,7 @@ Configuration
   globally)
 - Run elasticsearch
 - Run server: node ./server.js
-- Run search demon: ./bin/start_search_demon
+- Run search daemon: ./bin/start_search_daemon
 
 Roadmap
 -------
