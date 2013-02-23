@@ -434,6 +434,8 @@ App.CommentContainerView = Ember.View.extend({
     this.$().find('.body').anchorTextUrls();
     // wrap hashtags around text in post text
     this.$().find('.body').hashTagsUrls();
+    // wrap search query around text in post text
+    this.$().find('.body').highlightSearchResults(App.searchController.query);
     this.$().find('.body').expander({
       slicePoint: 512,
       expandPrefix: '&hellip; ',
