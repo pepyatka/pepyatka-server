@@ -36,7 +36,8 @@ var startCheckingPosts = function(){
         }
       }
       , function(err){
-          console.log('Reindexation was complete');//TODO Fix this. Now the message display before reindexation was complete
+        //TODO Fix this. The message is displayed before the reindexation is complete
+        console.log('Reindexation was complete');
     });
   });
 }
@@ -48,7 +49,7 @@ var startCheckingIndexes = function(){
 var checkIndex = function(dbObject, callback){
   var qryObj = {
     "query" : {
-        "term" : {"_id" : dbObject.element.id}
+        "term" : {"id" : dbObject.element.id}
     }
   };
 
@@ -61,7 +62,7 @@ var checkIndex = function(dbObject, callback){
           elasticSearch.updateElement(dbObject.index, dbObject.type, dbObject.element);
         }
       } else {
-        elasticSearch.indexElement(dbObject.index, dbObject.type, dbObject.element);
+        //elasticSearch.indexElement(dbObject.index, dbObject.type, dbObject.element);
       }
     })
     .on('done', function(){
