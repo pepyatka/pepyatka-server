@@ -17,10 +17,9 @@ exports.addRoutes = function(app) {
         index: 'pepyatka',
         type: 'post',
         queryObject: {
-          // FIXME: Parse Failure [No mapping found for [timestamp] in order to sort on]]; }
-          // "sort" : [
-          //   {"timestamp" : {"order" : "desc"}}
-          // ],
+          "sort" : [
+            {"timestamp" : {"order" : "desc"}}
+          ],
           "size" : pageSize,
           "from" : pageStart,
           "query" : parsedQuery
