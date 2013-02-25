@@ -7,6 +7,7 @@ exports.addRoutes = function(app) {
   app.get('/search/:searchQuery', function(req, res) {
     var pageSize = 25;
     var pageStart = req.query && req.query.start || 0;
+    console.log(req.params.searchQuery)
 
 //    var searchQuery = req.params.searchQuery.replace(/#/g, '\\#')
     var searchQuery = req.params.searchQuery.replace(/#/g, '') // TODO Now elasticSearch can't search with '#' char in query
@@ -31,6 +32,12 @@ exports.addRoutes = function(app) {
       })
     }
   })
+}
+
+var replaceWhiteSpacesToAND = function(searchQuery){
+  searchQuery = searchQuery.replace(/((AND!?) +(?!AND))/g, ' AND '); // TODO Add checking for 'OR'
+console.log(searchQuery)
+  return searchQuery;
 }
 
 var createAndSection = function(andQuery){
@@ -69,6 +76,7 @@ var createAndSection = function(andQuery){
 
 var createOrSection = function(orQuery){
   var splitedByANDQueries = orQuery.split(' AND ');
+  console.log(splitedByANDQueries)
   var conditions = [];
   var boolQuery;
   async.forEach(splitedByANDQueries, function(splitedByANDQuery, callback){
@@ -90,6 +98,7 @@ var createOrSection = function(orQuery){
 }
 
 var parseQuery = function(searchQuery){
+  searchQuery = replaceWhiteSpacesToAND(searchQuery);
   var splitedByORQueries = searchQuery.split(' OR ');
   var conditions = [];
   var boolQuery;
