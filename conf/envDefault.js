@@ -8,3 +8,12 @@ exports.getAppConfig = function () {
 
   return configValues;
 }
+
+exports.getElasticSearchConfig = function(){
+  serverOptions = {
+    host: 'localhost',
+    port: 9200
+  }
+
+  return serverOptions;
+}

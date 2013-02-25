@@ -1,12 +1,8 @@
 var ElasticSearchClient = require('elasticsearchclient')
   , db = require('../db').connect()
+  , configLocal = require('../conf/envLocal.js')
 
-var serverOptions = {
-    host: 'localhost',
-    port: 9200
-};
-
-var elasticSearchClient = new ElasticSearchClient(serverOptions);
+var elasticSearchClient = new ElasticSearchClient(configLocal.getElasticSearchConfig());
 
 exports.elasticSearchClient = elasticSearchClient;
 

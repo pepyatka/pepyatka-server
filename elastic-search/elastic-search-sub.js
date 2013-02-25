@@ -22,7 +22,7 @@ exports.listen = function() {
                 models.Post.findById(data.postId, function(err, post) {
                   models.Timeline.findById(data.timelineId, {}, function(err, timeline) {
                     // TODO: workaround to index just one post
-                    if (post && timeline.name == 'Posts') {
+                    if (post && timeline && timeline.name == 'Posts') {
                       post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'timelineId'],
                           createdBy: { select: ['id', 'username'] },
                           comments: { select: ['id', 'body', 'createdBy'],
@@ -39,22 +39,18 @@ exports.listen = function() {
 
             case 'newComment':
                 var data = JSON.parse(msg)
-
                 models.Post.findById(data.postId, function(err, post) {
-                  models.Timeline.findById(data.timelineId, {}, function(err, timeline) {
-                    // TODO: workaround to index just one post
-                    if (post && timeline.name == 'Posts') {
-                      post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'timelineId'],
-                          createdBy: { select: ['id', 'username'] },
-                          comments: { select: ['id', 'body', 'createdBy'],
-                            createdBy: { select: ['id', 'username'] }},
-                          likes: { select: ['id', 'username']}
-                        },
-                        function(err, json) {
-                          searchClient.updateElement('pepyatka', 'post', json);
-                        })
-                    }
-                  })
+                  if (post) {
+                    post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'timelineId'],
+                        createdBy: { select: ['id', 'username'] },
+                        comments: { select: ['id', 'body', 'createdBy'],
+                          createdBy: { select: ['id', 'username'] }},
+                        likes: { select: ['id', 'username']}
+                      },
+                      function(err, json) {
+                        searchClient.updateElement('pepyatka', 'post', json);
+                      })
+                  }
                 })
                 break;
 
