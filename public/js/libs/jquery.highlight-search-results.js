@@ -8,7 +8,7 @@
     var queryWords = [];
     searchQuery.split(' OR ').forEach(function(splitedByORQuery){
       splitedByORQuery.split(' AND ').forEach(function(splitedByANDQuery){
-        splitedByANDQuery = splitedByANDQuery.replace(/intitle:|incomment:|from:/, '');
+        splitedByANDQuery = splitedByANDQuery.replace(/intitle:|incomments:|from:/, '');
         splitedByANDQuery = splitedByANDQuery.trim();
         queryWords.push(splitedByANDQuery);
       });

@@ -14,7 +14,7 @@ var startCheckingPosts = function(){
 
           models.Post.findById(postId, function(err, post) {
             if (post) {
-              post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
+              post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'timelineId'],
                   createdBy: { select: ['id', 'username'] },
                   comments: { select: ['id', 'body', 'createdBy'],
                     createdBy: { select: ['id', 'username'] }},
@@ -49,7 +49,7 @@ var startCheckingIndexes = function(){
 var checkIndex = function(dbObject, callback){
   var qryObj = {
     "query" : {
-        "term" : {"id" : dbObject.element.id}
+        "term" : {"_id" : dbObject.element.id}
     }
   };
 
@@ -62,7 +62,7 @@ var checkIndex = function(dbObject, callback){
           elasticSearch.updateElement(dbObject.index, dbObject.type, dbObject.element);
         }
       } else {
-        //elasticSearch.indexElement(dbObject.index, dbObject.type, dbObject.element);
+          elasticSearch.indexElement(dbObject.index, dbObject.type, dbObject.element);
       }
     })
     .on('done', function(){

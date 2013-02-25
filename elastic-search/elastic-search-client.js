@@ -24,18 +24,8 @@ exports.indexElement = function(index, type, element){
   var createIndex = {
     pepyatka_post_index : function(post){
       getPostTimestamp(post, function(timestamp){
-        elasticSearchClient.index('pepyatka', 'post',
-          {
-            id: post.id,
-            createdAt: post.createdAt,
-            updatedAt: post.updatedAt,
-            body: post.body,
-            createdBy: post.createdBy,
-            comments: post.comments,
-            attachments: post.attachments,
-            likes: post.likes,
-            timestamp: timestamp
-          })
+        post.timestamp = timestamp;
+        elasticSearchClient.index('pepyatka', 'post', post)
           .on('data', function(data) {
             console.log(data)
           })
@@ -85,15 +75,15 @@ exports.parse = function(elasticSearchData){
   var parser = {
     pepyatka_post_parse : function(elasticSearchDataItem){
       return {
-        //_id: elasticSearchDataItem._id,
-        id: elasticSearchDataItem._source.id,
+        id: elasticSearchDataItem._id,
         createdAt: elasticSearchDataItem._source.createdAt,
         updatedAt: elasticSearchDataItem._source.updatedAt,
         body: elasticSearchDataItem._source.body,
         createdBy: elasticSearchDataItem._source.createdBy,
         comments: elasticSearchDataItem._source.comments,
         attachments: elasticSearchDataItem._source.attachments,
-        likes: elasticSearchDataItem._source.likes
+        likes: elasticSearchDataItem._source.likes,
+        timelineId: elasticSearchDataItem._source.timelineId
       };
     }
   };

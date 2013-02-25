@@ -191,13 +191,13 @@ App.Subscription = Ember.Object.extend({
   subscribe: function(channel, ids) {
     var subscribedTo = {};
     var that = this
-    if (!$.isArray(ids)){
+    if (!$.isArray(ids)) {
       ids = [ids];
     }
-    if (this.subscribedTo[channel]){
-      ids.forEach(function(id){
+    if (this.subscribedTo[channel]) {
+      ids.forEach(function(id) {
         var indexOfThisId = that.subscribedTo[channel].indexOf(id);
-        if (indexOfThisId == -1){
+        if (indexOfThisId == -1) {
           that.subscribedTo[channel].push(id);
         }
       })
@@ -213,27 +213,26 @@ App.Subscription = Ember.Object.extend({
     var unsubscribedTo = {};
     var that = this;
 
-    if (arguments[0] && arguments[1]){
-      if (this.subscribedTo[channel]){
-        if (!$.isArray(ids))
-        {
+    if (channel && ids) {
+      if (this.subscribedTo[channel]) {
+        if (!$.isArray(ids)) {
           ids = [ids];
         }
-        ids.forEach(function(id){
+        ids.forEach(function(id) {
           var indexOfThisId = that.subscribedTo[channel].indexOf(id);
-          if (indexOfThisId != -1)
-          {
+          if (indexOfThisId != -1) {
             unsubscribedTo[channel].push(id);
             that.subscribedTo[channel].splice(indexOfThisId, 1);
           }
         })
       }
     }
-    else if(arguments[0] && !arguments[1]){
+    else if(channel && !ids) {
       unsubscribedTo[channel] = this.subscribedTo[channel];
       // FIXME: this code does not work
-      this.subscribedTo[channel] == undefined;
-    } else if (arguments.length == 0){
+//      this.subscribedTo[channel] == undefined;
+      delete this.subscribedTo[channel];
+    } else if (!channel) {
       unsubscribedTo = this.subscribedTo;
     }
 
@@ -249,7 +248,7 @@ App.Subscription = Ember.Object.extend({
 
 App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
   templateName: 'application',
-  searchPhrase: function(){
+  searchPhrase: function() {
     App.router.transitionTo('searchPhrase', App.searchController.body);
   }
 });

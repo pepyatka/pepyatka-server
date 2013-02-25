@@ -1,7 +1,7 @@
 var searchClient = require('../../elastic-search/elastic-search-client.js')
     , async = require('async')
 
-var indicators = ['intitle', 'incomment', 'from'];
+var indicators = ['intitle', 'incomments', 'from'];
 
 exports.addRoutes = function(app) {
   app.get('/search/:searchQuery', function(req, res) {
