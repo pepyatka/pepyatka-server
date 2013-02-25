@@ -59,7 +59,7 @@ var createAndSection = function(andQuery){
           condition = {"wildcard" : { "body" : '*'+value+'*'}};
           break;
         }
-        case 'incomment':{
+        case 'incomments':{
           condition = {"wildcard" : { "comments.body" : '*'+value+'*'}};
           break;
         }

@@ -540,6 +540,9 @@ exports.addModel = function(db) {
       if (select.indexOf('id') != -1)
         json.id = that.id
 
+      if (select.indexOf('timelineId') != -1)
+        json.timelineId = that.timelineId
+
       if (select.indexOf('body') != -1)
         json.body = that.body
 

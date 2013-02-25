@@ -20,8 +20,10 @@ exports.listen = function() {
             case 'newPost':
                 var data = JSON.parse(msg);
                 models.Post.findById(data.postId, function(err, post) {
-                    if (post) {
-                      post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
+                  models.Timeline.findById(data.timelineId, {}, function(err, timeline) {
+                    // TODO: workaround to index just one post
+                    if (post && timeline.name == 'Posts') {
+                      post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'timelineId'],
                           createdBy: { select: ['id', 'username'] },
                           comments: { select: ['id', 'body', 'createdBy'],
                             createdBy: { select: ['id', 'username'] }},
@@ -31,6 +33,7 @@ exports.listen = function() {
                           searchClient.indexElement('pepyatka', 'post', json);
                         })
                     }
+                  })
                 });
                 break;
 
@@ -39,7 +42,7 @@ exports.listen = function() {
 
                 models.Post.findById(data.postId, function(err, post) {
                     if (post) {
-                      post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
+                      post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'timelineId'],
                           createdBy: { select: ['id', 'username'] },
                           comments: { select: ['id', 'body', 'createdBy'],
                             createdBy: { select: ['id', 'username'] }},
