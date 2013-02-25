@@ -6,8 +6,11 @@
     }
 
     var queryWords = [];
-    searchQuery.split(' OR ').forEach(function(splitedByORQuery){
-      splitedByORQuery.split(' AND ').forEach(function(splitedByANDQuery){
+    searchQuery = searchQuery.replace(/ +AND +/g, '&&');
+    searchQuery = searchQuery.replace(/ +OR +/g, '||');
+    searchQuery = searchQuery.replace(/ +/g, '&&');
+    searchQuery.split('||').forEach(function(splitedByORQuery){
+      splitedByORQuery.split('&&').forEach(function(splitedByANDQuery){
         splitedByANDQuery = splitedByANDQuery.replace(/intitle:|incomments:|from:/, '');
         splitedByANDQuery = splitedByANDQuery.trim();
         queryWords.push(splitedByANDQuery);

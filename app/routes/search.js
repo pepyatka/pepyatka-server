@@ -7,7 +7,6 @@ exports.addRoutes = function(app) {
   app.get('/search/:searchQuery', function(req, res) {
     var pageSize = 25;
     var pageStart = req.query && req.query.start || 0;
-    console.log(req.params.searchQuery)
 
 //    var searchQuery = req.params.searchQuery.replace(/#/g, '\\#')
     var searchQuery = req.params.searchQuery.replace(/#/g, '') // TODO Now elasticSearch can't search with '#' char in query
@@ -34,9 +33,11 @@ exports.addRoutes = function(app) {
   })
 }
 
-var replaceWhiteSpacesToAND = function(searchQuery){
-  searchQuery = searchQuery.replace(/((AND!?) +(?!AND))/g, ' AND '); // TODO Add checking for 'OR'
-console.log(searchQuery)
+var convertToProgrammersString = function(searchQuery){
+  searchQuery = searchQuery.replace(/ +AND +/g, '&&');
+  searchQuery = searchQuery.replace(/ +OR +/g, '||');
+  searchQuery = searchQuery.replace(/ +/g, '&&');
+
   return searchQuery;
 }
 
@@ -47,7 +48,7 @@ var createAndSection = function(andQuery){
       "bool" : {"should" : [
         {"wildcard" : { "body" : '*'+andQuery+'*'}},
         {"wildcard" : { "comments.body" : '*'+andQuery+'*'}}],
-      "minimum_number_should_match" : 1}}
+        "minimum_number_should_match" : 1}}
   } else {
     var keyValue = andQuery.split(':');
     var key = keyValue[0];
@@ -75,8 +76,7 @@ var createAndSection = function(andQuery){
 }
 
 var createOrSection = function(orQuery){
-  var splitedByANDQueries = orQuery.split(' AND ');
-  console.log(splitedByANDQueries)
+  var splitedByANDQueries = orQuery.split('&&');
   var conditions = [];
   var boolQuery;
   async.forEach(splitedByANDQueries, function(splitedByANDQuery, callback){
@@ -98,8 +98,8 @@ var createOrSection = function(orQuery){
 }
 
 var parseQuery = function(searchQuery){
-  searchQuery = replaceWhiteSpacesToAND(searchQuery);
-  var splitedByORQueries = searchQuery.split(' OR ');
+  searchQuery = convertToProgrammersString(searchQuery);
+  var splitedByORQueries = searchQuery.split('||');
   var conditions = [];
   var boolQuery;
   async.forEach(splitedByORQueries, function(splitedByORQuery, callback){
@@ -125,7 +125,7 @@ var isSimpleQuery = function(searchQuery){
   var isSimple = true;
   indicators.forEach(function(indicator){
     if (isSimple){
-      var regExp = new RegExp(indicator + ':')
+      var regExp = new RegExp('^' + indicator + ':' + '.')
       isSimple = !regExp.test(searchQuery);
     }
   })
