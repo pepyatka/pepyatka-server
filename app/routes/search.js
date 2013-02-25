@@ -33,10 +33,10 @@ exports.addRoutes = function(app) {
   })
 }
 
-var convertToProgrammersString = function(searchQuery){
-  searchQuery = searchQuery.replace(/ +AND +/g, '&&');
-  searchQuery = searchQuery.replace(/ +OR +/g, '||');
-  searchQuery = searchQuery.replace(/ +/g, '&&');
+var replaceWhitespacesTOAND = function(searchQuery){
+  searchQuery = searchQuery.replace(/ +(?!AND)(?!OR)/g, ' AND ');
+  searchQuery = searchQuery.replace(/ AND AND /g, ' AND ');
+  searchQuery = searchQuery.replace(/ OR AND /g, ' OR ');
 
   return searchQuery;
 }
@@ -76,7 +76,7 @@ var createAndSection = function(andQuery){
 }
 
 var createOrSection = function(orQuery){
-  var splitedByANDQueries = orQuery.split('&&');
+  var splitedByANDQueries = orQuery.split(' AND ');
   var conditions = [];
   var boolQuery;
   async.forEach(splitedByANDQueries, function(splitedByANDQuery, callback){
@@ -98,8 +98,8 @@ var createOrSection = function(orQuery){
 }
 
 var parseQuery = function(searchQuery){
-  searchQuery = convertToProgrammersString(searchQuery);
-  var splitedByORQueries = searchQuery.split('||');
+  searchQuery = replaceWhitespacesTOAND(searchQuery);
+  var splitedByORQueries = searchQuery.split(' OR ');
   var conditions = [];
   var boolQuery;
   async.forEach(splitedByORQueries, function(splitedByORQuery, callback){
