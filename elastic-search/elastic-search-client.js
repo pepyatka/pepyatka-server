@@ -21,7 +21,7 @@ exports.indexElement = function(index, type, element){
     pepyatka_post_index : function(post){
       getPostTimestamp(post, function(timestamp){
         post.timestamp = timestamp;
-        elasticSearchClient.index('pepyatka', 'post', post)
+        elasticSearchClient.index('pepyatka', 'post', post, post.id)
           .on('data', function(data) {
             console.log(data)
           })
@@ -33,7 +33,7 @@ exports.indexElement = function(index, type, element){
     }
   }
 
-    createIndex[getIndexerName(index, type)](element);
+  createIndex[getIndexerName(index, type)](element);
 };
 
 exports.updateElement = function(index, type, element){
@@ -45,7 +45,7 @@ exports.updateElement = function(index, type, element){
     pepyatka_post_update : function(post){
       getPostTimestamp(post, function(timestamp){
         post.timestamp = timestamp;
-        elasticSearchClient.update("pepyatka", "post", post)
+        elasticSearchClient.update("pepyatka", "post", post.id, post)
           .on('data', function(data) {
             console.log(JSON.parse(data));
           })
@@ -71,7 +71,7 @@ exports.parse = function(elasticSearchData){
   var parser = {
     pepyatka_post_parse : function(elasticSearchDataItem){
       return {
-        id: elasticSearchDataItem._id,
+        id: elasticSearchDataItem._source.id,
         createdAt: elasticSearchDataItem._source.createdAt,
         updatedAt: elasticSearchDataItem._source.updatedAt,
         body: elasticSearchDataItem._source.body,
