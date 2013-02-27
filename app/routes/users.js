@@ -2,12 +2,16 @@ var models = require('../models');
 
 exports.addRoutes = function(app) {
   app.get('/v1/users', function(req, res) {
-    var userId = req.user.id
+    if (req.user) {
+      var userId = req.user.id
 
-    if (userId)
-      res.redirect('/v1/users/' + userId)
-    else
-      res.jsonp({}, 404)
+      if (userId)
+        res.redirect('/v1/users/' + userId)
+      else
+        res.jsonp({}, 404)
+    } else {
+      res.jsonp({})
+    }
   })
 
   app.get('/v1/users/:userId', function(req, res) {

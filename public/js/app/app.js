@@ -1008,12 +1008,18 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
         App.ApplicationController.subscription.subscribe('timeline', response.id)
 
         this.set('content', [])
-        response.posts.forEach(function(attrs) {
-          var post = App.Post.create(attrs)
-          this.addObject(post)
-        }, this)
-        this.set('user', App.User.create(response.user))+
-        this.set('subscribers', response.subscribers)
+        if(response.posts) {
+          response.posts.forEach(function(attrs) {
+            var post = App.Post.create(attrs)
+            this.addObject(post)
+          }, this)
+        }
+        if(response.user) {
+          this.set('user', App.User.create(response.user))
+        }
+        if(response.subscribers) {
+          this.set('subscribers', response.subscribers)
+        }
         this.set('id', response.id)
         this.set('isLoaded', true)
       }

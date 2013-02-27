@@ -19,7 +19,7 @@ exports.getElasticSearchConfig = function(){
 }
 
 exports.isAnonymousPermitted = function(){
-  isPermitted = true;
+  var isPermitted = true;
 
   return isPermitted;
 }

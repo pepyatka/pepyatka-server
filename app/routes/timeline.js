@@ -60,8 +60,7 @@ exports.addRoutes = function(app) {
   }),
 
   app.get('/v1/timeline', function(req, res) {
-    if (req.user)
-    {
+    if(req.user) {
       models.User.findByUsername(req.user.username, function(err, user) {
         user.getRiverOfNews({
           start: req.query.start
@@ -90,6 +89,8 @@ exports.addRoutes = function(app) {
           }
         })
       })
+    } else {
+      res.jsonp({})
     }
   })
 }

@@ -4,18 +4,22 @@ var models = require('../models')
 
 exports.addRoutes = function(app, connections) {
   app.post('/v1/comments', function(req, res){
-    // TODO: filter body params - known as strong params
-    var newComment = req.user.newComment({
-      body: req.body.body,
-      postId: req.body.postId
-    })
+    if(req.user) {
+      // TODO: filter body params - known as strong params
+      var newComment = req.user.newComment({
+        body: req.body.body,
+        postId: req.body.postId
+      })
 
-    newComment.save(function(err, comment) {
-      if (err) return res.jsonp({}, 422)
+      newComment.save(function(err, comment) {
+        if (err) return res.jsonp({}, 422)
 
-      comment.toJSON({ select: ['id', 'body', 'createdAt', 'updatedAt', 'createdBy', 'postId'],
-                       createdBy: { select: ['id', 'username'] }
-                     }, function(err, json) { res.jsonp(json) })
-    })
+        comment.toJSON({ select: ['id', 'body', 'createdAt', 'updatedAt', 'createdBy', 'postId'],
+                         createdBy: { select: ['id', 'username'] }
+                       }, function(err, json) { res.jsonp(json) })
+      })
+    } else {
+      res.jsonp({})
+    }
   });
 }
