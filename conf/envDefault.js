@@ -17,3 +17,9 @@ exports.getElasticSearchConfig = function(){
 
   return serverOptions;
 }
+
+exports.isAnonymousPermitted = function(){
+  isPermitted = true;
+
+  return isPermitted;
+}

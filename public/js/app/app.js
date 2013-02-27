@@ -306,6 +306,7 @@ App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
 
 App.JustStarted = Ember.View.extend({
   templateName: 'just-started',
+  isAnonymousPermitted: isAnonymousPermitted,
 
   didInsertElement: function() {
     this.$().hide().slideDown();
@@ -336,6 +337,7 @@ App.UploadFileView = Ember.TextField.extend({
 App.PostContainerView = Ember.View.extend({
   templateName: 'post-view',
   isFormVisible: false,
+  currentUser: currentUser,
 
   toggleVisibility: function() {
     this.toggleProperty('isFormVisible');
@@ -386,6 +388,7 @@ App.PostContainerView = Ember.View.extend({
 App.OwnPostContainerView = Ember.View.extend({
   templateName: 'own-post-view',
   isFormVisible: false,
+  currentUser: currentUser,
 
   toggleVisibility: function() {
     this.toggleProperty('isFormVisible');
@@ -615,6 +618,7 @@ App.onePostController = App.OnePostController.create()
 App.OnePostView = Ember.View.extend({
   templateName: 'a-post',
   isFormVisible: false,
+  currentUser: currentUser,
 
   toggleVisibility: function(){
     this.toggleProperty('isFormVisible');
@@ -652,6 +656,7 @@ App.UserTimelineController = Ember.ObjectController.extend({
 App.userTimelineController = App.UserTimelineController.create()
 App.UserTimelineView = Ember.View.extend({
   templateName: 'user-timeline',
+  currentUser: currentUser,
 
   subscribeTo: function() {
     App.userTimelineController.subscribeTo(App.postsController.id)
@@ -722,6 +727,7 @@ App.commentsController = App.CommentsController.create()
 
 App.Post = Ember.Object.extend({
   showAllComments: false,
+  currentUser: currentUser,
 
   partial: function() {
     if (this.showAllComments)
@@ -1006,7 +1012,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
           var post = App.Post.create(attrs)
           this.addObject(post)
         }, this)
-        this.set('user', App.User.create(response.user))
+        this.set('user', App.User.create(response.user))+
         this.set('subscribers', response.subscribers)
         this.set('id', response.id)
         this.set('isLoaded', true)

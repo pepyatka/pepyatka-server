@@ -43,6 +43,7 @@ var replaceWhitespacesTOAND = function(searchQuery){
 
 var createAndSection = function(andQuery){
   var condition;
+  andQuery = andQuery.toLowerCase();
   if (isSimpleQuery(andQuery)){
     condition = {
       "bool" : {"should" : [

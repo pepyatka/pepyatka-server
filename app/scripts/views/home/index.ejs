@@ -46,23 +46,25 @@
       </div>
 
       <div class="span3">
-        <div class="media profile">
-          <div class="pull-left">
-            <img class="media-object" src="/img/48x48.png">
-          </div>
-
-          <div class="media-body">
-            <div class="author">
-              <a><%= req.user.username %></a>
+        <% if (req.user) { %>
+          <div class="media profile">
+            <div class="pull-left">
+              <img class="media-object" src="/img/48x48.png">
             </div>
-            <div>
 
-              <a>settings</a>
-              -
-              <a href="/logout">sign out</a>
+            <div class="media-body">
+              <div class="author">
+                <a><%= req.user.username %></a>
+              </div>
+              <div>
+
+                <a>settings</a>
+                -
+                <a href="/logout">sign out</a>
+              </div>
             </div>
           </div>
-        </div>
+        <% } %>
       </div>
     </div>
 
@@ -105,7 +107,7 @@
 <script type="text/x-handlebars" data-template-name="just-started">
   {{#if view.justStarted}}
     <div class="alert alert-info">
-      Seems like you've just started using Pepyatka? Check out <a href="/#/users/anonymous">anonymous posts</a>.<button class="close" data-dismiss="alert">&times;</button>
+      Seems like you've just started using Pepyatka? {{#if view.isAnonymousPermitted}}Check out <a href="/#/users/anonymous">anonymous posts</a>.{{/if}}<button class="close" data-dismiss="alert">&times;</button>
     </div>
   {{/if}}
 </script>
@@ -126,18 +128,20 @@
 </script>
 
 <script type="text/x-handlebars" data-template-name="post-list-view">
-  <div class="clearfix submitForm">
-    <div>
-      {{view App.CreatePostView target="parentView" action="submitPost"
-            class="span9"}}
+  <% if (req.user) { %>
+    <div class="clearfix submitForm">
+      <div>
+        {{view App.CreatePostView target="parentView" action="submitPost"
+              class="span9"}}
+      </div>
+      <div class="pull-left">
+        Add image: {{view App.UploadFileView name="image"}}
+      </div>
+      <div class="pull-right">
+        <button {{action submitPost target="view"}} class="btn pull-right">Post</button>
+      </div>
     </div>
-    <div class="pull-left">
-      Add image: {{view App.UploadFileView name="image"}}
-    </div>
-    <div class="pull-right">
-      <button {{action submitPost target="view"}} class="btn pull-right">Post</button>
-    </div>
-  </div>
+  <% } %>
 
   <div id="progressBar" {{bindAttr class="App.postsController.isProgressBarHidden"}}>
     {{view Bootstrap.ProgressBar isStriped=true isAnimated=true 
@@ -209,17 +213,19 @@
             <time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>
           </a>
 
-          {{#view App.CommentPostView}}
-            -
-            <a {{action toggleVisibility target="parentView"}}>Comment</a>
-          {{/view}}
-
-          {{#unless currentUserLiked}}
-            {{#view App.LikePostView}}
+          {{#if currentUser}}
+            {{#view App.CommentPostView}}
               -
-              <a {{action likePost target="parentView"}}>Like</a>
+              <a {{action toggleVisibility target="parentView"}}>Comment</a>
             {{/view}}
-          {{/unless}}
+
+            {{#unless currentUserLiked}}
+              {{#view App.LikePostView}}
+                -
+                <a {{action likePost target="parentView"}}>Like</a>
+              {{/view}}
+            {{/unless}}
+          {{/if}}
         </div>
 
         {{#if anyLikes}}
@@ -302,17 +308,19 @@
             <time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>
           </a>
 
-          {{#view App.CommentPostView}}
-            -
-            <a {{action toggleVisibility target="parentView"}}>Comment</a>
-          {{/view}}
-
-          {{#unless currentUserLiked}}
-            {{#view App.LikePostView}}
+          {{#if currentUser}}
+            {{#view App.CommentPostView}}
               -
-              <a {{action likePost target="parentView"}}>Like</a>
+              <a {{action toggleVisibility target="parentView"}}>Comment</a>
             {{/view}}
-          {{/unless}}
+
+            {{#unless currentUserLiked}}
+              {{#view App.LikePostView}}
+                -
+                <a {{action likePost target="parentView"}}>Like</a>
+              {{/view}}
+            {{/unless}}
+          {{/if}}
         </div>
 
         {{#if anyLikes}}
@@ -396,15 +404,17 @@
   </div>
 
   {{#unless content.user.ownProfile}}
-    <div class="row profile-actions">
-      {{#if content.user.subscribedTo}}
-        <a {{action unsubscribeTo target="view"}}>Unsubscribe</a>
-      {{/if}}
+    {{#if view.currentUser}}
+      <div class="row profile-actions">
+        {{#if content.user.subscribedTo}}
+          <a {{action unsubscribeTo target="view"}}>Unsubscribe</a>
+        {{/if}}
 
-      {{#unless content.user.subscribedTo}}
-        <a {{action subscribeTo target="view"}}>Subscribe</a>
-      {{/unless}}
-    </div>
+        {{#unless content.user.subscribedTo}}
+          <a {{action subscribeTo target="view"}}>Subscribe</a>
+        {{/unless}}
+      </div>
+    {{/if}}
   {{/unless}}
 
   <div class="posts">
@@ -438,17 +448,19 @@
         <a {{action showPost this}} class="datetime">
           <time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>
         </a>
-        {{#view App.CommentPostView}}
-          -
-          <a {{action toggleVisibility target="parentView"}}>Comment</a>
-        {{/view}}
-
-        {{#unless currentUserLiked}}
-          {{#view App.LikePostView}}
+        {{#if currentUser}}
+          {{#view App.CommentPostView}}
             -
-            <a {{action likePost target="parentView"}}>Like</a>
+            <a {{action toggleVisibility target="parentView"}}>Comment</a>
           {{/view}}
-        {{/unless}}
+
+          {{#unless currentUserLiked}}
+            {{#view App.LikePostView}}
+              -
+              <a {{action likePost target="parentView"}}>Like</a>
+            {{/view}}
+          {{/unless}}
+        {{/if}}
       </div>
     
       {{#if anyLikes}}
@@ -496,7 +508,12 @@
 </script>
 
 <script>
-  var currentUser = '<%= req.user.id %>'
+  var currentUser
+  var isAnonymousPermitted
+  <% if (req.user) { %>
+    currentUser = '<%= req.user.id %>'
+    isAnonymousPermitted = '<%= req.isAnonymousPermitted %>'
+  <% } %>
 </script>
 
 <script src="/js/app/app.js"></script>

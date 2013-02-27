@@ -1,5 +1,6 @@
 var home = require('./routes/index')
   , auth = require('./routes/auth')
+  , localConf = require('./../conf/envLocal.js')
 
 var session = require('./routes/session')
   , user = require('./routes/users')
@@ -12,12 +13,13 @@ var models = require('./models');
 
 var helpers = function(req, res, next) {
   res.locals.req = req
+  res.locals.req.isAninymousPermitted = localConf.isAnonymousPermitted()
 
   next();
 };
 
 var findUser = function(req, res, next) {
-  if (!req.user) {
+  if (!req.user && localConf.isAnonymousPermitted()) {
     models.User.findAnon(function(err, user) {
       if (user) {
         req.logIn(user, function(err) {
