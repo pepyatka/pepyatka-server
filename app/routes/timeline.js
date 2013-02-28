@@ -60,37 +60,37 @@ exports.addRoutes = function(app) {
   }),
 
   app.get('/v1/timeline', function(req, res) {
-    if(req.user) {
-      models.User.findByUsername(req.user.username, function(err, user) {
-        user.getRiverOfNews({
-          start: req.query.start
-        }, function(err, timeline) {
-          if (timeline) {
-            timeline.toJSON({ select: ['id', 'posts', 'user', 'subscribers'],
-                              posts: {
-                                select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
-                                createdBy: { select: ['id', 'username'] },
-                                comments: { select: ['id', 'body', 'createdBy'],
-                                            createdBy: { select: ['id', 'username'] }
-                                          },
-                                likes: { select: ['id', 'username'] }
-                              },
-                              user: {
-                                select: ['id', 'username', 'subscribers', 'subscriptions'],
-                                subscriptions: { select: ['id', 'user'],
-                                                 user: { select: ['id', 'username'] } }
-                              },
-                              subscribers: { select: ['id', 'username'] }
-                            }, function(err, json) {
-              res.jsonp(json);
-            })
-          } else {
-            res.jsonp({});
-          }
-        })
-      })
-    } else {
-      res.jsonp({})
+    if(!req.user) {
+      return res.jsonp({})
     }
+
+    models.User.findByUsername(req.user.username, function(err, user) {
+      user.getRiverOfNews({
+        start: req.query.start
+      }, function(err, timeline) {
+        if (timeline) {
+          timeline.toJSON({ select: ['id', 'posts', 'user', 'subscribers'],
+                            posts: {
+                              select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
+                              createdBy: { select: ['id', 'username'] },
+                              comments: { select: ['id', 'body', 'createdBy'],
+                                          createdBy: { select: ['id', 'username'] }
+                                        },
+                              likes: { select: ['id', 'username'] }
+                            },
+                            user: {
+                              select: ['id', 'username', 'subscribers', 'subscriptions'],
+                              subscriptions: { select: ['id', 'user'],
+                                               user: { select: ['id', 'username'] } }
+                            },
+                            subscribers: { select: ['id', 'username'] }
+                          }, function(err, json) {
+            res.jsonp(json);
+          })
+        } else {
+          res.jsonp({});
+        }
+      })
+    })
   })
 }
