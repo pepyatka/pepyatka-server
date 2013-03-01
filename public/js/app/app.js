@@ -40,6 +40,7 @@ App.ShowSpinnerWhileRendering = Ember.Mixin.create({
   }.property('App.postsController.content'),
 
   nextPageDisabled: function() {
+    //FIXME now content.length = 0. We can't control nextButton disabling
     var len = this.get('content.content.length')
     return len == 0 || len < this.get('pageSize') ? 'disabled' : ''
     // TODO: bind to generic content
@@ -79,7 +80,8 @@ App.SearchPaginationHelper = Em.Mixin.create({
   }.property('App.searchController.content'),
 
   nextPageDisabled: function() {
-    var len = App.searchController.content.length;
+    //FIXME now content.length = 0. We can't control nextButton disabling
+    var len = this.get('content.content.length')
     return len == 0 || len < this.get('pageSize') ? 'disabled' : ''
     // TODO: bind to generic content
   }.property('App.searchController.content'),
@@ -1054,7 +1056,7 @@ App.postsController = App.PostsController.create()
 App.Router.map(function() {
   this.route("posts", { path: "/" });
   this.route("userTimeline", { path: "/users/:username" });
-  this.route("aPost", { path: "/posts/:postId" });
+  this.route("onePost", { path: "/posts/:postId" });
   this.route("search", { path: "/search/:searchQuery" });
 });
 
@@ -1076,7 +1078,7 @@ App.PostsRoute = Ember.Route.extend({
     },
 
     showPost: function(post){
-      this.transitionTo('aPost', post);
+      this.transitionTo('onePost', post);
     },
 
     showAllPosts: function(){
@@ -1115,7 +1117,7 @@ App.UserTimelineRoute = Ember.Route.extend({
     },
 
     showPost: function(post){
-      this.transitionTo('aPost', post);
+      this.transitionTo('onePost', post);
     },
 
     showAllPosts: function(){
@@ -1128,7 +1130,7 @@ App.UserTimelineRoute = Ember.Route.extend({
   }
 })
 
-App.APostRoute = Ember.Route.extend({
+App.OnePostRoute = Ember.Route.extend({
   route: '/posts/:postId',
 
   serialize: function(context){
@@ -1140,7 +1142,7 @@ App.APostRoute = Ember.Route.extend({
   },
 
   setupController: function(controller, context) {
-    this.controllerFor('onePost').set('content', context)
+    controller.set('content', context)
   },
 
   renderTemplate: function() {
@@ -1173,8 +1175,11 @@ App.SearchRoute = Ember.Route.extend({
   },
 
   deserialize: function(urlParams) {
-    //TODO Will fix this in the future. Now I don't know, why we need to return array with object (but in other way it doesn't work)
+    //FIXME Will fix this in the future. Now I don't know, why we need to return array with object (but in other way it doesn't work)
+    //FIXME Move set strings from here
     //If it doesn't work, redirect page
+    App.searchController.set('body', urlParams.searchQuery)
+    App.searchController.set('query', urlParams.searchQuery)
     return [ { searchQuery: urlParams.searchQuery } ];
 //    return urlParams.searchQuery;
   },
@@ -1194,7 +1199,7 @@ App.SearchRoute = Ember.Route.extend({
     },
 
     showPost: function(post){
-      this.transitionTo('aPost', post);
+      this.transitionTo('onePost', post);
     },
 
     showAllPosts: function(){
