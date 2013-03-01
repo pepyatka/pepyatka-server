@@ -11,8 +11,8 @@
     searchQuery = searchQuery.replace(/ OR AND /g, ' OR ');
     searchQuery.split(' OR ').forEach(function(splitedByORQuery){
       splitedByORQuery.split(' AND ').forEach(function(splitedByANDQuery){
-        splitedByANDQuery = splitedByANDQuery.replace(/ intitle:| incomments:| from:/, '');
         splitedByANDQuery = splitedByANDQuery.trim();
+        splitedByANDQuery = splitedByANDQuery.replace(/intitle:|incomments:|from:/, '');
         queryWords.push(splitedByANDQuery);
       });
     });

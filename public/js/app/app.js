@@ -15,7 +15,7 @@ App.ShowSpinnerWhileRendering = Ember.Mixin.create({
   }
 });
 
-App.PaginationHelper = Em.Mixin.create({
+  App.PaginationHelper = Em.Mixin.create({
   pageSize: 25,
   pageStart: 0,
 
@@ -125,9 +125,11 @@ App.Subscription = Ember.Object.extend({
     this.socket = io.connect('/');
 
     this.socket.on('newPost', function (data) {
-      var post = App.Post.create(data.post)
-
-      App.postsController.addObject(post)
+      //TODO I'm not sure that's right. When we are in first page, postsController hasn't pageStart.
+      if(!App.postsController.get('pageStart')) {
+        var post = App.Post.create(data.post)
+        App.postsController.addObject(post)
+      }
     });
 
     this.socket.on('updatePost', function(data) {
@@ -249,7 +251,7 @@ App.Subscription = Ember.Object.extend({
 App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
   templateName: 'application',
   searchPhrase: function() {
-    App.router.transitionTo('searchPhrase', App.searchController.body);
+    this.controller.transitionToRoute('search', App.searchController.body);
   }
 });
 App.ApplicationController = Ember.Controller.extend({
@@ -319,7 +321,8 @@ App.JustStarted = Ember.View.extend({
   // },
 
   justStarted: function() {
-    return App.router.location.lastSetURL != "/users/anonymous"
+//    return App.Router.location.lastSetURL != "/users/anonymous"
+    return App.Router.lastSetURL != "/users/anonymous"
   }.property()
 });
 
@@ -637,7 +640,7 @@ App.UserTimelineController = Ember.ObjectController.extend({
       type: 'post',
       success: function(response) {
         console.log(response)
-        App.router.transitionTo('posts')
+        this.transitionToRoute('posts')
       }
     })
   },
@@ -648,7 +651,7 @@ App.UserTimelineController = Ember.ObjectController.extend({
       type: 'post',
       success: function(response) {
         console.log(response)
-        App.router.transitionTo('posts')
+        this.transitionToRoute('posts')
       }
     })
   }
@@ -804,6 +807,7 @@ App.Post = Ember.Object.extend({
   }.property('attachments')
 });
 
+//App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.SearchPaginationHelper, {
 App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.SearchPaginationHelper, {
   body: '',
   content: [],
@@ -1047,91 +1051,248 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
 })
 App.postsController = App.PostsController.create()
 
-App.Router = Ember.Router.extend({
-  // enableLogging: true,
-
-  root: Ember.Route.extend({
-    searchPhrase: Ember.Route.extend({
-      route: '/search/:searchQuery',
-
-      showPost: Ember.Route.transitionTo('aPost'),
-      showAllPosts: Ember.Route.transitionTo('posts'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-
-      connectOutlets: function(router, searchQuery){
-        router.get('applicationController').connectOutlet('search', App.searchController.searchByPhrase(searchQuery));
-      },
-
-      serialize: function(router, searchQuery) {
-        App.searchController.set('body', searchQuery)
-        App.searchController.set('query', searchQuery)
-        return {searchQuery: searchQuery}
-      },
-
-      deserialize: function(router, urlParams) {
-        return urlParams.searchQuery
-      }
-    }),
-
-    posts: Ember.Route.extend({
-      route: '/',
-
-      showPost: Ember.Route.transitionTo('aPost'),
-      showAllPosts: Ember.Route.transitionTo('posts'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      
-      connectOutlets: function(router){ 
-        App.postsController.set('timeline', null)
-        router.get('applicationController').connectOutlet('posts', App.postsController.findAll());
-      }
-    }),
-
-    userTimeline: Ember.Route.extend({
-      route: '/users/:username',
-
-      showPost: Ember.Route.transitionTo('aPost'),
-      showAllPosts: Ember.Route.transitionTo('posts'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-
-      connectOutlets: function(router, username) {
-        App.postsController.set('timeline', username)
-        router.get('applicationController').connectOutlet('userTimeline', App.postsController.findAll());
-      },
-
-      serialize: function(router, username) {
-        return {username: username}
-      },
-
-      deserialize: function(router, urlParams) {
-        return urlParams.username
-      }
-    }),
-
-    aPost: Ember.Route.extend({
-      route: '/posts/:postId',
-
-      showAllPosts: Ember.Route.transitionTo('posts'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      
-      connectOutlets: function(router, context) {
-        // FIXME: obviouly a defect. content should be set automagically
-        App.onePostController.set('content', context)
-        router.get('applicationController').connectOutlet('onePost', context);
-      },
-
-      serialize: function(router, context){
-        return {postId: context.get('id')}
-      },
-
-      deserialize: function(router, urlParams) {
-        return App.postsController.findOne(urlParams.postId);
-      }
-    })
-  })
+App.Router.map(function() {
+  this.route("posts", { path: "/" });
+  this.route("userTimeline", { path: "/users/:username" });
+  this.route("aPost", { path: "/posts/:postId" });
+  this.route("search", { path: "/search/:searchQuery" });
 });
+
+App.PostsRoute = Ember.Route.extend({
+  route: '/',
+
+  setupController: function(controller) {
+    controller.set('timeline', null);
+  },
+
+  renderTemplate: function() {
+    App.postsController.findAll()
+    this.render('posts');
+  },
+
+  events: {
+    showUserTimeline: function(username){
+      this.transitionTo('userTimeline', username);
+    },
+
+    showPost: function(post){
+      this.transitionTo('aPost', post);
+    },
+
+    showAllPosts: function(){
+      this.transitionTo('posts');
+    },
+
+    searchByPhrase: function(searchQuery){
+      this.transitionTo('search', searchQuery)
+    }
+  }
+})
+
+App.UserTimelineRoute = Ember.Route.extend({
+  route: '/users/:username',
+
+  serialize: function(username) {
+    return {username: username}
+  },
+
+  deserialize: function(urlParams) {
+    return urlParams.username
+  },
+
+  setupController: function(controller, username) {
+    this.controllerFor('posts').set('timeline', username)
+  },
+
+  renderTemplate: function() {
+    App.postsController.findAll()
+    this.render('userTimeline');
+  },
+
+  events: {
+    showUserTimeline: function(username){
+      this.transitionTo('userTimeline', username);
+    },
+
+    showPost: function(post){
+      this.transitionTo('aPost', post);
+    },
+
+    showAllPosts: function(){
+      this.transitionTo('posts');
+    },
+
+    searchByPhrase: function(searchQuery){
+      this.transitionTo('search', searchQuery)
+    }
+  }
+})
+
+App.APostRoute = Ember.Route.extend({
+  route: '/posts/:postId',
+
+  serialize: function(context){
+    return {postId: context.get('id')}
+  },
+
+  deserialize: function(urlParams) {
+    return App.postsController.findOne(urlParams.postId);
+  },
+
+  setupController: function(controller, context) {
+    this.controllerFor('onePost').set('content', context)
+  },
+
+  renderTemplate: function() {
+    App.postsController.findAll()
+    this.render('onePost');
+  },
+
+  events: {
+    showUserTimeline: function(username){
+      this.transitionTo('userTimeline', username);
+    },
+
+    showAllPosts: function(){
+      this.transitionTo('posts');
+    },
+
+    searchByPhrase: function(searchQuery){
+      this.transitionTo('search', searchQuery)
+    }
+  }
+})
+
+App.SearchRoute = Ember.Route.extend({
+  route: '/search/:searchQuery',
+
+  serialize: function(searchQuery){
+    App.searchController.set('body', searchQuery)
+    App.searchController.set('query', searchQuery)
+    return {searchQuery: searchQuery}
+  },
+
+  deserialize: function(urlParams) {
+    //TODO Will fix this in the future. Now I don't know, why we need to return array with object (but in other way it doesn't work)
+    //If it doesn't work, redirect page
+    return [ { searchQuery: urlParams.searchQuery } ];
+//    return urlParams.searchQuery;
+  },
+
+  setupController: function(controller, context) {
+//    controller.searchByPhrase(context)
+    controller.searchByPhrase(context[0].searchQuery)
+  },
+
+  renderTemplate: function() {
+    this.render('search');
+  },
+
+  events: {
+    showUserTimeline: function(username){
+      this.transitionTo('userTimeline', username);
+    },
+
+    showPost: function(post){
+      this.transitionTo('aPost', post);
+    },
+
+    showAllPosts: function(){
+      this.transitionTo('posts');
+    },
+
+    searchByPhrase: function(searchQuery){
+      console.log('search')
+      this.transitionTo('search', searchQuery)
+    }
+  }
+})
+
+//App.Router = Ember.Router.extend({
+//  // enableLogging: true,
+//
+//  root: Ember.Route.extend({
+//    searchPhrase: Ember.Route.extend({
+//      route: '/search/:searchQuery',
+//
+//      showPost: Ember.Route.transitionTo('aPost'),
+//      showAllPosts: Ember.Route.transitionTo('posts'),
+//      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+//      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+//
+//      connectOutlets: function(router, searchQuery){
+//        router.get('applicationController').connectOutlet('search', App.searchController.searchByPhrase(searchQuery));
+//      },
+//
+//      serialize: function(router, searchQuery) {
+//        App.searchController.set('body', searchQuery)
+//        App.searchController.set('query', searchQuery)
+//        return {searchQuery: searchQuery}
+//      },
+//
+//      deserialize: function(router, urlParams) {
+//        return urlParams.searchQuery
+//      }
+//    }),
+//
+//    posts: Ember.Route.extend({
+//      route: '/',
+//
+//      showPost: Ember.Route.transitionTo('aPost'),
+//      showAllPosts: Ember.Route.transitionTo('posts'),
+//      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+//      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+//
+//      connectOutlets: function(router){
+//        App.postsController.set('timeline', null)
+//        router.get('applicationController').connectOutlet('posts', App.postsController.findAll());
+//      }
+//    }),
+//
+//    userTimeline: Ember.Route.extend({
+//      route: '/users/:username',
+//
+//      showPost: Ember.Route.transitionTo('aPost'),
+//      showAllPosts: Ember.Route.transitionTo('posts'),
+//      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+//      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+//
+//      connectOutlets: function(router, username) {
+//        App.postsController.set('timeline', username)
+//        router.get('applicationController').connectOutlet('userTimeline', App.postsController.findAll());
+//      },
+//
+//      serialize: function(router, username) {
+//        return {username: username}
+//      },
+//
+//      deserialize: function(router, urlParams) {
+//        return urlParams.username
+//      }
+//    }),
+//
+//    aPost: Ember.Route.extend({
+//      route: '/posts/:postId',
+//
+//      showAllPosts: Ember.Route.transitionTo('posts'),
+//      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+//      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+//
+//      connectOutlets: function(router, context) {
+//        // FIXME: obviouly a defect. content should be set automagically
+//        App.onePostController.set('content', context)
+//        router.get('applicationController').connectOutlet('onePost', context);
+//      },
+//
+//      serialize: function(router, context){
+//        return {postId: context.get('id')}
+//      },
+//
+//      deserialize: function(router, urlParams) {
+//        return App.postsController.findOne(urlParams.postId);
+//      }
+//    })
+//  })
+//});
 
 App.initialize();
