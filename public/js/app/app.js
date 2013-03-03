@@ -1146,6 +1146,7 @@ App.OnePostRoute = Ember.Route.extend({
   },
 
   renderTemplate: function() {
+    // FIXME: findOne()
     App.postsController.findAll()
     this.render('onePost');
   },
