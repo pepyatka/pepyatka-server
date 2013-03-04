@@ -514,18 +514,16 @@ exports.addModel = function(db) {
       }
 
       if (select.indexOf('statistics') != -1) {
-        {
-          var statistics = {}
-          that.getPostsTimeline({}, function(err, timeline) {
-            if(timeline) {
-              timeline.getPostsCount(function(err, postsCount) {
-                statistics.postsCount = postsCount
-                json.statistics = statistics
-                returnJSON(err)
-              })
-            }
-          })
-        }
+        var statistics = {}
+        that.getPostsTimeline({}, function(err, timeline) {
+          if (timeline) {
+            timeline.getPostsCount(function(err, postsCount) {
+              statistics.postsCount = postsCount
+              json.statistics = statistics
+              returnJSON(err)
+            })
+          }
+        })
       }
     }
   }
