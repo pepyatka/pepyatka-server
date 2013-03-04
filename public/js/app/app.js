@@ -229,8 +229,6 @@ App.Subscription = Ember.Object.extend({
     }
     else if(channel && !ids) {
       unsubscribedTo[channel] = this.subscribedTo[channel];
-      // FIXME: this code does not work
-//      this.subscribedTo[channel] == undefined;
       delete this.subscribedTo[channel];
     } else if (!channel) {
       unsubscribedTo = this.subscribedTo;
@@ -620,7 +618,7 @@ App.OnePostView = Ember.View.extend({
   isFormVisible: false,
   currentUser: currentUser,
 
-  toggleVisibility: function(){
+  toggleVisibility: function() {
     this.toggleProperty('isFormVisible');
   },
 
@@ -731,8 +729,6 @@ App.User = Ember.Object.extend({
 App.CommentsController = Ember.ArrayController.extend({
   resourceUrl: '/v1/comments',
 
-  // TODO: extract URL to class level
-  // TODO: extract data to class/model level
   createComment: function(post, body) {
     var comment = App.Comment.create({ 
       body: body,
@@ -842,7 +838,7 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Sea
 
   sortAscending: false,
   isLoaded: true,
-  insertPostsIntoMediaList : function(posts){
+  insertPostsIntoMediaList : function(posts) {
     App.ApplicationController.subscription.unsubscribe();
 
     App.searchController.set('content', []);
@@ -857,18 +853,18 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Sea
     App.searchController.set('isLoaded', true)
   },
 
-  showPage: function(pageStart){
+  showPage: function(pageStart) {
     this.set('isLoaded', false)
     var query = this.get('query');
-    if (/#/g.test(query)){
+    if (/#/g.test(query)) {
       query = query.replace(/#/g, '%23')
     }
 
     $.ajax({
       url: '/search/' + query,
       type: 'get',
-      data: {start: pageStart},
-      success: function(response){
+      data: { start: pageStart },
+      success: function(response) {
         App.searchController.insertPostsIntoMediaList(response.posts);
       }
     });
@@ -878,13 +874,13 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Sea
     this.set('isLoaded', false)
     if (searchQuery)
     {
-      if (/#/g.test(searchQuery)){
+      if (/#/g.test(searchQuery)) {
         searchQuery = searchQuery.replace(/#/g, '%23')
       }
       $.ajax({
         url: '/search/' + searchQuery,
         type: 'get',
-        success: function(response){
+        success: function(response) {
           App.searchController.insertPostsIntoMediaList(response.posts);
         }
       });
@@ -1067,7 +1063,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       url: this.resourceUrl + '/' + postId,
       dataType: 'jsonp',
       context: post,
-      success: function(response){
+      success: function(response) {
         App.ApplicationController.subscription.unsubscribe()
         App.ApplicationController.subscription.subscribe('post', response.id)
         this.setProperties(response)
@@ -1090,7 +1086,7 @@ App.Router = Ember.Router.extend({
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
 
-      connectOutlets: function(router, searchQuery){
+      connectOutlets: function(router, searchQuery) {
         router.get('applicationController').connectOutlet('search', App.searchController.searchByPhrase(searchQuery));
       },
 
@@ -1113,7 +1109,7 @@ App.Router = Ember.Router.extend({
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
       
-      connectOutlets: function(router){ 
+      connectOutlets: function(router) {
         App.postsController.set('timeline', null)
         router.get('applicationController').connectOutlet('posts', App.postsController.findAll());
       }
@@ -1154,8 +1150,8 @@ App.Router = Ember.Router.extend({
         router.get('applicationController').connectOutlet('onePost', context);
       },
 
-      serialize: function(router, context){
-        return {postId: context.get('id')}
+      serialize: function(router, context) {
+        return { postId: context.get('id') }
       },
 
       deserialize: function(router, urlParams) {
