@@ -1,6 +1,7 @@
 var ElasticSearchClient = require('elasticsearchclient')
   , db = require('../db').connect()
   , configLocal = require('../conf/envLocal.js')
+  , async = require('async')
 
 var elasticSearchClient = new ElasticSearchClient(configLocal.getElasticSearchConfig());
 
@@ -14,12 +15,18 @@ var getPostTimestamp = function(post, callback){
 
 var replaceHashTagsToEqualWord = function(post) {
   post.body = post.body.replace(/#/g, configLocal.getWordWhichEqualHashTag())
+  async.forEach(post.comments, function(comment, callback) {
+    comment.body = comment.body.replace(/#/g, configLocal.getWordWhichEqualHashTag())
+  })
 
   return post
 }
 
 var replaceToHashTagFromEqualWord = function(post) {
   post.body = post.body.replace(new RegExp(configLocal.getWordWhichEqualHashTag(), 'g'), '#')
+  async.forEach(post.comments, function(comment, callback) {
+    comment.body = comment.body.replace(new RegExp(configLocal.getWordWhichEqualHashTag(), 'g'), '#')
+  })
 
   return post
 }
