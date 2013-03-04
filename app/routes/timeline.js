@@ -41,7 +41,7 @@ exports.addRoutes = function(app) {
                                 likes: { select: ['id', 'username'] }
                               },
                               user: {
-                                select: ['id', 'username', 'subscribers', 'subscriptions'],
+                                select: ['id', 'username', 'subscribers', 'subscriptions', 'statistics'],
                                 subscriptions: { select: ['id', 'user'],
                                                  user: { select: ['id', 'username'] } }
                               },

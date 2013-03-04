@@ -678,6 +678,7 @@ App.User = Ember.Object.extend({
   username: null,
   createdAt: null,
   updatedAt: null,
+  statistics: {},
 
   subscriptionsLength: function() {
     return this.subscriptions.length
@@ -685,6 +686,31 @@ App.User = Ember.Object.extend({
 
   subscribersLength: function() {
     return App.postsController.subscribers.length
+  }.property(),
+
+  postsLength: function() {
+    if(this.statistics.postsCount) {
+      return this.statistics.postsCount
+    } else {
+      return 0
+    }
+
+  }.property(),
+
+  commentsLength: function() {
+    if(this.statistics.commentsCount) {
+      return this.statistics.commentsCount
+    } else {
+      return 0
+    }
+  }.property(),
+
+  likesLength: function() {
+    if(this.statistics.likesCount) {
+      return this.statistics.likesCount
+    } else {
+      return 0
+    }
   }.property(),
 
   subscribedTo: function() {

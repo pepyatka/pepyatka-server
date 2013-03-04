@@ -399,6 +399,20 @@ exports.addModel = function(db) {
         , select = params.select ||
             models.User.getAttributes()
 
+      var returnJSON = function(err) {
+        var isReady = true
+        if(select.indexOf('subscriptions') != -1) {
+          isReady = json.subscriptions != undefined
+        }
+        if(select.indexOf('statistics') != -1) {
+          isReady = json.statistics != undefined
+        }
+
+        if(isReady) {
+          callback(err, json)
+        }
+      }
+
       if (select.indexOf('id') != -1) 
         json.id = that.id
 
@@ -420,11 +434,26 @@ exports.addModel = function(db) {
           }, function(err, subscriptionsJSON) {
             json.subscriptions = subscriptionsJSON
 
-            callback(err, json)
+            returnJSON(err)
           })
         })
       } else {
-        callback(null, json)
+        returnJSON(null)
+      }
+
+      if (select.indexOf('statistics') != -1) {
+        {
+          var statistics = {}
+          that.getPostsTimeline({}, function(err, timeline) {
+            if(timeline) {
+              timeline.getPostsCount(function(err, postsCount) {
+                statistics.postsCount = postsCount
+                json.statistics = statistics
+                returnJSON(err)
+              })
+            }
+          })
+        }
       }
     }
   }
