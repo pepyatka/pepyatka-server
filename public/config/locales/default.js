@@ -1,6 +1,6 @@
 Em.I18n.translations = {
   'title.title': 'Pepyatka',
-  'label.version': '0.0.3',
+  'label.version': '0.0.4',
   'message.welcome': 'Seems like you\'ve just started using Pepyatka?',
   'label.signin': 'Sign in',
   'label.signup': 'Join Pepyatka',
