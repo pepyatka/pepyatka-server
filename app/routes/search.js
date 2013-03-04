@@ -1,5 +1,6 @@
 var searchClient = require('../../elastic-search/elastic-search-client.js')
-    , async = require('async')
+  , async = require('async')
+  , configLocal = require('../../conf/envLocal.js')
 
 var indicators = ['intitle', 'incomments', 'from'];
 
@@ -7,9 +8,7 @@ exports.addRoutes = function(app) {
   app.get('/search/:searchQuery', function(req, res) {
     var pageSize = 25;
     var pageStart = req.query && req.query.start || 0;
-
-//    var searchQuery = req.params.searchQuery.replace(/#/g, '\\#')
-    var searchQuery = req.params.searchQuery.replace(/#/g, '') // TODO Now elasticSearch can't search with '#' char in query
+    var searchQuery = req.params.searchQuery.replace(/#/g, configLocal.getWordWhichEqualHashTag())
     var parsedQuery = parseQuery(searchQuery);
 
     if (parsedQuery){

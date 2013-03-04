@@ -12,6 +12,18 @@ var getPostTimestamp = function(post, callback){
   });
 };
 
+var replaceHashTagsToEqualWord = function(post) {
+  post.body = post.body.replace(/#/g, configLocal.getWordWhichEqualHashTag())
+
+  return post
+}
+
+var replaceToHashTagFromEqualWord = function(post) {
+  post.body = post.body.replace(new RegExp(configLocal.getWordWhichEqualHashTag(), 'g'), '#')
+
+  return post
+}
+
 exports.indexElement = function(index, type, element){
   var getIndexerName = function(index, type){
     return index + '_' + type + '_' + 'index';
@@ -21,7 +33,7 @@ exports.indexElement = function(index, type, element){
     pepyatka_post_index : function(post){
       getPostTimestamp(post, function(timestamp){
         post.timestamp = timestamp;
-        elasticSearchClient.index('pepyatka', 'post', post, post.id)
+        elasticSearchClient.index('pepyatka', 'post', replaceHashTagsToEqualWord(post), post.id)
           .on('data', function(data) {
             console.log(data)
           })
@@ -45,7 +57,7 @@ exports.updateElement = function(index, type, element){
     pepyatka_post_update : function(post){
       getPostTimestamp(post, function(timestamp){
         post.timestamp = timestamp;
-        elasticSearchClient.update("pepyatka", "post", post.id, post)
+        elasticSearchClient.update("pepyatka", "post", post.id, replaceHashTagsToEqualWord(post))
           .on('data', function(data) {
             console.log(JSON.parse(data));
           })
@@ -70,7 +82,7 @@ exports.parse = function(elasticSearchData){
 
   var parser = {
     pepyatka_post_parse : function(elasticSearchDataItem){
-      return {
+      var post = {
         id: elasticSearchDataItem._source.id,
         createdAt: elasticSearchDataItem._source.createdAt,
         updatedAt: elasticSearchDataItem._source.updatedAt,
@@ -80,7 +92,9 @@ exports.parse = function(elasticSearchData){
         attachments: elasticSearchDataItem._source.attachments,
         likes: elasticSearchDataItem._source.likes,
         timelineId: elasticSearchDataItem._source.timelineId
-      };
+      }
+
+      return replaceToHashTagFromEqualWord(post)
     }
   };
 
