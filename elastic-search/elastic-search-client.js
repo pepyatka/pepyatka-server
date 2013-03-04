@@ -7,8 +7,8 @@ var elasticSearchClient = new ElasticSearchClient(configLocal.getElasticSearchCo
 
 exports.elasticSearchClient = elasticSearchClient;
 
-var getPostTimestamp = function(post, callback){
-  db.zscore('timeline:' + post.timelineId + ':posts', post.id, function(err, timestamp){
+var getPostTimestamp = function(post, callback) {
+  db.zscore('timeline:' + post.timelineId + ':posts', post.id, function(err, timestamp) {
     callback(timestamp);
   });
 };
@@ -31,14 +31,14 @@ var replaceToHashTagFromEqualWord = function(post) {
   return post
 }
 
-exports.indexElement = function(index, type, element){
+exports.indexElement = function(index, type, element) {
   var getIndexerName = function(index, type){
     return index + '_' + type + '_' + 'index';
   };
 
   var createIndex = {
-    pepyatka_post_index : function(post){
-      getPostTimestamp(post, function(timestamp){
+    pepyatka_post_index : function(post) {
+      getPostTimestamp(post, function(timestamp) {
         post.timestamp = timestamp;
         elasticSearchClient.index('pepyatka', 'post', replaceHashTagsToEqualWord(post), post.id)
           .on('data', function(data) {
@@ -55,23 +55,23 @@ exports.indexElement = function(index, type, element){
   createIndex[getIndexerName(index, type)](element);
 };
 
-exports.updateElement = function(index, type, element){
+exports.updateElement = function(index, type, element) {
   var getUpdaterName = function(index, type){
     return index + '_' + type + '_' + 'update';
   };
 
   var updateIndex = {
-    pepyatka_post_update : function(post){
-      getPostTimestamp(post, function(timestamp){
+    pepyatka_post_update : function(post) {
+      getPostTimestamp(post, function(timestamp) {
         post.timestamp = timestamp;
         elasticSearchClient.update("pepyatka", "post", post.id, replaceHashTagsToEqualWord(post))
           .on('data', function(data) {
             console.log(JSON.parse(data));
           })
-          .on('done', function(){
+          .on('done', function() {
             //always returns 0 right now
           })
-          .on('error', function(error){
+          .on('error', function(error) {
             console.log(error)
           })
           .exec();
@@ -82,13 +82,13 @@ exports.updateElement = function(index, type, element){
   updateIndex[getUpdaterName(index, type)](element);
 };
 
-exports.parse = function(elasticSearchData){
-  var getParserName = function(index, type){
+exports.parse = function(elasticSearchData) {
+  var getParserName = function(index, type) {
     return index + '_' + type + '_' + 'parse';
   };
 
   var parser = {
-    pepyatka_post_parse : function(elasticSearchDataItem){
+    pepyatka_post_parse : function(elasticSearchDataItem) {
       var post = {
         id: elasticSearchDataItem._source.id,
         createdAt: elasticSearchDataItem._source.createdAt,
@@ -108,7 +108,7 @@ exports.parse = function(elasticSearchData){
   var resultArray = [];
 
   if (elasticSearchData && elasticSearchData.hits)
-    elasticSearchData.hits.hits.forEach(function(entry){
+    elasticSearchData.hits.hits.forEach(function(entry) {
       resultArray.push(parser[getParserName(entry._index, entry._type)](entry));
     });
 

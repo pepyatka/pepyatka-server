@@ -3,13 +3,13 @@ var models = require('./../app/models')
   , elasticSearch = require('./elastic-search-client.js')
   , async = require('async')
 
-var startCheckingPosts = function(){
-  db.keys('post:*', function(err, postsIdKeys){
+var startCheckingPosts = function() {
+  db.keys('post:*', function(err, postsIdKeys) {
     async.forEach(postsIdKeys
-      ,function(postsIdKey, callback){
+      ,function(postsIdKey, callback) {
         var postId;
         postsIdKey = postsIdKey.replace(/post:/, '');
-        if (!/:(\w)+/.test(postsIdKey)){
+        if (!/:(\w)+/.test(postsIdKey)) {
           postId = postsIdKey;
 
           models.Post.findById(postId, function(err, post) {
@@ -17,7 +17,7 @@ var startCheckingPosts = function(){
               post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'timelineId'],
                   createdBy: { select: ['id', 'username'] },
                   comments: { select: ['id', 'body', 'createdBy'],
-                    createdBy: { select: ['id', 'username'] }},
+                    createdBy: { select: ['id', 'username'] } },
                   likes: { select: ['id', 'username']}
                 },
                 function(err, json) {
@@ -31,25 +31,25 @@ var startCheckingPosts = function(){
                 });
             }
           })
-        } else{
+        } else {
           callback(null)
         }
       }
-      , function(err){
+      , function(err) {
         //TODO Fix this. The message is displayed before the reindexation is complete
         console.log('Reindexation was complete');
     });
   });
 }
 
-var startCheckingIndexes = function(){
+var startCheckingIndexes = function() {
   startCheckingPosts();
 }
 
-var checkIndex = function(dbObject, callback){
+var checkIndex = function(dbObject, callback) {
   var qryObj = {
     "query" : {
-        "term" : {"_id" : dbObject.element.id}
+        "term" : { "_id" : dbObject.element.id }
     }
   };
 
@@ -58,30 +58,30 @@ var checkIndex = function(dbObject, callback){
       var json =  JSON.parse(data);
       var result = elasticSearch.parse(json)[0];
       if (result){
-        if (!isEqualElements(dbObject.element, result)){
+        if (!isEqualElements(dbObject.element, result)) {
           elasticSearch.updateElement(dbObject.index, dbObject.type, dbObject.element);
         }
       } else {
           elasticSearch.indexElement(dbObject.index, dbObject.type, dbObject.element);
       }
     })
-    .on('done', function(){
+    .on('done', function() {
       callback(null)
     })
-    .on('error', function(error){
+    .on('error', function(error) {
       console.log(error)
       callback(error)
     })
     .exec();
 }
 
-var isEqualArrays = function(firstArray, secondArray){
+var isEqualArrays = function(firstArray, secondArray) {
   var isEqual;
-  if (Array.isArray(firstArray) && Array.isArray(secondArray)){
+  if (Array.isArray(firstArray) && Array.isArray(secondArray)) {
     isEqual = firstArray.length == secondArray.length;
-    if (isEqual){
+    if (isEqual) {
       var i = 0;
-      firstArray.forEach(function(element){
+      firstArray.forEach(function(element) {
         if (isEqual){
           isEqual = isEqualElements(element, secondArray[i++]);
         }
@@ -92,21 +92,21 @@ var isEqualArrays = function(firstArray, secondArray){
   return isEqual;
 };
 
-var isEqualObjects = function(firstObject, secondObject){
+var isEqualObjects = function(firstObject, secondObject) {
   var isEqual;
   var checkedProperties = [];
-  if (typeof firstObject == 'object' && typeof secondObject == 'object'){
+  if (typeof firstObject == 'object' && typeof secondObject == 'object') {
     isEqual = true;
-    for(var property in firstObject){
-      if (isEqual){
+    for(var property in firstObject) {
+      if (isEqual) {
         checkedProperties.push(property);
         isEqual = isEqualElements(firstObject[property], secondObject[property]);
       }
     }
-    if (isEqual){
-      for(var property in secondObject){
-        if (isEqual){
-          if (checkedProperties.indexOf(property) == -1){
+    if (isEqual) {
+      for(var property in secondObject) {
+        if (isEqual) {
+          if (checkedProperties.indexOf(property) == -1) {
             isEqual = false;
           }
         }
@@ -117,25 +117,25 @@ var isEqualObjects = function(firstObject, secondObject){
   return isEqual;
 }
 
-var isEqualElements = function(firstElement, secondElement){
+var isEqualElements = function(firstElement, secondElement) {
   var isEqual;
-  if (typeof firstElement == 'object' && typeof secondElement == 'object'){
-    if (Array.isArray(firstElement) && Array.isArray(secondElement)){
+  if (typeof firstElement == 'object' && typeof secondElement == 'object') {
+    if (Array.isArray(firstElement) && Array.isArray(secondElement)) {
       isEqual = isEqualArrays(firstElement, secondElement);
     } else{
-      if (Array.isArray(firstElement) || Array.isArray(secondElement)){
+      if (Array.isArray(firstElement) || Array.isArray(secondElement)) {
         isEqual = false;
-      } else{
+      } else {
         isEqual = isEqualObjects(firstElement, secondElement);
       }
     }
-  } else{
+  } else {
     isEqual = firstElement == secondElement;
   }
 
   return isEqual;
 }
 
-exports.startInspection = function(){
+exports.startInspection = function() {
   startCheckingIndexes();
 }

@@ -14,13 +14,13 @@ Em.I18n.translations = {
   'label.like': 'Like',
   'label.unlike': 'Un-like',
   'label.liked': 'liked this',
-  'label.subscriptions': 'subscriptions'
-  'label.subscribers': 'subscribers'
-  'label.likes': 'likes'
-  'label.posts': 'posts'
-  'label.comments': 'comments'
+  'label.subscriptions': 'subscriptions',
+  'label.subscribers': 'subscribers',
+  'label.likes': 'likes',
+  'label.posts': 'posts',
+  'label.comments': 'comments',
 
-  'button.Search': 'search',
+  'button.search': 'search',
   'button.post': 'Post',
   'button.next': 'Next &rarr;',
   'button.previous': '&larr; Previous'

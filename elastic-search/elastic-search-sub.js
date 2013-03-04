@@ -26,7 +26,7 @@ exports.listen = function() {
                       post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'timelineId'],
                           createdBy: { select: ['id', 'username'] },
                           comments: { select: ['id', 'body', 'createdBy'],
-                            createdBy: { select: ['id', 'username'] }},
+                            createdBy: { select: ['id', 'username'] } },
                           likes: { select: ['id', 'username']}
                         },
                         function(err, json) {
@@ -44,7 +44,7 @@ exports.listen = function() {
                     post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'timelineId'],
                         createdBy: { select: ['id', 'username'] },
                         comments: { select: ['id', 'body', 'createdBy'],
-                          createdBy: { select: ['id', 'username'] }},
+                          createdBy: { select: ['id', 'username'] } },
                         likes: { select: ['id', 'username']}
                       },
                       function(err, json) {
