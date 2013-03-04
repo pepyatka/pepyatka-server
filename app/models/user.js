@@ -167,28 +167,50 @@ exports.addModel = function(db) {
         if (err) return callback(err, null)
         if (timeline.userId == that.id) return callback(null, null)
 
-        db.zadd('user:' + that.id + ':subscriptions', currentTime, timelineId, function(err, res) {
-          db.zadd('timeline:' + timelineId + ':subscribers', currentTime, that.id, function(err, res) {
-            that.getRiverOfNewsId(function(err, riverOfNewsId) {
-              db.zunionstore(
-                'timeline:' + riverOfNewsId + ':posts', 2,
-                'timeline:' + riverOfNewsId + ':posts',
-                'timeline:' + timelineId + ':posts',
-                'AGGREGATE', 'MAX', function(err, res) {
-                  timeline.getPosts(0, -1, function(err, posts) {
-                    async.forEach(posts, function(post, callback) {
-                      // XXX: kind of dup
-                      db.sadd('post:' + post.id + ':timelines', riverOfNewsId, function(err, res) {
-                        callback(err)
+        var innerCallback = function(timelinesIds) {
+          async.forEach(timelinesIds, function(timelineId, callback) {
+            db.zadd('user:' + that.id + ':subscriptions', currentTime, timelineId, function(err, res) {
+              db.zadd('timeline:' + timelineId + ':subscribers', currentTime, that.id, function(err, res) {
+                that.getRiverOfNewsId(function(err, riverOfNewsId) {
+                  db.zunionstore(
+                    'timeline:' + riverOfNewsId + ':posts', 2,
+                    'timeline:' + riverOfNewsId + ':posts',
+                    'timeline:' + timelineId + ':posts',
+                    'AGGREGATE', 'MAX', function(err, res) {
+                      timeline.getPosts(0, -1, function(err, posts) {
+                        async.forEach(posts, function(post, callback) {
+                          // XXX: kind of dup
+                          db.sadd('post:' + post.id + ':timelines', riverOfNewsId, function(err, res) {
+                            callback(err)
+                          })
+                        }, function(err) {
+                          callback(err)
+                        })
                       })
-                    }, function(err) {
-                      callback(err, that)
                     })
-                  })
                 })
+              })
+            })
+          }, function(err) {
+            callback(err, that)
+          })
+        }
+
+        var timelinesIds = [timelineId]
+
+        if (timeline.name == 'Posts') {
+          models.User.findById(timeline.userId, function(err, user) {
+            user.getCommentsTimelineId(function(err, commentsTimelineId) {
+              user.getLikesTimelineId(function(err, likesTimelineId) {
+                timelinesIds = timelinesIds.concat([commentsTimelineId, likesTimelineId])
+
+                innerCallback(timelinesIds)
+              })
             })
           })
-        })
+        } else {
+          innerCallback(timelinesIds)
+        }
       })
     },
 
@@ -198,46 +220,68 @@ exports.addModel = function(db) {
       models.Timeline.findById(timelineId, {}, function(err, timeline) {
         if (err) return callback(err, null)
 
-        db.zrem('user:' + that.id + ':subscriptions', timelineId, function(err, res) {
-          db.zrem('timeline:' + timelineId + ':subscribers', currentTime, that.id, function(err, res) {
-            that.getRiverOfNewsId(function(err, riverOfNewsId) {
-              // zinterstore saves results to a key. so we have to
-              // create a temporary storage
-              var randomKey = 'timeline:' + riverOfNewsId + ':random:' + uuid.v4()
+        var innerCallback = function(timelinesIds) {
+          async.forEach(timelinesIds, function(timelineId, callback) {
+            db.zrem('user:' + that.id + ':subscriptions', timelineId, function(err, res) {
+              db.zrem('timeline:' + timelineId + ':subscribers', currentTime, that.id, function(err, res) {
+                that.getRiverOfNewsId(function(err, riverOfNewsId) {
+                  // zinterstore saves results to a key. so we have to
+                  // create a temporary storage
+                  var randomKey = 'timeline:' + riverOfNewsId + ':random:' + uuid.v4()
 
-              db.zinterstore(
-                randomKey, 2,
-                'timeline:' + riverOfNewsId + ':posts',
-                'timeline:' + timelineId + ':posts',
-                'AGGREGATE', 'MAX', function(err, res) {
-                  // now we need to delete these posts from RiverOfNews
-                  db.zrange(randomKey, 0, -1, function(err, postsIds) {
-                    async.forEach(postsIds, function(postId, callback) {
-                      // XXX: kind of dup
-                      db.srem('post:' + postId + ':timelines', riverOfNewsId, function(err, res) {
-                        // TODO: delete if and only if user (this) is
-                        // not a participant of this discussion
-                        db.zrem('timeline:' + riverOfNewsId + ':posts', postId, function(err, res) {
-                          callback(err)
-                        })
-                      })
-                    }, function(err) {
-                      db.del(randomKey, function(err, res) {
-                        db.zcard('user:' + that.id + ':subscriptions', function(err, res) {
-                          if (res == 0)
-                            db.del('user:' + that.id + ':subscriptions', function(err, res) {
-                              callback(err, res)
+                  db.zinterstore(
+                    randomKey, 2,
+                    'timeline:' + riverOfNewsId + ':posts',
+                    'timeline:' + timelineId + ':posts',
+                    'AGGREGATE', 'MAX', function(err, res) {
+                      // now we need to delete these posts from RiverOfNews
+                      db.zrange(randomKey, 0, -1, function(err, postsIds) {
+                        async.forEach(postsIds, function(postId, callback) {
+                          // XXX: kind of dup
+                          db.srem('post:' + postId + ':timelines', riverOfNewsId, function(err, res) {
+                            // TODO: delete if and only if user (this) is
+                            // not a participant of this discussion
+                            db.zrem('timeline:' + riverOfNewsId + ':posts', postId, function(err, res) {
+                              callback(err)
                             })
-                          else
-                            callback(err, res)
+                          })
+                        }, function(err) {
+                          db.del(randomKey, function(err, res) {
+                            db.zcard('user:' + that.id + ':subscriptions', function(err, res) {
+                              if (res == 0)
+                                db.del('user:' + that.id + ':subscriptions', function(err, res) {
+                                  callback(err, res)
+                                })
+                              else
+                                callback(err)
+                            })
+                          })
                         })
                       })
                     })
-                  })
                 })
+              })
+            })
+          }, function(err) {
+            callback(err)
+          })
+        }
+
+        var timelinesIds = [timelineId]
+
+        if (timeline.name == 'Posts') {
+          models.User.findById(timeline.userId, function(err, user) {
+            user.getCommentsTimelineId(function(err, commentsTimelineId) {
+              user.getLikesTimelineId(function(err, likesTimelineId) {
+                timelinesIds = timelinesIds.concat([commentsTimelineId, likesTimelineId])
+
+                innerCallback(timelinesIds)
+              })
             })
           })
-        })
+        } else {
+          innerCallback(timelinesIds)
+        }
       })
     },
 
