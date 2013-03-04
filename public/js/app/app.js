@@ -631,7 +631,7 @@ App.OnePostView = Ember.View.extend({
 });
 
 App.UserTimelineController = Ember.ObjectController.extend({
-  resourceUrl: '/v1/timeline'
+  resourceUrl: '/v1/timeline',
 
   subscribeTo: function(timelineId) {
     $.ajax({
@@ -729,7 +729,7 @@ App.User = Ember.Object.extend({
 })
 
 App.CommentsController = Ember.ArrayController.extend({
-  resourceUrl: '/v1/comments'
+  resourceUrl: '/v1/comments',
 
   // TODO: extract URL to class level
   // TODO: extract data to class/model level
