@@ -160,6 +160,12 @@ exports.addModel = function(db) {
       }
     },
 
+    getPostsCount: function(callback) {
+      db.zcount('timeline:' + this.id + ':posts', '-inf', '+inf', function(err, res){
+        callback(err, res)
+      })
+    },
+
     toJSON: function(params, callback) {
       var that = this
         , json = {}

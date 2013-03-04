@@ -23,3 +23,9 @@ exports.isAnonymousPermitted = function(){
 
   return isPermitted;
 }
+
+exports.getWordWhichEqualHashTag = function(){
+  var wordWhichEqualHashTag = 'hashtagsym';
+
+  return wordWhichEqualHashTag;
+}

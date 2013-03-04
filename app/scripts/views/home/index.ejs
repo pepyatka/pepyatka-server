@@ -3,7 +3,7 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/libs/holder.js"></script>
 <script src="/js/libs/moment.min.js"></script>
-<script src="/js/libs/handlebars-1.0.rc.3.js"></script>
+<script src="/js/libs/handlebars-1.0.rc.1.js"></script>
 <script src="/js/libs/jquery.anchorlinks.js"></script>
 <script src="/js/libs/jquery.hashtags.js"></script>
 <script src="/js/libs/jquery.highlight-search-results.js"></script>
@@ -12,30 +12,32 @@
 <script src="/js/libs/core_ext.js"></script>
 <script src="/js/libs/bootstrap.min.js"></script>
 <script src="/js/libs/bootstrap.file-input.js"></script>
-<script src="/js/libs/ember-1.0.0-rc.1.js"></script>
+<script src="/js/libs/ember-1.0.0-pre.2.js"></script>
 <script src="/js/libs/ember-bootstrap.prod.js"></script>
+<script src="/js/libs/ember-i18n.js"></script>
+<script src="/config/envLocal.js"></script>
 
 <script type="text/x-handlebars" data-template-name="application">
   <div class="container">
     <div class="row">
       <div class="span5">
         <h1 class="title">
-          <a href="/">Pepyatka</a> <small class="mutted">0.0.3</small>
+          <a href="/">{{t title.title}}</a> <small class="mutted">{{t label.version}}</small>
         </h1>
       </div>
 	  <div class="span4 searchFieldView">
         <div>
           {{view App.CreateSearchFieldView target="parentView" action="searchPhrase"
                 class="span3"}}
-          <button {{action searchPhrase target="view"}} class="btn pull-right">Search</button>
+          <button {{action searchPhrase target="view"}} class="btn pull-right">{{t button.Search}}</button>
         </div>
       </div>
 
       <% if (!req.user || req.user.username == 'anonymous') { %>
         <div class="span3 signin-toolbar">
-          <a href="/session">Sign in</a>
+          <a href="/session">{{t label.signin}}</a>
           or
-          <a href="/signup">Join Pepyatka</a>
+          <a href="/signup">{{t label.signup}}</a>
         </div>
       <% } %>
     </div>
@@ -58,9 +60,9 @@
               </div>
               <div>
 
-                <a>settings</a>
+                <a>{{t label.settings}}</a>
                 -
-                <a href="/logout">sign out</a>
+                <a href="/logout">{{t label.signout}}</a>
               </div>
             </div>
           </div>
@@ -75,15 +77,15 @@
 <script type="text/x-handlebars" data-template-name="pagination">
   <ul class="pager">
     {{#if prevPageVisible}}
-      <li {{bindAttr class="prevPageDisabled"}}><a {{action prevPage href="true" target="App.postsController"}}>&larr; Previous</a></li>
+      <li {{bindAttr class="prevPageDisabled"}}><a {{action prevPage href="true" target="App.postsController"}}>{{t button.previous}}</a></li>
     {{else}}
-      <li {{bindAttr class="prevPageDisabled"}}><a>&larr; Previous</a></li>
+      <li {{bindAttr class="prevPageDisabled"}}><a>{{t button.previous}}</a></li>
     {{/if}}
 
     {{#if nextPageVisible}}
-      <li {{bindAttr class="nextPageDisabled"}}><a {{action nextPage href="true" target="App.postsController"}}>Next &rarr;</a></li>
+      <li {{bindAttr class="nextPageDisabled"}}><a {{action nextPage href="true" target="App.postsController"}}>{{t button.next}}</a></li>
     {{else}}
-      <li {{bindAttr class="nextPageDisabled"}}><a>Next &rarr;</a></li>
+      <li {{bindAttr class="nextPageDisabled"}}><a>{{t button.next}}</a></li>
     {{/if}}
   </ul>
 </script>
@@ -91,15 +93,15 @@
 <script type="text/x-handlebars" data-template-name="search-pagination">
   <ul class="pager">
     {{#if prevPageVisible}}
-      <li {{bindAttr class="prevPageDisabled"}}><a {{action prevPage href="true" target="App.searchController"}}>&larr; Previous</a></li>
+      <li {{bindAttr class="prevPageDisabled"}}><a {{action prevPage href="true" target="App.searchController"}}>{{t button.previous}}</a></li>
     {{else}}
-      <li {{bindAttr class="prevPageDisabled"}}><a>&larr; Previous</a></li>
+      <li {{bindAttr class="prevPageDisabled"}}><a>{{t button.previous}}</a></li>
     {{/if}}
 
     {{#if nextPageVisible}}
-      <li {{bindAttr class="nextPageDisabled"}}><a {{action nextPage href="true" target="App.searchController"}}>Next &rarr;</a></li>
+      <li {{bindAttr class="nextPageDisabled"}}><a {{action nextPage href="true" target="App.searchController"}}>{{t button.next}}</a></li>
     {{else}}
-      <li {{bindAttr class="nextPageDisabled"}}><a>Next &rarr;</a></li>
+      <li {{bindAttr class="nextPageDisabled"}}><a>{{t button.next}}</a></li>
     {{/if}}
   </ul>
 </script>
@@ -107,7 +109,7 @@
 <script type="text/x-handlebars" data-template-name="just-started">
   {{#if view.justStarted}}
     <div class="alert alert-info">
-      Seems like you've just started using Pepyatka? {{#if view.isAnonymousPermitted}}Check out <a href="/#/users/anonymous">anonymous posts</a>.{{/if}}<button class="close" data-dismiss="alert">&times;</button>
+      {{t message.welcome}}{{#if view.isAnonymousPermitted}} Check out <a href="/#/users/anonymous">anonymous posts</a>.{{/if}}<button class="close" data-dismiss="alert">&times;</button>
     </div>
   {{/if}}
 </script>
@@ -135,10 +137,10 @@
               class="span9"}}
       </div>
       <div class="pull-left">
-        Add image: {{view App.UploadFileView name="image"}}
+        {{t label.add.image}}{{view App.UploadFileView name="image"}}
       </div>
       <div class="pull-right">
-        <button {{action submitPost target="view"}} class="btn pull-right">Post</button>
+        <button {{action submitPost target="view"}} class="btn pull-right">{{t button.post}}</button>
       </div>
     </div>
   <% } %>
@@ -216,13 +218,13 @@
           {{#if currentUser}}
             {{#view App.CommentPostView}}
               -
-              <a {{action toggleVisibility target="parentView"}}>Comment</a>
+              <a {{action toggleVisibility target="parentView"}}>{{t label.comment}}</a>
             {{/view}}
 
             {{#unless currentUserLiked}}
               {{#view App.LikePostView}}
                 -
-                <a {{action likePost target="parentView"}}>Like</a>
+                <a {{action likePost target="parentView"}}>{{t label.like}}</a>
               {{/view}}
             {{/unless}}
           {{/if}}
@@ -239,9 +241,9 @@
                 {{view Ember.CollectionView contentBinding="likes"
                        itemViewClass="App.LikeView"}}
               </ul>
-              <span>liked this</span>
+              <span>{{t label.liked}}</span>
               {{#if currentUserLiked}}
-                <span>(<a {{action unlikePost id target="parentView"}}>Un-like</a>)</span>
+                <span>(<a {{action unlikePost id target="parentView"}}>{{t label.unlike}}</a>)</span>
               {{/if}}
             </div>
           </div>
@@ -279,8 +281,8 @@
                       class="span8 input-tiny comment-area"}}
               </div>
               <div>
-                <button {{action submitComment target="view"}} class="btn btn-small">Post</button>
-                <a {{action toggleVisibility target="parentView"}}>Cancel</a>
+                <button {{action submitComment target="view"}} class="btn btn-small">{{t button.post}}</button>
+                <a {{action toggleVisibility target="parentView"}}>{{t label.cancel}}</a>
               </div>
             </div>
           </div>
@@ -311,13 +313,13 @@
           {{#if currentUser}}
             {{#view App.CommentPostView}}
               -
-              <a {{action toggleVisibility target="parentView"}}>Comment</a>
+              <a {{action toggleVisibility target="parentView"}}>{{t label.comment}}</a>
             {{/view}}
 
             {{#unless currentUserLiked}}
               {{#view App.LikePostView}}
                 -
-                <a {{action likePost target="parentView"}}>Like</a>
+                <a {{action likePost target="parentView"}}>{{t label.like}}</a>
               {{/view}}
             {{/unless}}
           {{/if}}
@@ -334,9 +336,9 @@
                 {{view Ember.CollectionView contentBinding="likes"
                        itemViewClass="App.LikeView"}}
               </ul>
-              <span>liked this</span>
+              <span>{{t label.liked}}</span>
               {{#if currentUserLiked}}
-                <span>(<a {{action unlikePost id target="parentView"}}>Un-like</a>)</span>
+                <span>(<a {{action unlikePost id target="parentView"}}>{{t label.unlike}}</a>)</span>
               {{/if}}
             </div>
           </div>
@@ -374,8 +376,8 @@
                       class="span8 input-tiny comment-area"}}
               </div>
               <div>
-                <button {{action submitComment target="view"}} class="btn btn-small">Post</button>
-                <a {{action toggleVisibility target="parentView"}}>Cancel</a>
+                <button {{action submitComment target="view"}} class="btn btn-small">{{t button.post}}</button>
+                <a {{action toggleVisibility target="parentView"}}>{{t label.cancel}}</a>
               </div>
             </div>
           </div>
@@ -398,6 +400,9 @@
         <div class="pull-right profile-extra-info">
           <div>Subscriptions: {{content.user.subscriptionsLength}}</div>
           <div>Subscribers: {{content.user.subscribersLength}}</div>
+          <div>Posts: {{content.user.postsLength}}</div>
+          <div>Comments: {{content.user.commentsLength}}</div>
+          <div>Likes: {{content.user.likesLength}}</div>
         </div>
       </div>
     </div>
@@ -451,13 +456,13 @@
         {{#if currentUser}}
           {{#view App.CommentPostView}}
             -
-            <a {{action toggleVisibility target="parentView"}}>Comment</a>
+            <a {{action toggleVisibility target="parentView"}}>{{t label.comment}}</a>
           {{/view}}
 
           {{#unless currentUserLiked}}
             {{#view App.LikePostView}}
               -
-              <a {{action likePost target="parentView"}}>Like</a>
+              <a {{action likePost target="parentView"}}>{{t label.like}}</a>
             {{/view}}
           {{/unless}}
         {{/if}}
@@ -474,9 +479,9 @@
               {{view Ember.CollectionView contentBinding="likes"
                      itemViewClass="App.LikeView"}}
             </ul>
-            <span>liked this</span>
+            <span>{{t label.liked}}</span>
             {{#if currentUserLiked}}
-              <span>(<a {{action unlikePost target="parentView"}}>Un-like</a>)</span>
+              <span>(<a {{action unlikePost target="parentView"}}>{{t label.unlike}}</a>)</span>
             {{/if}}
           </div>
         </div>
@@ -497,8 +502,8 @@
                     class="span7 input-tiny comment-area"}}
             </div>
             <div>
-              <button {{action submitComment target="view"}} class="btn btn-small">Post</button>
-              <a {{action toggleVisibility target="parentView"}}>Cancel</a>
+              <button {{action submitComment target="view"}} class="btn btn-small">{{t button.post}}</button>
+              <a {{action toggleVisibility target="parentView"}}>{{t label.cancel}}</a>
             </div>
           </div>
         </div>

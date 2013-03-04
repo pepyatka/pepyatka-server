@@ -20,3 +20,4 @@ tmp/*
 /conf/envLocal.js
 
 /.idea
+/public/config/envLocal.js
