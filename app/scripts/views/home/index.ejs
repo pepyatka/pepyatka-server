@@ -29,7 +29,7 @@
         <div>
           {{view App.CreateSearchFieldView target="parentView" action="searchPhrase"
                 class="span3"}}
-          <button {{action searchPhrase target="view"}} class="btn pull-right">{{t button.Search}}</button>
+          <button {{action searchPhrase target="view"}} class="btn pull-right">{{t button.search}}</button>
         </div>
       </div>
 
@@ -398,11 +398,11 @@
         <h3 class="pull-left">{{content.user.username}}</h3>
 
         <div class="pull-right profile-extra-info">
-          <div>{{content.user.subscriptionsLength}} subscriptions</div>
-          <div>{{content.user.subscribersLength}} subscribers</div>
-          <div><a {{action showUserTimeline content.user.username}}>{{content.user.postsLength}} posts</a></div>
-          <div>{{content.user.commentsLength}} comments</div>
-          <div>{{content.user.likesLength}} likes</div>
+          <div>{{content.user.subscriptionsLength}} {{t label.subscriptions}}</div>
+          <div>{{content.user.subscribersLength}} {{t label.subscribers}}</div>
+          <div><a {{action showUserTimeline content.user.username}}>{{content.user.postsLength}} {{t label.posts}}</a></div>
+          <div>{{content.user.commentsLength}} {{t label.comments}}</div>
+          <div>{{content.user.likesLength}} {{t label.likes}}</div>
         </div>
       </div>
     </div>
