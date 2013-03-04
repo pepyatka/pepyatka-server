@@ -360,6 +360,78 @@ exports.addModel = function(db) {
       }
     },
 
+    // TODO: DRY - getRiverOfNews
+    getLikesTimelineId: function(callback) {
+      var that = this;
+      this.getTimelinesIds(function(err, timelines) {
+        if (timelines['Likes']) {
+          callback(null, timelines['Likes'])
+        } else {
+          // somehow this user has deleted its main timeline - let's
+          // recreate from the scratch
+          var timelineId = uuid.v4();
+          db.hset('user:' + that.id + ':timelines', 'Likes',
+                  timelineId, function(err, res) {
+                    db.hmset('timeline:' + timelineId,
+                             { 'name': 'Likes',
+                               'userId': that.id }, function(err, res) {
+                                 callback(err, timelineId);
+                               })
+                  })
+        }
+      })
+    },
+
+    getLikesTimeline: function(params, callback) {
+      if (this.likesTimeline) {
+        callback(null, this.likesTimeline)
+      } else {
+        var that = this
+        this.getLikesTimelineId(function(err, timelineId) {
+          models.Timeline.findById(timelineId, params, function(err, timeline) {
+            that.likesTimeline = timeline
+            callback(err, that.likesTimeline)
+          })
+        })
+      }
+    },
+
+    // TODO: DRY - getRiverOfNews
+    getCommentsTimelineId: function(callback) {
+      var that = this;
+      this.getTimelinesIds(function(err, timelines) {
+        if (timelines['Comments']) {
+          callback(null, timelines['Comments'])
+        } else {
+          // somehow this user has deleted its main timeline - let's
+          // recreate from the scratch
+          var timelineId = uuid.v4();
+          db.hset('user:' + that.id + ':timelines', 'Comments',
+                  timelineId, function(err, res) {
+                    db.hmset('timeline:' + timelineId,
+                             { 'name': 'Comments',
+                               'userId': that.id }, function(err, res) {
+                                 callback(err, timelineId);
+                               })
+                  })
+        }
+      })
+    },
+
+    getCommentsTimeline: function(params, callback) {
+      if (this.commentsTimeline) {
+        callback(null, this.commentsTimeline)
+      } else {
+        var that = this
+        this.getCommentsTimelineId(function(err, timelineId) {
+          models.Timeline.findById(timelineId, params, function(err, timeline) {
+            that.commentsTimeline = timeline
+            callback(err, that.commentsTimeline)
+          })
+        })
+      }
+    },
+
     getTimelinesIds: function(callback) {
       // TODO: following commented out cache is going to break
       // preconditions of Timeline functional test

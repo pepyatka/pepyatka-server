@@ -23,7 +23,7 @@ Configuration
   globally)
 - Run elasticsearch
 - Run server: node ./server.js
-- Run search daemon: ./bin/start_search_daemon
+- Run search daemon: ./bin/start-search-daemon
 
 Roadmap
 -------
@@ -36,10 +36,8 @@ Database
 ```
 username:<username>:uid
 user:<userId> { username, hashedPassword, salt, createdAt, updatedAt }
-user:<userId>:timelines { RiverOfNews, Posts, DirectMessages, Likes, Comments, [name*] }
+user:<userId>:timelines { RiverOfNews, Posts, Likes, Comments, DirectMessages, [name*] }
 * DirectMessages not implemented yet
-* Likes not implemented yet
-* Comments not implemented yet
 * Custom lists not implemented yet
 user:<userId>:subscriptions ( <timelineId>:<timestamp> )
 
