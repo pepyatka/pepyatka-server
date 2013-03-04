@@ -10,6 +10,7 @@ Em.I18n.translations = {
   'button.previous': '&larr; Previous',
   'label.add.image': 'Add image: ',
   'button.post': 'Post',
+  'label.cancel': 'Cancel',
   'button.Search': 'Search',
   'label.comment': 'Comment',
   'label.like': 'Like',
