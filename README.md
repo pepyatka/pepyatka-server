@@ -12,7 +12,7 @@ Configuration
 - Install redis
 - Install graphicsmagick (ensure jpeg and png flags are set)
 - Install nodejs
-- Install elasticsearch
+- Install elasticsearch (and java as a dependency ;-)
 - Install forever: npm install -g forever
 - Make sure to update secret token: cp ./conf/envDefault.js to
   ./conf/envLocal.js.
