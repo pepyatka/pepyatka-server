@@ -119,6 +119,10 @@ App.Subscription = Ember.Object.extend({
           return post.id == postId
         })
         break;
+      case "searchPhrase":
+        return App.searchController.find(function(post) {
+          return post.id == postId
+        })
       }
     }
 
