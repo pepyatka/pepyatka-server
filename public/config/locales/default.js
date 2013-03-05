@@ -20,7 +20,7 @@ Em.I18n.translations = {
   'label.posts': 'posts',
   'label.comments': 'posts commented',
 
-  'button.search': 'search',
+  'button.search': 'Search',
   'button.post': 'Post',
   'button.next': 'Next &rarr;',
   'button.previous': '&larr; Previous'
