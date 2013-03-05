@@ -7,7 +7,7 @@ Em.I18n.translations = {
   'label.signup': 'Join Pepyatka',
   'label.settings': 'settings',
   'label.signout': 'sign out',
-  'label.version': '0.0.4',
+  'label.version': '0.0.5',
   'label.add.image': 'Add image: ',
   'label.cancel': 'Cancel',
   'label.comment': 'Comment',
