@@ -521,4 +521,11 @@
   <% } %>
 </script>
 
-<script src="/js/app/app.js"></script>
+<script type="text/javascript">
+    function preloadFunc()
+    {
+        Config.loadScripts()
+    }
+    window.onpaint = preloadFunc();
+</script>
+

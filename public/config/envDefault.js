@@ -1,7 +1,7 @@
 Config = {}
-Config.getLabellingFile = function(){
+Config.loadScripts = function(){
   var labellingFilePath = '/config/locales/default.js'
-  $.getScript(labellingFilePath)
-}
 
-Config.getLabellingFile()
+  $(document.body).append("<script src='" + labellingFilePath + "'></script>")
+  $(document.body).append("<script src='/js/app/app.js\'></script>")
+}
