@@ -560,13 +560,24 @@ exports.addModel = function(db) {
       if (select.indexOf('statistics') != -1) {
         var statistics = {}
         that.getPostsTimeline({}, function(err, timeline) {
-          if (timeline) {
-            timeline.getPostsCount(function(err, postsCount) {
-              statistics.postsCount = postsCount
-              json.statistics = statistics
-              returnJSON(err)
+          timeline.getPostsCount(function(err, postsCount) {
+            statistics.postsCount = postsCount
+
+            that.getLikesTimeline({}, function(err, timeline) {
+              timeline.getPostsCount(function(err, likesCount) {
+                statistics.likesCount = likesCount
+
+                that.getCommentsTimeline({}, function(err, timeline) {
+                  timeline.getPostsCount(function(err, commentsCount) {
+                    statistics.commentsCount = commentsCount
+
+                    json.statistics = statistics
+                    returnJSON(err)
+                  })
+                })
+              })
             })
-          }
+          })
         })
       }
     }

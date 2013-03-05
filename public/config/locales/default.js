@@ -18,7 +18,7 @@ Em.I18n.translations = {
   'label.subscribers': 'subscribers',
   'label.likes': 'likes',
   'label.posts': 'posts',
-  'label.comments': 'comments',
+  'label.comments': 'posts commented',
 
   'button.search': 'search',
   'button.post': 'Post',
