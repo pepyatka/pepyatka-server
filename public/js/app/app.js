@@ -230,8 +230,7 @@ App.Subscription = Ember.Object.extend({
           }
         })
       }
-    }
-    else if(channel && !ids) {
+    } else if(channel && !ids) {
       unsubscribedTo[channel] = this.subscribedTo[channel];
       delete this.subscribedTo[channel];
     } else if (!channel) {
@@ -1068,8 +1067,12 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       dataType: 'jsonp',
       context: post,
       success: function(response) {
-        App.ApplicationController.subscription.unsubscribe()
-        App.ApplicationController.subscription.subscribe('post', response.id)
+        if (App.router.currentState.name == 'aPost') {
+          // TODO: we are not unsubscribing from all posts since we add
+          // posts to content by this method if it's missing on a page
+          App.ApplicationController.subscription.unsubscribe()
+          App.ApplicationController.subscription.subscribe('post', response.id)
+        }
         this.setProperties(response)
       }
     })
