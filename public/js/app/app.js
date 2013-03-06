@@ -442,6 +442,10 @@ App.OwnPostContainerView = Ember.View.extend({
 
   unlikePost: function() {
     App.postsController.unlikePost(this.content.id)
+  },
+
+  destroyPost: function() {
+    App.postsController.destroyPost(this.content.id)
   }
 });
 
