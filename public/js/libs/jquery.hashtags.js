@@ -3,7 +3,7 @@
     // Test a text node's contents for hashtags and split and rebuild it with an achor
     var testAndTag = function(el) {
       // Test for hashtags along whitespace and punctuation boundaries
-      var m = el.nodeValue.match(/#\w+/);
+      var m = el.nodeValue.match(/#[А-Яа-я\w]+/);
       // If we've found a valid hashtag, m[0] contains the hashtags
       if (m) {
         // Clone the text node to hold the "tail end" of the split node
