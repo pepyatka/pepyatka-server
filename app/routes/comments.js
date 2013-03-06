@@ -4,7 +4,7 @@ var models = require('../models')
 
 exports.addRoutes = function(app, connections) {
   app.delete('/v1/comments/:commentId', function(req, res) {
-    if (!req.user)
+    if (!req.user || req.user.username == 'anonymous')
       return res.jsonp({})
 
     models.Comment.findById(req.params.commentId, function(err, comment) {

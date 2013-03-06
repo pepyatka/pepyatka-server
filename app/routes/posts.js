@@ -41,7 +41,7 @@ exports.addRoutes = function(app) {
   })
 
   app.delete('/v1/posts/:postId', function(req, res) {
-    if (!req.user)
+    if (!req.user || req.user.username == 'anonymous')
       return res.jsonp({})
 
     models.Post.findById(req.params.postId, function(err, post) {

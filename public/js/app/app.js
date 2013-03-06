@@ -479,7 +479,8 @@ App.CommentContainerView = Ember.View.extend({
   },
 
   commentOwner: function() {
-    return this.content.createdBy.id == currentUser
+    return this.content.createdBy.id == currentUser &&
+      this.content.createdBy.username != 'anonymous'
   }.property(),
 
   destroyComment: function() {
@@ -816,7 +817,8 @@ App.Post = Ember.Object.extend({
   },
 
   postOwner: function() {
-    return this.get('createdBy').id == currentUser
+    return this.get('createdBy').id == currentUser &&
+      this.get('createdBy').username != 'anonymous'
   }.property('createdBy'),
 
   currentUserLiked: function() {

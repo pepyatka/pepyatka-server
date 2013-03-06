@@ -37,12 +37,17 @@ exports.addModel = function(db) {
   Comment.destroy = function(commentId, callback) {
     models.Comment.findById(commentId, function(err, comment) {
       db.del('comment:' + commentId, function(err, res) {
-        var pub = redis.createClient();
+        if (!comment)
+          return callback(err, res)
 
-        pub.publish('destroyComment', JSON.stringify({ postId: comment.postId,
-                                                       commentId: commentId }))
+        db.lrem('post:' + comment.postId + ':comments', 1, commentId, function(err, res) {
+          var pub = redis.createClient();
 
-        callback(err, res)
+          pub.publish('destroyComment', JSON.stringify({ postId: comment.postId,
+                                                         commentId: commentId }))
+
+          callback(err, res)
+        })
       })
     })
   }
