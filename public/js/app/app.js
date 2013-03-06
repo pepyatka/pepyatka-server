@@ -366,13 +366,14 @@ App.PostContainerView = Ember.View.extend({
     this.$().hide().slideDown('slow');
   },
 
-  // willDestroyElement: function() {
-  //   if (this.$()) {
-  //     var clone = this.$().clone();
-  //     this.$().replaceWith(clone);
-  //     clone.slideUp()
-  //   }
-  // },
+  // FIXME: this leads to an emberjs error: "action is undefined"
+  willDestroyElement: function() {
+    if (this.$()) {
+      var clone = this.$().clone();
+      this.$().replaceWith(clone);
+      clone.slideUp()
+    }
+  },
 
   showAllComments: function() {
     this.content.set('showAllComments', true)
@@ -380,6 +381,10 @@ App.PostContainerView = Ember.View.extend({
 
   unlikePost: function() {
     App.postsController.unlikePost(this.content.id)
+  },
+
+  destroyPost: function() {
+    App.postsController.destroyPost(this.content.id)
   }
 });
 
@@ -770,6 +775,10 @@ App.Post = Ember.Object.extend({
     this.likes.removeObject(obj);
   },
 
+  postOwner: function() {
+    return this.get('createdBy').id == currentUser
+  }.property('createdBy'),
+
   currentUserLiked: function() {
     var likes = this.get('likes')
 
@@ -936,6 +945,17 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
     $.ajax({
       url: this.resourceUrl + '/' + postId + '/unlike',
       type: 'post',
+      success: function(response) {
+        console.log(response)
+      }
+    })
+  },
+
+  destroyPost: function(postId) {
+    $.ajax({
+      url: this.resourceUrl + '/' + postId,
+      type: 'post',
+      data: {'_method': 'delete'},
       success: function(response) {
         console.log(response)
       }

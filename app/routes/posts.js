@@ -40,6 +40,20 @@ exports.addRoutes = function(app) {
     })
   })
 
+  app.delete('/v1/posts/:postId', function(req, res) {
+    if (!req.user)
+      return res.jsonp({})
+
+    models.Post.findById(req.params.postId, function(err, post) {
+      if (!post || req.user.id != post.userId)
+        return res.jsonp({})
+
+      models.Post.destroy(req.params.postId, function(err, r) {
+        res.jsonp({})
+      })
+    })
+  })
+
   app.post('/v1/posts', function(req, res) {
     if(!req.user) {
       return res.jsonp({})
