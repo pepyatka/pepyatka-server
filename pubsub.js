@@ -1,4 +1,5 @@
 var models = require('./app/models')
+  , async = require('async')
   , redis = require('redis')
 
 exports.listen = function(server) {
@@ -118,6 +119,23 @@ exports.listen = function(server) {
               io.sockets.in('post:' + data.postId).emit('newComment', event)
           })
         }
+      })
+      break
+
+    case 'destroyComment':
+      var data = JSON.parse(msg)
+      var event = { postId: data.postId, commentId: data.commentId }
+
+      io.sockets.in('post:' + data.postId).emit('destroyComment', event)
+
+      models.Post.findById(data.postId, function(err, post) {
+        post.getTimelinesIds(function(err, timelinesIds) {
+          async.forEach(timelinesIds, function(timelineId, callback) {
+            io.sockets.in('timeline:' + timelineId).emit('destroyComment', event)
+            callback(null)
+          }, function(err) {
+          })
+        })
       })
       break
 

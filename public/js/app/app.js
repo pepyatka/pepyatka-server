@@ -154,6 +154,12 @@ App.Subscription = Ember.Object.extend({
       }
     });
 
+    this.socket.on('destroyComment', function(data) {
+      var post = findPost(data.postId)
+
+      App.commentsController.removeComment('id', data.commentId)
+    })
+
     this.socket.on('newLike', function(data) {
       var user = App.User.create(data.user)
 
@@ -461,6 +467,23 @@ App.CommentContainerView = Ember.View.extend({
     })
 
     this.$().hide().slideDown('fast');
+  },
+
+  // FIXME: this leads to an emberjs error: "action is undefined"
+  willDestroyElement: function() {
+    if (this.$()) {
+      var clone = this.$().clone();
+      this.$().replaceWith(clone);
+      clone.slideUp()
+    }
+  },
+
+  commentOwner: function() {
+    return this.content.createdBy.id == currentUser
+  }.property(),
+
+  destroyComment: function() {
+    App.commentsController.destroyComment(this.content.id)
   }
 })
 
@@ -736,6 +759,22 @@ App.User = Ember.Object.extend({
 
 App.CommentsController = Ember.ArrayController.extend({
   resourceUrl: '/v1/comments',
+
+  removeComment: function(propName, value) {
+    var obj = this.findProperty(propName, value);
+    this.removeObject(obj);
+  },
+
+  destroyComment: function(commentId) {
+    $.ajax({
+      url: this.resourceUrl + '/' + commentId,
+      type: 'post',
+      data: {'_method': 'delete'},
+      success: function(response) {
+        console.log(response)
+      }
+    })
+  },
 
   createComment: function(post, body) {
     var comment = App.Comment.create({ 

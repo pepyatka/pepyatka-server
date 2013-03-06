@@ -180,6 +180,13 @@
         <span class="author">
           <a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a>
         </span>
+
+        {{#if view.commentOwner}}
+          <span class="links">
+            -
+            <a {{action destroyComment target="view"}}>{{t label.delete}}</a>
+          </span>
+        {{/if}}
       </div>
     {{/with}}
   </li>

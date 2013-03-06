@@ -65,7 +65,7 @@ footer {
 }
 .post .tagline a, .post .text a, .post .comments .author a,
   .post .comments .more-comments a, .comments .body a, .post .new-comment-link a,
-  .post .likes a {
+  .post .likes a, .post .comments .links a {
     color: #555599;
 }
 .post .text a {

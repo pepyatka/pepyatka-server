@@ -596,6 +596,9 @@ exports.addModel = function(db) {
       if (select.indexOf('comments') != -1) {
         this.getComments(function(err, comments) {
           async.map(comments, function(comment, callback) {
+            if (!comment)
+              return callback(err, null)
+
             comment.toJSON(params.comments || {}, function(err, json) {
               callback(err, json)
             })

@@ -1,4 +1,5 @@
 var uuid = require('node-uuid')
+  , redis = require('redis')
   , models = require('../models')
 
 exports.addModel = function(db) {
@@ -20,7 +21,9 @@ exports.addModel = function(db) {
 
   Comment.findById = function(commentId, callback) {
     db.hgetall('comment:' + commentId, function(err, attrs) {
-      // TODO: check if we find a comment
+      if (!attrs)
+        return callback(err, null)
+
       attrs.id = commentId
       var comment = new Comment(attrs)
       models.User.findById(attrs.userId, function(err, user) {
@@ -32,8 +35,15 @@ exports.addModel = function(db) {
 
   // TODO: commentId -> commentsId
   Comment.destroy = function(commentId, callback) {
-    db.del('comment:' + commentId, function(err, res) {
-      callback(err, res)
+    models.Comment.findById(commentId, function(err, comment) {
+      db.del('comment:' + commentId, function(err, res) {
+        var pub = redis.createClient();
+
+        pub.publish('destroyComment', JSON.stringify({ postId: comment.postId,
+                                                       commentId: commentId }))
+
+        callback(err, res)
+      })
     })
   }
 
