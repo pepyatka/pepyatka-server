@@ -156,8 +156,8 @@ App.Subscription = Ember.Object.extend({
 
     this.socket.on('destroyComment', function(data) {
       var post = findPost(data.postId)
-
-      App.commentsController.removeComment('id', data.commentId)
+      var comment = post.comments.findProperty('id', data.commentId)
+      post.comments.removeObject(comment)
     })
 
     this.socket.on('newLike', function(data) {
@@ -760,6 +760,7 @@ App.User = Ember.Object.extend({
 App.CommentsController = Ember.ArrayController.extend({
   resourceUrl: '/v1/comments',
 
+  // XXX: noone uses this method
   removeComment: function(propName, value) {
     var obj = this.findProperty(propName, value);
     this.removeObject(obj);
