@@ -129,6 +129,9 @@ exports.listen = function(server) {
       io.sockets.in('post:' + data.postId).emit('destroyComment', event)
 
       models.Post.findById(data.postId, function(err, post) {
+        if (!post)
+          return callback(err)
+
         post.getTimelinesIds(function(err, timelinesIds) {
           async.forEach(timelinesIds, function(timelineId, callback) {
             io.sockets.in('timeline:' + timelineId).emit('destroyComment', event)

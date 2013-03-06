@@ -45,6 +45,7 @@ exports.addModel = function(db) {
       // - deletes post from all users timelines
       // - deletes comments entities and comments array
       // - deletes attachments entities and attachments array
+      // - deletes likes key
       // - delete original post
       async.parallel([
         // remove post from all timelines
@@ -102,8 +103,8 @@ exports.addModel = function(db) {
         , function(callback) {
           // delete all comments asynchroniously
           post.getCommentsIds(function(err, commentsIds) {
-            async.forEach(commentsIds, function(comment, callback) {
-              models.Comment.destroy(comment.id, function(err, res) {
+            async.forEach(commentsIds, function(commentId, callback) {
+              models.Comment.destroy(commentId, function(err, res) {
                 callback(err)
               })
             }, function(err) {
@@ -144,9 +145,15 @@ exports.addModel = function(db) {
               })
             })
           })
-        },
+        }
+        // delete likes
+        , function(callback) {
+          db.del('post:' + postId + ':likes', function(err, res) {
+            callback(err)
+          })
+        }
         // delete original post
-        function(callback) {
+        , function(callback) {
           db.del('post:' + postId, function(err, res) {
             callback(err)
           })
