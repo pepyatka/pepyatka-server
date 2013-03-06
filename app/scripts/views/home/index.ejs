@@ -178,7 +178,11 @@
         </span>
         - 
         <span class="author">
-          <a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a>
+          {{#if view.commentOwner}}
+            <a {{action showUserTimeline createdBy.username href="true"}}>You</a>
+          {{else}}
+            <a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a>
+          {{/if}}
         </span>
 
         {{#if view.commentOwner}}
