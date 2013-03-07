@@ -256,7 +256,12 @@ App.Subscription = Ember.Object.extend({
 App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
   templateName: 'application',
   searchPhrase: function() {
-    App.router.transitionTo('searchPhrase', App.searchController.body);
+    query = App.searchController.body
+
+    if (/#/g.test(query))
+      query = query.replace(/#/g, '%23')
+
+    App.router.transitionTo('searchPhrase', query);
   }
 });
 App.ApplicationController = Ember.Controller.extend({
@@ -889,6 +894,7 @@ App.Post = Ember.Object.extend({
 });
 
 App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.SearchPaginationHelper, {
+  resourceUrl: '/v1/search',
   body: '',
   content: [],
   sortProperties: ['updatedAt'],
@@ -896,6 +902,7 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Sea
 
   sortAscending: false,
   isLoaded: true,
+
   insertPostsIntoMediaList : function(posts) {
     App.ApplicationController.subscription.unsubscribe();
 
@@ -914,12 +921,11 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Sea
   showPage: function(pageStart) {
     this.set('isLoaded', false)
     var query = this.get('query');
-    if (/#/g.test(query)) {
+    if (/#/g.test(query))
       query = query.replace(/#/g, '%23')
-    }
 
     $.ajax({
-      url: '/search/' + query,
+      url: this.resourceUrl + '/' + query,
       type: 'get',
       data: { start: pageStart },
       success: function(response) {
@@ -930,13 +936,12 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Sea
 
   searchByPhrase: function(searchQuery) {
     this.set('isLoaded', false)
-    if (searchQuery)
-    {
-      if (/#/g.test(searchQuery)) {
+    if (searchQuery) {
+      if (/#/g.test(searchQuery))
         searchQuery = searchQuery.replace(/#/g, '%23')
-      }
+
       $.ajax({
-        url: '/search/' + searchQuery,
+        url: this.resourceUrl + '/' + searchQuery,
         type: 'get',
         success: function(response) {
           App.searchController.insertPostsIntoMediaList(response.posts);
@@ -1165,9 +1170,15 @@ App.Router = Ember.Router.extend({
       },
 
       serialize: function(router, searchQuery) {
+        query = searchQuery
+
+        if (/%23/g.test(searchQuery))
+          searchQuery = searchQuery.replace(/%23/g, '#')
+
         App.searchController.set('body', searchQuery)
         App.searchController.set('query', searchQuery)
-        return {searchQuery: searchQuery}
+
+        return {searchQuery: query}
       },
 
       deserialize: function(router, urlParams) {
@@ -1212,7 +1223,7 @@ App.Router = Ember.Router.extend({
     }),
 
     userTimeline: Ember.Route.extend({
-      route: '/:username',
+      route: '/users/:username',
 
       showPost: Ember.Route.transitionTo('aPost'),
       showAllPosts: Ember.Route.transitionTo('posts'),
