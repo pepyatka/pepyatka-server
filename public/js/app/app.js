@@ -1189,8 +1189,30 @@ App.Router = Ember.Router.extend({
       }
     }),
 
+    aPost: Ember.Route.extend({
+      route: '/posts/:postId',
+
+      showAllPosts: Ember.Route.transitionTo('posts'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+
+      connectOutlets: function(router, context) {
+        // FIXME: obviouly a defect. content should be set automagically
+        App.onePostController.set('content', context)
+        router.get('applicationController').connectOutlet('onePost', context);
+      },
+
+      serialize: function(router, context) {
+        return { postId: context.get('id') }
+      },
+
+      deserialize: function(router, urlParams) {
+        return App.postsController.findOne(urlParams.postId);
+      }
+    }),
+
     userTimeline: Ember.Route.extend({
-      route: '/users/:username',
+      route: '/:username',
 
       showPost: Ember.Route.transitionTo('aPost'),
       showAllPosts: Ember.Route.transitionTo('posts'),
@@ -1208,28 +1230,6 @@ App.Router = Ember.Router.extend({
 
       deserialize: function(router, urlParams) {
         return urlParams.username
-      }
-    }),
-
-    aPost: Ember.Route.extend({
-      route: '/posts/:postId',
-
-      showAllPosts: Ember.Route.transitionTo('posts'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      
-      connectOutlets: function(router, context) {
-        // FIXME: obviouly a defect. content should be set automagically
-        App.onePostController.set('content', context)
-        router.get('applicationController').connectOutlet('onePost', context);
-      },
-
-      serialize: function(router, context) {
-        return { postId: context.get('id') }
-      },
-
-      deserialize: function(router, urlParams) {
-        return App.postsController.findOne(urlParams.postId);
       }
     })
   })
