@@ -1149,6 +1149,7 @@ App.postsController = App.PostsController.create()
 
 App.Router = Ember.Router.extend({
   // enableLogging: true,
+  location: 'history',
 
   root: Ember.Route.extend({
     searchPhrase: Ember.Route.extend({
