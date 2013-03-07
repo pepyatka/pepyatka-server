@@ -717,7 +717,7 @@ App.User = Ember.Object.extend({
   statistics: {},
 
   subscriptionsLength: function() {
-    return this.subscriptions.length
+    return this.subscriptions.filter(function(s) { return s.name == 'Posts'}).length
   }.property(),
 
   subscribersLength: function() {
