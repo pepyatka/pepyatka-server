@@ -4,52 +4,112 @@ var models = require('./../app/models')
   , async = require('async')
 
 var startCheckingPosts = function() {
-  db.keys('post:*', function(err, postsIdKeys) {
-    async.forEach(postsIdKeys
-      ,function(postsIdKey, callback) {
-        var postId;
-        postsIdKey = postsIdKey.replace(/post:/, '');
-        if (!/:(\w)+/.test(postsIdKey)) {
-          postId = postsIdKey;
+  var startCheckingExistingPosts = function(callback) {
+    db.keys('post:*', function(err, postsIdKeys) {
+      async.forEach(postsIdKeys
+        ,function(postsIdKey, callback) {
+          var postId;
+          postsIdKey = postsIdKey.replace(/post:/, '');
+          if (!/:(\w)+/.test(postsIdKey)) {
+            postId = postsIdKey;
 
-          models.Post.findById(postId, function(err, post) {
-            if (post) {
-              post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'timelineId'],
-                  createdBy: { select: ['id', 'username'] },
-                  comments: { select: ['id', 'body', 'createdBy'],
-                    createdBy: { select: ['id', 'username'] } },
-                  likes: { select: ['id', 'username']}
-                },
-                function(err, json) {
-                  checkIndex({
-                    index: 'pepyatka',
-                    type: 'post',
-                    element: json
-                  }, function(err){
-                    callback(err);
+            models.Post.findById(postId, function(err, post) {
+              if (post) {
+                post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'timelineId'],
+                    createdBy: { select: ['id', 'username'] },
+                    comments: { select: ['id', 'body', 'createdBy'],
+                      createdBy: { select: ['id', 'username'] } },
+                    likes: { select: ['id', 'username']}
+                  },
+                  function(err, json) {
+                    checkIndex({
+                      index: 'pepyatka',
+                      type: 'post',
+                      element: json
+                    }, function(err){
+                      callback(err);
+                    });
                   });
-                });
-            }
-          })
-        } else {
-          callback(null)
+              }
+            })
+          } else {
+            callback(null)
+          }
         }
-      }
-      , function(err) {
-        //TODO Fix this. The message is displayed before the reindexation is complete
-        console.log('Reindexation was complete');
+        , function(err) {
+          callback()
+        });
     });
-  });
+  }
+
+  var startChekingDeletedPosts = function(callback) {
+    var checkDeletedPosts = function(fromNumber) {
+      var size = 25
+      var queryObject = {
+        "size" : size,
+        "from" : fromNumber,
+        "query" : {
+          "wildcard" : { "id" : '?*' } //It doesn't work with '_id'
+        }}
+
+      elasticSearch.elasticSearchClient.search('pepyatka', 'post', queryObject)
+        .on('data', function(data) {
+          var json =  JSON.parse(data);
+          var searchedElements = elasticSearch.parse(json)
+          if(searchedElements.length == 0) callback()
+
+          async.forEach(searchedElements, function(post, callback) {
+              checkDbElement('pepyatka', 'post', post.id)
+              callback()
+            },
+            function(err) {
+              checkDeletedPosts(fromNumber + size)
+            })
+        })
+        .on('done', function() {
+        })
+        .on('error', function(error) {
+          console.log(error)
+        })
+        .exec();
+    }
+
+    checkDeletedPosts(0)
+  }
+
+  async.parallel([
+      function(callback) {
+        startCheckingExistingPosts(callback)
+      },
+      function(callback) {
+        startChekingDeletedPosts(callback)
+      }],
+    function(err) {
+      if(err) console.log(err)
+      else console.log('Reindexation was complete');//TODO Fix this. The message is displayed before the reindexation is complete
+  })
 }
 
 var startCheckingIndexes = function() {
   startCheckingPosts();
 }
 
+var checkDbElement = function(index, type, elementId) {
+  switch (type) {
+    case 'post':
+      models.Post.findById(elementId, function(err, post) {
+        if (post) return
+
+        elasticSearch.deleteElement(index, type, elementId)
+      })
+      break
+  }
+}
+
 var checkIndex = function(dbObject, callback) {
   var qryObj = {
     "query" : {
-        "term" : { "_id" : dbObject.element.id }
+        "term" : { "_id" : dbObject.element.id } //It doesn't work with 'id'
     }
   };
 
@@ -75,49 +135,49 @@ var checkIndex = function(dbObject, callback) {
     .exec();
 }
 
-var isEqualArrays = function(firstArray, secondArray) {
-  var isEqual;
-  if (Array.isArray(firstArray) && Array.isArray(secondArray)) {
-    isEqual = firstArray.length == secondArray.length;
-    if (isEqual) {
-      var i = 0;
-      firstArray.forEach(function(element) {
-        if (isEqual){
-          isEqual = isEqualElements(element, secondArray[i++]);
-        }
-      })
-    }
-  }
-
-  return isEqual;
-};
-
-var isEqualObjects = function(firstObject, secondObject) {
-  var isEqual;
-  var checkedProperties = [];
-  if (typeof firstObject == 'object' && typeof secondObject == 'object') {
-    isEqual = true;
-    for(var property in firstObject) {
+var isEqualElements = function(firstElement, secondElement) {
+  var isEqualArrays = function(firstArray, secondArray) {
+    var isEqual;
+    if (Array.isArray(firstArray) && Array.isArray(secondArray)) {
+      isEqual = firstArray.length == secondArray.length;
       if (isEqual) {
-        checkedProperties.push(property);
-        isEqual = isEqualElements(firstObject[property], secondObject[property]);
+        var i = 0;
+        firstArray.forEach(function(element) {
+          if (isEqual){
+            isEqual = isEqualElements(element, secondArray[i++]);
+          }
+        })
       }
     }
-    if (isEqual) {
-      for(var property in secondObject) {
+
+    return isEqual;
+  };
+
+  var isEqualObjects = function(firstObject, secondObject) {
+    var isEqual;
+    var checkedProperties = [];
+    if (typeof firstObject == 'object' && typeof secondObject == 'object') {
+      isEqual = true;
+      for(var property in firstObject) {
         if (isEqual) {
-          if (checkedProperties.indexOf(property) == -1) {
-            isEqual = false;
+          checkedProperties.push(property);
+          isEqual = isEqualElements(firstObject[property], secondObject[property]);
+        }
+      }
+      if (isEqual) {
+        for(var property in secondObject) {
+          if (isEqual) {
+            if (checkedProperties.indexOf(property) == -1) {
+              isEqual = false;
+            }
           }
         }
       }
     }
+
+    return isEqual;
   }
 
-  return isEqual;
-}
-
-var isEqualElements = function(firstElement, secondElement) {
   var isEqual;
   if (typeof firstElement == 'object' && typeof secondElement == 'object') {
     if (Array.isArray(firstElement) && Array.isArray(secondElement)) {
