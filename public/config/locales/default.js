@@ -12,6 +12,7 @@ Em.I18n.translations = {
   'label.cancel': 'Cancel',
   'label.comment': 'Comment',
   'label.like': 'Like',
+  'label.delete': 'Delete',
   'label.unlike': 'Un-like',
   'label.liked': 'liked this',
   'label.subscriptions': 'subscriptions',

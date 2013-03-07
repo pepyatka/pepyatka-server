@@ -154,6 +154,12 @@ App.Subscription = Ember.Object.extend({
       }
     });
 
+    this.socket.on('destroyComment', function(data) {
+      var post = findPost(data.postId)
+      var comment = post.comments.findProperty('id', data.commentId)
+      post.comments.removeObject(comment)
+    })
+
     this.socket.on('newLike', function(data) {
       var user = App.User.create(data.user)
 
@@ -366,13 +372,14 @@ App.PostContainerView = Ember.View.extend({
     this.$().hide().slideDown('slow');
   },
 
-  // willDestroyElement: function() {
-  //   if (this.$()) {
-  //     var clone = this.$().clone();
-  //     this.$().replaceWith(clone);
-  //     clone.slideUp()
-  //   }
-  // },
+  // FIXME: this leads to an emberjs error: "action is undefined"
+  willDestroyElement: function() {
+    if (this.$()) {
+      var clone = this.$().clone();
+      this.$().replaceWith(clone);
+      clone.slideUp()
+    }
+  },
 
   showAllComments: function() {
     this.content.set('showAllComments', true)
@@ -380,6 +387,10 @@ App.PostContainerView = Ember.View.extend({
 
   unlikePost: function() {
     App.postsController.unlikePost(this.content.id)
+  },
+
+  destroyPost: function() {
+    App.postsController.destroyPost(this.content.id)
   }
 });
 
@@ -431,6 +442,10 @@ App.OwnPostContainerView = Ember.View.extend({
 
   unlikePost: function() {
     App.postsController.unlikePost(this.content.id)
+  },
+
+  destroyPost: function() {
+    App.postsController.destroyPost(this.content.id)
   }
 });
 
@@ -456,6 +471,24 @@ App.CommentContainerView = Ember.View.extend({
     })
 
     this.$().hide().slideDown('fast');
+  },
+
+  // FIXME: this leads to an emberjs error: "action is undefined"
+  willDestroyElement: function() {
+    if (this.$()) {
+      var clone = this.$().clone();
+      this.$().replaceWith(clone);
+      clone.slideUp()
+    }
+  },
+
+  commentOwner: function() {
+    return this.content.createdBy.id == currentUser &&
+      this.content.createdBy.username != 'anonymous'
+  }.property(),
+
+  destroyComment: function() {
+    App.commentsController.destroyComment(this.content.id)
   }
 })
 
@@ -732,6 +765,23 @@ App.User = Ember.Object.extend({
 App.CommentsController = Ember.ArrayController.extend({
   resourceUrl: '/v1/comments',
 
+  // XXX: noone uses this method
+  removeComment: function(propName, value) {
+    var obj = this.findProperty(propName, value);
+    this.removeObject(obj);
+  },
+
+  destroyComment: function(commentId) {
+    $.ajax({
+      url: this.resourceUrl + '/' + commentId,
+      type: 'post',
+      data: {'_method': 'delete'},
+      success: function(response) {
+        console.log(response)
+      }
+    })
+  },
+
   createComment: function(post, body) {
     var comment = App.Comment.create({ 
       body: body,
@@ -769,6 +819,11 @@ App.Post = Ember.Object.extend({
     var obj = this.get('likes').findProperty(propName, value);
     this.likes.removeObject(obj);
   },
+
+  postOwner: function() {
+    return this.get('createdBy').id == currentUser &&
+      this.get('createdBy').username != 'anonymous'
+  }.property('createdBy'),
 
   currentUserLiked: function() {
     var likes = this.get('likes')
@@ -936,6 +991,17 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
     $.ajax({
       url: this.resourceUrl + '/' + postId + '/unlike',
       type: 'post',
+      success: function(response) {
+        console.log(response)
+      }
+    })
+  },
+
+  destroyPost: function(postId) {
+    $.ajax({
+      url: this.resourceUrl + '/' + postId,
+      type: 'post',
+      data: {'_method': 'delete'},
       success: function(response) {
         console.log(response)
       }

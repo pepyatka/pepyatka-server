@@ -3,6 +3,21 @@ var models = require('../models')
   , redis = require('redis')
 
 exports.addRoutes = function(app, connections) {
+  app.delete('/v1/comments/:commentId', function(req, res) {
+    if (!req.user || req.user.username == 'anonymous')
+      return res.jsonp({})
+
+    models.Comment.findById(req.params.commentId, function(err, comment) {
+      if (!comment || req.user.id != comment.userId)
+        return res.jsonp({})
+
+      models.Comment.destroy(req.params.commentId, function(err, r) {
+        res.jsonp({})
+      })
+    })
+  })
+
+
   app.post('/v1/comments', function(req, res){
     if(!req.user) {
       return res.jsonp({})

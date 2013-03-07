@@ -8,6 +8,7 @@ var session = require('./routes/session')
   , comments = require('./routes/comments')
   , timeline = require('./routes/timeline')
   , search = require('./routes/search')
+  , allUsers = require('./routes/all-users')
 
 var models = require('./models');
 
@@ -81,4 +82,6 @@ module.exports = function(app) {
   comments.addRoutes(app);
   timeline.addRoutes(app);
   search.addRoutes(app);
+
+  allUsers.addRoutes(app);
 };

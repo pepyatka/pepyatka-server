@@ -178,8 +178,19 @@
         </span>
         - 
         <span class="author">
-          <a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a>
+          {{#if view.commentOwner}}
+            <a {{action showUserTimeline createdBy.username href="true"}}>You</a>
+          {{else}}
+            <a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a>
+          {{/if}}
         </span>
+
+        {{#if view.commentOwner}}
+          <span class="links">
+            -
+            <a {{action destroyComment target="view"}}>{{t label.delete}}</a>
+          </span>
+        {{/if}}
       </div>
     {{/with}}
   </li>
@@ -227,6 +238,11 @@
                 <a {{action likePost target="parentView"}}>{{t label.like}}</a>
               {{/view}}
             {{/unless}}
+
+            {{#if postOwner}}
+              -
+              <a {{action destroyPost target="view"}}>{{t label.delete}}</a>
+            {{/if}}
           {{/if}}
         </div>
 
@@ -322,6 +338,11 @@
                 <a {{action likePost target="parentView"}}>{{t label.like}}</a>
               {{/view}}
             {{/unless}}
+
+            {{#if postOwner}}
+              -
+              <a {{action destroyPost target="view"}}>{{t label.delete}}</a>
+            {{/if}}
           {{/if}}
         </div>
 
