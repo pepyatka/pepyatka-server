@@ -9,6 +9,10 @@ exports.addRoutes = function(app) {
     res.render('./home')
   });
 
+  app.get('/users/:username', function(req, res) {
+    res.render('./home')
+  });
+
   app.get('/', function(req, res) {
     res.render('./home')
   });
