@@ -40,9 +40,7 @@ exports.addModel = function(db) {
 
   // XXX: this is the longest method in the app. Review it once you have time
   Post.destroy = function(postId, callback) {
-    console.log('postId ' + postId)
     models.Post.findById(postId, function(err, post) {
-      console.log('post ' + post)
       // This is a parallel process: 
       // - deletes post from all users timelines
       // - deletes comments entities and comments array
@@ -52,22 +50,16 @@ exports.addModel = function(db) {
         // remove post from all timelines
         function(callback) {
           post.getTimelinesIds(function(err, timelinesIds) {
-            console.log('timelineIds ' + timelinesIds)
             var pub = redis.createClient();
 
             async.forEach(timelinesIds, function(timelineId, callback) {
               db.zrem('timeline:' + timelineId + ':posts', postId, function(err, res) {
-                if(err) {
-                  callback(err)
-                }
-
                 db.srem('post:' + postId + ':timelines', timelineId, function(err, res) {
                   // Notify clients that postId has been deleted
                   pub.publish('destroyPost', JSON.stringify({ postId: postId,
                                                               timelineId: timelineId }))
-                  if(err) {
-                    callback(err)
-                  }
+
+                  callback(err)
                 })
               })
             }, function(err) {

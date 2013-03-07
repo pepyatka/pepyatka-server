@@ -40,18 +40,6 @@ exports.addRoutes = function(app) {
     })
   })
 
-  app.post('/v1/posts/:postId/delete', function(req, res) {
-    if(!req.user) {
-      return res.jsonp({})
-    }
-
-    models.Post.destroy(req.params.postId, function(err, response) {
-      console.log('err' + err)
-      console.log('response' + r)
-      res.jsonp({})
-    })
-  })
-
   app.post('/v1/posts', function(req, res) {
     if(!req.user) {
       return res.jsonp({})
