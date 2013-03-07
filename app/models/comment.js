@@ -61,7 +61,7 @@ exports.addModel = function(db) {
           db.exists('comment:' + that.id, function(err, commentExists) {
             callback(postExists == 1 &&
                      userExists == 1 &&
-                     commentExists == 0 &&
+//                     commentExists == 0 &&
                      that.body.trim().length > 0)
           })
         })

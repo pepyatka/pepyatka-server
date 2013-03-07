@@ -188,6 +188,10 @@ App.Subscription = Ember.Object.extend({
     })
 
     this.socket.on('updateComment', function(data) {
+      console.log('update')
+//      var post = findPost(data.postId)
+//      var comment = post.comments.findProperty('id', data.commentId)
+//      post.comments.removeObject(comment)
     })
 
     this.socket.on('destroyComment', function(data) {
@@ -344,10 +348,15 @@ App.UploadFileView = Ember.TextField.extend({
 App.PostContainerView = Ember.View.extend({
   templateName: 'post-view',
   isFormVisible: false,
+  isEditFormVisible: false,
   currentUser: currentUser,
 
   toggleVisibility: function() {
     this.toggleProperty('isFormVisible');
+  },
+
+  editFormVisibility: function() {
+    this.toggleProperty('isEditFormVisible');
   },
 
   didInsertElement: function() {
@@ -451,6 +460,11 @@ App.OwnPostContainerView = Ember.View.extend({
 
 App.CommentContainerView = Ember.View.extend({
   templateName: 'comment-view',
+  isEditFormVisible: false,
+
+  editFormVisibility: function() {
+    this.toggleProperty('isEditFormVisible');
+  },
 
   didInsertElement: function() {
     // wrap anchor tags around links in comments
@@ -631,6 +645,58 @@ App.CommentForm = Ember.View.extend({
   }
 });
 
+App.EditPostForm = Ember.View.extend({
+  // I'd no success to use isVisibleBinding property...
+  classNameBindings: 'isVisible visible:invisible',
+  body: '',
+
+  isVisible: function() {
+    return this.get('parentView.isEditFormVisible') == true;
+  }.property('parentView.isEditFormVisible'),
+
+  autoFocus: function () {
+    if (this.get('parentView.isEditFormVisible') == true) {
+      this.$().hide().show();
+      this.$('textarea').focus();
+      this.$('textarea').trigger('keyup') // to apply autogrow
+    }
+  }.observes('parentView.isEditFormVisible'),
+
+  // XXX: this is a dup of App.PostContainerView.toggleVisibility()
+  // function. I just do not know how to access it from UI bindings
+  toggleVisibility: function() {
+    this.toggleProperty('parentView.isEditFormVisible');
+  }
+});
+
+App.EditCommentForm = Ember.View.extend({
+  body: '',
+
+  autoFocus: function () {
+    if (this.get('parentView.isFormVisible') == true) {
+      this.$().hide().show();
+      this.$('textarea').focus();
+      this.$('textarea').trigger('keyup') // to apply autogrow
+    }
+  }.observes('parentView.isEditFormVisible'),
+
+  updateComment: function() {
+    if (this.body) {
+      // XXX: rather strange bit of code here -- potentially a defect
+      var comment = this.bindingContext.content || this.bindingContext;
+      App.commentsController.updateComment(comment, this.body)
+      this.set('parentView.isEditFormVisible', false)
+      this.set('body', '')
+    }
+  },
+
+  // XXX: this is a dup of App.PostContainerView.toggleVisibility()
+  // function. I just do not know how to access it from UI bindings
+  editFormVisibility: function() {
+    this.toggleProperty('parentView.isEditFormVisible');
+  }
+});
+
 // Create new post text field. Separate view to be able to bind events
 App.CreateCommentView = Ember.TextArea.extend(Ember.TargetActionSupport, {
   attributeBindings: ['class'],
@@ -776,6 +842,18 @@ App.CommentsController = Ember.ArrayController.extend({
       url: this.resourceUrl + '/' + commentId,
       type: 'post',
       data: {'_method': 'delete'},
+      success: function(response) {
+        console.log(response)
+      }
+    })
+  },
+
+  updateComment: function(comment, body) {
+    $.ajax({
+      url: this.resourceUrl + '/' + comment.id,
+      type: 'post',
+      data: { body: body }, // XXX: we've already defined a model above
+      context: comment,
       success: function(response) {
         console.log(response)
       }
