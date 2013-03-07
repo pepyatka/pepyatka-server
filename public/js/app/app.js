@@ -380,6 +380,10 @@ App.PostContainerView = Ember.View.extend({
 
   unlikePost: function() {
     App.postsController.unlikePost(this.content.id)
+  },
+
+  deletePost: function() {
+    App.postsController.deletePost(this.content.id)
   }
 });
 
@@ -935,6 +939,16 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
   unlikePost: function(postId) {
     $.ajax({
       url: this.resourceUrl + '/' + postId + '/unlike',
+      type: 'post',
+      success: function(response) {
+        console.log(response)
+      }
+    })
+  },
+
+  deletePost: function(postId) {
+    $.ajax({
+      url: this.resourceUrl + '/' + postId + '/delete',
       type: 'post',
       success: function(response) {
         console.log(response)
