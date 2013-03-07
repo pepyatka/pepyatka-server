@@ -82,6 +82,20 @@ exports.updateElement = function(index, type, element) {
   updateIndex[getUpdaterName(index, type)](element);
 };
 
+exports.deleteElement = function(index, type, elementId) {
+  elasticSearchClient.deleteDocument(index, type, elementId)
+    .on('data', function(data) {
+      console.log(data);
+    })
+    .on('done', function() {
+      //always returns 0 right now
+    })
+    .on('error', function(error) {
+      console.log(error)
+    })
+    .exec();
+}
+
 exports.parse = function(elasticSearchData) {
   var getParserName = function(index, type) {
     return index + '_' + type + '_' + 'parse';
