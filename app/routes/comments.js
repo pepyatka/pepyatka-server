@@ -29,7 +29,7 @@ exports.addRoutes = function(app, connections) {
       postId: req.body.postId
     })
 
-    newComment.save(function(err, comment) {
+    newComment.create(function(err, comment) {
       if (err) return res.jsonp({}, 422)
 
       comment.toJSON({ select: ['id', 'body', 'createdAt', 'updatedAt', 'createdBy', 'postId'],
