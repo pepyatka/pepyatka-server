@@ -335,17 +335,23 @@ exports.addModel = function(db) {
             timelinesIds.push(timelineId)
             async.map(timelinesIds, function(timelineId, callback) {
               models.Timeline.findById(timelineId, {}, function(err, timeline) {
-                timeline.getSubscribersIds(function(err, subscribersIds) {
-                  callback(err, subscribersIds)
-                })
+                if (timeline)
+                  timeline.getSubscribersIds(function(err, subscribersIds) {
+                    callback(err, subscribersIds)
+                  })
+                else
+                  callback(null, null)
               })
             }, function(err, subscribersIds) {
               async.forEach(subscribersIds.flatten(), function(subscriberId, callback) {
                 models.User.findById(subscriberId, function(err, user) {
-                  user.getRiverOfNewsId(function(err, riverId) {
-                    timelinesIds.push(riverId)
-                    callback(err)
-                  })
+                  if (user)
+                    user.getRiverOfNewsId(function(err, riverId) {
+                      timelinesIds.push(riverId)
+                      callback(err)
+                    })
+                  else
+                    callback(null)
                 })
               }, function(err) {
                 timelinesIds = _.uniq(timelinesIds)
