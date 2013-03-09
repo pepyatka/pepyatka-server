@@ -87,8 +87,13 @@ Keywords:
     OR
     ' ' - It's whitespace
 
-If you write word without keyword, it means that elasticSearch will search in post's and comment's bodies.
+If you write word without keyword, it means that elasticSearch will
+search in post's and comment's bodies.
 
-Example:  this AND intitle:that OR incomment:blabla from:user
-ElasticSearch will return you posts which contain 'that' in post's body and 'this' in post's or comment's body.
-And, it will return posts which contain 'blabla' in comment's body and written by 'user'.
+Example: this AND intitle:that OR incomment:blabla from:user
+
+ElasticSearch will return you posts which contain 'that' in post's
+body and 'this' in post's or comment's body.
+
+And, it will return posts which contain 'blabla' in comment's body and
+written by 'user'.
