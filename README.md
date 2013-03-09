@@ -17,10 +17,10 @@ Configuration
 - Make sure to update secret token: cp ./conf/envDefault.js to
   ./conf/envLocal.js.
 - Install dependencies: npm install
-- Update translation file: cp ./public/config/envDefault.js ./public/config/envLocal.js 
-- Check there are no broken tests: ./node_modules/mocha/bin/mocha
-  --recursive (or just run mocha --resursive if you have installed it
-  globally)
+- Update translation file: cp ./public/config/envDefault.js
+  ./public/config/envLocal.js
+- Check there are no broken tests: ./node_modules/mocha/bin/mocha (or
+  just run mocha if you have installed it globally)
 - Run elasticsearch
 - Run server: node ./server.js
 - Run search daemon: ./bin/start-search-daemon
