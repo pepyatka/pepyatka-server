@@ -64,12 +64,14 @@ API
 - POST /v1/timeline/:timelineId/subscribe
 - POST /v1/timeline/:timelineId/unsubscribe
 - GET /v1/posts/:postId
+- DELETE /v1/posts/:postId
 - GET /v1/posts/:postId/comments # not implemented yet
 - GET /v1/posts/:postId/likes # not implemented yet
 - POST /v1/posts
 - POST /v1/posts/:postId/like
 - POST /v1/posts/:postId/unlike
 - POST /v1/comments
+- DELETE /v1/comments/:commentId
 - GET /v1/users/:userId
 
 SEARCH API
