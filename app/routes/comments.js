@@ -17,8 +17,24 @@ exports.addRoutes = function(app, connections) {
     })
   })
 
+  app.post('/v1/comments/:commentId', function(req, res) {
+    if (!req.user || req.user.username == 'anonymous')
+      return res.jsonp({})
 
-  app.post('/v1/comments', function(req, res){
+    models.Comment.findById(req.params.commentId, function(err, comment) {
+      if (!comment || req.user.id != comment.userId)
+        return res.jsonp({})
+
+      var params = { body: req.body.body }
+      comment.update(params, function(err, comment) {
+        if (err) return res.jsonp({}, 422)
+
+        res.jsonp({})
+      })
+    })
+  })
+
+  app.post('/v1/comments', function(req, res) {
     if(!req.user) {
       return res.jsonp({})
     }

@@ -67,7 +67,7 @@ exports.addModel = function(db) {
       })
     },
 
-    update: function(callback) {
+    update: function(params, callback) {
       var that = this
 
       this.updatedAt = new Date().getTime()
@@ -77,10 +77,8 @@ exports.addModel = function(db) {
           db.exists('comment:' + that.id, function(err, res) {
             if (res == 1) {
               db.hmset('comment:' + that.id,
-                       { 'body': (that.body || "").toString().trim(),
-                         'updatedAt': that.createdAt.toString(),
-                         'userId': that.userId.toString(),
-                         'postId': that.postId.toString()
+                       { 'body': (params.body || that.body).toString().trim(),
+                         'updatedAt': that.createdAt.toString()
                        }, function(err, res) {
                          models.Post.addComment(that.postId, that.id, function() {
                            callback(err, that)
