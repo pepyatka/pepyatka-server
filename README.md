@@ -53,7 +53,7 @@ post:<postId>:likes ( <userId> )
 
 comment:<commentId> { body, createdAt, updatedAt, createdBy, postId }
 
-attachment:<attachmentId> { mimeType, filename, extension, path, createdAt, updatedAt, postId, thumbnailId* }
+attachment:<attachmentId> { mimeType, filename, extension, path, createdAt, updatedAt, postId, thumbnailId? }
 ```
 
 API
