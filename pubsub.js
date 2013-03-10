@@ -72,7 +72,7 @@ exports.listen = function(server) {
     , pub = redis.createClient();
         
   sub.subscribe('newPost', 'destroyPost',
-                'newComment', 'destroyComment',
+                'newComment', 'destroyComment', 'updateComment',
                 'newLike', 'removeLike' )
   
   // TODO: extract to separate functions
@@ -117,6 +117,25 @@ exports.listen = function(server) {
               io.sockets.in('timeline:' + data.timelineId).emit('newComment', event)
             else
               io.sockets.in('post:' + data.postId).emit('newComment', event)
+          })
+        }
+      })
+      break
+
+    case 'updateComment':
+      var data = JSON.parse(msg)
+
+      models.Comment.findById(data.commentId, function(err, comment) {
+        if (comment) {
+          comment.toJSON({ select: ['id', 'body', 'createdAt', 'updatedAt', 'createdBy', 'postId'],
+                           createdBy: { select: ['id', 'username'] }
+                         }, function(err, json) {
+            var event = { comment: json }
+
+            if (data.timelineId)
+              io.sockets.in('timeline:' + data.timelineId).emit('updateComment', event)
+            else
+              io.sockets.in('post:' + data.postId).emit('updateComment', event)
           })
         }
       })

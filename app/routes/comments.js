@@ -17,7 +17,7 @@ exports.addRoutes = function(app, connections) {
     })
   })
 
-  app.post('/v1/comments/:commentId', function(req, res) {
+  app.patch('/v1/comments/:commentId', function(req, res) {
     if (!req.user || req.user.username == 'anonymous')
       return res.jsonp({})
 

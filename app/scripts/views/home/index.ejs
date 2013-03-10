@@ -172,26 +172,47 @@
       <div class="pull-left">
         <i class="icon-comment-alt media-object"></i>
       </div>
-      <div class="media-body">
-        <span class="body">
-          {{body}}
-        </span>
-        - 
-        <span class="author">
-          {{#if view.commentOwner}}
-            <a {{action showUserTimeline createdBy.username href="true"}}>You</a>
-          {{else}}
-            <a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a>
-          {{/if}}
-        </span>
 
-        {{#if view.commentOwner}}
-          <span class="links">
-            -
-            <a {{action destroyComment target="view"}}>{{t label.delete}}</a>
+
+      {{#unless view.isEditFormVisible}}
+        <div class="media-body">
+          <span class="body">
+            {{body}}
           </span>
-        {{/if}}
-      </div>
+          -
+          <span class="author">
+            {{#if view.commentOwner}}
+              <a {{action showUserTimeline createdBy.username href="true"}}>You</a>
+            {{else}}
+              <a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a>
+            {{/if}}
+          </span>
+
+          {{#if view.commentOwner}}
+            <span class="links">
+              (<a {{action editFormVisibility target="parentView"}}>{{t label.edit}}</a>
+              |
+              <a {{action destroyComment target="view"}}>{{t label.delete}}</a>)
+            </span>
+          {{/if}}
+        </div>
+      {{else}}
+        {{#view App.EditCommentForm}}
+          <div class="comment-form media">
+            <div class="media-body">
+              <div>
+                {{view App.CreateCommentView target="parentView"
+                      action="updateComment" valueBinding="view.body"
+                      class="span7 input-tiny comment-area"}}
+              </div>
+              <div>
+                <button {{action updateComment target="view"}} class="btn btn-small">{{t button.post}}</button>
+                <a {{action editFormVisibility target="parentView"}}>{{t label.cancel}}</a>
+              </div>
+            </div>
+          </div>
+        {{/view}}
+      {{/unless}}
     {{/with}}
   </li>
 </script>
@@ -214,12 +235,31 @@
       <div class="media-body post">
         <h5 class="media-heading author"><a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a></h5>
 
-        <div class="body">
-          <div class="text">{{body}}</div>
-          {{#if firstThumbnailSrc}}
-            <div class="image"><a {{bindAttr href="firstImageSrc"}}><img {{bindAttr src="firstThumbnailSrc"}} class="img-polaroid" /></a></div>
-          {{/if}}
-        </div>
+        {{#unless isEditFormVisible}}
+          <div class="body">
+            <div class="text">{{body}}</div>
+
+            {{#if firstThumbnailSrc}}
+              <div class="image"><a {{bindAttr href="firstImageSrc"}}><img {{bindAttr src="firstThumbnailSrc"}} class="img-polaroid" /></a></div>
+            {{/if}}
+          </div>
+        {{else}}
+          {{#view App.EditPostForm}}
+            <div class="edit-post-form media">
+              <div class="media-body">
+                <div>
+                  {{view App.CreatePostView target="parentView"
+                        action="updateComment" valueBinding="view.body"
+                        class="span8 input-tiny comment-area"}}
+                </div>
+                <div>
+                  <button {{action submitComment target="view"}} class="btn btn-small">{{t button.post}}</button>
+                  <a {{action toggleVisibility target="parentView"}}>{{t label.cancel}}</a>
+                </div>
+              </div>
+            </div>
+          {{/view}}
+        {{/unless}}
 
         <div class="tagline">
           <a {{action showPost this href="true"}} class="datetime">
@@ -240,8 +280,9 @@
             {{/unless}}
 
             {{#if postOwner}}
-              -
-              <a {{action destroyPost target="view"}}>{{t label.delete}}</a>
+              (<a {{action editFormVisibility target="parentView"}}>{{t label.edit}}</a>
+              |
+              <a {{action destroyPost target="view"}}>{{t label.delete}}</a>)
             {{/if}}
           {{/if}}
         </div>
@@ -314,12 +355,31 @@
       <hr/>
 
       <div class="media-body post">
-        <div class="body">
-          <div class="text">{{body}}</div>
-          {{#if firstThumbnailSrc}}
-            <div class="image"><a {{bindAttr href="firstImageSrc"}}><img {{bindAttr src="firstThumbnailSrc"}} class="img-polaroid" /></a></div>
-          {{/if}}
-        </div>
+        {{#unless isEditFormVisible}}
+          <div class="body">
+            <div class="text">{{body}}</div>
+
+            {{#if firstThumbnailSrc}}
+              <div class="image"><a {{bindAttr href="firstImageSrc"}}><img {{bindAttr src="firstThumbnailSrc"}} class="img-polaroid" /></a></div>
+            {{/if}}
+          </div>
+        {{else}}
+          {{#view App.EditPostForm}}
+            <div class="edit-post-form media">
+              <div class="media-body">
+                <div>
+                  {{view App.CreatePostView target="parentView"
+                        action="submitComment" valueBinding="view.body"
+                        class="span8 input-tiny comment-area"}}
+                </div>
+                <div>
+                  <button {{action submitComment target="view"}} class="btn btn-small">{{t button.post}}</button>
+                  <a {{action toggleVisibility target="parentView"}}>{{t label.cancel}}</a>
+                </div>
+              </div>
+            </div>
+          {{/view}}
+        {{/unless}}
 
         <div class="tagline">
           <a {{action showPost this href="true"}} class="datetime">
@@ -340,8 +400,9 @@
             {{/unless}}
 
             {{#if postOwner}}
-              -
-              <a {{action destroyPost target="view"}}>{{t label.delete}}</a>
+              (<a {{action editPost target="view"}}>{{t label.edit}}</a>
+              |
+              <a {{action destroyPost target="view"}}>{{t label.delete}}</a>)
             {{/if}}
           {{/if}}
         </div>
@@ -463,12 +524,31 @@
       <!-- FIXME: showUserTimeline createdBy.username is undefined on a deserialized view -->
       <h5 class="media-heading author"><a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a></h5>
     
-      <div class="body">
-        <div class="text">{{body}}</div>
-        {{#if firstThumbnailSrc}}
-          <div class="image"><a {{bindAttr href="firstImageSrc"}}><img {{bindAttr src="firstThumbnailSrc"}} class="img-polaroid" /></a></div>
-        {{/if}}
-      </div>
+      {{#unless isEditFormVisible}}
+        <div class="body">
+          <div class="text">{{body}}</div>
+
+          {{#if firstThumbnailSrc}}
+            <div class="image"><a {{bindAttr href="firstImageSrc"}}><img {{bindAttr src="firstThumbnailSrc"}} class="img-polaroid" /></a></div>
+          {{/if}}
+        </div>
+      {{else}}
+        {{#view App.EditPostForm}}
+          <div class="edit-post-form media">
+            <div class="media-body">
+              <div>
+                {{view App.CreatePostView target="parentView"
+                      action="submitComment" valueBinding="view.body"
+                      class="span8 input-tiny comment-area"}}
+              </div>
+              <div>
+                <button {{action submitComment target="view"}} class="btn btn-small">{{t button.post}}</button>
+                <a {{action toggleVisibility target="parentView"}}>{{t label.cancel}}</a>
+              </div>
+            </div>
+          </div>
+        {{/view}}
+      {{/unless}}
     
       <div class="tagline">
         <a {{action showPost this}} class="datetime">

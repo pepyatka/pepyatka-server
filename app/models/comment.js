@@ -1,6 +1,7 @@
 var uuid = require('node-uuid')
   , redis = require('redis')
   , models = require('../models')
+  , async = require('async')
 
 exports.addModel = function(db) {
   function Comment(params) {
@@ -80,8 +81,29 @@ exports.addModel = function(db) {
                        { 'body': (params.body || that.body).toString().trim(),
                          'updatedAt': that.createdAt.toString()
                        }, function(err, res) {
-                         models.Post.addComment(that.postId, that.id, function() {
-                           callback(err, that)
+                         // TODO: a bit mess here: update method calls
+                         // pubsub event and Post.newComment calls
+                         // them as well
+                         var pub = redis.createClient();
+
+                         pub.publish('updateComment', JSON.stringify({
+                           postId: that.postId,
+                           commentId: that.id
+                         }))
+
+                         models.Post.findById(that.postId, function(err, post) {
+                           post.getSubscribedTimelinesIds(function(err, timelinesIds) {
+                             async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
+                               pub.publish('updateComment', JSON.stringify({
+                                 timelineId: timelinesIds[timelineId],
+                                 commentId: that.id
+                               }))
+
+                               callback(null)
+                             }, function(err) {
+                               callback(err)
+                             })
+                           })
                          })
                        })
             } else {

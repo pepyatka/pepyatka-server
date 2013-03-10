@@ -72,6 +72,7 @@ API
 - POST /v1/posts/:postId/unlike
 - POST /v1/comments
 - DELETE /v1/comments/:commentId
+- PATCH /v1/comments/:commentId
 - GET /v1/users/:userId
 
 SEARCH API

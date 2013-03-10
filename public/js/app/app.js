@@ -143,7 +143,6 @@ App.Subscription = Ember.Object.extend({
 
     this.socket.on('newComment', function (data) {
       var comment = App.Comment.create(data.comment)
-
       var post = findPost(data.comment.postId)
 
       if (post) {
@@ -154,6 +153,26 @@ App.Subscription = Ember.Object.extend({
       }
     });
 
+     this.socket.on('updateComment', function(data) {
+       var post = findPost(data.comment.postId)
+
+       var index = 0
+       var comment = post.comments.find(function(comment) {
+         index += 1
+         if (comment && comment.id)
+           return comment.id == data.comment.id
+       })
+
+      if (comment) {
+        // FIXME: doesn't work as comment is not an Ember object
+        // comment.set('body', data.comment.body)
+
+        var updatedComment = App.Comment.create(data.comment)
+        post.comments.removeObject(comment)
+        post.comments.insertAt(index-1, updatedComment)
+      }
+     })
+
     this.socket.on('destroyComment', function(data) {
       var post = findPost(data.postId)
       var comment = post.comments.findProperty('id', data.commentId)
@@ -162,7 +181,6 @@ App.Subscription = Ember.Object.extend({
 
     this.socket.on('newLike', function(data) {
       var user = App.User.create(data.user)
-
       var post = findPost(data.postId)
 
       if (post) {
@@ -185,12 +203,6 @@ App.Subscription = Ember.Object.extend({
       if (post) {
         post.removeLike('id', data.userId)
       }
-    })
-
-    this.socket.on('updateComment', function(data) {
-    })
-
-    this.socket.on('destroyComment', function(data) {
     })
 
     this.socket.on('disconnect', function(data) {
@@ -349,10 +361,15 @@ App.UploadFileView = Ember.TextField.extend({
 App.PostContainerView = Ember.View.extend({
   templateName: 'post-view',
   isFormVisible: false,
+  isEditFormVisible: false,
   currentUser: currentUser,
 
   toggleVisibility: function() {
     this.toggleProperty('isFormVisible');
+  },
+
+  editFormVisibility: function() {
+    this.toggleProperty('isEditFormVisible');
   },
 
   didInsertElement: function() {
@@ -456,6 +473,11 @@ App.OwnPostContainerView = Ember.View.extend({
 
 App.CommentContainerView = Ember.View.extend({
   templateName: 'comment-view',
+  isEditFormVisible: false,
+
+  editFormVisibility: function() {
+    this.toggleProperty('isEditFormVisible');
+  },
 
   didInsertElement: function() {
     // wrap anchor tags around links in comments
@@ -636,6 +658,64 @@ App.CommentForm = Ember.View.extend({
   }
 });
 
+App.EditPostForm = Ember.View.extend({
+  // I'd no success to use isVisibleBinding property...
+  classNameBindings: 'isVisible visible:invisible',
+  body: '',
+
+  isVisible: function() {
+    return this.get('parentView.isEditFormVisible') == true;
+  }.property('parentView.isEditFormVisible'),
+
+  autoFocus: function () {
+    if (this.get('parentView.isEditFormVisible') == true) {
+      this.$().hide().show();
+      this.$('textarea').focus();
+      this.$('textarea').trigger('keyup') // to apply autogrow
+    }
+  }.observes('parentView.isEditFormVisible'),
+
+  // XXX: this is a dup of App.PostContainerView.toggleVisibility()
+  // function. I just do not know how to access it from UI bindings
+  toggleVisibility: function() {
+    this.toggleProperty('parentView.isEditFormVisible');
+  }
+});
+
+App.EditCommentForm = Ember.View.extend({
+  body: '',
+
+  autoFocus: function () {
+    if (this.get('parentView.isEditFormVisible') == true) {
+      this.$().hide().show();
+      this.$('textarea').focus();
+      this.$('textarea').trigger('keyup') // to apply autogrow
+    }
+  }.observes('parentView.isEditFormVisible'),
+
+  // FIXME: autoFocus doesn't observe isEditFormVisible?
+  didInsertElement: function() {
+    this.autoFocus()
+  },
+
+  updateComment: function() {
+    if (this.body) {
+      // XXX: rather strange bit of code here -- potentially a defect
+      var comment = this.bindingContext.content || this.bindingContext;
+      App.commentsController.updateComment(comment, this.body)
+      this.set('parentView.isEditFormVisible', false)
+      this.set('body', '')
+    }
+  },
+
+  // XXX: this is a dup of App.PostContainerView.toggleVisibility()
+  // function. I just do not know how to access it from UI bindings
+  editFormVisibility: function() {
+    this.toggleProperty('parentView.isEditFormVisible');
+  }
+});
+
+
 // Create new post text field. Separate view to be able to bind events
 App.CreateCommentView = Ember.TextArea.extend(Ember.TargetActionSupport, {
   attributeBindings: ['class'],
@@ -647,6 +727,10 @@ App.CreateCommentView = Ember.TextArea.extend(Ember.TargetActionSupport, {
   },
 
   didInsertElement: function() {
+    // FIXME: bind as valueBinding property
+    if (this.action != 'submitComment')
+      this.set('value', this.bindingContext.body)
+
     this.$().autogrow();
   }
 })
@@ -787,7 +871,19 @@ App.CommentsController = Ember.ArrayController.extend({
     })
   },
 
-  createComment: function(post, body) {
+  updateComment: function(comment, body) {
+    $.ajax({
+      url: this.resourceUrl + '/' + comment.id,
+      type: 'patch',
+      data: { body: body },
+      context: comment,
+      success: function(response) {
+        console.log(response)
+      }
+    })
+  },
+
+ createComment: function(post, body) {
     var comment = App.Comment.create({ 
       body: body,
       postId: post.id
@@ -812,6 +908,7 @@ App.commentsController = App.CommentsController.create()
 App.Post = Ember.Object.extend({
   showAllComments: false,
   currentUser: currentUser,
+  comments: Ember.ArrayProxy.create(),
 
   partial: function() {
     if (this.showAllComments)
