@@ -5,7 +5,7 @@ var models = require('./../app/models')
 exports.listen = function() {
   var sub = redis.createClient();
 
-  sub.subscribe('newPost', 'destroyPost',
+  sub.subscribe('newPost', 'destroyPost', 'updatePost',
     'newComment', 'destroyComment', 'updateComment',
     'newLike', 'removeLike' )
 
@@ -16,6 +16,7 @@ exports.listen = function() {
       searchClient.deleteElement('pepyatka', 'post', data.postId)
       break
 
+    case 'updatePost':
     case 'newPost':
       var data = JSON.parse(msg);
       models.Post.findById(data.postId, function(err, post) {
@@ -38,6 +39,7 @@ exports.listen = function() {
 
     case 'updateComment':
     case 'newComment':
+    case 'destroyComment':
       var data = JSON.parse(msg)
       models.Post.findById(data.postId, function(err, post) {
         if (!post) return
@@ -55,23 +57,6 @@ exports.listen = function() {
       break
 
     case 'newLike':
-      var data = JSON.parse(msg)
-      models.Post.findById(data.postId, function(err, post) {
-        if (!post) return
-
-        post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'timelineId'],
-                      createdBy: { select: ['id', 'username'] },
-                      comments: { select: ['id', 'body', 'createdBy'],
-                                  createdBy: { select: ['id', 'username'] } },
-                      likes: { select: ['id', 'username']}
-                    },
-                    function(err, json) {
-                      searchClient.updateElement('pepyatka', 'post', json);
-                    })
-      })
-
-      break
-
     case 'removeLike':
       var data = JSON.parse(msg)
       models.Post.findById(data.postId, function(err, post) {
@@ -88,23 +73,6 @@ exports.listen = function() {
                     })
       })
 
-      break
-
-    case 'destroyComment':
-      var data = JSON.parse(msg)
-      models.Post.findById(data.postId, function(err, post) {
-        if (!post) return
-
-        post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'timelineId'],
-                      createdBy: { select: ['id', 'username'] },
-                      comments: { select: ['id', 'body', 'createdBy'],
-                                  createdBy: { select: ['id', 'username'] } },
-                      likes: { select: ['id', 'username']}
-                    },
-                    function(err, json) {
-                      searchClient.updateElement('pepyatka', 'post', json);
-                    })
-      })
       break
     }
   })
