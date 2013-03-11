@@ -13,6 +13,14 @@ exports.addRoutes = function(app) {
     res.render('./home')
   });
 
+  app.get('/users/:username/likes', function(req, res) {
+    res.render('./home')
+  });
+
+  app.get('/users/:username/comments', function(req, res) {
+    res.render('./home')
+  });
+
   app.get('/posts/:postId', function(req, res) {
     res.render('./home')
   });
