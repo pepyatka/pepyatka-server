@@ -1272,6 +1272,8 @@ App.Router = Ember.Router.extend({
         if (/%23/g.test(searchQuery))
           searchQuery = searchQuery.replace(/%23/g, '#')
 
+        searchQuery = decodeURIComponent(searchQuery)
+
         App.searchController.set('body', searchQuery)
         App.searchController.set('query', searchQuery)
 
