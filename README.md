@@ -65,6 +65,7 @@ API
 - POST /v1/timeline/:timelineId/unsubscribe
 - GET /v1/posts/:postId
 - DELETE /v1/posts/:postId
+- PATCH /v1/posts/:postId
 - GET /v1/posts/:postId/comments # not implemented yet
 - GET /v1/posts/:postId/likes # not implemented yet
 - POST /v1/posts
