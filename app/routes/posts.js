@@ -54,10 +54,26 @@ exports.addRoutes = function(app) {
     })
   })
 
-  app.post('/v1/posts', function(req, res) {
-    if(!req.user) {
+  app.patch('/v1/posts/:postId', function(req, res) {
+    if (!req.user || req.user.username == 'anonymous')
       return res.jsonp({})
-    }
+
+    models.Post.findById(req.params.postId, function(err, post) {
+      if (!post || req.user.id != post.userId)
+        return res.jsonp({})
+
+      var params = { body: req.body.body }
+      post.update(params, function(err, post) {
+        if (err) return res.jsonp({}, 422)
+
+        res.jsonp({})
+      })
+    })
+  })
+
+  app.post('/v1/posts', function(req, res) {
+    if(!req.user)
+      return res.jsonp({})
 
     req.user.getPostsTimelineId(function(err, timelineId) {
       req.user.newPost({
@@ -65,7 +81,7 @@ exports.addRoutes = function(app) {
         timelineId: timelineId,
         files: req.files
       }, function(err, newPost) {
-        newPost.save(function(err, post) {
+        newPost.create(function(err, post) {
           if (err) return res.jsonp({}, 422)
 
           post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
