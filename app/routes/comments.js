@@ -35,9 +35,8 @@ exports.addRoutes = function(app, connections) {
   })
 
   app.post('/v1/comments', function(req, res) {
-    if(!req.user) {
+    if(!req.user)
       return res.jsonp({})
-    }
 
     // TODO: filter body params - known as strong params
     var newComment = req.user.newComment({
