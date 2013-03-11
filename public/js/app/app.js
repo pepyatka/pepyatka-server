@@ -1190,13 +1190,18 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
     this.resetPage()
   }.observes('timeline'),
 
-  findAll: function(pageStart) {
+  findAll: function(pageStart, suffix) {
     this.set('isLoaded', false)
 
     var timeline = this.get('timeline') || ""
 
+    if (suffix)
+      suffix = '/' + suffix
+    else
+      suffix = ''
+
     $.ajax({
-      url: '/v1/timeline/' + timeline,
+      url: '/v1/timeline/' + timeline + suffix,
       data: { start: pageStart },
       dataType: 'jsonp',
       context: this,
@@ -1260,6 +1265,8 @@ App.Router = Ember.Router.extend({
       showPost: Ember.Route.transitionTo('aPost'),
       showAllPosts: Ember.Route.transitionTo('posts'),
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
+      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
 
       connectOutlets: function(router, searchQuery) {
@@ -1291,6 +1298,8 @@ App.Router = Ember.Router.extend({
       showPost: Ember.Route.transitionTo('aPost'),
       showAllPosts: Ember.Route.transitionTo('posts'),
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
+      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
       
       connectOutlets: function(router) {
@@ -1327,6 +1336,8 @@ App.Router = Ember.Router.extend({
       showPost: Ember.Route.transitionTo('aPost'),
       showAllPosts: Ember.Route.transitionTo('posts'),
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
+      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
 
       connectOutlets: function(router, username) {
@@ -1341,7 +1352,57 @@ App.Router = Ember.Router.extend({
       deserialize: function(router, urlParams) {
         return urlParams.username
       }
+    }),
+
+    userLikesTimeline: Ember.Route.extend({
+      route: '/users/:username/likes',
+
+      showPost: Ember.Route.transitionTo('aPost'),
+      showAllPosts: Ember.Route.transitionTo('posts'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
+      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+
+      connectOutlets: function(router, username) {
+        App.postsController.set('timeline', username)
+        router.get('applicationController').connectOutlet('userTimeline', App.postsController.findAll(0, 'likes'));
+      },
+
+      serialize: function(router, username) {
+        return {username: username}
+      },
+
+      deserialize: function(router, urlParams) {
+        return urlParams.username
+      }
+    }),
+
+    userCommentsTimeline: Ember.Route.extend({
+      route: '/users/:username/comments',
+
+      showPost: Ember.Route.transitionTo('aPost'),
+      showAllPosts: Ember.Route.transitionTo('posts'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
+      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+
+      connectOutlets: function(router, username) {
+        App.postsController.set('timeline', username)
+        router.get('applicationController').connectOutlet('userTimeline', App.postsController.findAll(0, 'comments'));
+      },
+
+      serialize: function(router, username) {
+        return {username: username}
+      },
+
+      deserialize: function(router, urlParams) {
+        return urlParams.username
+      }
     })
+
+
   })
 });
 

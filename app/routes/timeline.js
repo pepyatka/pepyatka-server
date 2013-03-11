@@ -2,6 +2,23 @@ var models = require('../models')
   , logger = require('../../logger').create()
 
 exports.addRoutes = function(app) {
+  var timelineSerializer = { select: ['id', 'posts', 'user', 'subscribers'],
+                             posts: {
+                               select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
+                               createdBy: { select: ['id', 'username'] },
+                               comments: { select: ['id', 'body', 'createdBy'],
+                                           createdBy: { select: ['id', 'username'] }
+                                         },
+                               likes: { select: ['id', 'username'] }
+                             },
+                             user: {
+                               select: ['id', 'username', 'subscribers', 'subscriptions', 'statistics'],
+                               subscriptions: { select: ['id', 'user', 'name'],
+                                                user: { select: ['id', 'username'] } }
+                             },
+                             subscribers: { select: ['id', 'username'] }
+                           }
+
   app.post('/v1/timeline/:timelineId/subscribe', function(req, res) {
     req.user.subscribeTo(req.params.timelineId, function(err, r) {
       if (err) return res.jsonp({}, 422)
@@ -31,22 +48,47 @@ exports.addRoutes = function(app) {
           start: req.query.start
         }, function(err, timeline) {
           if (timeline) {
-            timeline.toJSON({ select: ['id', 'posts', 'user', 'subscribers'],
-                              posts: {
-                                select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
-                                createdBy: { select: ['id', 'username'] },
-                                comments: { select: ['id', 'body', 'createdBy'],
-                                            createdBy: { select: ['id', 'username'] }
-                                          },
-                                likes: { select: ['id', 'username'] }
-                              },
-                              user: {
-                                select: ['id', 'username', 'subscribers', 'subscriptions', 'statistics'],
-                                subscriptions: { select: ['id', 'user', 'name'],
-                                                 user: { select: ['id', 'username'] } }
-                              },
-                              subscribers: { select: ['id', 'username'] }
-                            }, function(err, json) {
+            timeline.toJSON(timelineSerializer, function(err, json) {
+              res.jsonp(json);
+            })
+          } else {
+            res.jsonp({});
+          }
+        })
+      } else {
+        res.jsonp({}, 404)
+      }
+    })
+  }),
+
+  app.get('/v1/timeline/:username/likes', function(req, res){
+    models.User.findByUsername(req.params.username, function(err, user) {
+      if (user) {
+        user.getLikesTimeline({
+          start: req.query.start
+        }, function(err, timeline) {
+          if (timeline) {
+            timeline.toJSON(timelineSerializer, function(err, json) {
+              res.jsonp(json);
+            })
+          } else {
+            res.jsonp({});
+          }
+        })
+      } else {
+        res.jsonp({}, 404)
+      }
+    })
+  }),
+
+  app.get('/v1/timeline/:username/comments', function(req, res){
+    models.User.findByUsername(req.params.username, function(err, user) {
+      if (user) {
+        user.getCommentsTimeline({
+          start: req.query.start
+        }, function(err, timeline) {
+          if (timeline) {
+            timeline.toJSON(timelineSerializer, function(err, json) {
               res.jsonp(json);
             })
           } else {
@@ -69,22 +111,7 @@ exports.addRoutes = function(app) {
         start: req.query.start
       }, function(err, timeline) {
         if (timeline) {
-          timeline.toJSON({ select: ['id', 'posts', 'user', 'subscribers'],
-                            posts: {
-                              select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
-                              createdBy: { select: ['id', 'username'] },
-                              comments: { select: ['id', 'body', 'createdBy'],
-                                          createdBy: { select: ['id', 'username'] }
-                                        },
-                              likes: { select: ['id', 'username'] }
-                            },
-                            user: {
-                              select: ['id', 'username', 'subscribers', 'subscriptions'],
-                              subscriptions: { select: ['id', 'user', 'name'],
-                                               user: { select: ['id', 'username'] } }
-                            },
-                            subscribers: { select: ['id', 'username'] }
-                          }, function(err, json) {
+          timeline.toJSON(timelineSerializer, function(err, json) {
             res.jsonp(json);
           })
         } else {
