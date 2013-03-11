@@ -4,6 +4,8 @@ var searchClient = require('../../elastic-search/elastic-search-client.js')
 
 var indicators = ['intitle', 'incomments', 'from'];
 
+// TODO: refactor me to Search model
+
 exports.addRoutes = function(app) {
   app.get('/v1/search/:searchQuery', function(req, res) {
     var pageSize = 25;
