@@ -2,22 +2,23 @@ var models = require('../models')
   , logger = require('../../logger').create()
 
 exports.addRoutes = function(app) {
-  var timelineSerializer = { select: ['id', 'posts', 'user', 'subscribers'],
-                             posts: {
-                               select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
-                               createdBy: { select: ['id', 'username'] },
-                               comments: { select: ['id', 'body', 'createdBy'],
-                                           createdBy: { select: ['id', 'username'] }
-                                         },
-                               likes: { select: ['id', 'username'] }
-                             },
-                             user: {
-                               select: ['id', 'username', 'subscribers', 'subscriptions', 'statistics'],
-                               subscriptions: { select: ['id', 'user', 'name'],
-                                                user: { select: ['id', 'username'] } }
-                             },
-                             subscribers: { select: ['id', 'username'] }
-                           }
+  var timelineSerializer = { 
+    select: ['id', 'posts', 'user', 'subscribers'],
+    posts: {
+      select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
+      createdBy: { select: ['id', 'username'] },
+      comments: { select: ['id', 'body', 'createdBy'],
+                  createdBy: { select: ['id', 'username'] }
+                },
+      likes: { select: ['id', 'username'] }
+    },
+    user: {
+      select: ['id', 'username', 'subscribers', 'subscriptions', 'statistics'],
+      subscriptions: { select: ['id', 'user', 'name'],
+                       user: { select: ['id', 'username'] } }
+    },
+    subscribers: { select: ['id', 'username'] }
+  }
 
   app.post('/v1/timeline/:timelineId/subscribe', function(req, res) {
     req.user.subscribeTo(req.params.timelineId, function(err, r) {

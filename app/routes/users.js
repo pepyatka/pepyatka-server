@@ -1,10 +1,13 @@
 var models = require('../models');
 
 exports.addRoutes = function(app) {
+  var userSerializer = {
+    select: ['id', 'username']
+  }
+
   app.get('/v1/users', function(req, res) {
-    if (!req.user) {
+    if (!req.user) 
       return res.jsonp({})
-    }
 
     var userId = req.user.id
 
@@ -18,7 +21,7 @@ exports.addRoutes = function(app) {
     models.User.findById(req.params.userId, function(err, user) {
       if (err) return res.jsonp({}, 422)
 
-      user.toJSON({select: ['id', 'username']}, function(err, json) { res.jsonp(json) })
+      user.toJSON(userSerializer, function(err, json) { res.jsonp(json) })
     })
   })
 }

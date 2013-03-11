@@ -3,6 +3,11 @@ var models = require('../models')
   , redis = require('redis')
 
 exports.addRoutes = function(app, connections) {
+  var commentSerializer = { 
+    select: ['id', 'body', 'createdAt', 'updatedAt', 'createdBy', 'postId'],
+    createdBy: { select: ['id', 'username'] }
+  }
+
   app.delete('/v1/comments/:commentId', function(req, res) {
     if (!req.user || req.user.username == 'anonymous')
       return res.jsonp({})
@@ -47,9 +52,7 @@ exports.addRoutes = function(app, connections) {
     newComment.create(function(err, comment) {
       if (err) return res.jsonp({}, 422)
 
-      comment.toJSON({ select: ['id', 'body', 'createdAt', 'updatedAt', 'createdBy', 'postId'],
-                       createdBy: { select: ['id', 'username'] }
-                     }, function(err, json) { res.jsonp(json) })
+      comment.toJSON(commentSerializer, function(err, json) { res.jsonp(json) })
     })
   });
 }
