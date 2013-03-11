@@ -522,17 +522,27 @@ exports.addModel = function(db) {
       this.validate(function(valid) {
         if (valid) {
           db.exists('post:' + that.id, function(err, res) {
-            if (res == 0) {
+            if (res == 1) {
               db.hmset('post:' + that.id,
                        { 'body': (that.body || "").toString().trim(),
-                         'timelineId': that.timelineId.toString(),
-                         'userId': that.userId.toString(),
-                         'createdAt': that.createdAt.toString(),
                          'updatedAt': that.updatedAt.toString()
                        }, function(err, res) {
-                         models.Timeline.newPost(that.id, function() {
-                           // BUG: updatedAt is different now than we set few lines above
-                           callback(null, that)
+                         // TODO: a bit mess here: update method calls
+                         // pubsub event and Timeline.newPost calls
+                         // them as well
+                         var pub = redis.createClient();
+
+                         that.getSubscribedTimelinesIds(function(err, timelinesIds) {
+                           async.forEach(timelinesIds, function(timelineId, callback) {
+                             pub.publish('updatePost', JSON.stringify({ 
+                               postId: postId,
+                               timelineId: timelineId 
+                             }))
+
+                             callback(err)
+                           }, function(err) {
+                             callback(err)
+                           })
                          })
                        })
             } else {
