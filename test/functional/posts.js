@@ -16,7 +16,7 @@ describe('Post API', function() {
       user.newPost({
         body: 'postBody'
       }, function(err, newPost) {
-        newPost.save(function(err, post) {
+        newPost.create(function(err, post) {
           request(server)
             .get('/v1/posts/' + post.id)
             .expect('Content-Type', /json/)
@@ -28,7 +28,7 @@ describe('Post API', function() {
               assert.equal(post.id, jsonPost.id)
               assert.equal(post.body, jsonPost.body)
               assert.equal(post.createdAt, jsonPost.createdAt)
-              // Read defect in post.save() function
+              // Read defect in post.create() function
               // assert.equal(post.updatedAt, jsonPost.updatedAt)
               assert(Array.isArray(jsonPost.comments))
               assert.equal(jsonPost.comments.length, 0)

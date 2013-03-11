@@ -59,11 +59,9 @@ exports.addModel = function(db) {
 
       db.exists('user:' + that.userId, function(err, userExists) {
         db.exists('post:' + that.postId, function(err, postExists) {
-          db.exists('comment:' + that.id, function(err, commentExists) {
-            callback(postExists == 1 &&
-                     userExists == 1 &&
-                     that.body.trim().length > 0)
-          })
+          callback(postExists == 1 &&
+                   userExists == 1 &&
+                   that.body.trim().length > 0)
         })
       })
     },
@@ -125,17 +123,23 @@ exports.addModel = function(db) {
 
       this.validate(function(valid) {
         if (valid) {
-          db.hmset('comment:' + that.id,
-                   { 'body': (that.body || "").toString().trim(),
-                     'createdAt': that.createdAt.toString(),
-                     'updatedAt': that.createdAt.toString(),
-                     'userId': that.userId.toString(),
-                     'postId': that.postId.toString()
-                   }, function(err, res) {
-                     models.Post.addComment(that.postId, that.id, function() {
-                       callback(err, that)
-                     })
-                   })
+          db.exists('comment:' + that.id, function(err, res) {
+            if (res == 0) {
+              db.hmset('comment:' + that.id,
+                       { 'body': (that.body || "").toString().trim(),
+                         'createdAt': that.createdAt.toString(),
+                         'updatedAt': that.createdAt.toString(),
+                         'userId': that.userId.toString(),
+                         'postId': that.postId.toString()
+                       }, function(err, res) {
+                         models.Post.addComment(that.postId, that.id, function() {
+                           callback(err, that)
+                         })
+                       })
+            } else {
+              callback(err, that)
+            }
+          })
         } else {
           callback(1, that)
         }

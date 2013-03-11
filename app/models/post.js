@@ -471,41 +471,74 @@ exports.addModel = function(db) {
 
       db.exists('user:' + that.userId, function(err, userExists) {
         db.exists('timeline:' + that.timelineId, function(err, timelineExists) {
-          db.exists('post:' + that.id, function(err, postExists) {
-            callback(postExists == 0 &&
-                     userExists == 1 &&
-                     timelineExists == 1 &&
-                     that.body.trim().length > 0)
-          })
+          callback(userExists == 1 &&
+                   timelineExists == 1 &&
+                   that.body.trim().length > 0)
         })
       })
     },
 
-    save: function(callback) {
+    create: function(callback) {
       var that = this
 
-      if (!this.createdAt)
-        this.createdAt = new Date().getTime()
+      this.createdAt = new Date().getTime()
       this.updatedAt = new Date().getTime()
-      if (this.id === undefined) this.id = uuid.v4()
+      this.id = uuid.v4()
 
       this.validate(function(valid) {
         if (valid) {
-          db.hmset('post:' + that.id,
-                   { 'body': (that.body || "").toString().trim(),
-                     'timelineId': that.timelineId.toString(),
-                     'userId': that.userId.toString(),
-                     'createdAt': that.createdAt.toString(),
-                     'updatedAt': that.updatedAt.toString()
-                   }, function(err, res) {
-                     that.saveAttachments(function(err, res) {
-                       models.Timeline.newPost(that.id, function() {
-                         // BUG: updatedAt is different now than we set few lines above
-                         // XXX: we don't care (yet) if attachment wasn't saved
-                         callback(null, that)
+          db.exists('post:' + that.id, function(err, res) {
+            if (res == 0) {
+              db.hmset('post:' + that.id,
+                       { 'body': (that.body || "").toString().trim(),
+                         'timelineId': that.timelineId.toString(),
+                         'userId': that.userId.toString(),
+                         'createdAt': that.createdAt.toString(),
+                         'updatedAt': that.updatedAt.toString()
+                       }, function(err, res) {
+                         that.saveAttachments(function(err, res) {
+                           models.Timeline.newPost(that.id, function() {
+                             // BUG: updatedAt is different now than we set few lines above
+                             // XXX: we don't care (yet) if attachment wasn't saved
+                             callback(null, that)
+                           })
+                         })
                        })
-                     })
-                   })
+            } else {
+              callback(err, res)
+            }
+          })
+        } else {
+          callback(1, that)
+        }
+      })
+    },
+
+    update: function(callback) {
+      var that = this
+
+      this.updatedAt = new Date().getTime()
+
+      this.validate(function(valid) {
+        if (valid) {
+          db.exists('post:' + that.id, function(err, res) {
+            if (res == 0) {
+              db.hmset('post:' + that.id,
+                       { 'body': (that.body || "").toString().trim(),
+                         'timelineId': that.timelineId.toString(),
+                         'userId': that.userId.toString(),
+                         'createdAt': that.createdAt.toString(),
+                         'updatedAt': that.updatedAt.toString()
+                       }, function(err, res) {
+                         models.Timeline.newPost(that.id, function() {
+                           // BUG: updatedAt is different now than we set few lines above
+                           callback(null, that)
+                         })
+                       })
+            } else {
+              callback(err, res)
+            }
+          })
         } else {
           callback(1, that)
         }

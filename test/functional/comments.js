@@ -12,7 +12,7 @@ describe('Comment API', function() {
       user.newPost({
         body: 'postBody'
       }, function(err, newPost) {
-        newPost.save(function(err, usersPost) {
+        newPost.create(function(err, usersPost) {
           post = usersPost
           done()
         })
