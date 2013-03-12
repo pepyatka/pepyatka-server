@@ -63,6 +63,7 @@ API
 - GET /v1/timeline - returns river of news for auth user
 - POST /v1/timeline/:timelineId/subscribe
 - POST /v1/timeline/:timelineId/unsubscribe
+- GET /v1/timeline/:timelineId/subcribers
 - GET /v1/posts/:postId
 - DELETE /v1/posts/:postId
 - PATCH /v1/posts/:postId
@@ -75,6 +76,7 @@ API
 - DELETE /v1/comments/:commentId
 - PATCH /v1/comments/:commentId
 - GET /v1/users/:userId
+- GET /v1/users/:username/subscriptions
 
 SEARCH API
 ---

@@ -1,5 +1,5 @@
 var models = require('../models')
-  , logger = require('../../logger').create()
+  , async = require('async')
 
 exports.addRoutes = function(app) {
   var timelineSerializer = { 
@@ -19,6 +19,24 @@ exports.addRoutes = function(app) {
     },
     subscribers: { select: ['id', 'username'] }
   }
+
+  var subscriberSerializer = {
+    select: ['id', 'username']
+  }
+
+  app.get('/v1/timeline/:timelineId/subscribers', function(req, res) {
+    models.Timeline.findById(req.params.timelineId, {}, function(err, timeline) {
+      timeline.getSubscribers(function(err, subscribers) {
+        async.map(subscribers, function(subscriber, callback) {
+          subscriber.toJSON(subscriberSerializer, function(err, json) {
+            callback(err, json)
+          })
+        }, function(err, json) {
+          res.jsonp(json)
+        })
+      })
+    })
+  })
 
   app.post('/v1/timeline/:timelineId/subscribe', function(req, res) {
     req.user.subscribeTo(req.params.timelineId, function(err, r) {

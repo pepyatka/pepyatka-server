@@ -1,8 +1,14 @@
-var models = require('../models');
+var models = require('../models')
+  , async = require('async')
 
 exports.addRoutes = function(app) {
   var userSerializer = {
     select: ['id', 'username']
+  }
+
+  var subscriptionSerializer = {
+    select: ['id', 'user', 'name'],
+    user: { select: ['id', 'username'] }
   }
 
   app.get('/v1/users', function(req, res) {
@@ -15,6 +21,22 @@ exports.addRoutes = function(app) {
       res.redirect('/v1/users/' + userId)
     else
       res.jsonp({}, 404)
+  })
+
+  app.get('/v1/users/:username/subscriptions', function(req, res) {
+    models.User.findByUsername(req.params.username, function(err, user) {
+      if (err) return res.jsonp({}, 422)
+
+      req.user.getSubscriptions(function(err, subscriptions) {
+        async.map(subscriptions, function(subscription, callback) {
+          subscription.toJSON(subscriptionSerializer, function(err, json) {
+            callback(err, json)
+          })
+        }, function(err, json) {
+          res.jsonp(json)
+        })
+      })
+    })
   })
 
   app.get('/v1/users/:userId', function(req, res) {
