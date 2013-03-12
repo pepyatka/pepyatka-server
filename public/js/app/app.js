@@ -153,15 +153,15 @@ App.Subscription = Ember.Object.extend({
       }
     });
 
-     this.socket.on('updateComment', function(data) {
-       var post = findPost(data.comment.postId)
+    this.socket.on('updateComment', function(data) {
+      var post = findPost(data.comment.postId)
 
-       var index = 0
-       var comment = post.comments.find(function(comment) {
-         index += 1
-         if (comment && comment.id)
-           return comment.id == data.comment.id
-       })
+      var index = 0
+      var comment = post.comments.find(function(comment) {
+        index += 1
+        if (comment && comment.id)
+          return comment.id == data.comment.id
+      })
 
       if (comment) {
         // FIXME: doesn't work as comment is not an Ember object
@@ -171,7 +171,7 @@ App.Subscription = Ember.Object.extend({
         post.comments.removeObject(comment)
         post.comments.insertAt(index-1, updatedComment)
       }
-     })
+    })
 
     this.socket.on('destroyComment', function(data) {
       var post = findPost(data.postId)
@@ -675,6 +675,15 @@ App.EditPostForm = Ember.View.extend({
     }
   }.observes('parentView.isEditFormVisible'),
 
+  updatePost: function() {
+    if (this.body) {
+      // XXX: rather strange bit of code here -- potentially a defect
+      var post = this.bindingContext.content || this.bindingContext;
+      App.postController.updatePost(post, this.body)
+      this.set('parentView.isEditFormVisible', false)
+    }
+  },
+
   // XXX: this is a dup of App.PostContainerView.toggleVisibility()
   // function. I just do not know how to access it from UI bindings
   toggleVisibility: function() {
@@ -1104,6 +1113,18 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       url: this.resourceUrl + '/' + postId,
       type: 'post',
       data: {'_method': 'delete'},
+      success: function(response) {
+        console.log(response)
+      }
+    })
+  },
+
+  updatePost: function(post, body) {
+    $.ajax({
+      url: this.resourceUrl + '/' + post.id,
+      type: 'patch',
+      data: { body: body },
+      context: post,
       success: function(response) {
         console.log(response)
       }

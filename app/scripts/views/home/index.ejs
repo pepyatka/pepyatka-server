@@ -482,9 +482,9 @@
         <div class="pull-right profile-extra-info">
           <div>{{content.user.subscriptionsLength}} {{t label.subscriptions}}</div>
           <div>{{content.user.subscribersLength}} {{t label.subscribers}}</div>
-          <div><a {{action showUserTimeline content.user.username}}>{{content.user.postsLength}} {{t label.posts}}</a></div>
-          <div><a {{action showLikesTimeline content.user.username}}>{{content.user.likesLength}} {{t label.likes}}</a></div>
-          <div><a {{action showCommentsTimeline content.user.username}}>{{content.user.commentsLength}} {{t label.comments}}</a></div>
+          <div><a {{action showUserTimeline App.postsController.timeline href="true"}}>{{content.user.postsLength}} {{t label.posts}}</a></div>
+          <div><a {{action showLikesTimeline App.postsController.timeline href="true"}}>{{content.user.likesLength}} {{t label.likes}}</a></div>
+          <div><a {{action showCommentsTimeline App.postsController.timeline href="true"}}>{{content.user.commentsLength}} {{t label.comments}}</a></div>
         </div>
       </div>
     </div>
