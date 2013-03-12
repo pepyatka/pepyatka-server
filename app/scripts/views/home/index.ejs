@@ -480,8 +480,8 @@
         <h3 class="pull-left">{{content.user.username}}</h3>
 
         <div class="pull-right profile-extra-info">
-          <div>{{content.user.subscriptionsLength}} {{t label.subscriptions}}</div>
-          <div>{{content.user.subscribersLength}} {{t label.subscribers}}</div>
+          <div><a {{action showSubscriptions App.postsController.timeline href="true"}}>{{content.user.subscriptionsLength}} {{t label.subscriptions}}</a></div>
+          <div><a {{action showSubscribers App.postsController.timeline href="true"}}>{{content.user.subscribersLength}} {{t label.subscribers}}</a></div>
           <div><a {{action showUserTimeline App.postsController.timeline href="true"}}>{{content.user.postsLength}} {{t label.posts}}</a></div>
           <div><a {{action showLikesTimeline App.postsController.timeline href="true"}}>{{content.user.likesLength}} {{t label.likes}}</a></div>
           <div><a {{action showCommentsTimeline App.postsController.timeline href="true"}}>{{content.user.commentsLength}} {{t label.comments}}</a></div>

@@ -1351,11 +1351,57 @@ App.Router = Ember.Router.extend({
       }
     }),
 
+    subscribers: Ember.Route.extend({
+      route: '/users/:username/subscribers',
+
+      showPost: Ember.Route.transitionTo('aPost'),
+      showAllPosts: Ember.Route.transitionTo('posts'),
+      showSubscribers: Ember.Route.transitionTo('subscribers'),
+      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
+      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+
+      connectOutlets: function(routes, context) {
+      },
+
+      serialize: function(router, context) {
+      },
+
+      deserialize: function(router, urlParams) {
+      }
+    }),
+
+    subscriptions: Ember.Route.extend({
+      route: '/users/:username/subscriptions',
+
+      showPost: Ember.Route.transitionTo('aPost'),
+      showAllPosts: Ember.Route.transitionTo('posts'),
+      showSubscribers: Ember.Route.transitionTo('subscribers'),
+      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
+      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+
+      connectOutlets: function(routes, context) {
+      },
+
+      serialize: function(router, context) {
+      },
+
+      deserialize: function(router, urlParams) {
+      }
+    }),
+
     userTimeline: Ember.Route.extend({
       route: '/users/:username',
 
       showPost: Ember.Route.transitionTo('aPost'),
       showAllPosts: Ember.Route.transitionTo('posts'),
+      showSubscribers: Ember.Route.transitionTo('subscribers'),
+      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
       showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
       showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
@@ -1380,6 +1426,8 @@ App.Router = Ember.Router.extend({
 
       showPost: Ember.Route.transitionTo('aPost'),
       showAllPosts: Ember.Route.transitionTo('posts'),
+      showSubscribers: Ember.Route.transitionTo('subscribers'),
+      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
       showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
       showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
@@ -1404,6 +1452,8 @@ App.Router = Ember.Router.extend({
 
       showPost: Ember.Route.transitionTo('aPost'),
       showAllPosts: Ember.Route.transitionTo('posts'),
+      showSubscribers: Ember.Route.transitionTo('subscribers'),
+      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
       showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
       showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
