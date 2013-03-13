@@ -490,7 +490,7 @@ exports.addModel = function(db) {
           db.exists('post:' + that.id, function(err, res) {
             if (res == 0) {
               db.hmset('post:' + that.id,
-                       { 'body': (that.body || "").toString().trim(),
+                       { 'body': (that.body.slice(0, 512) || "").toString().trim(),
                          'timelineId': that.timelineId.toString(),
                          'userId': that.userId.toString(),
                          'createdAt': that.createdAt.toString(),
@@ -524,7 +524,7 @@ exports.addModel = function(db) {
           db.exists('post:' + that.id, function(err, res) {
             if (res == 1) {
               db.hmset('post:' + that.id,
-                       { 'body': (params.body || that.body).toString().trim(),
+                       { 'body': (params.body.slice(0, 512) || that.body).toString().trim(),
                          'updatedAt': that.updatedAt.toString()
                        }, function(err, res) {
                          // TODO: a bit mess here: update method calls
