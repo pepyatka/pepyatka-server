@@ -71,7 +71,7 @@ exports.listen = function(server) {
   var sub = redis.createClient()
     , pub = redis.createClient();
         
-  sub.subscribe('newPost', 'destroyPost',
+  sub.subscribe('newPost', 'destroyPost', 'updatePost',
                 'newComment', 'destroyComment', 'updateComment',
                 'newLike', 'removeLike' )
   
@@ -98,6 +98,24 @@ exports.listen = function(server) {
                       }, function(err, json) {
             var event = { post: json }
             io.sockets.in('timeline:' + data.timelineId).emit('newPost', event)
+          })
+        }
+      })
+      break
+
+    case 'updatePost':
+      var data = JSON.parse(msg)
+
+      models.Post.findById(data.postId, function(err, post) {
+        if (post) {
+          post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
+                        createdBy: { select: ['id', 'username'] },
+                        comments: { select: ['id', 'body', 'createdBy'],
+                                    createdBy: { select: ['id', 'username'] }},
+                        likes: { select: ['id', 'username']}
+                      }, function(err, json) {
+            var event = { post: json }
+            io.sockets.in('timeline:' + data.timelineId).emit('updatePost', event)
           })
         }
       })

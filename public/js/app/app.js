@@ -135,6 +135,12 @@ App.Subscription = Ember.Object.extend({
     });
 
     this.socket.on('updatePost', function(data) {
+      var post = findPost(data.post.id)
+
+      if (post) {
+        post.set('body', data.post.body)
+        post.set('updatedAt', data.post.updatedAt)
+      }
     })
 
     this.socket.on('destroyPost', function(data) {
@@ -324,6 +330,9 @@ App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
   },
 
   didInsertElement: function() {
+    // FIXME: bind as valueBinding property
+    this.set('value', this.bindingContext.body)
+
     this.$().autogrow();
   }
 })
@@ -426,6 +435,10 @@ App.OwnPostContainerView = Ember.View.extend({
 
   toggleVisibility: function() {
     this.toggleProperty('isFormVisible');
+  },
+
+  editFormVisibility: function() {
+    this.toggleProperty('isEditFormVisible');
   },
 
   didInsertElement: function() {
@@ -679,7 +692,7 @@ App.EditPostForm = Ember.View.extend({
     if (this.body) {
       // XXX: rather strange bit of code here -- potentially a defect
       var post = this.bindingContext.content || this.bindingContext;
-      App.postController.updatePost(post, this.body)
+      App.postsController.updatePost(post, this.body)
       this.set('parentView.isEditFormVisible', false)
     }
   },

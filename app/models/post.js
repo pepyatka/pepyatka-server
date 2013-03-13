@@ -514,7 +514,7 @@ exports.addModel = function(db) {
       })
     },
 
-    update: function(callback) {
+    update: function(params, callback) {
       var that = this
 
       this.updatedAt = new Date().getTime()
@@ -524,7 +524,7 @@ exports.addModel = function(db) {
           db.exists('post:' + that.id, function(err, res) {
             if (res == 1) {
               db.hmset('post:' + that.id,
-                       { 'body': (that.body || "").toString().trim(),
+                       { 'body': (params.body || that.body).toString().trim(),
                          'updatedAt': that.updatedAt.toString()
                        }, function(err, res) {
                          // TODO: a bit mess here: update method calls
@@ -535,13 +535,13 @@ exports.addModel = function(db) {
                          that.getSubscribedTimelinesIds(function(err, timelinesIds) {
                            async.forEach(timelinesIds, function(timelineId, callback) {
                              pub.publish('updatePost', JSON.stringify({ 
-                               postId: postId,
+                               postId: that.id,
                                timelineId: timelineId 
                              }))
 
-                             callback(err)
+                             callback(null)
                            }, function(err) {
-                             callback(err)
+                             callback(err, that)
                            })
                          })
                        })
