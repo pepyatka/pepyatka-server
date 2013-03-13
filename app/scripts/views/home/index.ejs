@@ -79,13 +79,11 @@
     {{#if prevPageVisible}}
       <li {{bindAttr class="prevPageDisabled"}}><a {{action prevPage href="true" target="App.postsController"}}>{{t button.previous}}</a></li>
     {{else}}
-      <li {{bindAttr class="prevPageDisabled"}}><a>{{t button.previous}}</a></li>
     {{/if}}
 
     {{#if nextPageVisible}}
       <li {{bindAttr class="nextPageDisabled"}}><a {{action nextPage href="true" target="App.postsController"}}>{{t button.next}}</a></li>
     {{else}}
-      <li {{bindAttr class="nextPageDisabled"}}><a>{{t button.next}}</a></li>
     {{/if}}
   </ul>
 </script>
@@ -95,13 +93,11 @@
     {{#if prevPageVisible}}
       <li {{bindAttr class="prevPageDisabled"}}><a {{action prevPage href="true" target="App.searchController"}}>{{t button.previous}}</a></li>
     {{else}}
-      <li {{bindAttr class="prevPageDisabled"}}><a>{{t button.previous}}</a></li>
     {{/if}}
 
     {{#if nextPageVisible}}
       <li {{bindAttr class="nextPageDisabled"}}><a {{action nextPage href="true" target="App.searchController"}}>{{t button.next}}</a></li>
     {{else}}
-      <li {{bindAttr class="nextPageDisabled"}}><a>{{t button.next}}</a></li>
     {{/if}}
   </ul>
 </script>
