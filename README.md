@@ -85,7 +85,7 @@ API
 - PATCH /v1/comments/:commentId
 - GET /v1/users/:userId
 - GET /v1/users/:username/subscriptions
-- GET /v1/users/:username/subscribers - return subscribers for posts timeline
+- GET /v1/users/:username/subscribers - returns Posts timeline subscribers
 
 SEARCH API
 ---
