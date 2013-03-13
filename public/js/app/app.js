@@ -139,7 +139,6 @@ App.Subscription = Ember.Object.extend({
 
       if (post) {
         post.set('body', data.post.body)
-        post.set('updatedAt', data.post.updatedAt)
       }
     })
 
