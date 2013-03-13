@@ -1015,7 +1015,7 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Sea
   resourceUrl: '/v1/search',
   body: '',
   content: [],
-  sortProperties: ['updatedAt'],
+  sortProperties: ['createdAt'],
   query: '',
 
   sortAscending: false,
@@ -1139,7 +1139,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
   body: '',
   isProgressBarHidden: 'hidden',
 
-  sortProperties: ['updatedAt'],
+  sortProperties: ['createdAt'],
   sortAscending: false,
   isLoaded: true,
 
