@@ -76,7 +76,7 @@ exports.addModel = function(db) {
           db.exists('comment:' + that.id, function(err, res) {
             if (res == 1) {
               db.hmset('comment:' + that.id,
-                       { 'body': (params.body || that.body).toString().trim(),
+                       { 'body': (params.body.slice(0, 4096) || that.body).toString().trim(),
                          'updatedAt': that.createdAt.toString()
                        }, function(err, res) {
                          // TODO: a bit mess here: update method calls
@@ -126,7 +126,7 @@ exports.addModel = function(db) {
           db.exists('comment:' + that.id, function(err, res) {
             if (res == 0) {
               db.hmset('comment:' + that.id,
-                       { 'body': (that.body || "").toString().trim(),
+                       { 'body': (that.body.slice(0, 4096) || "").toString().trim(),
                          'createdAt': that.createdAt.toString(),
                          'updatedAt': that.createdAt.toString(),
                          'userId': that.userId.toString(),
