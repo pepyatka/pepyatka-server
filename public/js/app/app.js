@@ -1091,6 +1091,33 @@ App.SubscriptionsView = Ember.View.extend({
   templateName: 'subscriptions'
 });
 
+App.SubscribersController = Ember.ArrayController.extend({
+  resourceUrl: '/v1/users',
+  verb: 'subscribers',
+
+  findAll: function(username) {
+    this.set('isLoaded', false)
+
+    $.ajax({
+      url: this.resourceUrl + '/' + username + '/' + this.verb,
+      dataType: 'jsonp',
+      context: this,
+      success: function(response) {
+        App.ApplicationController.subscription.unsubscribe()
+
+        this.set('content', response)
+
+        this.set('isLoaded', true)
+      }
+    })
+    return this
+  }
+})
+App.subscribersController = App.SubscribersController.create()
+
+App.SubscribersView = Ember.View.extend({
+  templateName: 'subscribers'
+});
 
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.PaginationHelper, {
   resourceUrl: '/v1/posts',
@@ -1419,6 +1446,7 @@ App.Router = Ember.Router.extend({
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
 
       connectOutlets: function(routes, context) {
+        App.router.get('applicationController').connectOutlet('subscribers', App.subscribersController.findAll(context));
       },
 
       serialize: function(router, username) {

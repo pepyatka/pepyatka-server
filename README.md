@@ -54,6 +54,14 @@ post:<postId>:likes ( <userId> )
 comment:<commentId> { body, createdAt, updatedAt, createdBy, postId }
 
 attachment:<attachmentId> { mimeType, filename, extension, path, createdAt, updatedAt, postId, thumbnailId? }
+
+# not implemented yet
+stats:<userId> { comments, likes, discussions, subscribers, subscriptions }
+stats:comments { <userId>:<comments> }
+stats:likes { <userId>:<likes> }
+stats:discussions { <userId>:<discussions> }
+stats:subscribers { <userId>:<subscribers> }
+stats:subscripions { <userId>:<subscriptions> }
 ```
 
 API
@@ -77,6 +85,7 @@ API
 - PATCH /v1/comments/:commentId
 - GET /v1/users/:userId
 - GET /v1/users/:username/subscriptions
+- GET /v1/users/:username/subscribers - return subscribers for posts timeline
 
 SEARCH API
 ---

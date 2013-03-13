@@ -11,6 +11,10 @@ exports.addRoutes = function(app) {
     user: { select: ['id', 'username'] }
   }
 
+  var subscriberSerializer = {
+    select: ['id', 'username']
+  }
+
   app.get('/v1/users', function(req, res) {
     if (!req.user) 
       return res.jsonp({})
@@ -21,6 +25,22 @@ exports.addRoutes = function(app) {
       res.redirect('/v1/users/' + userId)
     else
       res.jsonp({}, 404)
+  })
+
+  app.get('/v1/users/:username/subscribers', function(req, res) {
+    models.User.findByUsername(req.params.username, function(err, user) {
+      user.getPostsTimeline({}, function(err, timeline) {
+        timeline.getSubscribers(function(err, subscribers) {
+          async.map(subscribers, function(subscriber, callback) {
+            subscriber.toJSON(subscriberSerializer, function(err, json) {
+              callback(err, json)
+            })
+          }, function(err, json) {
+            res.jsonp(json)
+          })
+        })
+      })
+    })
   })
 
   app.get('/v1/users/:username/subscriptions', function(req, res) {
