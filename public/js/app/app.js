@@ -299,7 +299,7 @@ App.CreateSearchFieldView = Ember.TextField.extend(Ember.TargetActionSupport, {
     valueBinding: 'App.searchController.body',
 
     insertNewline: function() {
-        this.triggerAction();
+      this.triggerAction();
     }
 })
 
