@@ -24,6 +24,6 @@ Em.I18n.translations = {
 
   'button.search': 'Search',
   'button.post': 'Post',
-  'button.next': 'Next &rarr;',
-  'button.previous': '&larr; Previous'
+  'button.next': 'Older items &rarr;',
+  'button.previous': '&larr; Newer items'
 };
