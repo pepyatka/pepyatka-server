@@ -613,20 +613,25 @@
   </div>
 </script>
 
-<script>
+<script type="text/x-handlebars" data-template-name="subscriptions">
+  <ul>
+    {{#each content}}
+      <li>{{user.username}} - {{name}}</li>
+    {{/each}}
+  </ul>
+</script>
+
+<script type="text/javascript">
+  function preloadFunc() {
+    Config.loadScripts()
+  }
+  window.onpaint = preloadFunc();
+
   var currentUser
   var isAnonymousPermitted
   <% if (req.user) { %>
     currentUser = '<%= req.user.id %>'
     isAnonymousPermitted = '<%= req.isAnonymousPermitted %>'
   <% } %>
-</script>
-
-<script type="text/javascript">
-    function preloadFunc()
-    {
-        Config.loadScripts()
-    }
-    window.onpaint = preloadFunc();
 </script>
 

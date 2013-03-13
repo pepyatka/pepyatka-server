@@ -1063,6 +1063,35 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Sea
 })
 App.searchController = App.SearchController.create()
 
+App.SubscriptionsController = Ember.ArrayController.extend({
+  resourceUrl: '/v1/users',
+  verb: 'subscriptions',
+
+  findAll: function(username) {
+    this.set('isLoaded', false)
+
+    $.ajax({
+      url: this.resourceUrl + '/' + username + '/' + this.verb,
+      dataType: 'jsonp',
+      context: this,
+      success: function(response) {
+        App.ApplicationController.subscription.unsubscribe()
+
+        this.set('content', response)
+
+        this.set('isLoaded', true)
+      }
+    })
+    return this
+  }
+})
+App.subscriptionsController = App.SubscriptionsController.create()
+
+App.SubscriptionsView = Ember.View.extend({
+  templateName: 'subscriptions'
+});
+
+
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.PaginationHelper, {
   resourceUrl: '/v1/posts',
   content: [],
@@ -1351,50 +1380,6 @@ App.Router = Ember.Router.extend({
       }
     }),
 
-    subscribers: Ember.Route.extend({
-      route: '/users/:username/subscribers',
-
-      showPost: Ember.Route.transitionTo('aPost'),
-      showAllPosts: Ember.Route.transitionTo('posts'),
-      showSubscribers: Ember.Route.transitionTo('subscribers'),
-      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
-      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-
-      connectOutlets: function(routes, context) {
-      },
-
-      serialize: function(router, context) {
-      },
-
-      deserialize: function(router, urlParams) {
-      }
-    }),
-
-    subscriptions: Ember.Route.extend({
-      route: '/users/:username/subscriptions',
-
-      showPost: Ember.Route.transitionTo('aPost'),
-      showAllPosts: Ember.Route.transitionTo('posts'),
-      showSubscribers: Ember.Route.transitionTo('subscribers'),
-      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
-      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-
-      connectOutlets: function(routes, context) {
-      },
-
-      serialize: function(router, context) {
-      },
-
-      deserialize: function(router, urlParams) {
-      }
-    }),
-
     userTimeline: Ember.Route.extend({
       route: '/users/:username',
 
@@ -1411,6 +1396,55 @@ App.Router = Ember.Router.extend({
         App.postsController.set('timeline', username)
         router.get('applicationController').connectOutlet('userTimeline', App.postsController.findAll());
       },
+
+      serialize: function(router, username) {
+        return {username: username}
+      },
+
+      deserialize: function(router, urlParams) {
+        return urlParams.username
+      }
+    }),
+
+    subscribers: Ember.Route.extend({
+      route: '/users/:username/subscribers',
+
+      showPost: Ember.Route.transitionTo('aPost'),
+      showAllPosts: Ember.Route.transitionTo('posts'),
+      showSubscribers: Ember.Route.transitionTo('subscribers'),
+      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
+      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+
+      connectOutlets: function(routes, context) {
+      },
+
+      serialize: function(router, username) {
+        return {username: username}
+      },
+
+      deserialize: function(router, urlParams) {
+        return urlParams.username
+      }
+    }),
+
+    subscriptions: Ember.Route.extend({
+      route: '/users/:username/subscriptions',
+
+      showPost: Ember.Route.transitionTo('aPost'),
+      showAllPosts: Ember.Route.transitionTo('posts'),
+      showSubscribers: Ember.Route.transitionTo('subscribers'),
+      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
+      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+
+      connectOutlets: function(routes, context) {
+        App.router.get('applicationController').connectOutlet('subscriptions', App.subscriptionsController.findAll(context));
+     },
 
       serialize: function(router, username) {
         return {username: username}
