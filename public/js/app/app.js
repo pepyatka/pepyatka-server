@@ -1078,6 +1078,7 @@ App.SubscriptionsController = Ember.ArrayController.extend({
         App.ApplicationController.subscription.unsubscribe()
 
         this.set('content', response)
+        this.set('username', username)
 
         this.set('isLoaded', true)
       }
@@ -1106,6 +1107,7 @@ App.SubscribersController = Ember.ArrayController.extend({
         App.ApplicationController.subscription.unsubscribe()
 
         this.set('content', response)
+        this.set('username', username)
 
         this.set('isLoaded', true)
       }
