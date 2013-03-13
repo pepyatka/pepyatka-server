@@ -1511,7 +1511,7 @@ App.Router = Ember.Router.extend({
 
       connectOutlets: function(router, username) {
         App.postsController.set('timeline', username)
-        router.get('applicationController').connectOutlet('userTimeline', App.postsController.findAll(0, 'likes'));
+        router.get('applicationController').connectOutlet('posts', App.postsController.findAll(0, 'likes'));
       },
 
       serialize: function(router, username) {
@@ -1537,7 +1537,7 @@ App.Router = Ember.Router.extend({
 
       connectOutlets: function(router, username) {
         App.postsController.set('timeline', username)
-        router.get('applicationController').connectOutlet('userTimeline', App.postsController.findAll(0, 'comments'));
+        router.get('applicationController').connectOutlet('posts', App.postsController.findAll(0, 'comments'));
       },
 
       serialize: function(router, username) {
