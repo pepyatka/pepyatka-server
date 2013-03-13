@@ -630,16 +630,16 @@
 </script>
 
 <script type="text/javascript">
-  function preloadFunc() {
-    Config.loadScripts()
-  }
-  window.onpaint = preloadFunc();
-
   var currentUser
   var isAnonymousPermitted
   <% if (req.user) { %>
     currentUser = '<%= req.user.id %>'
     isAnonymousPermitted = '<%= req.isAnonymousPermitted %>'
   <% } %>
+
+  function preloadFunc() {
+    Config.loadScripts()
+  }
+  window.onpaint = preloadFunc();
 </script>
 
