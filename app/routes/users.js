@@ -47,7 +47,7 @@ exports.addRoutes = function(app) {
     models.User.findByUsername(req.params.username, function(err, user) {
       if (err) return res.jsonp({}, 422)
 
-      req.user.getSubscriptions(function(err, subscriptions) {
+      user.getSubscriptions(function(err, subscriptions) {
         async.map(subscriptions, function(subscription, callback) {
           subscription.toJSON(subscriptionSerializer, function(err, json) {
             callback(err, json)
