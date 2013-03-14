@@ -895,8 +895,8 @@ App.CommentsController = Ember.ArrayController.extend({
   updateComment: function(comment, body) {
     $.ajax({
       url: this.resourceUrl + '/' + comment.id,
-      type: 'patch',
-      data: { body: body },
+      type: 'post',
+      data: { body: body, '_method': 'patch' },
       context: comment,
       success: function(response) {
         console.log(response)
@@ -1192,8 +1192,8 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
   updatePost: function(post, body) {
     $.ajax({
       url: this.resourceUrl + '/' + post.id,
-      type: 'patch',
-      data: { body: body },
+      type: 'post',
+      data: { body: body, '_method': '_patch' },
       context: post,
       success: function(response) {
         console.log(response)
