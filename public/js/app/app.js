@@ -1193,7 +1193,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
     $.ajax({
       url: this.resourceUrl + '/' + post.id,
       type: 'post',
-      data: { body: body, '_method': '_patch' },
+      data: { body: body, '_method': 'patch' },
       context: post,
       success: function(response) {
         console.log(response)
