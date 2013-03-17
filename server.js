@@ -83,13 +83,27 @@ function logErrors(err, req, res, next) {
 
 app.configure('development', function() {
   app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
+  app.set('redisdb', 1);
 });
 
-var server = http.createServer(app)
-  , pubsub = require('./pubsub').listen(server)
-  , routes = require('./app/routes')(app)
+app.configure('production', function(){
+  app.set('redisdb', 0);
+});
 
-server.listen(app.get('port'), function() {  
-  console.log("Express server listening on port " + app.get('port'));
-  console.log("Server is running on " + (process.env.NODE_ENV || "development") + " mode")
+app.configure('test', function(){
+  app.set('redisdb', 2);
+});
+
+var redis = require('./db')
+  , db = redis.connect()
+
+db.select(app.get('redisdb'), function(err, res) {
+  var server = http.createServer(app)
+    , pubsub = require('./pubsub').listen(server)
+    , routes = require('./app/routes')(app)
+
+  server.listen(app.get('port'), function() {  
+    console.log("Express server listening on port " + app.get('port'));
+    console.log("Server is running on " + (process.env.NODE_ENV || "development") + " mode")
+  });
 });
