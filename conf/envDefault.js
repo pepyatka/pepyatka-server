@@ -29,3 +29,9 @@ exports.getWordWhichEqualHashTag = function(){
 
   return wordWhichEqualHashTag;
 }
+
+exports.getStatisticsTopCount = function() {
+  var topCount = 20
+
+  return topCount
+}
