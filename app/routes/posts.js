@@ -29,7 +29,11 @@ exports.addRoutes = function(app) {
     models.Post.addLike(req.params.postId, req.user.id, function(err, r) {
       // post.toJSON({}, function(err, json) { res.jsonp(json) })
 
-      res.jsonp({})
+      models.Stats.findByUserId(req.user.id, function(err, stats) {
+        stats.addLike(function(err, stats) {
+          res.jsonp({})
+        })
+      })
     })
   })
 
@@ -39,7 +43,11 @@ exports.addRoutes = function(app) {
     }
 
     models.Post.removeLike(req.params.postId, req.user.id, function(err, r) {
-      res.jsonp({})
+      models.Stats.findByUserId(req.user.id, function(err, stats) {
+        stats.removeLike(function(err, stats) {
+          res.jsonp({})
+        })
+      })
     })
   })
 
@@ -51,8 +59,15 @@ exports.addRoutes = function(app) {
       if (!post || req.user.id != post.userId)
         return res.jsonp({})
 
-      models.Post.destroy(req.params.postId, function(err, r) {
-        res.jsonp({})
+      post.getCommentsIds(function(err, ids) {
+        models.Post.destroy(req.params.postId, function(err, r) {
+          models.Stats.findByUserId(req.user.id, function(err, stats) {
+            stats.comments = stats.comments - ids.length
+            stats.update(function(err, stats) {
+              res.jsonp({})
+            })
+          })
+        })
       })
     })
   })
@@ -87,7 +102,11 @@ exports.addRoutes = function(app) {
         newPost.create(function(err, post) {
           if (err) return res.jsonp({}, 422)
 
-          post.toJSON(postSerializer, function(err, json) { res.jsonp(json) })
+          models.Stats.findByUserId(req.user.id, function(err, stats) {
+            stats.addPost(function(err, stats) {
+              post.toJSON(postSerializer, function(err, json) { res.jsonp(json) })
+            })
+          })
         })
       })
     })

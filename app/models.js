@@ -6,3 +6,4 @@ exports.Post = require('./models/post').addModel(db);
 exports.Comment = require('./models/comment').addModel(db);
 exports.Timeline = require('./models/timeline').addModel(db);
 exports.Attachment = require('./models/attachment').addModel(db);
+exports.Stats = require('./models/stats').addModel(db);

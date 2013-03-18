@@ -17,7 +17,11 @@ exports.addRoutes = function(app, connections) {
         return res.jsonp({})
 
       models.Comment.destroy(req.params.commentId, function(err, r) {
-        res.jsonp({})
+        models.Stats.findByUserId(req.user.id, function(err, stats) {
+          stats.removeComment(function(err, stats) {
+            res.jsonp({})
+          })
+        })
       })
     })
   })
@@ -52,7 +56,11 @@ exports.addRoutes = function(app, connections) {
     newComment.create(function(err, comment) {
       if (err) return res.jsonp({}, 422)
 
-      comment.toJSON(commentSerializer, function(err, json) { res.jsonp(json) })
+      models.Stats.findByUserId(req.user.id, function(err, stats) {
+        stats.addComment(function(err, stats) {
+          comment.toJSON(commentSerializer, function(err, json) { res.jsonp(json) })
+        })
+      })
     })
   });
 }

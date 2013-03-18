@@ -148,6 +148,14 @@ exports.addModel = function(db) {
                 db.set('username:' + that.username + ':uid', that.id, function(err, res) {
                   done(err, res)
                 })
+              },
+              function(done) {
+                var stats = new models.Stats({
+                  userId: that.id
+                })
+                stats.create(function(err, stats) {
+                  done(err, stats)
+                })
               }
             ], function(err, res) {
               callback(err, that)
