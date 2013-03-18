@@ -335,17 +335,23 @@ exports.addModel = function(db) {
             timelinesIds.push(timelineId)
             async.map(timelinesIds, function(timelineId, callback) {
               models.Timeline.findById(timelineId, {}, function(err, timeline) {
-                timeline.getSubscribersIds(function(err, subscribersIds) {
-                  callback(err, subscribersIds)
-                })
+                if (timeline)
+                  timeline.getSubscribersIds(function(err, subscribersIds) {
+                    callback(err, subscribersIds)
+                  })
+                else
+                  callback(null, null)
               })
             }, function(err, subscribersIds) {
               async.forEach(subscribersIds.flatten(), function(subscriberId, callback) {
                 models.User.findById(subscriberId, function(err, user) {
-                  user.getRiverOfNewsId(function(err, riverId) {
-                    timelinesIds.push(riverId)
-                    callback(err)
-                  })
+                  if (user)
+                    user.getRiverOfNewsId(function(err, riverId) {
+                      timelinesIds.push(riverId)
+                      callback(err)
+                    })
+                  else
+                    callback(null)
                 })
               }, function(err) {
                 timelinesIds = _.uniq(timelinesIds)
@@ -465,41 +471,84 @@ exports.addModel = function(db) {
 
       db.exists('user:' + that.userId, function(err, userExists) {
         db.exists('timeline:' + that.timelineId, function(err, timelineExists) {
-          db.exists('post:' + that.id, function(err, postExists) {
-            callback(postExists == 0 &&
-                     userExists == 1 &&
-                     timelineExists == 1 &&
-                     that.body.trim().length > 0)
-          })
+          callback(userExists == 1 &&
+                   timelineExists == 1 &&
+                   that.body.trim().length > 0)
         })
       })
     },
 
-    save: function(callback) {
+    create: function(callback) {
       var that = this
 
-      if (!this.createdAt)
-        this.createdAt = new Date().getTime()
+      this.createdAt = new Date().getTime()
       this.updatedAt = new Date().getTime()
-      if (this.id === undefined) this.id = uuid.v4()
+      this.id = uuid.v4()
 
       this.validate(function(valid) {
         if (valid) {
-          db.hmset('post:' + that.id,
-                   { 'body': (that.body || "").toString().trim(),
-                     'timelineId': that.timelineId.toString(),
-                     'userId': that.userId.toString(),
-                     'createdAt': that.createdAt.toString(),
-                     'updatedAt': that.updatedAt.toString()
-                   }, function(err, res) {
-                     that.saveAttachments(function(err, res) {
-                       models.Timeline.newPost(that.id, function() {
-                         // BUG: updatedAt is different now than we set few lines above
-                         // XXX: we don't care (yet) if attachment wasn't saved
-                         callback(null, that)
+          db.exists('post:' + that.id, function(err, res) {
+            if (res == 0) {
+              db.hmset('post:' + that.id,
+                       { 'body': (that.body.slice(0, 512) || "").toString().trim(),
+                         'timelineId': that.timelineId.toString(),
+                         'userId': that.userId.toString(),
+                         'createdAt': that.createdAt.toString(),
+                         'updatedAt': that.updatedAt.toString()
+                       }, function(err, res) {
+                         that.saveAttachments(function(err, res) {
+                           models.Timeline.newPost(that.id, function() {
+                             // BUG: updatedAt is different now than we set few lines above
+                             // XXX: we don't care (yet) if attachment wasn't saved
+                             callback(null, that)
+                           })
+                         })
                        })
-                     })
-                   })
+            } else {
+              callback(err, res)
+            }
+          })
+        } else {
+          callback(1, that)
+        }
+      })
+    },
+
+    update: function(params, callback) {
+      var that = this
+
+      this.updatedAt = new Date().getTime()
+
+      this.validate(function(valid) {
+        if (valid) {
+          db.exists('post:' + that.id, function(err, res) {
+            if (res == 1) {
+              db.hmset('post:' + that.id,
+                       { 'body': (params.body.slice(0, 512) || that.body).toString().trim(),
+                         'updatedAt': that.updatedAt.toString()
+                       }, function(err, res) {
+                         // TODO: a bit mess here: update method calls
+                         // pubsub event and Timeline.newPost calls
+                         // them as well
+                         var pub = redis.createClient();
+
+                         that.getSubscribedTimelinesIds(function(err, timelinesIds) {
+                           async.forEach(timelinesIds, function(timelineId, callback) {
+                             pub.publish('updatePost', JSON.stringify({ 
+                               postId: that.id,
+                               timelineId: timelineId 
+                             }))
+
+                             callback(null)
+                           }, function(err) {
+                             callback(err, that)
+                           })
+                         })
+                       })
+            } else {
+              callback(err, res)
+            }
+          })
         } else {
           callback(1, that)
         }

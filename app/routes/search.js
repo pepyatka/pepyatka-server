@@ -4,11 +4,14 @@ var searchClient = require('../../elastic-search/elastic-search-client.js')
 
 var indicators = ['intitle', 'incomments', 'from'];
 
+// TODO: refactor me to Search model
+
 exports.addRoutes = function(app) {
-  app.get('/search/:searchQuery', function(req, res) {
+  app.get('/v1/search/:searchQuery', function(req, res) {
     var pageSize = 25;
     var pageStart = req.query && req.query.start || 0;
-    var searchQuery = req.params.searchQuery.replace(/#/g, configLocal.getWordWhichEqualHashTag())
+    var searchQuery = req.params.searchQuery.replace(/%23/g, '#')
+    searchQuery = searchQuery.replace(/#/g, configLocal.getWordWhichEqualHashTag())
     var parsedQuery = parseQuery(searchQuery);
 
     if (parsedQuery) {

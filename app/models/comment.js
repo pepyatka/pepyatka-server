@@ -1,6 +1,7 @@
 var uuid = require('node-uuid')
   , redis = require('redis')
   , models = require('../models')
+  , async = require('async')
 
 exports.addModel = function(db) {
   function Comment(params) {
@@ -58,33 +59,74 @@ exports.addModel = function(db) {
 
       db.exists('user:' + that.userId, function(err, userExists) {
         db.exists('post:' + that.postId, function(err, postExists) {
-          db.exists('comment:' + that.id, function(err, commentExists) {
-            callback(postExists == 1 &&
-                     userExists == 1 &&
-//                     commentExists == 0 &&
-                     that.body.trim().length > 0)
-          })
+          callback(postExists == 1 &&
+                   userExists == 1 &&
+                   that.body.trim().length > 0)
         })
       })
     },
 
-    save: function(callback) {
+    update: function(params, callback) {
       var that = this
 
-      if (!this.createdAt)
-        this.createdAt = new Date().getTime()
       this.updatedAt = new Date().getTime()
-      if (this.id === undefined) this.id = uuid.v4()
 
       this.validate(function(valid) {
         if (valid) {
-          // User is allowed to create a comment if and only if its
-          // post is created and exists.
-          db.exists('post:' + that.postId, function(err, res) {
-            // post exists
+          db.exists('comment:' + that.id, function(err, res) {
             if (res == 1) {
               db.hmset('comment:' + that.id,
-                       { 'body': (that.body || "").toString().trim(),
+                       { 'body': (params.body.slice(0, 4096) || that.body).toString().trim(),
+                         'updatedAt': that.createdAt.toString()
+                       }, function(err, res) {
+                         // TODO: a bit mess here: update method calls
+                         // pubsub event and Post.newComment calls
+                         // them as well
+                         var pub = redis.createClient();
+
+                         pub.publish('updateComment', JSON.stringify({
+                           postId: that.postId,
+                           commentId: that.id
+                         }))
+
+                         models.Post.findById(that.postId, function(err, post) {
+                           post.getSubscribedTimelinesIds(function(err, timelinesIds) {
+                             async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
+                               pub.publish('updateComment', JSON.stringify({
+                                 timelineId: timelinesIds[timelineId],
+                                 commentId: that.id
+                               }))
+
+                               callback(null)
+                             }, function(err) {
+                               callback(err)
+                             })
+                           })
+                         })
+                       })
+            } else {
+              callback(err, that)
+            }
+          })
+        } else {
+          callback(1, that)
+        }
+      })
+    },
+
+    create: function(callback) {
+      var that = this
+
+      this.createdAt = new Date().getTime()
+      this.updatedAt = new Date().getTime()
+      this.id = uuid.v4()
+
+      this.validate(function(valid) {
+        if (valid) {
+          db.exists('comment:' + that.id, function(err, res) {
+            if (res == 0) {
+              db.hmset('comment:' + that.id,
+                       { 'body': (that.body.slice(0, 4096) || "").toString().trim(),
                          'createdAt': that.createdAt.toString(),
                          'updatedAt': that.createdAt.toString(),
                          'userId': that.userId.toString(),

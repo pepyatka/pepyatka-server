@@ -175,6 +175,9 @@ exports.addModel = function(db) {
       if (select.indexOf('id') != -1)
         json.id = that.id
 
+      if (select.indexOf('name') != -1)
+        json.name = that.name
+
       if (select.indexOf('userId') != -1)
         json.userId = that.userId
 

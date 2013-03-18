@@ -16,7 +16,8 @@ var getPostTimestamp = function(post, callback) {
 var replaceHashTagsToEqualWord = function(post) {
   post.body = post.body.replace(/#/g, configLocal.getWordWhichEqualHashTag())
   async.forEach(post.comments, function(comment, callback) {
-    comment.body = comment.body.replace(/#/g, configLocal.getWordWhichEqualHashTag())
+    if (comment)
+      comment.body = comment.body.replace(/#/g, configLocal.getWordWhichEqualHashTag())
   })
 
   return post
@@ -25,7 +26,8 @@ var replaceHashTagsToEqualWord = function(post) {
 var replaceToHashTagFromEqualWord = function(post) {
   post.body = post.body.replace(new RegExp(configLocal.getWordWhichEqualHashTag(), 'g'), '#')
   async.forEach(post.comments, function(comment, callback) {
-    comment.body = comment.body.replace(new RegExp(configLocal.getWordWhichEqualHashTag(), 'g'), '#')
+    if (comment)
+      comment.body = comment.body.replace(new RegExp(configLocal.getWordWhichEqualHashTag(), 'g'), '#')
   })
 
   return post

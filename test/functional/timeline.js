@@ -28,7 +28,7 @@ describe('Timeline API', function() {
           });
         }, function(err, posts) {
           async.forEachSeries(posts, function(post, callback) {
-            post.save(function(err) {
+            post.create(function(err) {
               callback(err)
             })
           }, function(err) {

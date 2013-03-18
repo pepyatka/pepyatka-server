@@ -135,6 +135,11 @@ App.Subscription = Ember.Object.extend({
     });
 
     this.socket.on('updatePost', function(data) {
+      var post = findPost(data.post.id)
+
+      if (post) {
+        post.set('body', data.post.body)
+      }
     })
 
     this.socket.on('destroyPost', function(data) {
@@ -143,7 +148,6 @@ App.Subscription = Ember.Object.extend({
 
     this.socket.on('newComment', function (data) {
       var comment = App.Comment.create(data.comment)
-
       var post = findPost(data.comment.postId)
 
       if (post) {
@@ -154,6 +158,26 @@ App.Subscription = Ember.Object.extend({
       }
     });
 
+    this.socket.on('updateComment', function(data) {
+      var post = findPost(data.comment.postId)
+
+      var index = 0
+      var comment = post.comments.find(function(comment) {
+        index += 1
+        if (comment && comment.id)
+          return comment.id == data.comment.id
+      })
+
+      if (comment) {
+        // FIXME: doesn't work as comment is not an Ember object
+        // comment.set('body', data.comment.body)
+
+        var updatedComment = App.Comment.create(data.comment)
+        post.comments.removeObject(comment)
+        post.comments.insertAt(index-1, updatedComment)
+      }
+    })
+
     this.socket.on('destroyComment', function(data) {
       var post = findPost(data.postId)
       var comment = post.comments.findProperty('id', data.commentId)
@@ -162,7 +186,6 @@ App.Subscription = Ember.Object.extend({
 
     this.socket.on('newLike', function(data) {
       var user = App.User.create(data.user)
-
       var post = findPost(data.postId)
 
       if (post) {
@@ -185,16 +208,6 @@ App.Subscription = Ember.Object.extend({
       if (post) {
         post.removeLike('id', data.userId)
       }
-    })
-
-    this.socket.on('updateComment', function(data) {
-      console.log('update')
-//      var post = findPost(data.postId)
-//      var comment = post.comments.findProperty('id', data.commentId)
-//      post.comments.removeObject(comment)
-    })
-
-    this.socket.on('destroyComment', function(data) {
     })
 
     this.socket.on('disconnect', function(data) {
@@ -260,7 +273,12 @@ App.Subscription = Ember.Object.extend({
 App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
   templateName: 'application',
   searchPhrase: function() {
-    App.router.transitionTo('searchPhrase', App.searchController.body);
+    query = App.searchController.body
+
+    if (/#/g.test(query))
+      query = query.replace(/#/g, '%23')
+
+    App.router.transitionTo('searchPhrase', query);
   }
 });
 App.ApplicationController = Ember.Controller.extend({
@@ -281,7 +299,7 @@ App.CreateSearchFieldView = Ember.TextField.extend(Ember.TargetActionSupport, {
     valueBinding: 'App.searchController.body',
 
     insertNewline: function() {
-        this.triggerAction();
+      this.triggerAction();
     }
 })
 
@@ -311,6 +329,9 @@ App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
   },
 
   didInsertElement: function() {
+    // FIXME: bind as valueBinding property
+    this.set('value', this.bindingContext.body)
+
     this.$().autogrow();
   }
 })
@@ -413,6 +434,10 @@ App.OwnPostContainerView = Ember.View.extend({
 
   toggleVisibility: function() {
     this.toggleProperty('isFormVisible');
+  },
+
+  editFormVisibility: function() {
+    this.toggleProperty('isEditFormVisible');
   },
 
   didInsertElement: function() {
@@ -662,6 +687,15 @@ App.EditPostForm = Ember.View.extend({
     }
   }.observes('parentView.isEditFormVisible'),
 
+  updatePost: function() {
+    if (this.body) {
+      // XXX: rather strange bit of code here -- potentially a defect
+      var post = this.bindingContext.content || this.bindingContext;
+      App.postsController.updatePost(post, this.body)
+      this.set('parentView.isEditFormVisible', false)
+    }
+  },
+
   // XXX: this is a dup of App.PostContainerView.toggleVisibility()
   // function. I just do not know how to access it from UI bindings
   toggleVisibility: function() {
@@ -673,12 +707,17 @@ App.EditCommentForm = Ember.View.extend({
   body: '',
 
   autoFocus: function () {
-    if (this.get('parentView.isFormVisible') == true) {
+    if (this.get('parentView.isEditFormVisible') == true) {
       this.$().hide().show();
       this.$('textarea').focus();
       this.$('textarea').trigger('keyup') // to apply autogrow
     }
   }.observes('parentView.isEditFormVisible'),
+
+  // FIXME: autoFocus doesn't observe isEditFormVisible?
+  didInsertElement: function() {
+    this.autoFocus()
+  },
 
   updateComment: function() {
     if (this.body) {
@@ -697,6 +736,7 @@ App.EditCommentForm = Ember.View.extend({
   }
 });
 
+
 // Create new post text field. Separate view to be able to bind events
 App.CreateCommentView = Ember.TextArea.extend(Ember.TargetActionSupport, {
   attributeBindings: ['class'],
@@ -708,6 +748,10 @@ App.CreateCommentView = Ember.TextArea.extend(Ember.TargetActionSupport, {
   },
 
   didInsertElement: function() {
+    // FIXME: bind as valueBinding property
+    if (this.action != 'submitComment')
+      this.set('value', this.bindingContext.body)
+
     this.$().autogrow();
   }
 })
@@ -783,7 +827,7 @@ App.User = Ember.Object.extend({
   statistics: {},
 
   subscriptionsLength: function() {
-    return this.subscriptions.length
+    return this.subscriptions.filter(function(s) { return s.name == 'Posts'}).length
   }.property(),
 
   subscribersLength: function() {
@@ -852,7 +896,7 @@ App.CommentsController = Ember.ArrayController.extend({
     $.ajax({
       url: this.resourceUrl + '/' + comment.id,
       type: 'post',
-      data: { body: body }, // XXX: we've already defined a model above
+      data: { body: body, '_method': 'patch' },
       context: comment,
       success: function(response) {
         console.log(response)
@@ -860,7 +904,7 @@ App.CommentsController = Ember.ArrayController.extend({
     })
   },
 
-  createComment: function(post, body) {
+ createComment: function(post, body) {
     var comment = App.Comment.create({ 
       body: body,
       postId: post.id
@@ -885,6 +929,7 @@ App.commentsController = App.CommentsController.create()
 App.Post = Ember.Object.extend({
   showAllComments: false,
   currentUser: currentUser,
+  comments: Ember.ArrayProxy.create(),
 
   partial: function() {
     if (this.showAllComments)
@@ -967,6 +1012,7 @@ App.Post = Ember.Object.extend({
 });
 
 App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.SearchPaginationHelper, {
+  resourceUrl: '/v1/search',
   body: '',
   content: [],
   sortProperties: ['updatedAt'],
@@ -974,6 +1020,7 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Sea
 
   sortAscending: false,
   isLoaded: true,
+
   insertPostsIntoMediaList : function(posts) {
     App.ApplicationController.subscription.unsubscribe();
 
@@ -992,12 +1039,11 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Sea
   showPage: function(pageStart) {
     this.set('isLoaded', false)
     var query = this.get('query');
-    if (/#/g.test(query)) {
+    if (/#/g.test(query))
       query = query.replace(/#/g, '%23')
-    }
 
     $.ajax({
-      url: '/search/' + query,
+      url: this.resourceUrl + '/' + query,
       type: 'get',
       data: { start: pageStart },
       success: function(response) {
@@ -1008,13 +1054,12 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Sea
 
   searchByPhrase: function(searchQuery) {
     this.set('isLoaded', false)
-    if (searchQuery)
-    {
-      if (/#/g.test(searchQuery)) {
+    if (searchQuery) {
+      if (/#/g.test(searchQuery))
         searchQuery = searchQuery.replace(/#/g, '%23')
-      }
+
       $.ajax({
-        url: '/search/' + searchQuery,
+        url: this.resourceUrl + '/' + searchQuery,
         type: 'get',
         success: function(response) {
           App.searchController.insertPostsIntoMediaList(response.posts);
@@ -1029,6 +1074,64 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Sea
   }
 })
 App.searchController = App.SearchController.create()
+
+App.SubscriptionsController = Ember.ArrayController.extend({
+  resourceUrl: '/v1/users',
+  verb: 'subscriptions',
+
+  findAll: function(username) {
+    this.set('isLoaded', false)
+
+    $.ajax({
+      url: this.resourceUrl + '/' + username + '/' + this.verb,
+      dataType: 'jsonp',
+      context: this,
+      success: function(response) {
+        App.ApplicationController.subscription.unsubscribe()
+
+        this.set('content', response)
+        this.set('username', username)
+
+        this.set('isLoaded', true)
+      }
+    })
+    return this
+  }
+})
+App.subscriptionsController = App.SubscriptionsController.create()
+
+App.SubscriptionsView = Ember.View.extend({
+  templateName: 'subscriptions'
+});
+
+App.SubscribersController = Ember.ArrayController.extend({
+  resourceUrl: '/v1/users',
+  verb: 'subscribers',
+
+  findAll: function(username) {
+    this.set('isLoaded', false)
+
+    $.ajax({
+      url: this.resourceUrl + '/' + username + '/' + this.verb,
+      dataType: 'jsonp',
+      context: this,
+      success: function(response) {
+        App.ApplicationController.subscription.unsubscribe()
+
+        this.set('content', response)
+        this.set('username', username)
+
+        this.set('isLoaded', true)
+      }
+    })
+    return this
+  }
+})
+App.subscribersController = App.SubscribersController.create()
+
+App.SubscribersView = Ember.View.extend({
+  templateName: 'subscribers'
+});
 
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.PaginationHelper, {
   resourceUrl: '/v1/posts',
@@ -1080,6 +1183,18 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       url: this.resourceUrl + '/' + postId,
       type: 'post',
       data: {'_method': 'delete'},
+      success: function(response) {
+        console.log(response)
+      }
+    })
+  },
+
+  updatePost: function(post, body) {
+    $.ajax({
+      url: this.resourceUrl + '/' + post.id,
+      type: 'post',
+      data: { body: body, '_method': 'patch' },
+      context: post,
       success: function(response) {
         console.log(response)
       }
@@ -1166,13 +1281,18 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
     this.resetPage()
   }.observes('timeline'),
 
-  findAll: function(pageStart) {
+  findAll: function(pageStart, suffix) {
     this.set('isLoaded', false)
 
     var timeline = this.get('timeline') || ""
 
+    if (suffix)
+      suffix = '/' + suffix
+    else
+      suffix = ''
+
     $.ajax({
-      url: '/v1/timeline/' + timeline,
+      url: '/v1/timeline/' + timeline + suffix,
       data: { start: pageStart },
       dataType: 'jsonp',
       context: this,
@@ -1227,6 +1347,7 @@ App.postsController = App.PostsController.create()
 
 App.Router = Ember.Router.extend({
   // enableLogging: true,
+  location: 'history',
 
   root: Ember.Route.extend({
     searchPhrase: Ember.Route.extend({
@@ -1235,6 +1356,8 @@ App.Router = Ember.Router.extend({
       showPost: Ember.Route.transitionTo('aPost'),
       showAllPosts: Ember.Route.transitionTo('posts'),
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
+      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
 
       connectOutlets: function(router, searchQuery) {
@@ -1242,9 +1365,17 @@ App.Router = Ember.Router.extend({
       },
 
       serialize: function(router, searchQuery) {
+        query = searchQuery
+
+        if (/%23/g.test(searchQuery))
+          searchQuery = searchQuery.replace(/%23/g, '#')
+
+        searchQuery = decodeURIComponent(searchQuery)
+
         App.searchController.set('body', searchQuery)
         App.searchController.set('query', searchQuery)
-        return {searchQuery: searchQuery}
+
+        return {searchQuery: query}
       },
 
       deserialize: function(router, urlParams) {
@@ -1258,6 +1389,8 @@ App.Router = Ember.Router.extend({
       showPost: Ember.Route.transitionTo('aPost'),
       showAllPosts: Ember.Route.transitionTo('posts'),
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
+      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
       
       connectOutlets: function(router) {
@@ -1266,12 +1399,38 @@ App.Router = Ember.Router.extend({
       }
     }),
 
+    aPost: Ember.Route.extend({
+      route: '/posts/:postId',
+
+      showAllPosts: Ember.Route.transitionTo('posts'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+
+      connectOutlets: function(router, context) {
+        // FIXME: obviouly a defect. content should be set automagically
+        App.onePostController.set('content', context)
+        router.get('applicationController').connectOutlet('onePost', context);
+      },
+
+      serialize: function(router, context) {
+        return { postId: context.get('id') }
+      },
+
+      deserialize: function(router, urlParams) {
+        return App.postsController.findOne(urlParams.postId);
+      }
+    }),
+
     userTimeline: Ember.Route.extend({
       route: '/users/:username',
 
       showPost: Ember.Route.transitionTo('aPost'),
       showAllPosts: Ember.Route.transitionTo('posts'),
+      showSubscribers: Ember.Route.transitionTo('subscribers'),
+      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
+      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
 
       connectOutlets: function(router, username) {
@@ -1288,27 +1447,109 @@ App.Router = Ember.Router.extend({
       }
     }),
 
-    aPost: Ember.Route.extend({
-      route: '/posts/:postId',
+    subscribers: Ember.Route.extend({
+      route: '/users/:username/subscribers',
 
+      showPost: Ember.Route.transitionTo('aPost'),
       showAllPosts: Ember.Route.transitionTo('posts'),
+      showSubscribers: Ember.Route.transitionTo('subscribers'),
+      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
+      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      
-      connectOutlets: function(router, context) {
-        // FIXME: obviouly a defect. content should be set automagically
-        App.onePostController.set('content', context)
-        router.get('applicationController').connectOutlet('onePost', context);
+
+      connectOutlets: function(routes, context) {
+        App.router.get('applicationController').connectOutlet('subscribers', App.subscribersController.findAll(context));
       },
 
-      serialize: function(router, context) {
-        return { postId: context.get('id') }
+      serialize: function(router, username) {
+        return {username: username}
       },
 
       deserialize: function(router, urlParams) {
-        return App.postsController.findOne(urlParams.postId);
+        return urlParams.username
+      }
+    }),
+
+    subscriptions: Ember.Route.extend({
+      route: '/users/:username/subscriptions',
+
+      showPost: Ember.Route.transitionTo('aPost'),
+      showAllPosts: Ember.Route.transitionTo('posts'),
+      showSubscribers: Ember.Route.transitionTo('subscribers'),
+      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
+      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+
+      connectOutlets: function(routes, context) {
+        App.router.get('applicationController').connectOutlet('subscriptions', App.subscriptionsController.findAll(context));
+     },
+
+      serialize: function(router, username) {
+        return {username: username}
+      },
+
+      deserialize: function(router, urlParams) {
+        return urlParams.username
+      }
+    }),
+
+    userLikesTimeline: Ember.Route.extend({
+      route: '/users/:username/likes',
+
+      showPost: Ember.Route.transitionTo('aPost'),
+      showAllPosts: Ember.Route.transitionTo('posts'),
+      showSubscribers: Ember.Route.transitionTo('subscribers'),
+      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
+      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+
+      connectOutlets: function(router, username) {
+        App.postsController.set('timeline', username)
+        router.get('applicationController').connectOutlet('posts', App.postsController.findAll(0, 'likes'));
+      },
+
+      serialize: function(router, username) {
+        return {username: username}
+      },
+
+      deserialize: function(router, urlParams) {
+        return urlParams.username
+      }
+    }),
+
+    userCommentsTimeline: Ember.Route.extend({
+      route: '/users/:username/comments',
+
+      showPost: Ember.Route.transitionTo('aPost'),
+      showAllPosts: Ember.Route.transitionTo('posts'),
+      showSubscribers: Ember.Route.transitionTo('subscribers'),
+      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
+      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+
+      connectOutlets: function(router, username) {
+        App.postsController.set('timeline', username)
+        router.get('applicationController').connectOutlet('posts', App.postsController.findAll(0, 'comments'));
+      },
+
+      serialize: function(router, username) {
+        return {username: username}
+      },
+
+      deserialize: function(router, urlParams) {
+        return urlParams.username
       }
     })
+
+
   })
 });
 

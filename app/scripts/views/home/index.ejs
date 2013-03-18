@@ -79,13 +79,11 @@
     {{#if prevPageVisible}}
       <li {{bindAttr class="prevPageDisabled"}}><a {{action prevPage href="true" target="App.postsController"}}>{{t button.previous}}</a></li>
     {{else}}
-      <li {{bindAttr class="prevPageDisabled"}}><a>{{t button.previous}}</a></li>
     {{/if}}
 
     {{#if nextPageVisible}}
       <li {{bindAttr class="nextPageDisabled"}}><a {{action nextPage href="true" target="App.postsController"}}>{{t button.next}}</a></li>
     {{else}}
-      <li {{bindAttr class="nextPageDisabled"}}><a>{{t button.next}}</a></li>
     {{/if}}
   </ul>
 </script>
@@ -95,13 +93,11 @@
     {{#if prevPageVisible}}
       <li {{bindAttr class="prevPageDisabled"}}><a {{action prevPage href="true" target="App.searchController"}}>{{t button.previous}}</a></li>
     {{else}}
-      <li {{bindAttr class="prevPageDisabled"}}><a>{{t button.previous}}</a></li>
     {{/if}}
 
     {{#if nextPageVisible}}
       <li {{bindAttr class="nextPageDisabled"}}><a {{action nextPage href="true" target="App.searchController"}}>{{t button.next}}</a></li>
     {{else}}
-      <li {{bindAttr class="nextPageDisabled"}}><a>{{t button.next}}</a></li>
     {{/if}}
   </ul>
 </script>
@@ -109,7 +105,7 @@
 <script type="text/x-handlebars" data-template-name="just-started">
   {{#if view.justStarted}}
     <div class="alert alert-info">
-      {{t message.welcome}}{{#if view.isAnonymousPermitted}} Check out <a href="/#/users/anonymous">anonymous posts</a>.{{/if}}<button class="close" data-dismiss="alert">&times;</button>
+      {{t message.welcome}}{{#if view.isAnonymousPermitted}} Check out <a href="/users/anonymous">anonymous posts</a>.{{/if}}<button class="close" data-dismiss="alert">&times;</button>
     </div>
   {{/if}}
 </script>
@@ -172,6 +168,7 @@
       <div class="pull-left">
         <i class="icon-comment-alt media-object"></i>
       </div>
+
       {{#unless view.isEditFormVisible}}
         <div class="media-body">
           <span class="body">
@@ -188,11 +185,9 @@
 
           {{#if view.commentOwner}}
             <span class="links">
-              (
-              <a {{action editFormVisibility target="parentView"}}>{{t label.edit}}</a>
+              (<a {{action editFormVisibility target="parentView"}}>{{t label.edit}}</a>
               |
-              <a {{action destroyComment target="view"}}>{{t label.delete}}</a>
-              )
+              <a {{action destroyComment target="view"}}>{{t label.delete}}</a>)
             </span>
           {{/if}}
         </div>
@@ -235,7 +230,23 @@
       <div class="media-body post">
         <h5 class="media-heading author"><a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a></h5>
 
-        {{#unless isEditFormVisible}}
+        {{#if view.isEditFormVisible}}
+          {{#view App.EditPostForm}}
+            <div class="edit-post-form media">
+              <div class="media-body">
+                <div>
+                  {{view App.CreatePostView target="parentView"
+                        action="updatePost" valueBinding="view.body"
+                        class="span8 input-tiny comment-area"}}
+                </div>
+                <div>
+                  <button {{action updatePost target="view"}} class="btn btn-small">{{t button.post}}</button>
+                  <a {{action toggleVisibility target="parentView"}}>{{t label.cancel}}</a>
+                </div>
+              </div>
+            </div>
+          {{/view}}
+        {{else}}
           <div class="body">
             <div class="text">{{body}}</div>
 
@@ -243,23 +254,7 @@
               <div class="image"><a {{bindAttr href="firstImageSrc"}}><img {{bindAttr src="firstThumbnailSrc"}} class="img-polaroid" /></a></div>
             {{/if}}
           </div>
-        {{else}}
-          {{#view App.EditPostForm}}
-            <div class="edit-post-form media">
-              <div class="media-body">
-                <div>
-                  {{view App.CreateCommentView target="parentView"
-                        action="submitComment" valueBinding="view.body"
-                        class="span8 input-tiny comment-area"}}
-                </div>
-                <div>
-                  <button {{action submitComment target="view"}} class="btn btn-small">{{t button.post}}</button>
-                  <a {{action toggleVisibility target="parentView"}}>{{t label.cancel}}</a>
-                </div>
-              </div>
-            </div>
-          {{/view}}
-        {{/unless}}
+        {{/if}}
 
         <div class="tagline">
           <a {{action showPost this href="true"}} class="datetime">
@@ -280,11 +275,9 @@
             {{/unless}}
 
             {{#if postOwner}}
-              (
-              <a {{action editFormVisibility target="parentView"}}>{{t label.edit}}</a>
+              (<a {{action editFormVisibility target="parentView"}}>{{t label.edit}}</a>
               |
-              <a {{action destroyPost target="view"}}>{{t label.delete}}</a>
-              )
+              <a {{action destroyPost target="view"}}>{{t label.delete}}</a>)
             {{/if}}
           {{/if}}
         </div>
@@ -357,7 +350,23 @@
       <hr/>
 
       <div class="media-body post">
-        {{#unless isEditFormVisible}}
+        {{#if view.isEditFormVisible}}
+          {{#view App.EditPostForm}}
+            <div class="edit-post-form media">
+              <div class="media-body">
+                <div>
+                  {{view App.CreatePostView target="parentView"
+                        action="updatePost" valueBinding="view.body"
+                        class="span8 input-tiny comment-area"}}
+                </div>
+                <div>
+                  <button {{action updatePost target="view"}} class="btn btn-small">{{t button.post}}</button>
+                  <a {{action toggleVisibility target="parentView"}}>{{t label.cancel}}</a>
+                </div>
+              </div>
+            </div>
+          {{/view}}
+        {{else}}
           <div class="body">
             <div class="text">{{body}}</div>
 
@@ -365,23 +374,7 @@
               <div class="image"><a {{bindAttr href="firstImageSrc"}}><img {{bindAttr src="firstThumbnailSrc"}} class="img-polaroid" /></a></div>
             {{/if}}
           </div>
-        {{else}}
-          {{#view App.EditPostForm}}
-            <div class="edit-post-form media">
-              <div class="media-body">
-                <div>
-                  {{view App.CreateCommentView target="parentView"
-                        action="submitComment" valueBinding="view.body"
-                        class="span8 input-tiny comment-area"}}
-                </div>
-                <div>
-                  <button {{action submitComment target="view"}} class="btn btn-small">{{t button.post}}</button>
-                  <a {{action toggleVisibility target="parentView"}}>{{t label.cancel}}</a>
-                </div>
-              </div>
-            </div>
-          {{/view}}
-        {{/unless}}
+        {{/if}}
 
         <div class="tagline">
           <a {{action showPost this href="true"}} class="datetime">
@@ -402,11 +395,9 @@
             {{/unless}}
 
             {{#if postOwner}}
-              (
-              <a {{action editPost target="view"}}>{{t label.edit}}</a>
+              (<a {{action editFormVisibility target="view"}}>{{t label.edit}}</a>
               |
-              <a {{action destroyPost target="view"}}>{{t label.delete}}</a>
-              )
+              <a {{action destroyPost target="view"}}>{{t label.delete}}</a>)
             {{/if}}
           {{/if}}
         </div>
@@ -484,11 +475,11 @@
         <h3 class="pull-left">{{content.user.username}}</h3>
 
         <div class="pull-right profile-extra-info">
-          <div>{{content.user.subscriptionsLength}} {{t label.subscriptions}}</div>
-          <div>{{content.user.subscribersLength}} {{t label.subscribers}}</div>
-          <div><a {{action showUserTimeline content.user.username}}>{{content.user.postsLength}} {{t label.posts}}</a></div>
-          <div>{{content.user.likesLength}} {{t label.likes}}</div>
-          <div>{{content.user.commentsLength}} {{t label.comments}}</div>
+          <div><a {{action showSubscriptions App.postsController.timeline href="true"}}>{{content.user.subscriptionsLength}} {{t label.subscriptions}}</a></div>
+          <div><a {{action showSubscribers App.postsController.timeline href="true"}}>{{content.user.subscribersLength}} {{t label.subscribers}}</a></div>
+          <div><a {{action showUserTimeline App.postsController.timeline href="true"}}>{{content.user.postsLength}} {{t label.posts}}</a></div>
+          <div><a {{action showLikesTimeline App.postsController.timeline href="true"}}>{{content.user.likesLength}} {{t label.likes}}</a></div>
+          <div><a {{action showCommentsTimeline App.postsController.timeline href="true"}}>{{content.user.commentsLength}} {{t label.comments}}</a></div>
         </div>
       </div>
     </div>
@@ -528,7 +519,23 @@
       <!-- FIXME: showUserTimeline createdBy.username is undefined on a deserialized view -->
       <h5 class="media-heading author"><a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a></h5>
     
-      {{#unless isEditFormVisible}}
+      {{#if view.isEditFormVisible}}
+        {{#view App.EditPostForm}}
+          <div class="edit-post-form media">
+            <div class="media-body">
+              <div>
+                {{view App.CreatePostView target="parentView"
+                      action="updatePost" valueBinding="view.body"
+                      class="span8 input-tiny comment-area"}}
+              </div>
+              <div>
+                <button {{action updatePost target="view"}} class="btn btn-small">{{t button.post}}</button>
+                <a {{action toggleVisibility target="parentView"}}>{{t label.cancel}}</a>
+              </div>
+            </div>
+          </div>
+        {{/view}}
+      {{else}}
         <div class="body">
           <div class="text">{{body}}</div>
 
@@ -536,23 +543,7 @@
             <div class="image"><a {{bindAttr href="firstImageSrc"}}><img {{bindAttr src="firstThumbnailSrc"}} class="img-polaroid" /></a></div>
           {{/if}}
         </div>
-      {{else}}
-        {{#view App.EditPostForm}}
-          <div class="edit-post-form media">
-            <div class="media-body">
-              <div>
-                {{view App.CreateCommentView target="parentView"
-                      action="submitComment" valueBinding="view.body"
-                      class="span8 input-tiny comment-area"}}
-              </div>
-              <div>
-                <button {{action submitComment target="view"}} class="btn btn-small">{{t button.post}}</button>
-                <a {{action toggleVisibility target="parentView"}}>{{t label.cancel}}</a>
-              </div>
-            </div>
-          </div>
-        {{/view}}
-      {{/unless}}
+      {{/if}}
     
       <div class="tagline">
         <a {{action showPost this}} class="datetime">
@@ -617,20 +608,37 @@
   </div>
 </script>
 
-<script>
+<script type="text/x-handlebars" data-template-name="subscriptions">
+  <h3>Subscriptions {{App.subscriptionsController.username}}</h3>
+
+  <ul>
+    {{#each content}}
+      <li>{{user.username}} - {{name}}</li>
+    {{/each}}
+  </ul>
+</script>
+
+<script type="text/x-handlebars" data-template-name="subscribers">
+  <h3>Subscribers {{App.subscribersController.username}}</h3>
+
+  <ul>
+    {{#each content}}
+      <li>{{username}}</li>
+    {{/each}}
+  </ul>
+</script>
+
+<script type="text/javascript">
   var currentUser
   var isAnonymousPermitted
   <% if (req.user) { %>
     currentUser = '<%= req.user.id %>'
     isAnonymousPermitted = '<%= req.isAnonymousPermitted %>'
   <% } %>
-</script>
 
-<script type="text/javascript">
-    function preloadFunc()
-    {
-        Config.loadScripts()
-    }
-    window.onpaint = preloadFunc();
+  function preloadFunc() {
+    Config.loadScripts()
+  }
+  window.onpaint = preloadFunc();
 </script>
 

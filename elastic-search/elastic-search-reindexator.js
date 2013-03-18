@@ -42,6 +42,12 @@ var startCheckingPosts = function() {
     });
   }
 
+  // NOTE: THIS IS A WORKAROUND TILL WE PLUGIN A BETTER SOLUTION.
+  // This method goes through all indexed posts and checks if it's
+  // deleted or not. If it's it removes it from the index. Better
+  // solution'd be to have a key in redis like posts:deleted with all
+  // deleted posts. In this case owner might restore a post if he
+  // wants (like FrF Undo).
   var startChekingDeletedPosts = function(callback) {
     var checkDeletedPosts = function(fromNumber) {
       var size = 25

@@ -12,18 +12,18 @@ Em.I18n.translations = {
   'label.cancel': 'Cancel',
   'label.comment': 'Comment',
   'label.like': 'Like',
-  'label.delete': 'Delete',
-  'label.edit': 'Edit',
+  'label.delete': 'delete',
+  'label.edit': 'edit',
   'label.unlike': 'Un-like',
   'label.liked': 'liked this',
   'label.subscriptions': 'subscriptions',
   'label.subscribers': 'subscribers',
   'label.likes': 'likes',
   'label.posts': 'posts',
-  'label.comments': 'posts commented',
+  'label.comments': 'discussions',
 
   'button.search': 'Search',
   'button.post': 'Post',
-  'button.next': 'Next &rarr;',
-  'button.previous': '&larr; Previous'
+  'button.next': 'Older items &rarr;',
+  'button.previous': '&larr; Newer items'
 };
