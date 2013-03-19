@@ -341,6 +341,13 @@ exports.addModel = function(db) {
       }
     },
 
+    getSubscriptionsCount: function(callback) {
+      var that = this
+      db.zcount('user:' + this.id + ':subscriptions', '-inf', '+inf', function(err, res){
+        callback(err, res)
+      })
+    },
+
     newPost: function(attrs, callback) {
       attrs.userId = this.id
 
