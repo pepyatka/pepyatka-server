@@ -4,6 +4,10 @@ var uuid = require('node-uuid')
   , crypto = require('crypto')
 
 exports.addModel = function(db) {
+  var statisticsSerializer = {
+    select: ['userId', 'posts', 'likes', 'discussions', 'subscribers', 'subscriptions']
+  }
+
   function User(params) {
     this.id = params.id
     this.username = params.username || ""
@@ -622,25 +626,15 @@ exports.addModel = function(db) {
 
       if (select.indexOf('statistics') != -1) {
         var statistics = {}
-        that.getPostsTimeline({}, function(err, timeline) {
-          timeline.getPostsCount(function(err, postsCount) {
-            statistics.postsCount = postsCount
-
-            that.getLikesTimeline({}, function(err, timeline) {
-              timeline.getPostsCount(function(err, likesCount) {
-                statistics.likesCount = likesCount
-
-                that.getCommentsTimeline({}, function(err, timeline) {
-                  timeline.getPostsCount(function(err, commentsCount) {
-                    statistics.commentsCount = commentsCount
-
-                    json.statistics = statistics
-                    returnJSON(err)
-                  })
-                })
-              })
+        models.Stats.findByUserId(that.id, function(err, stats) {
+          if (stats) {
+            stats.toJSON(statisticsSerializer, function(err, statistics) {
+              json.statistics = statistics
+              returnJSON(err)
             })
-          })
+          } else {
+            callback(null)
+          }
         })
       }
     }

@@ -12,7 +12,6 @@ exports.addModel = function(db) {
   function Stats(params) {
     this.userId = params.userId
     this.posts = params.posts || 0
-    this.comments = params.comments || 0
     this.likes = params.likes || 0
     this.discussions = params.discussions || 0
     this.subscribers = params.subscribers || 0
@@ -20,7 +19,7 @@ exports.addModel = function(db) {
   }
 
   Stats.getAttributes = function() {
-    return ['userId', 'posts', 'comments', 'likes', 'discussions', 'subscribers', 'subscriptions']
+    return ['userId', 'posts', 'likes', 'discussions', 'subscribers', 'subscriptions']
   },
 
   Stats.findByUserId = function(userId, callback) {
@@ -55,7 +54,6 @@ exports.addModel = function(db) {
                   db.hmset('stats:' + that.userId,
                     {
                       'posts' : that.posts.toString(),
-                      'comments' : that.comments.toString(),
                       'likes' : that.likes.toString(),
                       'discussions' : that.discussions.toString(),
                       'subscribers' : that.subscribers.toString(),
@@ -75,11 +73,6 @@ exports.addModel = function(db) {
             },
             function(done){
               db.zadd('stats:posts', that.posts, that.userId, function(err, res) {
-                done(err, res)
-              })
-            },
-            function(done){
-              db.zadd('stats:comments', that.comments, that.userId, function(err, res) {
                 done(err, res)
               })
             },
@@ -120,24 +113,6 @@ exports.addModel = function(db) {
       var that = this
       db.hincrby('stats:' + that.userId, 'posts', '-1', function(err, stats) {
         db.zincrby('stats:posts', -1, that.userId, function(err, stats) {
-          callback(err, stats)
-        })
-      })
-    },
-
-    addComment: function(callback) {
-      var that = this
-      db.hincrby('stats:' + that.userId, 'comments', '1', function(err, stats) {
-        db.zincrby('stats:comments', 1, that.userId, function(err, stats) {
-          callback(err, stats)
-        })
-      })
-    },
-
-    removeComment: function(callback) {
-      var that = this
-      db.hincrby('stats:' + that.userId, 'comments', '-1', function(err, stats) {
-        db.zincrby('stats:comments', -1, that.userId, function(err, stats) {
           callback(err, stats)
         })
       })
@@ -215,12 +190,39 @@ exports.addModel = function(db) {
       })
     },
 
-    //category is 'likes', 'posts', 'comments' etc
+    //category is 'likes', 'posts', etc
     getTopUserIds: function(category, callback) {
       var that = this
       db.zrevrange('stats:' + category, 0, configLocal.getStatisticsTopCount(), function(err, userIds) {
         callback(err, userIds)
       })
+    },
+
+    toJSON: function(params, callback) {
+      var that = this
+        , json = {}
+        , select = params.select ||
+          models.Stats.getAttributes()
+
+      if (select.indexOf('userId') != -1)
+        json.userId = that.userId
+
+      if (select.indexOf('posts') != -1)
+        json.posts = that.posts
+
+      if (select.indexOf('likes') != -1)
+        json.likes = that.likes
+
+      if (select.indexOf('discussions') != -1)
+        json.discussions = that.discussions
+
+      if (select.indexOf('subscribers') != -1)
+        json.subscribers = that.subscribers
+
+      if (select.indexOf('subscriptions') != -1)
+        json.subscriptions = that.subscriptions
+
+      callback(null, json)
     }
   }
 

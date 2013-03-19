@@ -827,16 +827,26 @@ App.User = Ember.Object.extend({
   statistics: {},
 
   subscriptionsLength: function() {
-    return this.subscriptions.filter(function(s) { return s.name == 'Posts'}).length
+//    return this.subscriptions.filter(function(s) { return s.name == 'Posts'}).length
+    if(this.statistics.subscriptions) {
+      return this.statistics.subscriptions
+    } else {
+      return 0
+    }
   }.property(),
 
   subscribersLength: function() {
-    return App.postsController.subscribers.length
+//    return App.postsController.subscribers.length
+    if(this.statistics.subscribers) {
+      return this.statistics.subscribers
+    } else {
+      return 0
+    }
   }.property(),
 
   postsLength: function() {
-    if(this.statistics.postsCount) {
-      return this.statistics.postsCount
+    if(this.statistics.posts) {
+      return this.statistics.posts
     } else {
       return 0
     }
@@ -844,16 +854,16 @@ App.User = Ember.Object.extend({
   }.property(),
 
   commentsLength: function() {
-    if(this.statistics.commentsCount) {
-      return this.statistics.commentsCount
+    if(this.statistics.discussions) {
+      return this.statistics.discussions
     } else {
       return 0
     }
   }.property(),
 
   likesLength: function() {
-    if(this.statistics.likesCount) {
-      return this.statistics.likesCount
+    if(this.statistics.likes) {
+      return this.statistics.likes
     } else {
       return 0
     }

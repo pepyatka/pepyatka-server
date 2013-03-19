@@ -166,18 +166,6 @@ exports.addModel = function(db) {
       })
     },
 
-//    getCommentsCount: function(callback) {
-//      db.zcount('timeline:' + this.id + ':comments', '-inf', '+inf', function(err, res){
-//        callback(err, res)
-//      })
-//    },
-//
-//    getLikesCount: function(callback) {
-//      db.zcount('timeline:' + this.id + ':likes', '-inf', '+inf', function(err, res){
-//        callback(err, res)
-//      })
-//    },
-
     toJSON: function(params, callback) {
       var that = this
         , json = {}

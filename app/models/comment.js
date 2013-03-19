@@ -2,6 +2,7 @@ var uuid = require('node-uuid')
   , redis = require('redis')
   , models = require('../models')
   , async = require('async')
+  , _ = require('underscore')
 
 exports.addModel = function(db) {
   function Comment(params) {
@@ -48,21 +49,27 @@ exports.addModel = function(db) {
                                                          commentId: commentId }))
 
 
-          //remove comment from statistics
-          models.Stats.findByUserId(comment.userId, function(err, stats) {
-            if (!stats) {
-              stats = new models.Stats({
-                userId: comment.userId
-              })
-              stats.create(function(err, stats) {
-                stats.removeComment(function(err, stats) {
+          models.Post.findById(comment.postId, function(err, post) {
+            if (post) {
+              post.getComments(function(err, comments) {
+                if (comments) {
+                  if (_.where(comments, { userId: comment.userId }).length == 0) {
+                    models.Stats.findByUserId(comment.userId, function(err, stats) {
+                      if (stats) {
+                        stats.removeDiscussion(function(err, stats) {
+                          callback(err, res)
+                        })
+                      } else {
+                        callback(err, res)
+                      }
+                    })
+                  }
+                } else {
                   callback(err, res)
-                })
+                }
               })
             } else {
-              stats.removeComment(function(err, stats) {
-                callback(err, res)
-              })
+              callback(err, res)
             }
           })
         })
@@ -150,21 +157,27 @@ exports.addModel = function(db) {
                          'postId': that.postId.toString()
                        }, function(err, res) {
                          models.Post.addComment(that.postId, that.id, function() {
-                           //remove comment into statistics
-                           models.Stats.findByUserId(that.userId, function(err, stats) {
-                             if (!stats) {
-                               stats = new models.Stats({
-                                 userId: that.userId
-                               })
-                               stats.create(function(err, stats) {
-                                 stats.addComment(function(err, stats) {
+                           models.Post.findById(that.postId, function(err, post) {
+                             if (post) {
+                               post.getComments(function(err, comments) {
+                                 if (comments) {
+                                   if (_.where(comments, { userId: that.userId }).length == 1) {
+                                     models.Stats.findByUserId(that.userId, function(err, stats) {
+                                       if (stats) {
+                                         stats.addDiscussion(function(err, stats) {
+                                           callback(err, that)
+                                         })
+                                       } else {
+                                         callback(err, that)
+                                       }
+                                     })
+                                   }
+                                 } else {
                                    callback(err, that)
-                                 })
+                                 }
                                })
                              } else {
-                               stats.addComment(function(err, stats) {
-                                 callback(err, that)
-                               })
+                               callback(err, that)
                              }
                            })
                          })

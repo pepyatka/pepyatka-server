@@ -22,9 +22,6 @@ var startCheckingUsers = function() {
                       updatePosts(user, done)
                     },
                     function(done) {
-                      updateComments(user, done)
-                    },
-                    function(done) {
                       updateLikes(user, done)
                     },
                     function(done) {
@@ -73,69 +70,48 @@ var updatePosts = function(user, callback) {
   })
 }
 
-var updateComments = function(user, callback) {
-//  user.getCommentsTimeline(function(err, timeline) {
-//    if (timeline) {
-//      timeline.getCommentsCount(function(err, count) {
-//        if (count) {
-//          db.hset('stats:' + user.id, 'comments', count, function(err, stats) {
-//            db.zadd('stats:comments', count, user.id, function(err, res) {
-//              callback(err)
-//            })
-//          })
-//        } else {
-//          callback(null)
-//        }
-//      })
-//    } else {
-//      callback(null)
-//    }
-//  })
-  callback(null)
-}
-
 var updateLikes = function(user, callback) {
-//  user.getLikesTimeline(function(err, timeline) {
-//    if (timeline) {
-//      timeline.getLikesCount(function(err, count) {
-//        if (count) {
-//          db.hset('stats:' + user.id, 'likes', count, function(err, stats) {
-//            db.zadd('stats:likes', count, user.id, function(err, res) {
-//              callback(err)
-//            })
-//          })
-//        } else {
-//          callback(null)
-//        }
-//      })
-//    } else {
-//      callback(null)
-//    }
-//  })
-  callback(null)
+  user.getLikesTimeline(function(err, timeline) {
+    if (timeline) {
+      timeline.getPostsCount(function(err, count) {
+        if (count) {
+          db.hset('stats:' + user.id, 'likes', count, function(err, stats) {
+            db.zadd('stats:likes', count, user.id, function(err, res) {
+              callback(err)
+            })
+          })
+        } else {
+          callback(null)
+        }
+      })
+    } else {
+      callback(null)
+    }
+  })
 }
 
 var updateDiscussions = function(user, callback) {
-//  user.getLikesTimeline(function(err, timeline) {
-//    if (timeline) {
-//      timeline.getLikesCount(function(err, count) {
-//        if (count) {
-//          db.hset('stats:' + user.id, 'likes', count, function(err, stats) {
-//            db.zadd('stats:likes', count, user.id, function(err, res) {
-//              callback(err)
-//            })
-//          })
-//        } else {
-//          callback(null)
-//        }
-//      })
-//    } else {
-//      callback(null)
-//    }
-//  })
+  user.getCommentsTimeline(function(err, timeline) {
+    if (timeline) {
+      timeline.getPostsCount(function(err, count) {
+        if (count) {
+          db.hset('stats:' + user.id, 'discussions', count, function(err, stats) {
+            db.zadd('stats:discussions', count, user.id, function(err, res) {
+              callback(err)
+            })
+          })
+        } else {
+          callback(null)
+        }
+      })
+    } else {
+      callback(null)
+    }
+  })
   callback(null)
 }
 
+//FIXME
 var updateSubscribers = function(user, callback) {
   user.getPostsTimeline(function(err, timeline) {
     if (timeline) {
