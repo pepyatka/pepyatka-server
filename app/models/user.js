@@ -200,7 +200,16 @@ exports.addModel = function(db) {
               })
             })
           }, function(err) {
-            callback(err, that)
+            //add subscriber and subscription into statistics
+            models.Stats.findByUserId(that.id, function(err, stats) {
+              stats.addSubscription(function(err, stats) {
+                models.Stats.findByUserId(timeline.userId, function(err, stats) {
+                  stats.addSubscriber(function(err, stats) {
+                    callback(err, that)
+                  })
+                })
+              })
+            })
           })
         }
 
@@ -271,7 +280,16 @@ exports.addModel = function(db) {
               })
             })
           }, function(err) {
-            callback(err)
+            //remove subscriber and subscription from statistics
+            models.Stats.findByUserId(that.id, function(err, stats) {
+              stats.removeSubscription(function(err, stats) {
+                models.Stats.findByUserId(timeline.userId, function(err, stats) {
+                  stats.removeSubscriber(function(err, stats) {
+                    callback(err)
+                  })
+                })
+              })
+            })
           })
         }
 

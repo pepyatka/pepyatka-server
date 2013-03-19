@@ -42,25 +42,7 @@ exports.addRoutes = function(app) {
     req.user.subscribeTo(req.params.timelineId, function(err, r) {
       if (err) return res.jsonp({}, 422)
 
-      models.Stats.findByUserId(req.user.id, function(err, stats) {
-        models.User.findById(req.user.id, function(err, user) {
-          user.getSubscriptionsIds(function(err, ids) {
-            stats.subscriptions = ids.length
-            stats.update(function(err, stats) {
-              models.Timeline.findById(req.params.timelineId, { 'start':0 }, function(err, timeline) {
-                timeline.getSubscribersIds(function(err, ids) {
-                  models.Stats.findByUserId(timeline.userId, function(err, stats) {
-                    stats.subscribers = ids.length
-                    stats.update(function(err, stats) {
-                      res.jsonp({})
-                    })
-                  })
-                })
-              })
-            })
-          })
-        })
-      })
+      res.jsonp({})
     })
   })
 
@@ -68,25 +50,7 @@ exports.addRoutes = function(app) {
     req.user.unsubscribeTo(req.params.timelineId, function(err, r) {
       if (err) return res.jsonp({}, 422)
 
-      models.Stats.findByUserId(req.user.id, function(err, stats) {
-        models.User.findById(req.user.id, function(err, user) {
-          user.getSubscriptionsIds(function(err, ids) {
-            stats.subscriptions = ids.length
-            stats.update(function(err, stats) {
-              models.Timeline.findById(req.params.timelineId, { 'start':0 }, function(err, timeline) {
-                timeline.getSubscribersIds(function(err, ids) {
-                  models.Stats.findByUserId(timeline.userId, function(err, stats) {
-                    stats.subscribers = ids.length
-                    stats.update(function(err, stats) {
-                      res.jsonp({})
-                    })
-                  })
-                })
-              })
-            })
-          })
-        })
-      })
+      res.jsonp({})
     })
   })
 

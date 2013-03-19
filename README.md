@@ -55,14 +55,13 @@ comment:<commentId> { body, createdAt, updatedAt, createdBy, postId }
 
 attachment:<attachmentId> { mimeType, filename, extension, path, createdAt, updatedAt, postId, thumbnailId? }
 
-# not implemented yet
-stats:<userId> { comments, likes, discussions, subscribers, subscriptions }
+stats:<userId> { posts, comments, likes, discussions, subscribers, subscriptions }
+stats:posts { <userId>:<posts> }
 stats:comments { <userId>:<comments> }
 stats:likes { <userId>:<likes> }
 stats:discussions { <userId>:<discussions> }
 stats:subscribers { <userId>:<subscribers> }
 stats:subscripions { <userId>:<subscriptions> }
-```
 
 API
 ---

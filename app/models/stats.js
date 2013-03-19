@@ -44,56 +44,6 @@ exports.addModel = function(db) {
       })
     },
 
-    update: function(callback) {
-      var that = this
-      async.parallel([
-        function(done) {
-          db.hmset('stats:' + that.userId, {
-            'posts': that.posts.toString(),
-            'comments': that.comments.toString(),
-            'likes' : that.likes.toString(),
-            'discussions' : that.discussions.toString(),
-            'subscribers' : that.subscribers.toString(),
-            'subscriptions' : that.subscriptions.toString()
-          }, function(err, res) {
-            done(err, res)
-          })
-        },
-        function(done) {
-          db.zadd('stats:likes', that.likes, that.userId, function(err, res) {
-            done(err, res)
-          })
-        },
-        function(done){
-          db.zadd('stats:posts', that.posts, that.userId, function(err, res) {
-            done(err, res)
-          })
-        },
-        function(done){
-          db.zadd('stats:comments', that.comments, that.userId, function(err, res) {
-            done(err, res)
-          })
-        },
-        function(done){
-          db.zadd('stats:discussions', that.discussions, that.userId, function(err, res) {
-            done(err, res)
-          })
-        },
-        function(done){
-          db.zadd('stats:subscribers', that.subscribers, that.userId, function(err, res) {
-            done(err, res)
-          })
-        },
-        function(done){
-          db.zadd('stats:subscriptions', that.subscriptions, that.userId, function(err, res) {
-            done(err, res)
-          })
-        }
-      ], function(err, res) {
-        callback(err, that)
-      })
-    },
-
     create: function(callback) {
       var that = this
       this.validate(function(valid) {
@@ -159,65 +109,109 @@ exports.addModel = function(db) {
 
     addPost: function(callback) {
       var that = this
-      that.posts++
-      that.update(function(err, stats) {
-        callback(err, stats)
+      db.hincrby('stats:' + that.userId, 'posts', '1', function(err, stats) {
+        db.zincrby('stats:posts', 1, that.userId, function(err, stats) {
+          callback(err, stats)
+        })
       })
     },
 
     removePost: function(callback) {
       var that = this
-      that.posts--
-      that.update(function(err, stats) {
-        callback(err, stats)
+      db.hincrby('stats:' + that.userId, 'posts', '-1', function(err, stats) {
+        db.zincrby('stats:posts', -1, that.userId, function(err, stats) {
+          callback(err, stats)
+        })
       })
     },
 
     addComment: function(callback) {
       var that = this
-      that.comments++
-      that.update(function(err, stats) {
-        callback(err, stats)
+      db.hincrby('stats:' + that.userId, 'comments', '1', function(err, stats) {
+        db.zincrby('stats:comments', 1, that.userId, function(err, stats) {
+          callback(err, stats)
+        })
       })
     },
 
     removeComment: function(callback) {
       var that = this
-      that.comments--
-      that.update(function(err, stats) {
-        callback(err, stats)
+      db.hincrby('stats:' + that.userId, 'comments', '-1', function(err, stats) {
+        db.zincrby('stats:comments', -1, that.userId, function(err, stats) {
+          callback(err, stats)
+        })
       })
     },
 
     addLike: function(callback) {
       var that = this
-      that.likes++
-      that.update(function(err, stats) {
-        callback(err, stats)
+      db.hincrby('stats:' + that.userId, 'likes', '1', function(err, stats) {
+        db.zincrby('stats:likes', 1, that.userId, function(err, stats) {
+          callback(err, stats)
+        })
       })
     },
 
     removeLike: function(callback) {
       var that = this
-      that.likes--
-      that.update(function(err, stats) {
-        callback(err, stats)
+      db.hincrby('stats:' + that.userId, 'likes', '-1', function(err, stats) {
+        db.zincrby('stats:likes', -1, that.userId, function(err, stats) {
+          callback(err, stats)
+        })
       })
     },
 
     addDiscussion: function(callback) {
       var that = this
-      that.discussions++
-      that.update(function(err, stats) {
-        callback(err, stats)
+      db.hincrby('stats:' + that.userId, 'discussions', '1', function(err, stats) {
+        db.zincrby('stats:discussions', 1, that.userId, function(err, stats) {
+          callback(err, stats)
+        })
       })
     },
 
     removeDiscussion: function(callback) {
       var that = this
-      that.discussions--
-      that.update(function(err, stats) {
-        callback(err, stats)
+      db.hincrby('stats:' + that.userId, 'discussions', '-1', function(err, stats) {
+        db.zincrby('stats:discussions', -1, that.userId, function(err, stats) {
+          callback(err, stats)
+        })
+      })
+    },
+
+    addSubscriber: function(callback) {
+      var that = this
+      db.hincrby('stats:' + that.userId, 'subscribers', '1', function(err, stats) {
+        db.zincrby('stats:subscribers', 1, that.userId, function(err, stats) {
+          callback(err, stats)
+        })
+      })
+    },
+
+    removeSubscriber: function(callback) {
+      var that = this
+      db.hincrby('stats:' + that.userId, 'subscribers', '-1', function(err, stats) {
+        db.zincrby('stats:subscribers', -1, that.userId, function(err, stats) {
+          callback(err, stats)
+        })
+      })
+    },
+
+    addSubscription: function(callback) {
+      var that = this
+      db.hincrby('stats:' + that.userId, 'subscriptions', '1', function(err, stats) {
+        db.zincrby('stats:subscriptions', 1, that.userId, function(err, stats) {
+          callback(err, stats)
+        })
+      })
+    },
+
+    removeSubscription: function(callback) {
+      var that = this
+      db.hincrby('stats:' + that.userId, 'subscriptions', '-1', function(err, stats) {
+        db.zincrby('stats:subscriptions', -1, that.userId, function(err, stats) {
+          callback(err, stats)
+        })
       })
     },
 

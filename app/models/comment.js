@@ -47,7 +47,13 @@ exports.addModel = function(db) {
           pub.publish('destroyComment', JSON.stringify({ postId: comment.postId,
                                                          commentId: commentId }))
 
-          callback(err, res)
+
+          //remove comment from statistics
+          models.Stats.findByUserId(comment.userId, function(err, stats) {
+            stats.removeComment(function(err, stats) {
+              callback(err, res)
+            })
+          })
         })
       })
     })
@@ -133,7 +139,12 @@ exports.addModel = function(db) {
                          'postId': that.postId.toString()
                        }, function(err, res) {
                          models.Post.addComment(that.postId, that.id, function() {
-                           callback(err, that)
+                           //remove comment into statistics
+                           models.Stats.findByUserId(that.userId, function(err, stats) {
+                             stats.addComment(function(err, stats) {
+                               callback(err, that)
+                             })
+                           })
                          })
                        })
             } else {
