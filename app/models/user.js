@@ -202,13 +202,28 @@ exports.addModel = function(db) {
           }, function(err) {
             //add subscriber and subscription into statistics
             models.Stats.findByUserId(that.id, function(err, stats) {
-              stats.addSubscription(function(err, stats) {
-                models.Stats.findByUserId(timeline.userId, function(err, stats) {
-                  stats.addSubscriber(function(err, stats) {
-                    callback(err, that)
+              if (!stats) {
+                stats = new models.Stats({
+                  userId: that.id
+                })
+                stats.create(function(err, stats) {
+                  stats.addSubscription(function(err, stats) {
+                    models.Stats.findByUserId(timeline.userId, function(err, stats) {
+                      stats.addSubscriber(function(err, stats) {
+                        callback(err, that)
+                      })
+                    })
                   })
                 })
-              })
+              } else {
+                stats.addSubscription(function(err, stats) {
+                  models.Stats.findByUserId(timeline.userId, function(err, stats) {
+                    stats.addSubscriber(function(err, stats) {
+                      callback(err, that)
+                    })
+                  })
+                })
+              }
             })
           })
         }
@@ -282,13 +297,28 @@ exports.addModel = function(db) {
           }, function(err) {
             //remove subscriber and subscription from statistics
             models.Stats.findByUserId(that.id, function(err, stats) {
-              stats.removeSubscription(function(err, stats) {
-                models.Stats.findByUserId(timeline.userId, function(err, stats) {
-                  stats.removeSubscriber(function(err, stats) {
-                    callback(err)
+              if (!stats) {
+                stats = new models.Stats({
+                  userId: that.id
+                })
+                stats.create(function(err, stats) {
+                  stats.removeSubscription(function(err, stats) {
+                    models.Stats.findByUserId(timeline.userId, function(err, stats) {
+                      stats.removeSubscriber(function(err, stats) {
+                        callback(err)
+                      })
+                    })
                   })
                 })
-              })
+              } else {
+                stats.removeSubscription(function(err, stats) {
+                  models.Stats.findByUserId(timeline.userId, function(err, stats) {
+                    stats.removeSubscriber(function(err, stats) {
+                      callback(err)
+                    })
+                  })
+                })
+              }
             })
           })
         }

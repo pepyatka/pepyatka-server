@@ -50,9 +50,20 @@ exports.addModel = function(db) {
 
           //remove comment from statistics
           models.Stats.findByUserId(comment.userId, function(err, stats) {
-            stats.removeComment(function(err, stats) {
-              callback(err, res)
-            })
+            if (!stats) {
+              stats = new models.Stats({
+                userId: comment.userId
+              })
+              stats.create(function(err, stats) {
+                stats.removeComment(function(err, stats) {
+                  callback(err, res)
+                })
+              })
+            } else {
+              stats.removeComment(function(err, stats) {
+                callback(err, res)
+              })
+            }
           })
         })
       })
@@ -141,9 +152,20 @@ exports.addModel = function(db) {
                          models.Post.addComment(that.postId, that.id, function() {
                            //remove comment into statistics
                            models.Stats.findByUserId(that.userId, function(err, stats) {
-                             stats.addComment(function(err, stats) {
-                               callback(err, that)
-                             })
+                             if (!stats) {
+                               stats = new models.Stats({
+                                 userId: that.userId
+                               })
+                               stats.create(function(err, stats) {
+                                 stats.addComment(function(err, stats) {
+                                   callback(err, that)
+                                 })
+                               })
+                             } else {
+                               stats.addComment(function(err, stats) {
+                                 callback(err, that)
+                               })
+                             }
                            })
                          })
                        })

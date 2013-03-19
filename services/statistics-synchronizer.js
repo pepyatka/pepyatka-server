@@ -74,43 +74,45 @@ var updatePosts = function(user, callback) {
 }
 
 var updateComments = function(user, callback) {
-  user.getCommentsTimeline(function(err, timeline) {
-    if (timeline) {
-      timeline.getCommentsCount(function(err, count) {
-        if (count) {
-          db.hset('stats:' + user.id, 'comments', count, function(err, stats) {
-            db.zadd('stats:comments', count, user.id, function(err, res) {
-              callback(err)
-            })
-          })
-        } else {
-          callback(null)
-        }
-      })
-    } else {
-      callback(null)
-    }
-  })
+//  user.getCommentsTimeline(function(err, timeline) {
+//    if (timeline) {
+//      timeline.getCommentsCount(function(err, count) {
+//        if (count) {
+//          db.hset('stats:' + user.id, 'comments', count, function(err, stats) {
+//            db.zadd('stats:comments', count, user.id, function(err, res) {
+//              callback(err)
+//            })
+//          })
+//        } else {
+//          callback(null)
+//        }
+//      })
+//    } else {
+//      callback(null)
+//    }
+//  })
+  callback(null)
 }
 
 var updateLikes = function(user, callback) {
-  user.getLikesTimeline(function(err, timeline) {
-    if (timeline) {
-      timeline.getLikesCount(function(err, count) {
-        if (count) {
-          db.hset('stats:' + user.id, 'likes', count, function(err, stats) {
-            db.zadd('stats:likes', count, user.id, function(err, res) {
-              callback(err)
-            })
-          })
-        } else {
-          callback(null)
-        }
-      })
-    } else {
-      callback(null)
-    }
-  })
+//  user.getLikesTimeline(function(err, timeline) {
+//    if (timeline) {
+//      timeline.getLikesCount(function(err, count) {
+//        if (count) {
+//          db.hset('stats:' + user.id, 'likes', count, function(err, stats) {
+//            db.zadd('stats:likes', count, user.id, function(err, res) {
+//              callback(err)
+//            })
+//          })
+//        } else {
+//          callback(null)
+//        }
+//      })
+//    } else {
+//      callback(null)
+//    }
+//  })
+  callback(null)
 }
 
 var updateDiscussions = function(user, callback) {

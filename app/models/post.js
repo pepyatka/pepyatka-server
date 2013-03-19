@@ -161,9 +161,20 @@ exports.addModel = function(db) {
       ], function(err) {
         //remove post from statistics
         models.Stats.findByUserId(post.userId, function(err, stats) {
-          stats.removePost(function(err, stats) {
-            callback(err)
-          })
+          if (!stats) {
+              stats = new models.Stats({
+              userId: post.userId
+            })
+            stats.create(function(err, stats) {
+              stats.removePost(function(err, stats) {
+                callback(err)
+              })
+            })
+          } else {
+            stats.removePost(function(err, stats) {
+              callback(err)
+            })
+          }
         })
       })
     })
@@ -205,9 +216,20 @@ exports.addModel = function(db) {
             }, function(err) {
               //remove like from statistics
               models.Stats.findByUserId(userId, function(err, stats) {
-                stats.removeLike(function(err, stats) {
-                  callback(err, res)
-                })
+                if (!stats) {
+                  stats = new models.Stats({
+                    userId: userId
+                  })
+                  stats.create(function(err, stats) {
+                    stats.removeLike(function(err, stats) {
+                      callback(err, res)
+                    })
+                  })
+                } else {
+                  stats.removeLike(function(err, stats) {
+                    callback(err, res)
+                  })
+                }
               })
             })
           })
@@ -258,9 +280,20 @@ exports.addModel = function(db) {
                       }, function(err) {
                         //add like into statistics
                         models.Stats.findByUserId(userId, function(err, stats) {
-                          stats.addLike(function(err, stats) {
-                            callback(err, res)
-                          })
+                          if (!stats) {
+                            stats = new models.Stats({
+                              userId: userId
+                            })
+                            stats.create(function(err, stats) {
+                              stats.addLike(function(err, stats) {
+                                callback(err, res)
+                              })
+                            })
+                          } else {
+                            stats.addLike(function(err, stats) {
+                              callback(err, res)
+                            })
+                          }
                         })
                       })
                     })
@@ -515,11 +548,24 @@ exports.addModel = function(db) {
                            models.Timeline.newPost(that.id, function() {
                              //Add post into statistics
                              models.Stats.findByUserId(that.userId, function(err, stats) {
-                               stats.addPost(function(err, stats) {
-                                 // BUG: updatedAt is different now than we set few lines above
-                                 // XXX: we don't care (yet) if attachment wasn't saved
-                                 callback(null, that)
-                               })
+                               if (!stats) {
+                                 stats = new models.Stats({
+                                   userId: that.userId
+                                 })
+                                 stats.create(function(err, stats) {
+                                   stats.addPost(function(err, stats) {
+                                     // BUG: updatedAt is different now than we set few lines above
+                                     // XXX: we don't care (yet) if attachment wasn't saved
+                                     callback(null, that)
+                                   })
+                                 })
+                               } else {
+                                 stats.addPost(function(err, stats) {
+                                   // BUG: updatedAt is different now than we set few lines above
+                                   // XXX: we don't care (yet) if attachment wasn't saved
+                                   callback(null, that)
+                                 })
+                               }
                              })
                            })
                          })
