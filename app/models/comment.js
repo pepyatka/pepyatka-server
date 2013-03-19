@@ -48,7 +48,7 @@ exports.addModel = function(db) {
           pub.publish('destroyComment', JSON.stringify({ postId: comment.postId,
                                                          commentId: commentId }))
 
-
+          //TODO It's not the best way
           models.Post.findById(comment.postId, function(err, post) {
             if (post) {
               post.getComments(function(err, comments) {
@@ -157,6 +157,7 @@ exports.addModel = function(db) {
                          'postId': that.postId.toString()
                        }, function(err, res) {
                          models.Post.addComment(that.postId, that.id, function() {
+                           //TODO It's not the best way
                            models.Post.findById(that.postId, function(err, post) {
                              if (post) {
                                post.getComments(function(err, comments) {

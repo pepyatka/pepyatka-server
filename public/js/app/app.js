@@ -1369,6 +1369,7 @@ App.Router = Ember.Router.extend({
       showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
       showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+      showTop: Ember.Route.transitionTo('top'),
 
       connectOutlets: function(router, searchQuery) {
         router.get('applicationController').connectOutlet('search', App.searchController.searchByPhrase(searchQuery));
@@ -1402,6 +1403,7 @@ App.Router = Ember.Router.extend({
       showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
       showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+      showTop: Ember.Route.transitionTo('top'),
       
       connectOutlets: function(router) {
         App.postsController.set('timeline', null)
@@ -1415,6 +1417,7 @@ App.Router = Ember.Router.extend({
       showAllPosts: Ember.Route.transitionTo('posts'),
       showUserTimeline: Ember.Route.transitionTo('userTimeline'),
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+      showTop: Ember.Route.transitionTo('top'),
 
       connectOutlets: function(router, context) {
         // FIXME: obviouly a defect. content should be set automagically
@@ -1442,6 +1445,7 @@ App.Router = Ember.Router.extend({
       showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
       showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+      showTop: Ember.Route.transitionTo('top'),
 
       connectOutlets: function(router, username) {
         App.postsController.set('timeline', username)
@@ -1468,6 +1472,7 @@ App.Router = Ember.Router.extend({
       showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
       showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+      showTop: Ember.Route.transitionTo('top'),
 
       connectOutlets: function(routes, context) {
         App.router.get('applicationController').connectOutlet('subscribers', App.subscribersController.findAll(context));
@@ -1493,6 +1498,7 @@ App.Router = Ember.Router.extend({
       showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
       showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+      showTop: Ember.Route.transitionTo('top'),
 
       connectOutlets: function(routes, context) {
         App.router.get('applicationController').connectOutlet('subscriptions', App.subscriptionsController.findAll(context));
@@ -1518,6 +1524,7 @@ App.Router = Ember.Router.extend({
       showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
       showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+      showTop: Ember.Route.transitionTo('top'),
 
       connectOutlets: function(router, username) {
         App.postsController.set('timeline', username)
@@ -1544,6 +1551,7 @@ App.Router = Ember.Router.extend({
       showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
       showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+      showTop: Ember.Route.transitionTo('top'),
 
       connectOutlets: function(router, username) {
         App.postsController.set('timeline', username)
@@ -1555,6 +1563,42 @@ App.Router = Ember.Router.extend({
       },
 
       deserialize: function(router, urlParams) {
+        return urlParams.username
+      }
+    }),
+
+    top: Ember.Route.extend({
+      route: '/top/:category',
+
+      showPost: Ember.Route.transitionTo('aPost'),
+      showAllPosts: Ember.Route.transitionTo('posts'),
+      showSubscribers: Ember.Route.transitionTo('subscribers'),
+      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
+      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+      showTop: Ember.Route.transitionTo('top'),
+
+      connectOutlets: function(routes, context) {
+        console.log('TTT')
+        $.ajax({
+          url: '/top/posts',
+          type: 'GET',
+          success: function(res) {
+
+          }
+        })
+//        App.router.get('applicationController').connectOutlet('subscribers', App.subscribersController.findAll(context));
+      },
+
+      serialize: function(router, username) {
+        console.log('TOPS')
+        return {username: username}
+      },
+
+      deserialize: function(router, urlParams) {
+        console.log('TOPD')
         return urlParams.username
       }
     })

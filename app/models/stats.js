@@ -34,6 +34,14 @@ exports.addModel = function(db) {
     })
   }
 
+
+  //category is 'likes', 'posts', etc
+  Stats.getTopUserIds = function(category, callback) {
+    db.zrevrange('stats:' + category, 0, configLocal.getStatisticsTopCount(), function(err, userIds) {
+      callback(err, userIds)
+    })
+  },
+
   Stats.prototype = {
     validate: function(callback) {
       var that = this
@@ -187,14 +195,6 @@ exports.addModel = function(db) {
         db.zincrby('stats:subscriptions', -1, that.userId, function(err, stats) {
           callback(err, stats)
         })
-      })
-    },
-
-    //category is 'likes', 'posts', etc
-    getTopUserIds: function(category, callback) {
-      var that = this
-      db.zrevrange('stats:' + category, 0, configLocal.getStatisticsTopCount(), function(err, userIds) {
-        callback(err, userIds)
       })
     },
 
