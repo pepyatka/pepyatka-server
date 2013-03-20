@@ -84,6 +84,7 @@ API
 - GET /v1/users/:userId
 - GET /v1/users/:username/subscriptions
 - GET /v1/users/:username/subscribers - returns Posts timeline subscribers
+- GET /v1/top/:category - returns array of Users with the highest statistics in category
 
 SEARCH API
 ---
