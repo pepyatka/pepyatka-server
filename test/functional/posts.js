@@ -149,4 +149,57 @@ describe('Post API', function() {
       .send(params)
       .expect(422, done)
   })
+
+  it('DELETE /v1/posts/:postId should remove post', function(done) {
+    models.User.findAnon(function(err, user) {
+      user.newPost({
+        body: 'postBody'
+      }, function(err, newPost) {
+        newPost.create(function(err, post) {
+          var params = {
+            '_method': 'delete'
+          }
+          request(server)
+            .post('/v1/posts/' + post.id)
+            .expect('Content-Type', /json/)
+            .send(params)
+            .expect(200)
+            .end(function(err, res) {
+              models.Post.findById(post.id, function(err, post) {
+                assert.equal(!err, true)
+                assert.equal(!post, true)
+                done()
+              })
+            })
+        })
+      })
+    })
+  })
+
+  it('PATCH /v1/posts/:postId should edit post', function(done) {
+    models.User.findAnon(function(err, user) {
+      user.newPost({
+        body: 'postBody'
+      }, function(err, newPost) {
+        newPost.create(function(err, post) {
+          var params = {
+            body: 'newPostBody',
+            '_method': 'patch'
+          }
+          request(server)
+            .post('/v1/posts/' + post.id)
+            .send(params)
+            .expect('Content-Type', /json/)
+            .expect(200)
+            .end(function(res) {
+              models.Post.findById(post.id, function(err, updatedPost) {
+                assert.equal(err, null)
+                assert.equal(updatedPost.body, params.body)
+                done()
+              })
+            })
+        })
+      })
+    })
+  })
 })
