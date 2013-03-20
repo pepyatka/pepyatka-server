@@ -3,6 +3,28 @@ var models = require('./../app/models')
   , async = require('async')
 
 var startCheckingUsers = function() {
+  var updateStats = function(user, callback) {
+    async.parallel([
+      function(done){
+        updateSubscriptions(user, done)
+      },
+      function(done) {
+        updatePosts(user, done)
+      },
+      function(done) {
+        updateLikes(user, done)
+      },
+      function(done) {
+        updateSubscribers(user, done)
+      },
+      function(done) {
+        updateDiscussions(user, done)
+      }
+    ], function(err) {
+      callback(err)
+    })
+  }
+
   db.keys('user:*', function(err, usersIdKeys) {
     async.forEach(usersIdKeys,
       function(usersIdKey, callback) {
@@ -18,28 +40,14 @@ var startCheckingUsers = function() {
                     userId: userId
                   })
                   stats.create(function(err, stats) {
-                    callback(err)
+                    if (stats) {
+                      updateStats(user, callback)
+                    } else {
+                      callback(err)
+                    }
                   })
                 } else {
-                  async.parallel([
-                    function(done){
-                      updateSubscriptions(user, done)
-                    },
-                    function(done) {
-                      updatePosts(user, done)
-                    },
-                    function(done) {
-                      updateLikes(user, done)
-                    },
-                    function(done) {
-                      updateSubscribers(user, done)
-                    },
-                    function(done) {
-                      updateDiscussions(user, done)
-                    }
-                  ], function(err) {
-                    callback(err)
-                  })
+                  updateStats(user, callback)
                 }
               })
             } else {
