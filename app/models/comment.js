@@ -174,6 +174,8 @@ exports.addModel = function(db) {
                                          callback(err, that)
                                        }
                                      })
+                                   } else {
+                                     callback(err, that)
                                    }
                                  } else {
                                    callback(err, that)
