@@ -13,7 +13,14 @@ var startCheckingUsers = function() {
           models.User.findById(userId, function(err, user) {
             if (user) {
               models.Stats.findByUserId(userId, function(err, stats) {
-                if (stats) {
+                if (!stats) {
+                  stats = new models.Stats({
+                    userId: userId
+                  })
+                  stats.create(function(err, stats) {
+                    callback(err)
+                  })
+                } else {
                   async.parallel([
                     function(done){
                       updateSubscriptions(user, done)
@@ -33,8 +40,6 @@ var startCheckingUsers = function() {
                   ], function(err) {
                     callback(err)
                   })
-                } else {
-                  callback(null)
                 }
               })
             } else {

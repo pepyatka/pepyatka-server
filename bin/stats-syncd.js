@@ -1,7 +1,7 @@
 var express = require('express')
   , app = express()
   , db = require('../db').connect()
-  ,statisticsSynchronizer = require('./../services/statistics-synchronizer.js');
+  , statisticsSynchronizer = require('./../services/statistics-synchronizer.js');
 
 app.configure('development', function() {
   app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
