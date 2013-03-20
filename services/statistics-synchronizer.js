@@ -46,6 +46,8 @@ var startCheckingUsers = function() {
               callback(null)
             }
           })
+        } else {
+          callback(null)
         }
       },
       function(err) {
@@ -56,7 +58,7 @@ var startCheckingUsers = function() {
 }
 
 var updatePosts = function(user, callback) {
-  user.getPostsTimeline(function(err, timeline) {
+  user.getPostsTimeline({}, function(err, timeline) {
     if (timeline) {
       timeline.getPostsCount(function(err, count) {
         if (count) {
@@ -76,7 +78,7 @@ var updatePosts = function(user, callback) {
 }
 
 var updateLikes = function(user, callback) {
-  user.getLikesTimeline(function(err, timeline) {
+  user.getLikesTimeline({}, function(err, timeline) {
     if (timeline) {
       timeline.getPostsCount(function(err, count) {
         if (count) {
@@ -96,7 +98,7 @@ var updateLikes = function(user, callback) {
 }
 
 var updateDiscussions = function(user, callback) {
-  user.getCommentsTimeline(function(err, timeline) {
+  user.getCommentsTimeline({}, function(err, timeline) {
     if (timeline) {
       timeline.getPostsCount(function(err, count) {
         if (count) {
@@ -116,14 +118,13 @@ var updateDiscussions = function(user, callback) {
   callback(null)
 }
 
-//FIXME
 var updateSubscribers = function(user, callback) {
-  user.getPostsTimeline(function(err, timeline) {
+  user.getPostsTimeline({}, function(err, timeline) {
     if (timeline) {
-      timeline.getSubscribers(function(err, subscribers) {
-        if (subscribers) {
-          db.hset('stats:' + user.id, 'subscribers', subscribers.length, function(err, stats) {
-            db.zadd('stats:subscribers', subscribers.length, user.id, function(err, res) {
+      timeline.getSubscribersIds(function(err, subscribersIds) {
+        if (subscribersIds) {
+          db.hset('stats:' + user.id, 'subscribers', subscribersIds.length, function(err, stats) {
+            db.zadd('stats:subscribers', subscribersIds.length, user.id, function(err, res) {
               callback(err)
             })
           })
