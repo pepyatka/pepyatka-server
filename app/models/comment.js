@@ -63,6 +63,8 @@ exports.addModel = function(db) {
                         callback(err, res)
                       }
                     })
+                  } else {
+                    callback(err, res)
                   }
                 } else {
                   callback(err, res)
