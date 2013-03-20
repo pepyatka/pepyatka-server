@@ -628,6 +628,16 @@
   </ul>
 </script>
 
+<script type="text/x-handlebars" data-template-name="top-view">
+  <h3>Top {{App.topController.category}}</h3>
+
+  <ul>
+    {{#each content}}
+      <li>{{username}}</li>
+    {{/each}}
+  </ul>
+</script>
+
 <script type="text/javascript">
   var currentUser
   var isAnonymousPermitted

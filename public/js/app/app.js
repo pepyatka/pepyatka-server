@@ -283,6 +283,7 @@ App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
 });
 App.ApplicationController = Ember.Controller.extend({
   subscription: null,
+  top: null,
 
   init: function() {
     App.ApplicationController.subscription = App.Subscription.create()
@@ -1143,6 +1144,34 @@ App.SubscribersView = Ember.View.extend({
   templateName: 'subscribers'
 });
 
+App.TopController = Ember.ArrayController.extend({
+  resourceUrl: '/v1/top',
+
+  getTop: function(category) {
+    this.set('isLoaded', false)
+
+    $.ajax({
+      url: this.resourceUrl + '/' + category,
+      dataType: 'jsonp',
+      context: this,
+      success: function(response) {
+        App.ApplicationController.subscription.unsubscribe()
+
+        this.set('content', response)
+        this.set('category', category)
+
+        this.set('isLoaded', true)
+      }
+    })
+    return this
+  }
+})
+App.topController = App.TopController.create()
+
+App.TopView = Ember.View.extend({
+  templateName: 'top-view'
+});
+
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.PaginationHelper, {
   resourceUrl: '/v1/posts',
   content: [],
@@ -1581,29 +1610,17 @@ App.Router = Ember.Router.extend({
       showTop: Ember.Route.transitionTo('top'),
 
       connectOutlets: function(routes, context) {
-        console.log('TTT')
-        $.ajax({
-          url: '/top/posts',
-          type: 'GET',
-          success: function(res) {
-
-          }
-        })
-//        App.router.get('applicationController').connectOutlet('subscribers', App.subscribersController.findAll(context));
+        App.router.get('applicationController').connectOutlet('top', App.topController.getTop(context));
       },
 
-      serialize: function(router, username) {
-        console.log('TOPS')
-        return {username: username}
+      serialize: function(router, category) {
+        return {category: category}
       },
 
       deserialize: function(router, urlParams) {
-        console.log('TOPD')
-        return urlParams.username
+        return urlParams.category
       }
     })
-
-
   })
 });
 

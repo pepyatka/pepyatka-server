@@ -20,7 +20,7 @@ exports.addModel = function(db) {
 
   Stats.getAttributes = function() {
     return ['userId', 'posts', 'likes', 'discussions', 'subscribers', 'subscriptions']
-  },
+  }
 
   Stats.findByUserId = function(userId, callback) {
     db.hgetall('stats:' + userId, function(err, attrs) {
@@ -40,7 +40,7 @@ exports.addModel = function(db) {
     db.zrevrange('stats:' + category, 0, configLocal.getStatisticsTopCount(), function(err, userIds) {
       callback(err, userIds)
     })
-  },
+  }
 
   Stats.prototype = {
     validate: function(callback) {
