@@ -166,8 +166,7 @@ describe('Post API', function() {
             .expect(200)
             .end(function(err, res) {
               models.Post.findById(post.id, function(err, post) {
-                assert(err)
-                assert(post)
+                assert.equal(post, null)
                 done()
               })
             })
