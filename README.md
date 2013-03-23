@@ -90,7 +90,7 @@ API
 SEARCH API
 ---
 
-- GET /search/:searchQuery - returns all posts witch equal searchQuery.
+- GET /v1/search/:searchQuery - returns all posts witch equal searchQuery.
 
 Search query is string.
 Search query can contains keywords.
