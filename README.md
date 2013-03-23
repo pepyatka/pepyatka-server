@@ -61,6 +61,7 @@ stats:likes { <userId>:<likes> }
 stats:discussions { <userId>:<discussions> }
 stats:subscribers { <userId>:<subscribers> }
 stats:subscripions { <userId>:<subscriptions> }
+```
 
 API
 ---
