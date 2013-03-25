@@ -20,6 +20,8 @@ exports.addModel = function(db) {
       this.createdAt = parseInt(params.createdAt)
     if (parseInt(params.updatedAt))
       this.updatedAt = parseInt(params.updatedAt)
+
+    this.type = "user"
   }
 
   User.getAttributes = function() {
@@ -117,6 +119,7 @@ exports.addModel = function(db) {
     validate: function(callback) {
       var that = this
 
+      // FIXME: does it really validate?
       db.exists('user:' + that.userId, function(err, userExists) {
         callback(userExists == 0 &&
                  that.username.length > 1)

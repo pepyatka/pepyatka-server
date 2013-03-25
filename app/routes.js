@@ -2,13 +2,14 @@ var home = require('./routes/index')
   , auth = require('./routes/auth')
   , localConf = require('./../conf/envLocal.js')
 
-var session = require('./routes/session')
-  , user = require('./routes/users')
-  , posts = require('./routes/posts')
+var session  = require('./routes/session')
+  , users    = require('./routes/users')
+  , groups   = require('./routes/groups')
+  , posts    = require('./routes/posts')
   , comments = require('./routes/comments')
   , timeline = require('./routes/timeline')
-  , search = require('./routes/search')
-  , stats = require('./routes/stats')
+  , search   = require('./routes/search')
+  , stats    = require('./routes/stats')
 
 var models = require('./models');
 
@@ -77,7 +78,8 @@ module.exports = function(app) {
   app.all('/*', findUser)
 
   home.addRoutes(app);
-  user.addRoutes(app);
+  users.addRoutes(app);
+  groups.addRoutes(app);
   posts.addRoutes(app);
   comments.addRoutes(app);
   timeline.addRoutes(app);
