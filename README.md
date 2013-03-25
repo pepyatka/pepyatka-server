@@ -68,12 +68,14 @@ stats:subscripions { <userId>:<subscriptions> }
 API
 ---
 
+### Timeline
 - GET /v1/timeline/:username - returns all posts from user <username>
 - GET /v1/timeline - returns river of news for auth user
 - POST /v1/timeline/:timelineId/subscribe
 - POST /v1/timeline/:timelineId/unsubscribe
 - GET /v1/timeline/:timelineId/subcribers
 
+### Posts
 - GET /v1/posts/:postId
 - DELETE /v1/posts/:postId
 - PATCH /v1/posts/:postId
@@ -83,15 +85,18 @@ API
 - POST /v1/posts/:postId/like
 - POST /v1/posts/:postId/unlike
 
+### Comments
 - POST /v1/comments
 - DELETE /v1/comments/:commentId
 - PATCH /v1/comments/:commentId
 
+### Users
 - GET /v1/users/:userId
 - GET /v1/users/:username/subscriptions
 - GET /v1/users/:username/subscribers - returns Posts timeline subscribers
 
-# not implemented yet
+### Groups
+- not implemented yet
 - GET /v1/groups
 - GET /v1/groups/:groupId
 - GET /v1/groups/:groupId/subscribers - returns Posts timeline subscribers
@@ -100,6 +105,7 @@ API
 - PATCH /v1/groups/:groupId
 - POST /v1/groups
 
+### Statistics
 - GET /v1/top/:category - returns an array of users with the highest
   statistics in a category. Category could be one of { "posts",
   "likes", "discussions", "subscriptions", "subscribers" }
