@@ -73,6 +73,7 @@ API
 - POST /v1/timeline/:timelineId/subscribe
 - POST /v1/timeline/:timelineId/unsubscribe
 - GET /v1/timeline/:timelineId/subcribers
+
 - GET /v1/posts/:postId
 - DELETE /v1/posts/:postId
 - PATCH /v1/posts/:postId
@@ -81,36 +82,46 @@ API
 - POST /v1/posts
 - POST /v1/posts/:postId/like
 - POST /v1/posts/:postId/unlike
+
 - POST /v1/comments
 - DELETE /v1/comments/:commentId
 - PATCH /v1/comments/:commentId
+
 - GET /v1/users/:userId
 - GET /v1/users/:username/subscriptions
 - GET /v1/users/:username/subscribers - returns Posts timeline subscribers
-- GET /v1/top/:category - returns array of Users with the highest statistics in category
+
+# not implemented yet
+- GET /v1/groups
+- GET /v1/groups/:groupId
+- GET /v1/groups/:groupId/subscribers - returns Posts timeline subscribers
+- GET /v1/groups/:groupId/posts
+- DELETE /v1/groups/:groupId
+- PATCH /v1/groups/:groupId
+- POST /v1/groups
+
+- GET /v1/top/:category - returns an array of users with the highest
+  statistics in a category. Category could be one of { "posts",
+  "likes", "discussions", "subscriptions", "subscribers" }
 
 SEARCH API
 ---
 
-- GET /v1/search/:searchQuery - returns all posts witch equal searchQuery.
+- GET /v1/search/:searchQuery - returns all posts which equals searchQuery.
 
-Search query is string.
-Search query can contains keywords.
+Search query is a string of keywords.
 Keywords:
-    intitle:query (search query in post's body)
-    incomment:query (search query in comment's body)
-    from:username (search by username)
-    AND
-    OR
-    ' ' - It's whitespace
+- intitle:query (search query in post's body)
+- incomment:query (search query in comment's body)
+- from:username (search by username)
+- AND
+- OR
+- ' ' (whitespace)
 
-If you write word without keyword, it means that elasticSearch will
-search in post's and comment's bodies.
+If you enter a search phrase that does not match keywords above,
+search engine will search it in post's and comment's bodies.
 
-Example: this AND intitle:that OR incomment:blabla from:user
-
-ElasticSearch will return you posts which contain 'that' in post's
-body and 'this' in post's or comment's body.
-
-And, it will return posts which contain 'blabla' in comment's body and
-written by 'user'.
+Example: this AND intitle:that OR incomment:comment from:user. Search
+engine will return posts that contain 'that' in post's body and 'this'
+in post's or comment's body, also it will return posts that contain
+'comment' in comment's body and written by user 'user'.
