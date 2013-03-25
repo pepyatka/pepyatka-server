@@ -16,7 +16,7 @@ describe('Post API', function() {
     newUser.save(function(err, user) {
       userAgent = agent.agent();
       userAgent
-        .post('localhost:3000/session')
+        .post('localhost:' + server.get('port') + '/session')
         .send({ username: 'username', password: 'password' })
         .end(function(err, res) {
           done()
@@ -180,7 +180,7 @@ describe('Post API', function() {
             '_method': 'delete'
           }
           userAgent
-            .post('localhost:3000/v1/posts/' + post.id)
+            .post('localhost:' + server.get('port') + '/v1/posts/' + post.id)
             .send(params)
             .end(function(err, res) {
               // TODO: res should have status 200
@@ -206,7 +206,7 @@ describe('Post API', function() {
             '_method': 'patch'
           }
           userAgent
-            .post('localhost:3000/v1/posts/' + post.id)
+            .post('localhost:' + server.get('port') + '/v1/posts/' + post.id)
             .send(params)
             .end(function(res) {
               // TODO: res should have status 200
