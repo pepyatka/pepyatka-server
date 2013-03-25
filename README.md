@@ -35,8 +35,10 @@ Database
 
 ```
 username:<username>:uid
-user:<userId> { username, hashedPassword, salt, createdAt, updatedAt }
+# type is a enum of set of { "user", "group" } # not implemented yet
+user:<userId> { username, hashedPassword, salt, createdAt, updatedAt, type }
 user:<userId>:timelines { RiverOfNews, Posts, Likes, Comments, DirectMessages, [name*] }
+user:<userId>:administrators { <userId>:<timestamp> } # not implemented yet
 * DirectMessages not implemented yet
 * Custom lists not implemented yet
 user:<userId>:subscriptions ( <timelineId>:<timestamp> )
