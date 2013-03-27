@@ -88,7 +88,7 @@ exports.addModel = function(db) {
         return callback(null, [])
 
       async.forEach(tags, function(tag, callback) {
-        db.zincrby('tags:everyone', 1, tag, function(err, res) {
+        db.zincrby('tags:everyone', 1, tag.toLowerCase(), function(err, res) {
           callback(err)
         })
       }, function(err) {
