@@ -35,7 +35,9 @@ Database
 
 ```
 username:<username>:uid
-# type is a enum of set of { "user", "group" } # not implemented yet
+
+type is a enum of set of { "user", "group" } # not implemented yet
+
 user:<userId> { username, hashedPassword, salt, createdAt, updatedAt, type }
 user:<userId>:timelines { RiverOfNews, Posts, Likes, Comments, DirectMessages, [name*] }
 user:<userId>:administrators { <userId>:<timestamp> } # not implemented yet
@@ -43,9 +45,15 @@ user:<userId>:administrators { <userId>:<timestamp> } # not implemented yet
 * Custom lists not implemented yet
 user:<userId>:subscriptions ( <timelineId>:<timestamp> )
 
+reserved usernames:
+- anonymous
+- everyone
+
 timeline:<timelineId> { name, userId }
 timeline:<timelineId>:posts ( <postId>:<timestamp> )
 timeline:<timelineId>:subscribers ( <userId>:<timestamp> )
+
+as special case there is timeline: timeline:everyone
 
 post:<postId> { body, createdAt, updatedAt, userId, timelineId }
 post:<postId>:comments [ <commentId> ]
@@ -63,6 +71,11 @@ stats:likes { <userId>:<likes> }
 stats:discussions { <userId>:<discussions> }
 stats:subscribers { <userId>:<subscribers> }
 stats:subscripions { <userId>:<subscriptions> }
+
+tags:<userId> { <tag>:<score> }
+
+as special case there are tags: tags:everyone
+
 ```
 
 API
