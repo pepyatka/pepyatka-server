@@ -372,6 +372,22 @@ exports.addModel = function(db) {
   }
 
   Post.prototype = {
+    extractTags: function(callback) {
+      // TODO: tag model
+      var tags = this.body.match(/#[А-Яа-я\w]+/g);
+
+      if (!tags)
+        return callback(null, [])
+
+      async.forEach(tags, function(tag, callback) {
+        db.zincrby('tags:everyone', 1, tag, function(err, res) {
+          callback(err)
+        })
+      }, function(err) {
+        callback(err, tags)
+      })
+    },
+
     getSubscribedTimelinesIds: function(callback) {
       var that = this
 
@@ -546,26 +562,28 @@ exports.addModel = function(db) {
                        }, function(err, res) {
                          that.saveAttachments(function(err, res) {
                            models.Timeline.newPost(that.id, function() {
-                             //Add post into statistics
-                             models.Stats.findByUserId(that.userId, function(err, stats) {
-                               if (!stats) {
-                                 stats = new models.Stats({
-                                   userId: that.userId
-                                 })
-                                 stats.create(function(err, stats) {
+                             that.extractTags(function(err, tags) {
+                               //Add post into statistics
+                               models.Stats.findByUserId(that.userId, function(err, stats) {
+                                 if (!stats) {
+                                   stats = new models.Stats({
+                                     userId: that.userId
+                                   })
+                                   stats.create(function(err, stats) {
+                                     stats.addPost(function(err, stats) {
+                                       // BUG: updatedAt is different now than we set few lines above
+                                       // XXX: we don't care (yet) if attachment wasn't saved
+                                       callback(null, that)
+                                     })
+                                   })
+                                 } else {
                                    stats.addPost(function(err, stats) {
                                      // BUG: updatedAt is different now than we set few lines above
                                      // XXX: we don't care (yet) if attachment wasn't saved
                                      callback(null, that)
                                    })
-                                 })
-                               } else {
-                                 stats.addPost(function(err, stats) {
-                                   // BUG: updatedAt is different now than we set few lines above
-                                   // XXX: we don't care (yet) if attachment wasn't saved
-                                   callback(null, that)
-                                 })
-                               }
+                                 }
+                               })
                              })
                            })
                          })
