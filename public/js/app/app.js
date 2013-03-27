@@ -1421,10 +1421,6 @@ App.Router = Ember.Router.extend({
 
       connectOutlets: function(router, searchQuery) {
         router.get('applicationController').connectOutlet('search', App.searchController.searchByPhrase(searchQuery));
-      },
-
-      serialize: function(router, searchQuery) {
-        query = searchQuery
 
         if (/%23/g.test(searchQuery))
           searchQuery = searchQuery.replace(/%23/g, '#')
@@ -1433,8 +1429,10 @@ App.Router = Ember.Router.extend({
 
         App.searchController.set('body', searchQuery)
         App.searchController.set('query', searchQuery)
+      },
 
-        return {searchQuery: query}
+      serialize: function(router, searchQuery) {
+        return {searchQuery: searchQuery}
       },
 
       deserialize: function(router, urlParams) {
