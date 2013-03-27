@@ -93,6 +93,25 @@ App.SearchPaginationHelper = Em.Mixin.create({
   }.observes('pageStart')
 });
 
+App.Tags = Ember.View.extend({
+  resourceUrl: '/v1/tags',
+
+  templateName: 'tags',
+  tagName: 'ul',
+
+  willInsertElement: function() {
+    var that = this
+
+    $.ajax({
+      url: this.resourceUrl,
+      type: 'get',
+      success: function(response) {
+        that.set('content', response)
+      }
+    })
+  }
+});
+
 App.SearchPagination = Ember.View.extend({
   templateName: 'search-pagination'
 });
