@@ -63,6 +63,8 @@ exports.addModel = function(db) {
                         callback(err, res)
                       }
                     })
+                  } else {
+                    callback(err, res)
                   }
                 } else {
                   callback(err, res)
@@ -78,6 +80,22 @@ exports.addModel = function(db) {
   }
 
   Comment.prototype = {
+    extractTags: function(callback) {
+      // TODO: tag model
+      var tags = this.body.match(/#[А-Яа-я\w]+/g);
+
+      if (!tags)
+        return callback(null, [])
+
+      async.forEach(tags, function(tag, callback) {
+        db.zincrby('tags:everyone', 1, tag.toLowerCase(), function(err, res) {
+          callback(err)
+        })
+      }, function(err) {
+        callback(err, tags)
+      })
+    },
+
     validate: function(callback) {
       var that = this
 
@@ -158,28 +176,32 @@ exports.addModel = function(db) {
                        }, function(err, res) {
                          models.Post.addComment(that.postId, that.id, function() {
                            //TODO It's not the best way
-                           models.Post.findById(that.postId, function(err, post) {
-                             if (post) {
-                               post.getComments(function(err, comments) {
-                                 if (comments) {
-                                   if (_.where(comments, { userId: that.userId }).length == 1) {
-                                     models.Stats.findByUserId(that.userId, function(err, stats) {
-                                       if (stats) {
-                                         stats.addDiscussion(function(err, stats) {
+                           that.extractTags(function(err, tags) {
+                             models.Post.findById(that.postId, function(err, post) {
+                               if (post) {
+                                 post.getComments(function(err, comments) {
+                                   if (comments) {
+                                     if (_.where(comments, { userId: that.userId }).length == 1) {
+                                       models.Stats.findByUserId(that.userId, function(err, stats) {
+                                         if (stats) {
+                                           stats.addDiscussion(function(err, stats) {
+                                             callback(err, that)
+                                           })
+                                         } else {
                                            callback(err, that)
-                                         })
-                                       } else {
-                                         callback(err, that)
-                                       }
-                                     })
+                                         }
+                                       })
+                                     } else {
+                                       callback(err, that)
+                                     }
+                                   } else {
+                                     callback(err, that)
                                    }
-                                 } else {
-                                   callback(err, that)
-                                 }
-                               })
-                             } else {
-                               callback(err, that)
-                             }
+                                 })
+                               } else {
+                                 callback(err, that)
+                               }
+                             })
                            })
                          })
                        })

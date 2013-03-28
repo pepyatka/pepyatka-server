@@ -20,6 +20,8 @@ exports.addModel = function(db) {
       this.createdAt = parseInt(params.createdAt)
     if (parseInt(params.updatedAt))
       this.updatedAt = parseInt(params.updatedAt)
+
+    this.type = "user"
   }
 
   User.getAttributes = function() {
@@ -116,11 +118,10 @@ exports.addModel = function(db) {
 
     validate: function(callback) {
       var that = this
+      var stopList = ['anonymous', 'everyone']
 
-      db.exists('user:' + that.userId, function(err, userExists) {
-        callback(userExists == 0 &&
-                 that.username.length > 1)
-      })
+      callback(that.username.length > 1 &&
+              stopList.indexOf(that.username) != -1)
     },
 
     save: function(callback) {
@@ -135,35 +136,41 @@ exports.addModel = function(db) {
 
       this.validate(function(valid) {
         if (valid) {
-          that.updateHashedPassword(function() {
-            async.parallel([
-              function(done) {
-                db.hmset('user:' + that.id,
-                         { 'username': that.username.toString().trim(),
-                           'createdAt': that.createdAt.toString(),
-                           'updatedAt': that.updatedAt.toString(),
-                           'salt': that.salt.toString(),
-                           'hashedPassword': that.hashedPassword.toString()
-                         }, function(err, res) {
-                           done(err, res)
-                         })
-              },
-              function(done) {
-                db.set('username:' + that.username + ':uid', that.id, function(err, res) {
-                  done(err, res)
+          db.exists('user:' + that.id, function(err, res) {
+            if (res == 0) {
+              that.updateHashedPassword(function() {
+                async.parallel([
+                  function(done) {
+                    db.hmset('user:' + that.id,
+                             { 'username': that.username.toString().trim(),
+                               'createdAt': that.createdAt.toString(),
+                               'updatedAt': that.updatedAt.toString(),
+                               'salt': that.salt.toString(),
+                               'hashedPassword': that.hashedPassword.toString()
+                             }, function(err, res) {
+                               done(err, res)
+                             })
+                  },
+                  function(done) {
+                    db.set('username:' + that.username + ':uid', that.id, function(err, res) {
+                      done(err, res)
+                    })
+                  },
+                  function(done) {
+                    var stats = new models.Stats({
+                      userId: that.id
+                    })
+                    stats.create(function(err, stats) {
+                      done(err, stats)
+                    })
+                  }
+                ], function(err, res) {
+                  callback(err, that)
                 })
-              },
-              function(done) {
-                var stats = new models.Stats({
-                  userId: that.id
-                })
-                stats.create(function(err, stats) {
-                  done(err, stats)
-                })
-              }
-            ], function(err, res) {
-              callback(err, that)
-            })
+              })
+            } else {
+              callback(err, res)
+            }
           })
         } else {
           callback(1, that)

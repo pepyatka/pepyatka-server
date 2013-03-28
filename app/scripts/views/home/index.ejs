@@ -68,10 +68,22 @@
           </div>
         <% } %>
       </div>
+
+      <div class="span3">
+        <h5>Tags</h5>
+
+        {{view App.Tags}}
+      </div>
     </div>
 
     <% include ../../layouts/_footer %>
   </div>
+</script>
+
+<script type="text/x-handlebars" data-template-name="tags">
+  {{#each view.content}}
+    <li><a {{action searchByPhrase this href="true"}}>{{this}}</a></li>
+  {{/each}}
 </script>
 
 <script type="text/x-handlebars" data-template-name="pagination">
@@ -104,9 +116,9 @@
 
 <script type="text/x-handlebars" data-template-name="just-started">
   {{#if view.justStarted}}
-    <div class="alert alert-info">
-      {{t message.welcome}}{{#if view.isAnonymousPermitted}} Check out <a href="/users/anonymous">anonymous posts</a>.{{/if}}<button class="close" data-dismiss="alert">&times;</button>
-    </div>
+    <!-- div class="alert alert-info">
+      <{{t message.welcome}}{{#if view.isAnonymousPermitted}} Check out <a href="/users/anonymous">anonymous posts</a>.{{/if}}<button class="close" data-dismiss="alert">&times;</button>
+    </div -->
   {{/if}}
 </script>
 

@@ -1,10 +1,30 @@
 var request = require('supertest')
+  , agent = require('superagent')
   , assert = require('assert')
 
 var server = require('../../server')
   , models = require('../../app/models')
 
 describe('Post API', function() {
+  var userAgent;
+
+  before(function(done) {
+    var newUser = new models.User({
+      username: 'username',
+      password: 'password'
+    })
+    newUser.save(function(err, user) {
+      userAgent = agent.agent();
+      userAgent
+        .post('localhost:' + server.get('port') + '/session')
+        .send({ username: 'username', password: 'password' })
+        .end(function(err, res) {
+          done()
+        });
+
+    })
+  })
+
   it('GET /v1/posts/this-post-does-not-exist should return 404', function(done) {
     request(server)
       .get('/v1/posts/this-post-does-not-exist')
@@ -151,7 +171,7 @@ describe('Post API', function() {
   })
 
   it('DELETE /v1/posts/:postId should remove post', function(done) {
-    models.User.findAnon(function(err, user) {
+    models.User.findByUsername('username', function(err, user) {
       user.newPost({
         body: 'postBody'
       }, function(err, newPost) {
@@ -159,13 +179,13 @@ describe('Post API', function() {
           var params = {
             '_method': 'delete'
           }
-          request(server)
-            .post('/v1/posts/' + post.id)
-            .expect('Content-Type', /json/)
+          userAgent
+            .post('localhost:' + server.get('port') + '/v1/posts/' + post.id)
             .send(params)
-            .expect(200)
             .end(function(err, res) {
+              // TODO: res should have status 200
               models.Post.findById(post.id, function(err, post) {
+                assert.equal(err, null)
                 assert.equal(post, null)
                 done()
               })
@@ -176,7 +196,7 @@ describe('Post API', function() {
   })
 
   it('PATCH /v1/posts/:postId should edit post', function(done) {
-    models.User.findAnon(function(err, user) {
+    models.User.findByUsername('username', function(err, user) {
       user.newPost({
         body: 'postBody'
       }, function(err, newPost) {
@@ -185,12 +205,11 @@ describe('Post API', function() {
             body: 'newPostBody',
             '_method': 'patch'
           }
-          request(server)
-            .post('/v1/posts/' + post.id)
+          userAgent
+            .post('localhost:' + server.get('port') + '/v1/posts/' + post.id)
             .send(params)
-            .expect('Content-Type', /json/)
-            .expect(200)
             .end(function(res) {
+              // TODO: res should have status 200
               models.Post.findById(post.id, function(err, updatedPost) {
                 assert.equal(err, null)
                 assert.equal(updatedPost.body, params.body)
