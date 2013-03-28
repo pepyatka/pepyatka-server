@@ -22,12 +22,24 @@ describe('Comment API', function() {
         .end(function(err, res) {
           done()
         });
-
     })
   })
 
   beforeEach(function(done) {
-    models.User.findAnon(function(err, user) {
+//    models.User.findAnon(function(err, user) {
+//      console.log(user)
+//      user.newPost({
+//        body: 'postBody'
+//      }, function(err, newPost) {
+//        newPost.create(function(err, usersPost) {
+//          post = usersPost
+//          done()
+//        })
+//      })
+//    })
+    models.User.findByUsername('username', function(err, user) {
+      console.log(err)
+      console.log(user)
       user.newPost({
         body: 'postBody'
       }, function(err, newPost) {
@@ -122,7 +134,7 @@ describe('Comment API', function() {
     })
   })
 
-  it('PATCH /v1/comments/:commentId should edit post', function(done) {
+  it('PATCH /v1/comments/:commentId should edit comment', function(done) {
     models.User.findByUsername('username', function(err, user) {
       var newComment = user.newComment({
         body: 'commentBody',
