@@ -121,7 +121,7 @@ exports.addModel = function(db) {
       var stopList = ['anonymous', 'everyone']
 
       callback(that.username.length > 1 &&
-              stopList.indexOf(that.username) != -1)
+              stopList.indexOf(that.username) == -1)
     },
 
     save: function(callback) {

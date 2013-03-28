@@ -26,20 +26,7 @@ describe('Comment API', function() {
   })
 
   beforeEach(function(done) {
-//    models.User.findAnon(function(err, user) {
-//      console.log(user)
-//      user.newPost({
-//        body: 'postBody'
-//      }, function(err, newPost) {
-//        newPost.create(function(err, usersPost) {
-//          post = usersPost
-//          done()
-//        })
-//      })
-//    })
-    models.User.findByUsername('username', function(err, user) {
-      console.log(err)
-      console.log(user)
+    models.User.findAnon(function(err, user) {
       user.newPost({
         body: 'postBody'
       }, function(err, newPost) {
@@ -111,51 +98,63 @@ describe('Comment API', function() {
 
   it('DELETE /v1/comments/:commentId should remove comment', function(done) {
     models.User.findByUsername('username', function(err, user) {
-      var newComment = user.newComment({
-        body: 'commentBody',
-        postId: post.id
-      })
-      newComment.create(function(err, comment) {
-        var params = {
-          '_method': 'delete'
-        }
-        userAgent
-          .post('localhost:' + server.get('port') + '/v1/comments/' + comment.id)
-          .send(params)
-          .end(function(err, res) {
-            // TODO: res should have status 200
-            models.Comment.findById(comment.id, function(err, comment) {
-              assert.equal(err, null)
-              assert.equal(comment, null)
-              done()
-            })
+      user.newPost({
+        body: 'postBody'
+      }, function(err, newPost) {
+        newPost.create(function(err, usersPost) {
+          var newComment = user.newComment({
+            body: 'commentBody',
+            postId: usersPost.id
           })
+          newComment.create(function(err, comment) {
+            var params = {
+              '_method': 'delete'
+            }
+            userAgent
+              .post('localhost:' + server.get('port') + '/v1/comments/' + comment.id)
+              .send(params)
+              .end(function(err, res) {
+                // TODO: res should have status 200
+                models.Comment.findById(comment.id, function(err, comment) {
+                  assert.equal(err, null)
+                  assert.equal(comment, null)
+                  done()
+                })
+              })
+          })
+        })
       })
     })
   })
 
   it('PATCH /v1/comments/:commentId should edit comment', function(done) {
     models.User.findByUsername('username', function(err, user) {
-      var newComment = user.newComment({
-        body: 'commentBody',
-        postId: post.id
-      })
-      newComment.create(function(err, comment) {
-        var params = {
-          body: 'newCommentBody',
-          '_method': 'patch'
-        }
-        userAgent
-          .post('localhost:' + server.get('port') + '/v1/comments/' + comment.id)
-          .send(params)
-          .end(function(res) {
-            // TODO: res should have status 200
-            models.Comment.findById(comment.id, function(err, updatedComment) {
-              assert.equal(err, null)
-              assert.equal(updatedComment.body, params.body)
-              done()
-            })
+      user.newPost({
+        body: 'postBody'
+      }, function(err, newPost) {
+        newPost.create(function(err, usersPost) {
+          var newComment = user.newComment({
+            body: 'commentBody',
+            postId: post.id
           })
+          newComment.create(function(err, comment) {
+            var params = {
+              body: 'newCommentBody',
+              '_method': 'patch'
+            }
+            userAgent
+              .post('localhost:' + server.get('port') + '/v1/comments/' + comment.id)
+              .send(params)
+              .end(function(res) {
+                // TODO: res should have status 200
+                models.Comment.findById(comment.id, function(err, updatedComment) {
+                  assert.equal(err, null)
+                  assert.equal(updatedComment.body, params.body)
+                  done()
+                })
+              })
+          })
+        })
       })
     })
   })
