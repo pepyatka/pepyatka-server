@@ -1,4 +1,5 @@
 var request = require('supertest')
+  , agent = require('superagent')
   , assert = require('assert')
 
 var server = require('../../server')
@@ -6,6 +7,24 @@ var server = require('../../server')
 
 describe('Comment API', function() {
   var post = null
+  var userAgent;
+
+  before(function(done) {
+    var newUser = new models.User({
+      username: 'username',
+      password: 'password'
+    })
+    newUser.save(function(err, user) {
+      userAgent = agent.agent();
+      userAgent
+        .post('localhost:' + server.get('port') + '/session')
+        .send({ username: 'username', password: 'password' })
+        .end(function(err, res) {
+          done()
+        });
+
+    })
+  })
 
   beforeEach(function(done) {
     models.User.findAnon(function(err, user) {
@@ -76,5 +95,56 @@ describe('Comment API', function() {
       .post('/v1/comments')
       .send(params)
       .expect(422, done)
+  })
+
+  it('DELETE /v1/comments/:commentId should remove comment', function(done) {
+    models.User.findByUsername('username', function(err, user) {
+      var newComment = user.newComment({
+        body: 'commentBody',
+        postId: post.id
+      })
+      newComment.create(function(err, comment) {
+        var params = {
+          '_method': 'delete'
+        }
+        userAgent
+          .post('localhost:' + server.get('port') + '/v1/comments/' + comment.id)
+          .send(params)
+          .end(function(err, res) {
+            // TODO: res should have status 200
+            models.Comment.findById(comment.id, function(err, comment) {
+              assert.equal(err, null)
+              assert.equal(comment, null)
+              done()
+            })
+          })
+      })
+    })
+  })
+
+  it('PATCH /v1/comments/:commentId should edit post', function(done) {
+    models.User.findByUsername('username', function(err, user) {
+      var newComment = user.newComment({
+        body: 'commentBody',
+        postId: post.id
+      })
+      newComment.create(function(err, comment) {
+        var params = {
+          body: 'newCommentBody',
+          '_method': 'patch'
+        }
+        userAgent
+          .post('localhost:' + server.get('port') + '/v1/comments/' + comment.id)
+          .send(params)
+          .end(function(res) {
+            // TODO: res should have status 200
+            models.Comment.findById(comment.id, function(err, updatedComment) {
+              assert.equal(err, null)
+              assert.equal(updatedComment.body, params.body)
+              done()
+            })
+          })
+      })
+    })
   })
 })
