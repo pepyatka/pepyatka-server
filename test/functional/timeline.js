@@ -170,13 +170,13 @@ describe('Timeline API', function() {
 
   it('POST /v1/timeline/not-exist-timelineId/subscribe should return 422', function(done) {
     request(server)
-      .post('/v1/not-exist-timelineId/subscribe')
+      .post('/v1/timeline/not-exist-timelineId/subscribe')
       .expect(422, done)
   })
 
   it('POST /v1/timeline/not-exist-timelineId/unsubscribe should return 422', function(done) {
     request(server)
-      .post('/v1/not-exist-timelineId/unsubscribe')
+      .post('/v1/timeline/not-exist-timelineId/unsubscribe')
       .expect(422, done)
   })
 
