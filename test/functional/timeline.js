@@ -11,8 +11,16 @@ var server = require('../../server')
 
 describe('Timeline API', function() {
   var userAgent;
+  var user2Agent;
 
   before(function(done) {
+    var userAgentCreated = false;
+    var user2AgentCreated = false;
+
+    var invokeCallback = function() {
+      if (userAgentCreated && user2AgentCreated) done()
+    }
+
     var newUser = new models.User({
       username: 'username',
       password: 'password'
@@ -23,7 +31,23 @@ describe('Timeline API', function() {
         .post('localhost:' + server.get('port') + '/session')
         .send({ username: 'username', password: 'password' })
         .end(function(err, res) {
-          done()
+          userAgentCreated = true
+          invokeCallback()
+        });
+    })
+
+    var newUser2 = new models.User({
+      username: 'username2',
+      password: 'password'
+    })
+    newUser2.save(function(err, user) {
+      user2Agent = agent.agent();
+      user2Agent
+        .post('localhost:' + server.get('port') + '/session')
+        .send({ username: 'username2', password: 'password' })
+        .end(function(err, res) {
+          user2AgentCreated = true
+          invokeCallback()
         });
     })
   })
@@ -164,6 +188,86 @@ describe('Timeline API', function() {
                 done()
               })
           })
+      })
+    })
+  })
+
+  it('POST /v1/timeline/:timelineId/subscribe should subscribe A to B and B to C', function(done) {
+    var that = {}
+
+    var subscribeUser2ToUser = function(callback){
+      models.User.findByUsername('username', function(err, user) {
+        that.user = user
+        user.getLikesTimeline({start: 0}, function(err, timeline) {
+          user2Agent
+            .post('localhost:' + server.get('port') + '/v1/timeline/' + timeline.id + '/subscribe')
+            .end(function(err, res) {
+              callback()
+            })
+        })
+      })
+    }
+
+    var subscribeUserToAnon = function(callback){
+      models.User.findAnon(function(err, anonymous) {
+        that.anonymous = anonymous
+        anonymous.getLikesTimeline({start: 0}, function(err, timeline) {
+          userAgent
+            .post('localhost:' + server.get('port') + '/v1/timeline/' + timeline.id + '/subscribe')
+            .end(function(err, res) {
+              callback()
+            })
+        })
+      })
+    }
+
+    var createPostByAnon = function(callback) {
+      that.anonymous.newPost({
+        body: 'anonPostBody'
+      }, function(err, newPost) {
+        newPost.create(function(err, post) {
+          that.postId = post.id
+          callback()
+        })
+      })
+    }
+
+    var likeAnonPostByUser = function(callback) {
+      userAgent
+        .post('localhost:' + server.get('port') + '/v1/posts/' + that.postId + '/like')
+        .end(function(err, res) {
+          callback()
+        })
+    }
+
+    var checkUser2RiverOfNews = function(callback) {
+      models.User.findByUsername('username2', function(err, user2) {
+        user2.getRiverOfNews({start: 0}, function(err, riverOfNews) {
+          riverOfNews.getPostsIds(0, 25, function(err, postsIds) {
+            var isPostAdded = false;
+          async.forEach(postsIds, function(postId, callback) {
+              if (postId == that.postId) {
+                isPostAdded = true
+              }
+
+              callback()
+            },
+            function(err) {
+              assert.equal(isPostAdded, true)
+              callback()
+            })
+          })
+        })
+      })
+    }
+
+    subscribeUser2ToUser(function() {
+      subscribeUserToAnon(function() {
+        createPostByAnon(function() {
+          likeAnonPostByUser(function() {
+            checkUser2RiverOfNews(done)
+          })
+        })
       })
     })
   })
