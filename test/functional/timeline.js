@@ -157,10 +157,10 @@ describe('Timeline API', function() {
           .post('localhost:' + server.get('port') + '/v1/timeline/' + timeline.id + '/subscribe')
           .end(function(err, res) {
             request(server)
-              .get('/v1/timeline/' + timeline.id + '/subcribers')
+              .get('/v1/timeline/' + timeline.id + '/subscribers')
               .expect(200)
               .end(function(err, res) {
-                assert(res.body[0])
+                assert(res.body.length > 0)
                 done()
               })
           })
