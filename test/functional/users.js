@@ -64,6 +64,18 @@ describe('Users API', function() {
     })
   })
 
+  it('GET /v1/users/:userId should return user', function(done) {
+    models.User.findByUsername('username', function(err, user) {
+      request(server)
+        .get('/v1/users/' + user.id)
+        .expect(200)
+        .end(function(err, res) {
+          assert.equal(res.body.id, user.id)
+          done()
+        })
+    })
+  })
+
   it('GET /v1/users/user-not-exist/subscriptions should return 422', function(done) {
     request(server)
       .get('/v1/users/user-not-exist/subscriptions')
@@ -73,6 +85,12 @@ describe('Users API', function() {
   it('GET /v1/users/user-not-exist/subscribers should return 422', function(done) {
     request(server)
       .get('/v1/users/user-not-exist/subscribers')
+      .expect(422, done)
+  })
+
+  it('GET /v1/users/user-not-exist should return 422', function(done) {
+    request(server)
+      .get('/v1/users/user-not-exist')
       .expect(422, done)
   })
 })
