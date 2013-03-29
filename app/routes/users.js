@@ -30,7 +30,7 @@ exports.addRoutes = function(app) {
   app.get('/v1/users/:username/subscribers', function(req, res) {
     models.User.findByUsername(req.params.username, function(err, user) {
       if (err) return res.jsonp({}, 422)
-      
+
       user.getPostsTimeline({}, function(err, timeline) {
         timeline.getSubscribers(function(err, subscribers) {
           async.map(subscribers, function(subscriber, callback) {
