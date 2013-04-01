@@ -186,7 +186,7 @@ describe('Post API', function() {
             .end(function(err, res) {
               // TODO: res should have status 200
               models.Post.findById(post.id, function(err, post) {
-                assert.equal(err, null)
+                assert.equal(err, 1)
                 assert.equal(post, null)
                 done()
               })
@@ -337,8 +337,6 @@ describe('Post API', function() {
       models.User.findByUsername('username', function(err, user) {
         user.getLikesTimeline({start: 0}, function(err, timeline) {
           timeline.getPostsIds(0, 25, function(err, postsIds) {
-            console.log(postsIds)
-            console.log(that.postId)
             var isLikeAdded = false;
             async.forEach(postsIds, function(postId, done) {
                 if (that.postId == postId) isLikeAdded = true
@@ -399,7 +397,7 @@ describe('Post API', function() {
       .expect(422, done)
   })
 
-  it('POST /v1/posts/:postId/like like post two time', function(done) {
+  it('POST /v1/posts/:postId/like add like to post twice', function(done) {
     var that = {}
 
     var addPostByAnon = function(callback) {
@@ -477,7 +475,7 @@ describe('Post API', function() {
     })
   })
 
-  it('POST /v1/posts/:postId/unlike when post is not liked', function(done) {
+  it('POST /v1/posts/:postId/unlike remove not-exist like', function(done) {
     var that = {}
 
     var addPostByAnon = function(callback) {
