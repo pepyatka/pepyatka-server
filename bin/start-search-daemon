@@ -1,3 +1,0 @@
-prompt $n:$g
-if not exist \root\.forever md \root\.forever
-forever start -a -l forever.log -o ..\log\search.log -e ..\log\search_err.log searchd.js

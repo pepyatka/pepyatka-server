@@ -23,7 +23,7 @@ Configuration
   just run mocha if you have installed it globally)
 - Run elasticsearch
 - Run server: node ./server.js
-- Run search daemon: ./bin/start-search-daemon
+- Run search daemon: node ./bin/search-daemon.js
 
 Roadmap
 -------
