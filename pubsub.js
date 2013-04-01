@@ -26,13 +26,13 @@ exports.listen = function(server) {
   });
 
   var RedisStore = require('socket.io/lib/stores/redis')
-    , pub = redis.createClient()
-    , sub = redis.createClient()
+    , redisPub = redis.createClient()
+    , redisSub = redis.createClient()
     , client = redis.createClient();
 
   io.set('store', new RedisStore({
-      redisPub: pub
-    , redisSub: sub
+      redisPub: redisPub
+    , redisSub: redisSub
     , redisClient: client
   }));
 
@@ -40,7 +40,7 @@ exports.listen = function(server) {
     function(socket) {
       socket.on('subscribe', function(data) {
         for(var channel in data){
-          if (data[channel]){
+          if (data[channel]) {
             data[channel].forEach(function(id){
               if (id){
                 console.log('User has subscribed to ' + id + ' ' + channel);
@@ -54,7 +54,7 @@ exports.listen = function(server) {
 
       socket.on('unsubscribe', function(data) {
         for(var channel in data){
-          if (data[channel]){
+          if (data[channel]) {
             data[channel].forEach(function(id){
               if (id){
                 console.log('User has disconnected from ' + id + ' ' + channel);

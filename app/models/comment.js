@@ -11,10 +11,10 @@ exports.addModel = function(db) {
     this.postId = params.postId
     this.userId = params.userId
 
-    if (parseInt(params.createdAt))
-      this.createdAt = parseInt(params.createdAt)
-    if (parseInt(params.updatedAt))
-      this.updatedAt = parseInt(params.updatedAt)
+    if (parseInt(params.createdAt, 10))
+      this.createdAt = parseInt(params.createdAt, 10)
+    if (parseInt(params.updatedAt, 10))
+      this.updatedAt = parseInt(params.updatedAt, 10)
   }
 
   Comment.getAttributes = function() {
@@ -53,7 +53,7 @@ exports.addModel = function(db) {
             if (post) {
               post.getComments(function(err, comments) {
                 if (comments) {
-                  if (_.where(comments, { userId: comment.userId }).length == 0) {
+                  if (_.where(comments, { userId: comment.userId }).length === 0) {
                     models.Stats.findByUserId(comment.userId, function(err, stats) {
                       if (stats) {
                         stats.removeDiscussion(function(err, stats) {
@@ -166,7 +166,7 @@ exports.addModel = function(db) {
       this.validate(function(valid) {
         if (valid) {
           db.exists('comment:' + that.id, function(err, res) {
-            if (res == 0) {
+            if (res === 0) {
               db.hmset('comment:' + that.id,
                        { 'body': (that.body.slice(0, 4096) || "").toString().trim(),
                          'createdAt': that.createdAt.toString(),

@@ -16,10 +16,10 @@ exports.addModel = function(db) {
     this.hashedPassword = params.hashedPassword
     this.salt = params.salt
 
-    if (parseInt(params.createdAt))
-      this.createdAt = parseInt(params.createdAt)
-    if (parseInt(params.updatedAt))
-      this.updatedAt = parseInt(params.updatedAt)
+    if (parseInt(params.createdAt, 10))
+      this.createdAt = parseInt(params.createdAt, 10)
+    if (parseInt(params.updatedAt, 10))
+      this.updatedAt = parseInt(params.updatedAt, 10)
 
     this.type = "user"
   }
@@ -137,7 +137,7 @@ exports.addModel = function(db) {
       this.validate(function(valid) {
         if (valid) {
           db.exists('user:' + that.id, function(err, res) {
-            if (res == 0) {
+            if (res === 0) {
               that.updateHashedPassword(function() {
                 async.parallel([
                   function(done) {
@@ -291,7 +291,7 @@ exports.addModel = function(db) {
                         }, function(err) {
                           db.del(randomKey, function(err, res) {
                             db.zcard('user:' + that.id + ':subscriptions', function(err, res) {
-                              if (res == 0)
+                              if (res === 0)
                                 db.del('user:' + that.id + ':subscriptions', function(err, res) {
                                   callback(err, res)
                                 })
@@ -592,10 +592,10 @@ exports.addModel = function(db) {
       var returnJSON = function(err) {
         var isReady = true
         if(select.indexOf('subscriptions') != -1) {
-          isReady = json.subscriptions != undefined
+          isReady = json.subscriptions !== undefined
         }
         if(select.indexOf('statistics') != -1) {
-          isReady = json.statistics != undefined
+          isReady = json.statistics !== undefined
         }
 
         if(isReady) {

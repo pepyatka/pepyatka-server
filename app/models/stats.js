@@ -58,7 +58,7 @@ exports.addModel = function(db) {
           async.parallel([
             function(done){
               db.exists('stats:' + that.userId, function(err, res) {
-                if (res == 0) {
+                if (res === 0) {
                   db.hmset('stats:' + that.userId,
                     {
                       'posts' : that.posts.toString(),

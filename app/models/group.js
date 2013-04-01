@@ -18,7 +18,7 @@ exports.addModel = function(db) {
       var that = this
 
       db.exists('group:' + this.id, function(err, groupExists) {
-        callback(groupExists == 0 &&
+        callback(groupExists === 0 &&
                  that.username.length > 1)
       })
     },

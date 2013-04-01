@@ -14,10 +14,10 @@ exports.addModel = function(db) {
     this.fsPath = params.fsPath || ""
     this.postId = params.postId
 
-    if (parseInt(params.createdAt))
-      this.createdAt = parseInt(params.createdAt)
-    if (parseInt(params.updatedAt))
-      this.updatedAt = parseInt(params.updatedAt)
+    if (parseInt(params.createdAt, 10))
+      this.createdAt = parseInt(params.createdAt, 10)
+    if (parseInt(params.updatedAt, 10))
+      this.updatedAt = parseInt(params.updatedAt, 10)
 
     if (params.thumbnailId)
       this.thumbnailId = params.thumbnailId
@@ -52,8 +52,8 @@ exports.addModel = function(db) {
       db.exists('post:' + that.postId, function(err, postExists) {
         db.exists('attachment' + that.id, function(err, attachmentExists) {
           // TODO: dirty. we do an extra request to our db
-          callback((postExists == 1 || that.postId == undefined) &&
-                   attachmentExists == 0 &&
+          callback((postExists === 1 || that.postId === undefined) &&
+                   attachmentExists === 0 &&
                    that.filename.trim().length > 0 &&
                    that.path.trim().length > 0 &&
                    that.fsPath.trim().length > 0)
@@ -70,7 +70,7 @@ exports.addModel = function(db) {
       var params = { 'ext': this.ext.toString(),
                      'filename': this.filename.toString(),
                      'path': this.path.toString(),
-                     'fsPath': this.fsPath.toString(),
+                     'fsPath': this.fsPath.toString()
                    }
 
       if (this.thumbnailId) {

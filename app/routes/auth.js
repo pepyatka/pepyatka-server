@@ -12,7 +12,7 @@ exports.addRoutes = function(app) {
     })
 
     models.User.findByUsername(newUser.username, function(err, user) {
-      if (user == null) {
+      if (user === null) {
         newUser.save(function(err, user) {
           req.logIn(user, function(err) {
             res.redirect('/')
