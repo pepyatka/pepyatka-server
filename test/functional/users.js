@@ -79,18 +79,18 @@ describe('Users API', function() {
   it('GET /v1/users/user-not-exist/subscriptions should return 422', function(done) {
     request(server)
       .get('/v1/users/user-not-exist/subscriptions')
-      .expect(422, done)
+      .expect(404, done)
   })
 
   it('GET /v1/users/user-not-exist/subscribers should return 422', function(done) {
     request(server)
       .get('/v1/users/user-not-exist/subscribers')
-      .expect(422, done)
+      .expect(404, done)
   })
 
   it('GET /v1/users/user-not-exist should return 422', function(done) {
     request(server)
       .get('/v1/users/user-not-exist')
-      .expect(422, done)
+      .expect(404, done)
   })
 })
