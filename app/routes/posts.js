@@ -28,6 +28,7 @@ exports.addRoutes = function(app) {
 
     models.Post.addLike(req.params.postId, req.user.id, function(err, r) {
       // post.toJSON({}, function(err, json) { res.jsonp(json) })
+      if (err) return res.jsonp({}, 422)
 
       res.jsonp({})
     })
@@ -39,6 +40,8 @@ exports.addRoutes = function(app) {
     }
 
     models.Post.removeLike(req.params.postId, req.user.id, function(err, r) {
+      if (err) return res.jsonp({}, 422)
+
       res.jsonp({})
     })
   })

@@ -28,13 +28,11 @@ exports.addModel = function(db) {
 
   Post.findById = function(postId, callback) {
     db.hgetall('post:' + postId, function(err, attrs) {
-      if (attrs) {
-        attrs.id = postId
+      if (!attrs || err)
+        return callback(1, null)
 
-        callback(err, new Post(attrs))
-      } else {
-        callback(err, null)
-      }
+      attrs.id = postId
+      callback(err, new Post(attrs))
     })
   }
 
@@ -190,6 +188,8 @@ exports.addModel = function(db) {
   // FIXME: it doesn't remove likes from timelines yet
   Post.removeLike = function(postId, userId, callback) {
     models.Post.findById(postId, function(err, post) {
+      if (err) return callback(err)
+
       post.getSubscribedTimelinesIds(function(err, timelinesIds) {
         Post.bumpable(postId, function(bumpable) {
           db.srem('post:' + postId + ':likes', userId, function(err, res) {
@@ -242,6 +242,8 @@ exports.addModel = function(db) {
   // for a moment about this
   Post.addLike = function(postId, userId, callback) {
     models.Post.findById(postId, function(err, post) {
+      if (err) return callback(err)
+
       post.getSubscribedTimelinesIds(function(err, timelinesIds) {
         models.User.findById(userId, function(err, user) {
           user.getRiverOfNewsId(function(err, timelineId) {
