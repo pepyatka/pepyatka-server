@@ -343,7 +343,7 @@ describe('Post API', function() {
                 done()
               },
               function(err) {
-                assert.equal(isLikeAdded, false)
+                assert.equal(isLikeAdded, true)
                 callback()
               })
           })
