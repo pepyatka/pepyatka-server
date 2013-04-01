@@ -1,6 +1,7 @@
 var request = require('supertest')
   , agent = require('superagent')
   , assert = require('assert')
+  , async = require('async')
 
 var server = require('../../server')
   , models = require('../../app/models')
@@ -185,7 +186,7 @@ describe('Post API', function() {
             .end(function(err, res) {
               // TODO: res should have status 200
               models.Post.findById(post.id, function(err, post) {
-                assert.equal(err, null)
+                assert.equal(err, 1)
                 assert.equal(post, null)
                 done()
               })
@@ -217,6 +218,292 @@ describe('Post API', function() {
               })
             })
         })
+      })
+    })
+  })
+
+  it('POST /v1/posts/:postId/like should add like to post', function(done) {
+    var that = {}
+
+    var addPostByAnon = function(callback) {
+      models.User.findAnon(function(err, anonymous) {
+        anonymous.newPost({
+          body: 'postBody'
+        },
+          function(err, newPost) {
+            newPost.create(function(err, post) {
+              that.postId = post.id
+              callback()
+            })
+        })
+      })
+    }
+
+    var addLikeByUser = function(callback) {
+      userAgent
+        .post('localhost:' + server.get('port') + '/v1/posts/' + that.postId + '/like')
+        .end(function(res) {
+          // TODO: res should have status 200
+          callback()
+        })
+    }
+
+    var checkUserLikeTimeline = function(callback) {
+      models.User.findByUsername('username', function(err, user) {
+        user.getLikesTimeline({start: 0}, function(err, timeline) {
+          timeline.getPostsIds(0, 25, function(err, postsIds) {
+            var isLikeAdded = false;
+            async.forEach(postsIds, function(postId, done) {
+              if (that.postId == postId) isLikeAdded = true
+              done()
+            },
+            function(err) {
+              assert(isLikeAdded)
+              callback()
+            })
+          })
+        })
+      })
+    }
+
+    var checkPostLikes = function(callback) {
+      models.Post.findById(that.postId, function(err, post) {
+        post.getLikes(function(err, likes) {
+          var isLikeAdded = false
+          async.forEach(likes, function(like, done) {
+            if (like.username == 'username') isLikeAdded = true
+            done()
+          },
+          function(err) {
+            assert(isLikeAdded)
+            callback()
+          })
+        })
+      })
+    }
+
+    addPostByAnon(function() {
+      addLikeByUser(function() {
+        async.parallel([
+          function(done){
+            checkPostLikes(done)
+          },
+          function(done) {
+            checkUserLikeTimeline(done)
+          }
+        ], function(err) {
+          done()
+        })
+      })
+    })
+  })
+
+  it('POST /v1/posts/:postId/unlike should remove like from post', function(done) {
+    var that = {}
+
+    var addPostByAnon = function(callback) {
+      models.User.findAnon(function(err, anonymous) {
+        anonymous.newPost({
+            body: 'postBody'
+          },
+          function(err, newPost) {
+            newPost.create(function(err, post) {
+              that.postId = post.id
+              callback()
+            })
+          })
+      })
+    }
+
+    var addLikeByUser = function(callback) {
+      userAgent
+        .post('localhost:' + server.get('port') + '/v1/posts/' + that.postId + '/like')
+        .end(function(res) {
+          // TODO: res should have status 200
+          callback()
+        })
+    }
+
+    var removeUserLike = function(callback) {
+      userAgent
+        .post('localhost:' + server.get('port') + '/v1/posts/' + that.postId + '/unlike')
+        .end(function(res) {
+          // TODO: res should have status 200
+          callback()
+        })
+    }
+
+    var checkUserLikeTimeline = function(callback) {
+      models.User.findByUsername('username', function(err, user) {
+        user.getLikesTimeline({start: 0}, function(err, timeline) {
+          timeline.getPostsIds(0, 25, function(err, postsIds) {
+            var isLikeAdded = false;
+            async.forEach(postsIds, function(postId, done) {
+                if (that.postId == postId) isLikeAdded = true
+                done()
+              },
+              function(err) {
+                assert.equal(isLikeAdded, false)
+                callback()
+              })
+          })
+        })
+      })
+    }
+
+    var checkPostLikes = function(callback) {
+      models.Post.findById(that.postId, function(err, post) {
+        post.getLikes(function(err, likes) {
+          var isLikeAdded = false
+          async.forEach(likes, function(like, done) {
+              if (like.username == 'username') isLikeAdded = true
+              done()
+            },
+            function(err) {
+              assert.equal(isLikeAdded, false)
+              callback()
+            })
+        })
+      })
+    }
+
+    addPostByAnon(function() {
+      addLikeByUser(function() {
+        removeUserLike(function() {
+          async.parallel([
+            function(done){
+              checkPostLikes(done)
+            },
+            function(done) {
+              checkUserLikeTimeline(done)
+            }
+          ], function(err) {
+            done()
+          })
+        })
+      })
+    })
+  })
+
+  it('POST /v1/posts/not-exist-postId/like should return 422', function(done) {
+    request(server)
+      .post('/v1/posts/not-exist-postId/like')
+      .expect(422, done)
+  })
+
+  it('POST /v1/posts/not-exist-postId/unlike should return 422', function(done) {
+    request(server)
+      .post('/v1/posts/not-exist-postId/unlike')
+      .expect(422, done)
+  })
+
+  it('POST /v1/posts/:postId/like add like to post twice', function(done) {
+    var that = {}
+
+    var addPostByAnon = function(callback) {
+      models.User.findAnon(function(err, anonymous) {
+        anonymous.newPost({
+            body: 'postBody'
+          },
+          function(err, newPost) {
+            newPost.create(function(err, post) {
+              that.postId = post.id
+              callback()
+            })
+          })
+      })
+    }
+
+    var addLikeByUser = function(callback) {
+      userAgent
+        .post('localhost:' + server.get('port') + '/v1/posts/' + that.postId + '/like')
+        .end(function(res) {
+          // TODO: res should have status 200
+          callback()
+        })
+    }
+
+    var checkUserLikeTimeline = function(callback) {
+      models.User.findByUsername('username', function(err, user) {
+        user.getLikesTimeline({start: 0}, function(err, timeline) {
+          timeline.getPostsIds(0, 25, function(err, postsIds) {
+            var likeCount = 0;
+            async.forEach(postsIds, function(postId, done) {
+                if (that.postId == postId) likeCount++
+                done()
+              },
+              function(err) {
+                assert.equal(likeCount, 1)
+                callback()
+              })
+          })
+        })
+      })
+    }
+
+    var checkPostLikes = function(callback) {
+      models.Post.findById(that.postId, function(err, post) {
+        post.getLikes(function(err, likes) {
+          var likeCount = 0;
+          async.forEach(likes, function(like, done) {
+              if (like.username == 'username') likeCount++
+              done()
+            },
+            function(err) {
+              assert.equal(likeCount, 1)
+              callback()
+            })
+        })
+      })
+    }
+
+    addPostByAnon(function() {
+      addLikeByUser(function() {
+        addLikeByUser(function() {
+          async.parallel([
+            function(done){
+              checkPostLikes(done)
+            },
+            function(done) {
+              checkUserLikeTimeline(done)
+            }
+          ], function(err) {
+            done()
+          })
+        })
+      })
+    })
+  })
+
+  it('POST /v1/posts/:postId/unlike remove not-exist like', function(done) {
+    var that = {}
+
+    var addPostByAnon = function(callback) {
+      models.User.findAnon(function(err, anonymous) {
+        anonymous.newPost({
+            body: 'postBody'
+          },
+          function(err, newPost) {
+            newPost.create(function(err, post) {
+              that.postId = post.id
+              callback()
+            })
+          })
+      })
+    }
+
+    var removeUserLike = function(callback) {
+      userAgent
+        .post('localhost:' + server.get('port') + '/v1/posts/' + that.postId + '/unlike')
+        .end(function(res) {
+          // TODO: res should have status 200
+          callback()
+        })
+    }
+
+    addPostByAnon(function() {
+      removeUserLike(function() {
+        done()
       })
     })
   })

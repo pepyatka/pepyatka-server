@@ -102,7 +102,7 @@ var server = http.createServer(app)
   , routes = require('./app/routes')(app)
 
 db.select(app.get('redisdb'), function(err, res) {
-  server.listen(app.get('port'), function() {  
+  server.listen(app.get('port'), function() {
     console.log("Express server listening on port " + app.get('port'));
     console.log("Server is running on " + (process.env.NODE_ENV || "development") + " mode")
   });

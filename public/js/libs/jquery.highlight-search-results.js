@@ -13,7 +13,9 @@
       splitedByORQuery.split(' AND ').forEach(function(splitedByANDQuery){
         splitedByANDQuery = splitedByANDQuery.trim();
         splitedByANDQuery = splitedByANDQuery.replace(/intitle:|incomments:|from:/, '');
-        queryWords.push(splitedByANDQuery);
+        if(splitedByANDQuery) {
+          queryWords.push(splitedByANDQuery);
+        }
       });
     });
 

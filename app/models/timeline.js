@@ -19,15 +19,14 @@ exports.addModel = function(db) {
 
   Timeline.findById = function(timelineId, params, callback) {
     db.hgetall('timeline:' + timelineId, function(err, attrs) {
-      if (attrs) {
-        attrs.id = timelineId
-        attrs['start'] = params['start']
-        attrs['num'] = params['num']
+      if (!attrs || err)
+        return callback(1, null)
 
-        callback(err, new Timeline(attrs))
-      } else {
-        callback(err, null)
-      }
+      attrs.id = timelineId
+      attrs['start'] = params['start']
+      attrs['num'] = params['num']
+
+      callback(err, new Timeline(attrs))
     })
   }
 
