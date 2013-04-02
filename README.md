@@ -19,11 +19,10 @@ Configuration
 - Install dependencies: npm install
 - Update translation file: cp ./public/config/envDefault.js
   ./public/config/envLocal.js
-- Check there are no broken tests: ./node_modules/mocha/bin/mocha (or
-  just run mocha if you have installed it globally)
+- Check there are no broken tests: jake test
 - Run elasticsearch
 - Run server: node ./server.js
-- Run search daemon: ./bin/start-search-daemon
+- Run search daemon: node ./bin/search-daemon.js
 
 Roadmap
 -------

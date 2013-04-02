@@ -15,10 +15,10 @@ exports.addModel = function(db) {
     this.timelineId = params.timelineId
     this.files = params.files
 
-    if (parseInt(params.createdAt))
-      this.createdAt = parseInt(params.createdAt)
-    if (parseInt(params.updatedAt))
-      this.updatedAt = parseInt(params.updatedAt)
+    if (parseInt(params.createdAt, 10))
+      this.createdAt = parseInt(params.createdAt, 10)
+    if (parseInt(params.updatedAt, 10))
+      this.updatedAt = parseInt(params.updatedAt, 10)
   }
 
   Post.getAttributes = function() {
@@ -66,7 +66,7 @@ exports.addModel = function(db) {
                 function(callback) {
                   db.scard('post:' + postId + ':timelines', function(err, res) {
                     // post does not belong to any timelines
-                    if (res == 0) {
+                    if (res === 0) {
                       db.del('post:' + postId + ':timelines', function(err, res) {
                         callback(err)
                       })
@@ -79,7 +79,7 @@ exports.addModel = function(db) {
                   async.forEach(timelinesIds, function(timelineId, callback) {
                     db.zcard('timeline:' + timelineId + ':posts', function(err, res) {
                       // that timeline is empty
-                      if (res == 0) {
+                      if (res === 0) {
                         db.del('post:' + postId + ':timelines', function(err, res) {
                           callback(err)
                         })
@@ -132,7 +132,7 @@ exports.addModel = function(db) {
               })
             }, function(err) {
               db.llen('post:' + postId + ':attachments', function(err, res) {
-                if (res == 0) {
+                if (res === 0) {
                   // this post does not have any associated with it attachments
                   db.del('post:' + postId + ':attachments', function(err, res) {
                     callback(err)
@@ -554,7 +554,7 @@ exports.addModel = function(db) {
       this.validate(function(valid) {
         if (valid) {
           db.exists('post:' + that.id, function(err, res) {
-            if (res == 0) {
+            if (res === 0) {
               db.hmset('post:' + that.id,
                        { 'body': (that.body.slice(0, 512) || "").toString().trim(),
                          'timelineId': that.timelineId.toString(),

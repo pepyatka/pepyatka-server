@@ -62,7 +62,7 @@ var startCheckingPosts = function() {
         .on('data', function(data) {
           var json =  JSON.parse(data);
           var searchedElements = elasticSearch.parse(json)
-          if(searchedElements.length == 0) callback()
+          if(searchedElements.length === 0) callback()
 
           async.forEach(searchedElements, function(post, callback) {
               checkDbElement('pepyatka', 'post', post.id)
@@ -171,9 +171,9 @@ var isEqualElements = function(firstElement, secondElement) {
         }
       }
       if (isEqual) {
-        for(var property in secondObject) {
+        for(var prop in secondObject) {
           if (isEqual) {
-            if (checkedProperties.indexOf(property) == -1) {
+            if (checkedProperties.indexOf(prop) == -1) {
               isEqual = false;
             }
           }

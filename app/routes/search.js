@@ -64,18 +64,15 @@ var createAndSection = function(andQuery) {
 
     if (key && value) {
       switch (key) {
-        case 'intitle': {
-          condition = { "wildcard" : { "body" : '*' + value + '*' } };
-          break;
-        }
-        case 'incomments': {
-          condition = { "wildcard" : { "comments.body" : '*' + value + '*' } };
-          break;
-        }
-        case 'from': {
-          condition = { "term" : { "createdBy.username" : value } };
-          break;
-        }
+      case 'intitle':
+        condition = { "wildcard" : { "body" : '*' + value + '*' } }
+        break
+      case 'incomments':
+        condition = { "wildcard" : { "comments.body" : '*' + value + '*' } }
+        break
+      case 'from':
+        condition = { "term" : { "createdBy.username" : value } }
+        break
       }
     }
   }

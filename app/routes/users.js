@@ -29,7 +29,7 @@ exports.addRoutes = function(app) {
 
   app.get('/v1/users/:username/subscribers', function(req, res) {
     models.User.findByUsername(req.params.username, function(err, user) {
-      if (err) return res.jsonp({}, 422)
+      if (err) return res.jsonp({}, 404)
 
       user.getPostsTimeline({}, function(err, timeline) {
         timeline.getSubscribers(function(err, subscribers) {
@@ -47,7 +47,7 @@ exports.addRoutes = function(app) {
 
   app.get('/v1/users/:username/subscriptions', function(req, res) {
     models.User.findByUsername(req.params.username, function(err, user) {
-      if (err) return res.jsonp({}, 422)
+      if (err) return res.jsonp({}, 404)
 
       user.getSubscriptions(function(err, subscriptions) {
         async.map(subscriptions, function(subscription, callback) {
@@ -63,7 +63,7 @@ exports.addRoutes = function(app) {
 
   app.get('/v1/users/:userId', function(req, res) {
     models.User.findById(req.params.userId, function(err, user) {
-      if (err) return res.jsonp({}, 422)
+      if (err) return res.jsonp({}, 404)
 
       user.toJSON(userSerializer, function(err, json) { res.jsonp(json) })
     })

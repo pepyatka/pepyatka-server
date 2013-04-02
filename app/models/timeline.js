@@ -9,8 +9,8 @@ exports.addModel = function(db) {
     this.name = params.name
     this.userId = params.userId
 
-    this.start = parseInt(params.start) || 0
-    this.num = parseInt(params.num) || 25
+    this.start = parseInt(params.start, 10) || 0
+    this.num = parseInt(params.num, 10) || 25
   }
 
   Timeline.getAttributes = function() {
