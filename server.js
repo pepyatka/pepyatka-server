@@ -7,6 +7,7 @@ var express = require('express')
   , flash = require('connect-flash')
   , async = require('async')
   , passport = require('passport')
+  , environment = require('./environment.js')
 
 require('./public/js/libs/core_ext')
 
@@ -81,29 +82,13 @@ function logErrors(err, req, res, next) {
   next(err);
 }
 
-app.configure('development', function() {
-  app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
-  app.set('redisdb', 1);
-});
-
-app.configure('production', function(){
-  app.set('redisdb', 0);
-});
-
-app.configure('test', function(){
-  app.set('redisdb', 2);
-});
-
-var redis = require('./db')
-  , db = redis.connect()
-
 var server = http.createServer(app)
   , pubsub = require('./pubsub').listen(server)
   , routes = require('./app/routes')(app)
 
-db.select(app.get('redisdb'), function(err, res) {
+environment.init(function(err, res) {
   server.listen(app.get('port'), function() {
     console.log("Express server listening on port " + app.get('port'));
     console.log("Server is running on " + (process.env.NODE_ENV || "development") + " mode")
   });
-});
+})
