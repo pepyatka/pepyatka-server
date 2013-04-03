@@ -107,12 +107,13 @@ exports.addModel = function(db) {
         if (valid) {
           db.exists('comment:' + that.id, function(err, res) {
             if (res == 1) {
+              var newBody = (params.body.slice(0, 4096) || that.body).toString().trim()
               models.Tag.extract(that.body, function(err, oldPostTagsInfo) {
-                models.Tag.extract((params.body.slice(0, 512) || that.body).toString().trim(), function(err, newPostTagsInfo) {
+                models.Tag.extract(newBody, function(err, newPostTagsInfo) {
                   models.Tag.diff(oldPostTagsInfo, newPostTagsInfo, function(err, diffTagsInfo) {
                     models.Tag.update(diffTagsInfo, function(err) {
                       db.hmset('comment:' + that.id,
-                        { 'body': (params.body.slice(0, 4096) || that.body).toString().trim(),
+                        { 'body': newBody,
                           'updatedAt': that.createdAt.toString()
                         }, function(err, res) {
                           // TODO: a bit mess here: update method calls
@@ -165,8 +166,9 @@ exports.addModel = function(db) {
         if (valid) {
           db.exists('comment:' + that.id, function(err, res) {
             if (res === 0) {
+              var commentBody = (that.body.slice(0, 4096) || "").toString().trim()
               db.hmset('comment:' + that.id,
-                       { 'body': (that.body.slice(0, 4096) || "").toString().trim(),
+                       { 'body': commentBody,
                          'createdAt': that.createdAt.toString(),
                          'updatedAt': that.createdAt.toString(),
                          'userId': that.userId.toString(),
@@ -174,7 +176,7 @@ exports.addModel = function(db) {
                        }, function(err, res) {
                          models.Post.addComment(that.postId, that.id, function() {
                            //TODO It's not the best way
-                           models.Tag.extract(that.body, function(err, result) {
+                           models.Tag.extract(commentBody, function(err, result) {
                              models.Tag.update(result, function(err) {
                                models.Post.findById(that.postId, function(err, post) {
                                  if (post) {

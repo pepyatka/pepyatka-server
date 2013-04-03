@@ -549,8 +549,9 @@ exports.addModel = function(db) {
         if (valid) {
           db.exists('post:' + that.id, function(err, res) {
             if (res === 0) {
+              var postBody = (that.body.slice(0, 512) || "").toString().trim()
               db.hmset('post:' + that.id,
-                       { 'body': (that.body.slice(0, 512) || "").toString().trim(),
+                       { 'body': postBody,
                          'timelineId': that.timelineId.toString(),
                          'userId': that.userId.toString(),
                          'createdAt': that.createdAt.toString(),
@@ -558,7 +559,7 @@ exports.addModel = function(db) {
                        }, function(err, res) {
                          that.saveAttachments(function(err, res) {
                            models.Timeline.newPost(that.id, function() {
-                             models.Tag.extract(that.body, function(err, result) {
+                             models.Tag.extract(postBody, function(err, result) {
                                models.Tag.update(result, function(err) {
                                  models.Stats.findByUserId(that.userId, function(err, stats) {
                                    if (!stats) {
@@ -604,12 +605,13 @@ exports.addModel = function(db) {
         if (valid) {
           db.exists('post:' + that.id, function(err, res) {
             if (res == 1) {
+              var newBody = (params.body.slice(0, 512) || that.body).toString().trim()
               models.Tag.extract(that.body, function(err, oldPostTagsInfo) {
-                models.Tag.extract((params.body.slice(0, 512) || that.body).toString().trim(), function(err, newPostTagsInfo) {
+                models.Tag.extract(newBody, function(err, newPostTagsInfo) {
                   models.Tag.diff(oldPostTagsInfo, newPostTagsInfo, function(err, diffTagsInfo) {
                     models.Tag.update(diffTagsInfo, function(err) {
                       db.hmset('post:' + that.id,
-                        { 'body': (params.body.slice(0, 512) || that.body).toString().trim(),
+                        { 'body': newBody,
                           'updatedAt': that.updatedAt.toString()
                         }, function(err, res) {
                           // TODO: a bit mess here: update method calls
