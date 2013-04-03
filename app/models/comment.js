@@ -38,27 +38,37 @@ exports.addModel = function(db) {
   // TODO: commentId -> commentsId
   Comment.destroy = function(commentId, callback) {
     models.Comment.findById(commentId, function(err, comment) {
-      db.del('comment:' + commentId, function(err, res) {
-        if (!comment)
-          return callback(err, res)
+      models.Tag.extract(comment.body, function(err, tagsInfo) {
+        models.Tag.diff(tagsInfo, {}, function(err, resultTagsInfo) {
+          models.Tag.update(resultTagsInfo, function(err) {
+            db.del('comment:' + commentId, function(err, res) {
+              if (!comment)
+                return callback(err, res)
 
-        db.lrem('post:' + comment.postId + ':comments', 1, commentId, function(err, res) {
-          var pub = redis.createClient();
+              db.lrem('post:' + comment.postId + ':comments', 1, commentId, function(err, res) {
+                var pub = redis.createClient();
 
-          pub.publish('destroyComment', JSON.stringify({ postId: comment.postId,
-                                                         commentId: commentId }))
+                pub.publish('destroyComment', JSON.stringify({ postId: comment.postId,
+                  commentId: commentId }))
 
-          //TODO It's not the best way
-          models.Post.findById(comment.postId, function(err, post) {
-            if (post) {
-              post.getComments(function(err, comments) {
-                if (comments) {
-                  if (_.where(comments, { userId: comment.userId }).length === 0) {
-                    models.Stats.findByUserId(comment.userId, function(err, stats) {
-                      if (stats) {
-                        stats.removeDiscussion(function(err, stats) {
+                //TODO It's not the best way
+                models.Post.findById(comment.postId, function(err, post) {
+                  if (post) {
+                    post.getComments(function(err, comments) {
+                      if (comments) {
+                        if (_.where(comments, { userId: comment.userId }).length === 0) {
+                          models.Stats.findByUserId(comment.userId, function(err, stats) {
+                            if (stats) {
+                              stats.removeDiscussion(function(err, stats) {
+                                callback(err, res)
+                              })
+                            } else {
+                              callback(err, res)
+                            }
+                          })
+                        } else {
                           callback(err, res)
-                        })
+                        }
                       } else {
                         callback(err, res)
                       }
@@ -66,13 +76,9 @@ exports.addModel = function(db) {
                   } else {
                     callback(err, res)
                   }
-                } else {
-                  callback(err, res)
-                }
+                })
               })
-            } else {
-              callback(err, res)
-            }
+            })
           })
         })
       })
@@ -80,22 +86,6 @@ exports.addModel = function(db) {
   }
 
   Comment.prototype = {
-    extractTags: function(callback) {
-      // TODO: tag model
-      var tags = this.body.match(/#[А-Яа-я\w]+/g);
-
-      if (!tags)
-        return callback(null, [])
-
-      async.forEach(tags, function(tag, callback) {
-        db.zincrby('tags:everyone', 1, tag.toLowerCase(), function(err, res) {
-          callback(err)
-        })
-      }, function(err) {
-        callback(err, tags)
-      })
-    },
-
     validate: function(callback) {
       var that = this
 
@@ -117,35 +107,43 @@ exports.addModel = function(db) {
         if (valid) {
           db.exists('comment:' + that.id, function(err, res) {
             if (res == 1) {
-              db.hmset('comment:' + that.id,
-                       { 'body': (params.body.slice(0, 4096) || that.body).toString().trim(),
-                         'updatedAt': that.createdAt.toString()
-                       }, function(err, res) {
-                         // TODO: a bit mess here: update method calls
-                         // pubsub event and Post.newComment calls
-                         // them as well
-                         var pub = redis.createClient();
+              models.Tag.extract(that.body, function(err, oldPostTagsInfo) {
+                models.Tag.extract((params.body.slice(0, 512) || that.body).toString().trim(), function(err, newPostTagsInfo) {
+                  models.Tag.diff(oldPostTagsInfo, newPostTagsInfo, function(err, diffTagsInfo) {
+                    models.Tag.update(diffTagsInfo, function(err) {
+                      db.hmset('comment:' + that.id,
+                        { 'body': (params.body.slice(0, 4096) || that.body).toString().trim(),
+                          'updatedAt': that.createdAt.toString()
+                        }, function(err, res) {
+                          // TODO: a bit mess here: update method calls
+                          // pubsub event and Post.newComment calls
+                          // them as well
+                          var pub = redis.createClient();
 
-                         pub.publish('updateComment', JSON.stringify({
-                           postId: that.postId,
-                           commentId: that.id
-                         }))
+                          pub.publish('updateComment', JSON.stringify({
+                            postId: that.postId,
+                            commentId: that.id
+                          }))
 
-                         models.Post.findById(that.postId, function(err, post) {
-                           post.getSubscribedTimelinesIds(function(err, timelinesIds) {
-                             async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
-                               pub.publish('updateComment', JSON.stringify({
-                                 timelineId: timelinesIds[timelineId],
-                                 commentId: that.id
-                               }))
+                          models.Post.findById(that.postId, function(err, post) {
+                            post.getSubscribedTimelinesIds(function(err, timelinesIds) {
+                              async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
+                                pub.publish('updateComment', JSON.stringify({
+                                  timelineId: timelinesIds[timelineId],
+                                  commentId: that.id
+                                }))
 
-                               callback(null)
-                             }, function(err) {
-                               callback(err)
-                             })
-                           })
-                         })
-                       })
+                                callback(null)
+                              }, function(err) {
+                                callback(err)
+                              })
+                            })
+                          })
+                        })
+                    })
+                  })
+                })
+              })
             } else {
               callback(err, that)
             }
@@ -176,31 +174,33 @@ exports.addModel = function(db) {
                        }, function(err, res) {
                          models.Post.addComment(that.postId, that.id, function() {
                            //TODO It's not the best way
-                           that.extractTags(function(err, tags) {
-                             models.Post.findById(that.postId, function(err, post) {
-                               if (post) {
-                                 post.getComments(function(err, comments) {
-                                   if (comments) {
-                                     if (_.where(comments, { userId: that.userId }).length == 1) {
-                                       models.Stats.findByUserId(that.userId, function(err, stats) {
-                                         if (stats) {
-                                           stats.addDiscussion(function(err, stats) {
+                           models.Tag.extract(that.body, function(err, result) {
+                             models.Tag.update(result, function(err) {
+                               models.Post.findById(that.postId, function(err, post) {
+                                 if (post) {
+                                   post.getComments(function(err, comments) {
+                                     if (comments) {
+                                       if (_.where(comments, { userId: that.userId }).length == 1) {
+                                         models.Stats.findByUserId(that.userId, function(err, stats) {
+                                           if (stats) {
+                                             stats.addDiscussion(function(err, stats) {
+                                               callback(err, that)
+                                             })
+                                           } else {
                                              callback(err, that)
-                                           })
-                                         } else {
-                                           callback(err, that)
-                                         }
-                                       })
+                                           }
+                                         })
+                                       } else {
+                                         callback(err, that)
+                                       }
                                      } else {
                                        callback(err, that)
                                      }
-                                   } else {
-                                     callback(err, that)
-                                   }
-                                 })
-                               } else {
-                                 callback(err, that)
-                               }
+                                   })
+                                 } else {
+                                   callback(err, that)
+                                 }
+                               })
                              })
                            })
                          })
