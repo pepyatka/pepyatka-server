@@ -16,22 +16,18 @@ exports.addModel = function(db) {
   }
 
   Tag.diff = function(object1, object2, callback) {
-    var comparisonTags = []
     var result = {}
     for (var tagName in object1) {
-      comparisonTags.push(tagName)
-      if (object2[tagName]) {
-        result[tagName] = object2[tagName] - object1[tagName]
+      if (!object2[tagName]) {
+        result[tagName] = object1[tagName] * -1
         continue
       }
 
-      result[tagName] = object1[tagName] * -1
+      result[tagName] = object2[tagName] - object1[tagName]
+      delete object2[tagName]
     }
 
     for (var tagName in object2) {
-      if (comparisonTags.indexOf(tagName) != -1)
-        continue
-
       result[tagName] = object2[tagName]
     }
 
