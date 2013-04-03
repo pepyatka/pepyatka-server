@@ -36,14 +36,17 @@ exports.addModel = function(db) {
 
   Tag.extract = function(text, callback) {
     var tags = text.match(tagRegExp)
-    async.reduce(tags, {}, function(memo, tag, callback) {
-        if(memo[tag]) {
-          memo[tag]++
-          return callback(null, memo)
-        }
+    if(!tags) return callback(null, {})
 
-        memo[tag] = 1
-        callback(null, memo)
+    async.reduce(tags, {}, function(memo, tag, callback) {
+      tag = tag.toLowerCase()
+      if(memo[tag]) {
+        memo[tag]++
+        return callback(null, memo)
+      }
+
+      memo[tag] = 1
+      callback(null, memo)
     }, function(err, result) {
       callback(err, result)
     })
