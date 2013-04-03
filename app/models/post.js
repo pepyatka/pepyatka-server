@@ -46,6 +46,16 @@ exports.addModel = function(db) {
       // - deletes likes key
       // - delete original post
       async.parallel([
+        // update tags statistics
+        function(callback) {
+          models.Tag.extract(post.body, function(err, tagsInfo) {
+            models.Tag.diff(tagsInfo, {}, function(err, resultTagsInfo) {
+              models.Tag.update(resultTagsInfo, function(err) {
+                callback(err)
+              })
+            })
+          })
+        },
         // remove post from all timelines
         function(callback) {
           post.getTimelinesIds(function(err, timelinesIds) {
@@ -374,22 +384,6 @@ exports.addModel = function(db) {
   }
 
   Post.prototype = {
-    extractTags: function(callback) {
-      // TODO: tag model
-      var tags = this.body.match(/#[А-Яа-я\w]+/g);
-
-      if (!tags)
-        return callback(null, [])
-
-      async.forEach(tags, function(tag, callback) {
-        db.zincrby('tags:everyone', 1, tag.toLowerCase(), function(err, res) {
-          callback(err)
-        })
-      }, function(err) {
-        callback(err, tags)
-      })
-    },
-
     getSubscribedTimelinesIds: function(callback) {
       var that = this
 
@@ -564,27 +558,28 @@ exports.addModel = function(db) {
                        }, function(err, res) {
                          that.saveAttachments(function(err, res) {
                            models.Timeline.newPost(that.id, function() {
-                             that.extractTags(function(err, tags) {
-                               //Add post into statistics
-                               models.Stats.findByUserId(that.userId, function(err, stats) {
-                                 if (!stats) {
-                                   stats = new models.Stats({
-                                     userId: that.userId
-                                   })
-                                   stats.create(function(err, stats) {
+                             models.Tag.extract(that.body, function(err, result) {
+                               models.Tag.update(result, function(err) {
+                                 models.Stats.findByUserId(that.userId, function(err, stats) {
+                                   if (!stats) {
+                                     stats = new models.Stats({
+                                       userId: that.userId
+                                     })
+                                     stats.create(function(err, stats) {
+                                       stats.addPost(function(err, stats) {
+                                         // BUG: updatedAt is different now than we set few lines above
+                                         // XXX: we don't care (yet) if attachment wasn't saved
+                                         callback(null, that)
+                                       })
+                                     })
+                                   } else {
                                      stats.addPost(function(err, stats) {
                                        // BUG: updatedAt is different now than we set few lines above
                                        // XXX: we don't care (yet) if attachment wasn't saved
                                        callback(null, that)
                                      })
-                                   })
-                                 } else {
-                                   stats.addPost(function(err, stats) {
-                                     // BUG: updatedAt is different now than we set few lines above
-                                     // XXX: we don't care (yet) if attachment wasn't saved
-                                     callback(null, that)
-                                   })
-                                 }
+                                   }
+                                 })
                                })
                              })
                            })
@@ -609,28 +604,36 @@ exports.addModel = function(db) {
         if (valid) {
           db.exists('post:' + that.id, function(err, res) {
             if (res == 1) {
-              db.hmset('post:' + that.id,
-                       { 'body': (params.body.slice(0, 512) || that.body).toString().trim(),
-                         'updatedAt': that.updatedAt.toString()
-                       }, function(err, res) {
-                         // TODO: a bit mess here: update method calls
-                         // pubsub event and Timeline.newPost calls
-                         // them as well
-                         var pub = redis.createClient();
+              models.Tag.extract(that.body, function(err, oldPostTagsInfo) {
+                models.Tag.extract((params.body.slice(0, 512) || that.body).toString().trim(), function(err, newPostTagsInfo) {
+                  models.Tag.diff(oldPostTagsInfo, newPostTagsInfo, function(err, diffTagsInfo) {
+                    models.Tag.update(diffTagsInfo, function(err) {
+                      db.hmset('post:' + that.id,
+                        { 'body': (params.body.slice(0, 512) || that.body).toString().trim(),
+                          'updatedAt': that.updatedAt.toString()
+                        }, function(err, res) {
+                          // TODO: a bit mess here: update method calls
+                          // pubsub event and Timeline.newPost calls
+                          // them as well
+                          var pub = redis.createClient();
 
-                         that.getSubscribedTimelinesIds(function(err, timelinesIds) {
-                           async.forEach(timelinesIds, function(timelineId, callback) {
-                             pub.publish('updatePost', JSON.stringify({ 
-                               postId: that.id,
-                               timelineId: timelineId 
-                             }))
+                          that.getSubscribedTimelinesIds(function(err, timelinesIds) {
+                            async.forEach(timelinesIds, function(timelineId, callback) {
+                              pub.publish('updatePost', JSON.stringify({
+                                postId: that.id,
+                                timelineId: timelineId
+                              }))
 
-                             callback(null)
-                           }, function(err) {
-                             callback(err, that)
-                           })
-                         })
-                       })
+                              callback(null)
+                            }, function(err) {
+                              callback(err, that)
+                            })
+                          })
+                        })
+                    })
+                  })
+                })
+              })
             } else {
               callback(err, res)
             }
