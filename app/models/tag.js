@@ -2,6 +2,8 @@ var uuid = require('node-uuid')
   , models = require('../models')
   , async = require('async')
 
+const tagRegExp = /#[А-Яа-я\w]+/ig
+
 exports.addModel = function(db) {
   function Tag(params) {
     this.name = params.id
@@ -37,19 +39,16 @@ exports.addModel = function(db) {
   }
 
   Tag.extract = function(text, callback) {
-    var tags = text.match(/#[А-Яа-я\w]+/ig)
-    var result = {}
-    async.forEach(tags, function(tag, done) {
-      tag = tag.toLowerCase()
-      if (result[tag]) {
-        result[tag]++
-        done()
-      }
+    var tags = text.match(tagRegExp)
+    async.reduce(tags, {}, function(memo, tag, callback) {
+        if(memo[tag]) {
+          memo[tag]++
+          return callback(null, memo)
+        }
 
-      result[tag] = 1
-      done()
-    },
-    function(err) {
+        memo[tag] = 1
+        callback(null, memo)
+    }, function(err, result) {
       callback(err, result)
     })
   }
