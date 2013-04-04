@@ -126,7 +126,6 @@ App.Subscription = Ember.Object.extend({
 
   init: function() {
     var that = this
-    console.log(App.router.currentState.name)
     var findPost = function(postId) {
       switch (App.router.currentState.name) {
       case "aPost":
