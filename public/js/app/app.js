@@ -134,6 +134,8 @@ App.Subscription = Ember.Object.extend({
         break;
       case "posts":
       case "userTimeline":
+      case "userLikesTimeline":
+      case "userCommentsTimeline":
         return App.postsController.find(function(post) {
           return post.id == postId
         })
@@ -652,7 +654,7 @@ App.CommentPostViewSubst = Ember.View.extend(Ember.TargetActionSupport, {
     //   return false
 
     return this.get('parentView.isFormVisible') == false;
-  }.property('parentView.isFormVisible'),
+  }.property('parentView.isFormVisible')
 })
 
 // Text field to post a comment. Separate view to make it hideable
