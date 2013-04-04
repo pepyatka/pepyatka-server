@@ -56,11 +56,10 @@ exports.addModel = function(db) {
       if (res === 1) return callback(err, everyoneId)
 
       db.hmset('timeline:' + everyoneId,
-        { 'name': 'Posts',
-          'userId': ''
-        }, function(err, res) {
-          callback(err, everyoneId)
-        })
+                 { 'name': 'Posts' }
+               , function(err, res) {
+                 callback(err, everyoneId)
+               })
     })
   }
 
@@ -69,7 +68,8 @@ exports.addModel = function(db) {
 
     models.Post.findById(postId, function(err, post) {
       post.getSubscribedTimelinesIds(function(err, timelinesIds) {
-        //we add everyoneTimelineId to timelineIds, and newPost will be put in everyone timeline
+        // we add everyoneTimelineId to timelineIds, and newPost will
+        // be put in everyone timeline
         Timeline.getEveryoneTimelineId(function(err, everyoneTimelineId) {
           timelinesIds.push(everyoneTimelineId)
 
