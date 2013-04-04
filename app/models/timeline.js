@@ -210,9 +210,7 @@ exports.addModel = function(db) {
 
       if (select.indexOf('user') != -1) {
         models.User.findById(that.userId, function(err, user) {
-          user.toJSON(params.user || {}, function(err, userJSON) {
-            json.user = userJSON
-
+          var fn = function() {
             if (select.indexOf('posts') != -1) {
               that.getPosts(that.start, that.num, function(err, posts) {
                 async.map(posts, function(post, callback) {
@@ -242,6 +240,16 @@ exports.addModel = function(db) {
             } else {
               callback(err, json)
             }
+          }
+
+          // most likely this is everyone timeline
+          if (user === null)
+            return fn()
+
+          user.toJSON(params.user || {}, function(err, userJSON) {
+            json.user = userJSON
+
+            fn()
           })
         })
       } else {

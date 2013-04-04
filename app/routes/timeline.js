@@ -54,6 +54,21 @@ exports.addRoutes = function(app) {
     })
   })
 
+  app.get('/v1/timeline/everyone', function(req, res) {
+    models.Timeline.getEveryoneTimeline({
+      start: req.query.start
+    }, function(err, timeline) {
+      console.log(timeline)
+      if (timeline) {
+        timeline.toJSON(timelineSerializer, function(err, json) {
+          res.jsonp(json);
+        })
+      } else {
+        res.jsonp({});
+      }
+    })
+  }),
+
   app.get('/v1/timeline/:username', function(req, res){
     // XXX: calling model's function affects overall performance, e.g.
     // in this case we need just one user paramers: id, however

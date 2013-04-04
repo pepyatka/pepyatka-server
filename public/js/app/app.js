@@ -1459,6 +1459,33 @@ App.Router = Ember.Router.extend({
       }
     }),
 
+    publicTimeline: Ember.Route.extend({
+      route: '/public',
+
+      showPost: Ember.Route.transitionTo('aPost'),
+      showAllPosts: Ember.Route.transitionTo('posts'),
+      showSubscribers: Ember.Route.transitionTo('subscribers'),
+      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
+      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+      showTop: Ember.Route.transitionTo('top'),
+
+      connectOutlets: function(router, username) {
+        App.postsController.set('timeline', 'everyone')
+        router.get('applicationController').connectOutlet('posts', App.postsController.findAll(0));
+      },
+
+      serialize: function(router) {
+        return {username: 'everyone'}
+      },
+
+      deserialize: function(router, urlParams) {
+        return 'everyone'
+      }
+    }),
+
     aPost: Ember.Route.extend({
       route: '/posts/:postId',
 
