@@ -74,7 +74,6 @@ stats:subscripions { <userId>:<subscriptions> }
 tags:<userId> { <tag>:<score> }
 
 as special case there are tags: tags:everyone
-
 ```
 
 API
@@ -82,6 +81,7 @@ API
 
 ### Timeline
 - GET /v1/timeline/:username - returns all posts from user <username>
+- GET /v1/timeline/everyone - returns all posts from everyone
 - GET /v1/timeline - returns river of news for auth user
 - POST /v1/timeline/:timelineId/subscribe
 - POST /v1/timeline/:timelineId/unsubscribe
