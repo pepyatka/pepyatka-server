@@ -126,14 +126,17 @@ App.Subscription = Ember.Object.extend({
 
   init: function() {
     var that = this
+    console.log(App.router.currentState.name)
     var findPost = function(postId) {
       switch (App.router.currentState.name) {
       case "aPost":
         if (App.onePostController.content.id == postId)
           return App.onePostController.content
         break;
+      case "root":
       case "posts":
       case "userTimeline":
+      case "publicTimeline":
       case "userLikesTimeline":
       case "userCommentsTimeline":
         return App.postsController.find(function(post) {
