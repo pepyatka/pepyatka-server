@@ -2,6 +2,7 @@ var models = require('../models')
   , async = require('async')
   , redis = require('redis')
   , _ = require('underscore')
+  , uuid = require('node-uuid')
 
 exports.addModel = function(db) {
   function Timeline(params) {
@@ -41,26 +42,53 @@ exports.addModel = function(db) {
     })
   }
 
+  Timeline.getEveryoneTimeline = function(params, callback) {
+    Timeline.getEveryoneTimelineId(function(err, timelineId) {
+      Timeline.findById(timelineId, params, function(err, timeline) {
+        return callback(err, timeline)
+      })
+    })
+  }
+
+  Timeline.getEveryoneTimelineId = function(callback) {
+    var everyoneId = 'everyone'
+    db.exists('timeline:' + everyoneId, function(err, res) {
+      if (res === 1) return callback(err, everyoneId)
+
+      db.hmset('timeline:' + everyoneId,
+        { 'name': 'Posts',
+          'userId': ''
+        }, function(err, res) {
+          callback(err, everyoneId)
+        })
+    })
+  }
+
   Timeline.newPost = function(postId, callback) {
     var currentTime = new Date().getTime()
 
     models.Post.findById(postId, function(err, post) {
       post.getSubscribedTimelinesIds(function(err, timelinesIds) {
-        var pub = redis.createClient();
+        //we add everyoneTimelineId to timelineIds, and newPost will be put in everyone timeline
+        Timeline.getEveryoneTimelineId(function(err, everyoneTimelineId) {
+          timelinesIds.push(everyoneTimelineId)
 
-        async.forEach(timelinesIds, function(timelineId, callback) {
-          db.zadd('timeline:' + timelineId + ':posts', currentTime, postId, function(err, res) {
-            db.hset('post:' + postId, 'updatedAt', currentTime, function(err, res) {
-              db.sadd('post:' + postId + ':timelines', timelineId, function(err, res) {
-                pub.publish('newPost', JSON.stringify({ postId: postId,
-                                                        timelineId: timelineId }))
+          var pub = redis.createClient();
 
-                callback(err)
+          async.forEach(timelinesIds, function(timelineId, callback) {
+            db.zadd('timeline:' + timelineId + ':posts', currentTime, postId, function(err, res) {
+              db.hset('post:' + postId, 'updatedAt', currentTime, function(err, res) {
+                db.sadd('post:' + postId + ':timelines', timelineId, function(err, res) {
+                  pub.publish('newPost', JSON.stringify({ postId: postId,
+                    timelineId: timelineId }))
+
+                  callback(err)
+                })
               })
             })
+          }, function(err) {
+            callback(err)
           })
-        }, function(err) {
-          callback(err)
         })
       })
     })
