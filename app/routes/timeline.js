@@ -58,7 +58,6 @@ exports.addRoutes = function(app) {
     models.Timeline.getEveryoneTimeline({
       start: req.query.start
     }, function(err, timeline) {
-      console.log(timeline)
       if (timeline) {
         timeline.toJSON(timelineSerializer, function(err, json) {
           res.jsonp(json);
