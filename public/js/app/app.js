@@ -792,6 +792,13 @@ App.OnePostView = Ember.View.extend({
     this.toggleProperty('isFormVisible');
   },
 
+  didInsertElement: function() {
+    // wrap anchor tags around links in comments
+    this.$().find('.body').anchorTextUrls();
+    // wrap hashtags around text in post text
+    this.$().find('.body').hashTagsUrls();
+  },
+
   // XXX: kind of dup of App.PostContainerView.unlikePost function
   unlikePost: function() {
     App.postsController.unlikePost(App.onePostController.content.id)
