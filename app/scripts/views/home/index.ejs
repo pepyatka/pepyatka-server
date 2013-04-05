@@ -623,9 +623,9 @@
 <script type="text/x-handlebars" data-template-name="subscriptions">
   <h3>Subscriptions {{App.subscriptionsController.username}}</h3>
 
-  <ul>
+  <ul style="list-style:none">
     {{#each content}}
-      <li><a href="/users/{{unbound user.username}}">{{user.username}}</a> - {{name}}</li>
+      <li><a href="/users/{{unbound user.username}}">{{user.username}}</a></li>
     {{/each}}
   </ul>
 </script>

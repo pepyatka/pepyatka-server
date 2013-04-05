@@ -1121,6 +1121,16 @@ App.SubscriptionsController = Ember.ArrayController.extend({
   verb: 'subscriptions',
 
   findAll: function(username) {
+    var filterSubscriptionsByUsername = function(subscriptions) {
+      var filteredSubscriptions = []
+      $.each(subscriptions, function(number, subscription) {
+        if (subscription.name == 'Posts')
+          filteredSubscriptions.push(subscription)
+      })
+
+      return filteredSubscriptions
+    }
+
     this.set('isLoaded', false)
 
     $.ajax({
@@ -1130,7 +1140,7 @@ App.SubscriptionsController = Ember.ArrayController.extend({
       success: function(response) {
         App.ApplicationController.subscription.unsubscribe()
 
-        this.set('content', response)
+        this.set('content', filterSubscriptionsByUsername(response))
         this.set('username', username)
 
         this.set('isLoaded', true)
