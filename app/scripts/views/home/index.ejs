@@ -623,9 +623,9 @@
 <script type="text/x-handlebars" data-template-name="subscriptions">
   <h3>Subscriptions {{App.subscriptionsController.username}}</h3>
 
-  <ul style="list-style:none">
+  <ul>
     {{#each content}}
-      <li><a href="/users/{{unbound user.username}}">{{user.username}}</a></li>
+      <li><a {{action showUserTimeline user.username href="true"}}>{{user.username}}</a></li>
     {{/each}}
   </ul>
 </script>
@@ -633,9 +633,9 @@
 <script type="text/x-handlebars" data-template-name="subscribers">
   <h3>Subscribers {{App.subscribersController.username}}</h3>
 
-  <ul style="list-style:none">
+  <ul>
     {{#each content}}
-      <li><a href="/users/{{unbound username}}">{{username}}</a></li>
+      <li><a {{action showUserTimeline username href="true"}}>{{username}}</a></li>
     {{/each}}
   </ul>
 </script>
@@ -645,7 +645,7 @@
 
   <ul>
     {{#each content}}
-      <li>{{username}}</li>
+      <li><a {{action showUserTimeline username href="true"}}>{{username}}</a></li>
     {{/each}}
   </ul>
 </script>
