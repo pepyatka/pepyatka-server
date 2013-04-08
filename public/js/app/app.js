@@ -152,7 +152,7 @@ App.Subscription = Ember.Object.extend({
     //FIXME We shouldn't use delay. We need to use bindings
     var restoreLinksAndHashtags = function(element) {
       //set delay because element.set() is async and slower then other operations here
-      $(element).oneTime(1, function(number) {
+      $(element).oneTime(100, function(number) {
         $('.text').filter(":contains('" + element.get('body') + "')").anchorTextUrls()
         $('.text').filter(":contains('" + element.get('body') + "')").hashTagsUrls()
       })
@@ -807,10 +807,17 @@ App.OnePostView = Ember.View.extend({
   },
 
   didInsertElement: function() {
-    // wrap anchor tags around links in comments
-    this.$().find('.body').anchorTextUrls();
-    // wrap hashtags around text in post text
-    this.$().find('.body').hashTagsUrls();
+    //FIXME We shouldn't use delay. We need to use bindings
+    $(this).oneTime(100, function(number) {
+      // wrap anchor tags around links in comments
+      this.$().find('.body').anchorTextUrls();
+      // wrap hashtags around text in post text
+      this.$().find('.body').hashTagsUrls();
+    })
+//    // wrap anchor tags around links in comments
+//    this.$().find('.body').anchorTextUrls();
+//    // wrap hashtags around text in post text
+//    this.$().find('.body').hashTagsUrls();
   },
 
   // XXX: kind of dup of App.PostContainerView.unlikePost function
