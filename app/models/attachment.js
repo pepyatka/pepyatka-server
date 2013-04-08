@@ -76,12 +76,12 @@ exports.addModel = function(db) {
 
       if (this.thumbnailId) {
         this.thumbnailId = this.thumbnailId.toString()
-        params['thumbnailId'] = this.thumbnailId
+        params.thumbnailId = this.thumbnailId
       }
 
       if (this.postId) {
         this.postId = this.postId.toString()
-        params['postId'] = this.postId.toString()
+        params.postId = this.postId.toString()
       }
 
       this.validate(function(valid) {
@@ -111,7 +111,7 @@ exports.addModel = function(db) {
         return callback(null, attrs)
 
       models.Attachment.findById(this.thumbnailId, function(err, thumbnail) {
-        attrs['thumbnail'] = {
+        attrs.thumbnail = {
           id: thumbnail.id,
           // ext: thumbnail.ext,
           // filename: thumbnail.filename,

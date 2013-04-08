@@ -3,7 +3,7 @@ var uuid = require('node-uuid')
   , async = require('async')
 
 exports.addModel = function(db) {
-  const tagRegExp = /#[А-Яа-я\w]+/ig
+  var tagRegExp = /#[А-Яа-я\w]+/ig
 
   function Tag(params) {
     this.name = params.id
@@ -23,11 +23,11 @@ exports.addModel = function(db) {
         continue
       }
 
-      result[tagName] = object2[tagName] - object1[tagName]
+      result[tagName] = object2[tagName] - object1[tagName];
       delete object2[tagName]
     }
 
-    for (var tagName in object2) {
+    for (var tagName2 in object2) {
       result[tagName] = object2[tagName]
     }
 

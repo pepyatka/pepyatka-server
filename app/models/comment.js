@@ -208,7 +208,7 @@ exports.addModel = function(db) {
     toJSON: function(params, callback) {
       var that = this
         , json = {}
-        , select = params['select'] ||
+        , select = params.select ||
             models.Comment.getAttributes()
 
       if (select.indexOf('id') != -1)

@@ -24,8 +24,8 @@ exports.addModel = function(db) {
         return callback(1, null)
 
       attrs.id = timelineId
-      attrs['start'] = params['start']
-      attrs['num'] = params['num']
+      attrs.start = params.start
+      attrs.num = params.num
 
       callback(err, new Timeline(attrs))
     })
@@ -190,7 +190,7 @@ exports.addModel = function(db) {
     toJSON: function(params, callback) {
       var that = this
         , json = {}
-        , select = params['select'] ||
+        , select = params.select ||
             models.Timeline.getAttributes()
 
       if (select.indexOf('id') != -1)
