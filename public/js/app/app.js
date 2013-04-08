@@ -445,10 +445,6 @@ App.PostContainerView = Ember.View.extend({
 
   destroyPost: function() {
     App.postsController.destroyPost(this.content.id)
-  },
-
-  willRerender: function() {
-    console.log('A')
   }
 });
 
