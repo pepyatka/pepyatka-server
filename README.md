@@ -102,7 +102,7 @@ API
 - DELETE /v1/comments/:commentId
 - PATCH /v1/comments/:commentId
 
-### Users
+### Users and groups
 - GET /v1/users/:userId
 - GET /v1/users/:username/subscriptions
 - GET /v1/users/:username/subscribers - returns Posts timeline subscribers
@@ -110,16 +110,9 @@ API
 - POST /v1/users/:username/subscriptions/:userId/remove
 - POST /v1/users/:username/subscriptions/:userId/admin
 - POST /v1/users/:username/subscriptions/:userId/unadmin
-
-### Groups
-- not implemented yet
-- GET /v1/groups
-- GET /v1/groups/:groupId
-- GET /v1/groups/:groupId/subscribers - returns Posts timeline subscribers
-- GET /v1/groups/:groupId/posts
-- DELETE /v1/groups/:groupId
-- PATCH /v1/groups/:groupId
-- POST /v1/groups
+- POST /v1/users # it's a dup of sign up
+- PATCH /v1/users/:groupId
+- DELETE /v1/users/:groupId
 
 ### Statistics
 - GET /v1/top/:category - returns an array of users with the highest
