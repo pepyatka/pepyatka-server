@@ -14,27 +14,29 @@ exports.addRoutes = function(app) {
     searchQuery = searchQuery.replace(/#/g, configLocal.getWordWhichEqualHashTag())
     var parsedQuery = parseQuery(searchQuery);
 
-    if (parsedQuery) {
-      var query = {
-        index: 'pepyatka',
-        type: 'post',
-        queryObject: {
-          "sort" : [
-            {"timestamp" : {"order" : "desc"}}
-          ],
-          "size" : pageSize,
-          "from" : pageStart,
-          "query" : parsedQuery
-        }
-      };
+    if (!parsedQuery)
+      return res.jsonp({}, 422)
 
-      startSearching(query, function(json){
-        res.jsonp(json);
-      })
-    }
+    var query = {
+      index: 'pepyatka',
+      type: 'post',
+      queryObject: {
+        "sort" : [
+          {"timestamp" : {"order" : "desc"}}
+        ],
+        "size" : pageSize,
+        "from" : pageStart,
+        "query" : parsedQuery
+      }
+    };
+
+    startSearching(query, function(json){
+      res.jsonp(json);
+    })
   })
 }
 
+// FIXME: namespace-spoiling
 var replaceWhitespacesTOAND = function(searchQuery) {
   searchQuery = searchQuery.replace(/ +(?!AND)(?!OR)/g, ' AND ');
   searchQuery = searchQuery.replace(/ AND AND /g, ' AND ');
@@ -127,7 +129,7 @@ var parseQuery = function(searchQuery) {
         "should": conditions,
         "minimum_number_should_match": 1
       }
-    };
+    }
   }
 
   return boolQuery;

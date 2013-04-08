@@ -23,7 +23,7 @@ exports.addModel = function(db) {
 
   Comment.findById = function(commentId, callback) {
     db.hgetall('comment:' + commentId, function(err, attrs) {
-      if (!attrs)
+      if (!attrs || err)
         return callback(err, null)
 
       attrs.id = commentId
@@ -53,29 +53,25 @@ exports.addModel = function(db) {
 
                 //TODO It's not the best way
                 models.Post.findById(comment.postId, function(err, post) {
-                  if (post) {
-                    post.getComments(function(err, comments) {
-                      if (comments) {
-                        if (_.where(comments, { userId: comment.userId }).length === 0) {
-                          models.Stats.findByUserId(comment.userId, function(err, stats) {
-                            if (stats) {
-                              stats.removeDiscussion(function(err, stats) {
-                                callback(err, res)
-                              })
-                            } else {
-                              callback(err, res)
-                            }
-                          })
-                        } else {
-                          callback(err, res)
-                        }
-                      } else {
+                  if (!post)
+                    return callback(err, null)
+
+                  post.getComments(function(err, comments) {
+                    if (!comments)
+                      return callback(err, null)
+
+                    if (_.where(comments, { userId: comment.userId }).length !== 0)
+                      return callback(err, null)
+
+                    models.Stats.findByUserId(comment.userId, function(err, stats) {
+                      if (!stats || err)
+                        return callback(err, null)
+
+                      stats.removeDiscussion(function(err, stats) {
                         callback(err, res)
-                      }
+                      })
                     })
-                  } else {
-                    callback(err, res)
-                  }
+                  })
                 })
               })
             })
@@ -104,54 +100,52 @@ exports.addModel = function(db) {
       this.updatedAt = new Date().getTime()
 
       this.validate(function(valid) {
-        if (valid) {
-          db.exists('comment:' + that.id, function(err, res) {
-            if (res == 1) {
-              var newBody = (params.body.slice(0, 4096) || that.body).toString().trim()
-              models.Tag.extract(that.body, function(err, oldPostTagsInfo) {
-                models.Tag.extract(newBody, function(err, newPostTagsInfo) {
-                  models.Tag.diff(oldPostTagsInfo, newPostTagsInfo, function(err, diffTagsInfo) {
-                    models.Tag.update(diffTagsInfo, function(err) {
-                      db.hmset('comment:' + that.id,
-                        { 'body': newBody,
-                          'updatedAt': that.createdAt.toString()
-                        }, function(err, res) {
-                          // TODO: a bit mess here: update method calls
-                          // pubsub event and Post.newComment calls
-                          // them as well
-                          var pub = redis.createClient();
+        if (!valid)
+          return callback(1, that)
 
-                          pub.publish('updateComment', JSON.stringify({
-                            postId: that.postId,
-                            commentId: that.id
-                          }))
+        db.exists('comment:' + that.id, function(err, res) {
+          if (res !== 1)
+            return callback(err, that)
 
-                          models.Post.findById(that.postId, function(err, post) {
-                            post.getSubscribedTimelinesIds(function(err, timelinesIds) {
-                              async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
-                                pub.publish('updateComment', JSON.stringify({
-                                  timelineId: timelinesIds[timelineId],
-                                  commentId: that.id
-                                }))
+          var newBody = (params.body.slice(0, 4096) || that.body).toString().trim()
+          models.Tag.extract(that.body, function(err, oldPostTagsInfo) {
+            models.Tag.extract(newBody, function(err, newPostTagsInfo) {
+              models.Tag.diff(oldPostTagsInfo, newPostTagsInfo, function(err, diffTagsInfo) {
+                models.Tag.update(diffTagsInfo, function(err) {
+                  db.hmset('comment:' + that.id,
+                           { 'body': newBody,
+                             'updatedAt': that.createdAt.toString()
+                           }, function(err, res) {
+                             // TODO: a bit mess here: update method calls
+                             // pubsub event and Post.newComment calls
+                             // them as well
+                             var pub = redis.createClient();
 
-                                callback(null)
-                              }, function(err) {
-                                callback(err)
-                              })
-                            })
-                          })
-                        })
-                    })
-                  })
+                             pub.publish('updateComment', JSON.stringify({
+                               postId: that.postId,
+                               commentId: that.id
+                             }))
+
+                             models.Post.findById(that.postId, function(err, post) {
+                               post.getSubscribedTimelinesIds(function(err, timelinesIds) {
+                                 async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
+                                   pub.publish('updateComment', JSON.stringify({
+                                     timelineId: timelinesIds[timelineId],
+                                     commentId: that.id
+                                   }))
+
+                                   callback(null)
+                                 }, function(err) {
+                                   callback(err)
+                                 })
+                               })
+                             })
+                           })
                 })
               })
-            } else {
-              callback(err, that)
-            }
+            })
           })
-        } else {
-          callback(1, that)
-        }
+        })
       })
     },
 
@@ -163,57 +157,51 @@ exports.addModel = function(db) {
       this.id = uuid.v4()
 
       this.validate(function(valid) {
-        if (valid) {
-          db.exists('comment:' + that.id, function(err, res) {
-            if (res === 0) {
-              var commentBody = (that.body.slice(0, 4096) || "").toString().trim()
-              db.hmset('comment:' + that.id,
-                       { 'body': commentBody,
-                         'createdAt': that.createdAt.toString(),
-                         'updatedAt': that.createdAt.toString(),
-                         'userId': that.userId.toString(),
-                         'postId': that.postId.toString()
-                       }, function(err, res) {
-                         models.Post.addComment(that.postId, that.id, function() {
-                           //TODO It's not the best way
-                           models.Tag.extract(commentBody, function(err, result) {
-                             models.Tag.update(result, function(err) {
-                               models.Post.findById(that.postId, function(err, post) {
-                                 if (post) {
-                                   post.getComments(function(err, comments) {
-                                     if (comments) {
-                                       if (_.where(comments, { userId: that.userId }).length == 1) {
-                                         models.Stats.findByUserId(that.userId, function(err, stats) {
-                                           if (stats) {
-                                             stats.addDiscussion(function(err, stats) {
-                                               callback(err, that)
-                                             })
-                                           } else {
-                                             callback(err, that)
-                                           }
-                                         })
-                                       } else {
-                                         callback(err, that)
-                                       }
-                                     } else {
-                                       callback(err, that)
-                                     }
-                                   })
-                                 } else {
+        if (!valid)
+          return callback(1, that)
+
+        db.exists('comment:' + that.id, function(err, res) {
+          if (res !== 0)
+            return callback(err, that)
+
+          var commentBody = (that.body.slice(0, 4096) || "").toString().trim()
+          db.hmset('comment:' + that.id,
+                   { 'body': commentBody,
+                     'createdAt': that.createdAt.toString(),
+                     'updatedAt': that.createdAt.toString(),
+                     'userId': that.userId.toString(),
+                     'postId': that.postId.toString()
+                   }, function(err, res) {
+                     models.Post.addComment(that.postId, that.id, function() {
+                       //TODO It's not the best way
+                       models.Tag.extract(commentBody, function(err, result) {
+                         models.Tag.update(result, function(err) {
+                           models.Post.findById(that.postId, function(err, post) {
+                             if (!post)
+                               return callback(err, that)
+
+                             post.getComments(function(err, comments) {
+                               if (!comments)
+                                 return callback(err, that)
+
+                               if (_.where(comments, { userId: that.userId }).length !== 1)
+                                 return callback(err, that)
+
+                               models.Stats.findByUserId(that.userId, function(err, stats) {
+                                 if (!stats)
+                                   return callback(err, that)
+
+                                 stats.addDiscussion(function(err, stats) {
                                    callback(err, that)
-                                 }
+                                 })
                                })
                              })
                            })
                          })
                        })
-            } else {
-              callback(err, that)
-            }
-          })
-        } else {
-          callback(1, that)
-        }
+                     })
+                   })
+        })
       })
     },
 

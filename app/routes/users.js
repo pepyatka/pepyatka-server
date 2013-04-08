@@ -21,10 +21,10 @@ exports.addRoutes = function(app) {
 
     var userId = req.user.id
 
-    if (userId)
-      res.redirect('/v1/users/' + userId)
-    else
-      res.jsonp({}, 404)
+    if (!userId)
+      return res.jsonp({}, 404)
+
+    res.redirect('/v1/users/' + userId)
   })
 
   app.get('/v1/users/:username/subscribers', function(req, res) {

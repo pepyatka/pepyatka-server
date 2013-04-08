@@ -24,13 +24,12 @@ exports.addModel = function(db) {
 
   Stats.findByUserId = function(userId, callback) {
     db.hgetall('stats:' + userId, function(err, attrs) {
-      if (attrs) {
-        attrs.userId = userId
+      if (!attrs || err)
+        return callback(err, null)
 
-        callback(err, new Stats(attrs))
-      } else {
-        callback(err, null)
-      }
+      attrs.userId = userId
+
+      callback(err, new Stats(attrs))
     })
   }
 
@@ -54,57 +53,54 @@ exports.addModel = function(db) {
     create: function(callback) {
       var that = this
       this.validate(function(valid) {
-        if(valid) {
-          async.parallel([
-            function(done){
-              db.exists('stats:' + that.userId, function(err, res) {
-                if (res === 0) {
-                  db.hmset('stats:' + that.userId,
-                    {
-                      'posts' : that.posts.toString(),
-                      'likes' : that.likes.toString(),
-                      'discussions' : that.discussions.toString(),
-                      'subscribers' : that.subscribers.toString(),
-                      'subscriptions' : that.subscriptions.toString()
-                    }, function(err, res) {
-                      done(err, res)
-                    })
-                } else {
-                  done(err, res)
-                }
-              })
-            },
-            function(done){
-              db.zadd('stats:likes', that.likes, that.userId, function(err, res) {
+        if (!valid)
+          return callback(1, that)
+
+        async.parallel([
+          function(done) {
+            db.exists('stats:' + that.userId, function(err, res) {
+              if (res !== 0)
+                return done(err, res)
+
+              db.hmset('stats:' + that.userId, {
+                'posts' : that.posts.toString(),
+                'likes' : that.likes.toString(),
+                'discussions' : that.discussions.toString(),
+                'subscribers' : that.subscribers.toString(),
+                'subscriptions' : that.subscriptions.toString()
+              }, function(err, res) {
                 done(err, res)
               })
-            },
-            function(done){
-              db.zadd('stats:posts', that.posts, that.userId, function(err, res) {
-                done(err, res)
-              })
-            },
-            function(done){
-              db.zadd('stats:discussions', that.discussions, that.userId, function(err, res) {
-                done(err, res)
-              })
-            },
-            function(done){
-              db.zadd('stats:subscribers', that.subscribers, that.userId, function(err, res) {
-                done(err, res)
-              })
-            },
-            function(done){
-              db.zadd('stats:subscriptions', that.subscriptions, that.userId, function(err, res) {
-                done(err, res)
-              })
-            }
-          ], function(err, res) {
-            callback(err, that)
-          })
-        } else {
-          callback(1, that)
-        }
+            })
+          },
+          function(done) {
+            db.zadd('stats:likes', that.likes, that.userId, function(err, res) {
+              done(err, res)
+            })
+          },
+          function(done) {
+            db.zadd('stats:posts', that.posts, that.userId, function(err, res) {
+              done(err, res)
+            })
+          },
+          function(done) {
+            db.zadd('stats:discussions', that.discussions, that.userId, function(err, res) {
+              done(err, res)
+            })
+          },
+          function(done) {
+            db.zadd('stats:subscribers', that.subscribers, that.userId, function(err, res) {
+              done(err, res)
+            })
+          },
+          function(done) {
+            db.zadd('stats:subscriptions', that.subscriptions, that.userId, function(err, res) {
+              done(err, res)
+            })
+          }
+        ], function(err, res) {
+          callback(err, that)
+        })
       })
     },
 
