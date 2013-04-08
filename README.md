@@ -111,8 +111,8 @@ API
 - POST /v1/users/:username/subscriptions/:userId/admin
 - POST /v1/users/:username/subscriptions/:userId/unadmin
 - POST /v1/users # it's a dup of sign up
-- PATCH /v1/users/:groupId
-- DELETE /v1/users/:groupId
+- PATCH /v1/users/:userId
+- DELETE /v1/users/:userId
 
 ### Statistics
 - GET /v1/top/:category - returns an array of users with the highest
