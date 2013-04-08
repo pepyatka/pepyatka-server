@@ -149,15 +149,6 @@ App.Subscription = Ember.Object.extend({
       }
     }
 
-    //FIXME We shouldn't use delay. We need to use bindings
-    var restoreLinksAndHashtags = function(element) {
-      //set delay because element.set() is async and slower then other operations here
-      $(element).oneTime(100, function(number) {
-        $('.text').filter(":contains('" + element.get('body') + "')").anchorTextUrls()
-        $('.text').filter(":contains('" + element.get('body') + "')").hashTagsUrls()
-      })
-    }
-
     this.socket = io.connect('/');
 
     this.socket.on('newPost', function (data) {
@@ -171,7 +162,6 @@ App.Subscription = Ember.Object.extend({
 
       if (post) {
         post.set('body', data.post.body)
-        restoreLinksAndHashtags(post)
       }
     })
 
@@ -807,17 +797,10 @@ App.OnePostView = Ember.View.extend({
   },
 
   didInsertElement: function() {
-    //FIXME We shouldn't use delay. We need to use bindings
-    $(this).oneTime(100, function(number) {
-      // wrap anchor tags around links in comments
-      this.$().find('.body').anchorTextUrls();
-      // wrap hashtags around text in post text
-      this.$().find('.body').hashTagsUrls();
-    })
-//    // wrap anchor tags around links in comments
-//    this.$().find('.body').anchorTextUrls();
-//    // wrap hashtags around text in post text
-//    this.$().find('.body').hashTagsUrls();
+    // wrap anchor tags around links in comments
+    this.$().find('.body').anchorTextUrls();
+    // wrap hashtags around text in post text
+    this.$().find('.body').hashTagsUrls();
   },
 
   // XXX: kind of dup of App.PostContainerView.unlikePost function
@@ -1070,7 +1053,14 @@ App.Post = Ember.Object.extend({
     } else {
       return false
     }
-  }.property('attachments')
+  }.property('attachments'),
+
+  bodyChanged: function() {
+    Ember.run.next(this, function() {
+      $('.text').filter(":contains('" + this.get('body') + "')").anchorTextUrls()
+      $('.text').filter(":contains('" + this.get('body') + "')").hashTagsUrls()
+    })
+  }.observes('body')
 });
 
 App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.SearchPaginationHelper, {
