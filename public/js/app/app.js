@@ -799,6 +799,13 @@ App.OnePostView = Ember.View.extend({
     this.$().find('.body').hashTagsUrls();
   },
 
+  postLoaded: function() {
+    Ember.run.next(this, function() {
+      this.$().find('.body').anchorTextUrls()
+      this.$().find('.body').hashTagsUrls()
+    })
+  }.observes('App.onePostController.content'),
+
   // XXX: kind of dup of App.PostContainerView.unlikePost function
   unlikePost: function() {
     App.postsController.unlikePost(App.onePostController.content.id)
@@ -1049,14 +1056,7 @@ App.Post = Ember.Object.extend({
     } else {
       return false
     }
-  }.property('attachments'),
-
-  bodyChanged: function() {
-    Ember.run.next(this, function() {
-      $('.text').filter(":contains('" + this.get('body') + "')").anchorTextUrls()
-      $('.text').filter(":contains('" + this.get('body') + "')").hashTagsUrls()
-    })
-  }.observes('body')
+  }.property('attachments')
 });
 
 App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.SearchPaginationHelper, {
@@ -1424,6 +1424,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
           App.ApplicationController.subscription.subscribe('post', response.id)
         }
         this.setProperties(response)
+        App.onePostController.set('content', response)
       }
     })
     return post;
