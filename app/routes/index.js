@@ -1,6 +1,10 @@
 var models = require('../models');
 
 exports.addRoutes = function(app) {
+  app.get('/signup', function(req, res) {
+    res.render('./home')
+  });
+
   app.get('/top/:category', function(req, res) {
     res.render('./home')
   });

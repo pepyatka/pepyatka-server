@@ -6,7 +6,7 @@ exports.addRoutes = function(app) {
     res.render('session');
   });
 
-  app.post('/session', function(req, res, next) {
+  app.post('/v1/session', function(req, res, next) {
     passport.authenticate('local', function(err, user, info) {
       if (err) { return next(err); }
       if (!user) { return res.redirect('/session'); }

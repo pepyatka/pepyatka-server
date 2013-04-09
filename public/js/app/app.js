@@ -445,10 +445,6 @@ App.PostContainerView = Ember.View.extend({
 
   destroyPost: function() {
     App.postsController.destroyPost(this.content.id)
-  },
-
-  willRerender: function() {
-    console.log('A')
   }
 });
 
@@ -1223,6 +1219,37 @@ App.TopView = Ember.View.extend({
   templateName: 'top-view'
 });
 
+App.SessionController = Ember.ArrayController.extend({
+  resourceUrl: '/v1/session',
+  login: '',
+  password: '',
+
+  signup: function() {
+    this.set('isLoaded', false)
+
+    $.ajax({
+      url: this.resourceUrl,
+      dataType: 'jsonp',
+      type: 'post',
+      context: this,
+      success: function(response) {
+        App.ApplicationController.subscription.unsubscribe()
+
+        this.set('content', response)
+        this.set('category', category)
+
+        this.set('isLoaded', true)
+      }
+    })
+    return this
+  }
+})
+App.sessionController = App.SessionController.create()
+
+App.SignupView = Ember.View.extend({
+  templateName: 'signup-view'
+});
+
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.PaginationHelper, {
   resourceUrl: '/v1/posts',
   content: [],
@@ -1695,6 +1722,36 @@ App.Router = Ember.Router.extend({
 
       deserialize: function(router, urlParams) {
         return urlParams.category
+      }
+    }),
+
+    signup: Ember.Route.extend({
+      route: '/signup',
+
+      showPost: Ember.Route.transitionTo('aPost'),
+      showAllPosts: Ember.Route.transitionTo('posts'),
+      showSubscribers: Ember.Route.transitionTo('subscribers'),
+      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
+      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+      showTop: Ember.Route.transitionTo('top'),
+      doSignup: Ember.Route.transitionTo('signup'),
+
+      connectOutlets: function(routes, context) {
+        console.log('O')
+        App.router.get('applicationController').connectOutlet('signup', App.sessionController.signup());
+      },
+
+      serialize: function(router, category) {
+        console.log('S')
+//        return {category: category}
+      },
+
+      deserialize: function(router, urlParams) {
+        console.log('D')
+//        return urlParams.category
       }
     })
   })
