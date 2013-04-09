@@ -36,9 +36,9 @@
       <% if (!req.user || req.user.username == 'anonymous') { %>
         {{#unless App.properties.isAuthorized}}
           <div class="span3 signin-toolbar">
-            <a href="/signin">{{t label.signin}}</a>
+            <a {{action signin target="view"}} href="true">{{t label.signin}}</a>
             or
-            <a href="/signup">{{t label.signup}}</a>
+            <a {{action signup target="view"}} href="true">{{t label.signup}}</a>
           </div>
         {{/unless}}
       <% } %>

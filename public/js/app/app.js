@@ -308,6 +308,15 @@ App.Subscription = Ember.Object.extend({
 
 App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
   templateName: 'application',
+
+  signin: function() {
+    App.router.transitionTo('signin')
+  },
+
+  signup: function() {
+    App.router.transitionTo('signup')
+  },
+
   searchPhrase: function() {
     query = App.searchController.body
 
@@ -1238,7 +1247,6 @@ App.SignupController = Ember.ArrayController.extend({
   password: '',
 
   signup: function() {
-//    this.set('isLoaded', false)
     $.ajax({
       url: this.resourceUrl,
       data: { username: this.get('username'), password: this.get('password') },
@@ -1281,7 +1289,6 @@ App.SigninController = Ember.ArrayController.extend({
   password: '',
 
   signin: function() {
-//    this.set('isLoaded', false)
     $.ajax({
       url: this.resourceUrl,
       data: { username: this.get('username'), password: this.get('password') },
@@ -1817,17 +1824,7 @@ App.Router = Ember.Router.extend({
     signup: Ember.Route.extend({
       route: '/signup',
 
-      showPost: Ember.Route.transitionTo('aPost'),
-      showAllPosts: Ember.Route.transitionTo('posts'),
-      showSubscribers: Ember.Route.transitionTo('subscribers'),
-      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
-      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      showTop: Ember.Route.transitionTo('top'),
-      doSignup: Ember.Route.transitionTo('signup'),
-      doSignin: Ember.Route.transitionTo('signin'),
 
       connectOutlets: function(routes, context) {
         App.router.get('applicationController').connectOutlet('signup', App.signupController);
@@ -1837,17 +1834,7 @@ App.Router = Ember.Router.extend({
     signin: Ember.Route.extend({
       route: '/signin',
 
-      showPost: Ember.Route.transitionTo('aPost'),
-      showAllPosts: Ember.Route.transitionTo('posts'),
-      showSubscribers: Ember.Route.transitionTo('subscribers'),
-      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
-      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      showTop: Ember.Route.transitionTo('top'),
-      doSignup: Ember.Route.transitionTo('signup'),
-      doSignin: Ember.Route.transitionTo('signin'),
 
       connectOutlets: function(routes, context) {
         App.router.get('applicationController').connectOutlet('signin', App.signinController);
