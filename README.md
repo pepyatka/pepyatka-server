@@ -71,7 +71,7 @@ stats:discussions { <userId>:<discussions> }
 stats:subscribers { <userId>:<subscribers> }
 stats:subscripions { <userId>:<subscriptions> }
 
-tags:<userId> { <tag>:<score> }
+tags:<userId> { <tag>:<score> } # implemented only for everyone, see below
 
 as special case there are tags: tags:everyone
 ```
