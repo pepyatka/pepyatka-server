@@ -34,13 +34,16 @@
       </div>
 
       <% if (!req.user || req.user.username == 'anonymous') { %>
-        <div class="span3 signin-toolbar">
-          <a href="/session">{{t label.signin}}</a>
-          or
-          <a href="/signup">{{t label.signup}}</a>
-        </div>
+        {{#unless App.properties.isAuthorized}}
+          <div class="span3 signin-toolbar">
+            <a href="/signin">{{t label.signin}}</a>
+            or
+            <a href="/signup">{{t label.signup}}</a>
+          </div>
+        {{/unless}}
       <% } %>
     </div>
+
 
     <div class="row">
       <div class="span9">
@@ -56,7 +59,7 @@
 
             <div class="media-body">
               <div class="author">
-                <a href="/users/<%= req.user.username %>"><%= req.user.username %></a>
+                <a {{bindAttr href="App.properties.userLink"}}>{{App.properties.username}}</a>
               </div>
               <div>
 
@@ -651,16 +654,6 @@
 </script>
 
 <script type="text/x-handlebars" data-template-name="signup-view">
-  <h3>Subscribers {{App.subscribersController.username}}</h3>
-
-  <ul>
-    {{#each content}}
-      <li><a {{action showUserTimeline username href="true"}}>{{username}}</a></li>
-    {{/each}}
-  </ul>
-</script>
-
-<script type="text/x-handlebars" data-template-name="top-view">
   <div class="span3">
     <h2>Sign up</h2>
 
@@ -668,20 +661,48 @@
       <div class="control-group">
         <label class="control-label" for="username">Username</label>
         <div class="controls">
-          <input type="text" id="username" name="username" />
+          {{view Ember.TextField valueBinding="App.signupController.username" type="text" id="username" name="username"}}
         </div>
       </div>
 
       <div class="control-group">
         <label class="control-label" for="password">Password</label>
         <div class="controls">
-          <input type="password" id="password" name="password" />
+          {{view Ember.TextField valueBinding="App.signupController.password" type="password" id="password" name="password"}}
         </div>
       </div>
 
       <div class="control-group">
         <div class="controls span2">
-          <button type="submit" class="btn btn-primary">Sign up</button>
+          <button {{action signup target="view"}} class="btn btn-primary">Sign up</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</script>
+
+<script type="text/x-handlebars" data-template-name="signin-view">
+  <div class="span3">
+    <h2>Sign in</h2>
+
+    <form action="/session" method="post" class="form-horizontal">
+      <div class="control-group">
+        <label class="control-label" for="username">Username</label>
+        <div class="controls">
+          {{view Ember.TextField valueBinding="App.signinController.username" type="text" id="username" name="username"}}
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label" for="password">Password</label>
+        <div class="controls">
+          {{view Ember.TextField valueBinding="App.signinController.password" type="password" id="password" name="password"}}
+        </div>
+      </div>
+
+      <div class="control-group">
+        <div class="controls span2">
+          <button {{action signin target="view"}} class="btn btn-primary">Sign in</button>
         </div>
       </div>
     </form>
@@ -690,9 +711,11 @@
 
 <script type="text/javascript">
   var currentUser
+  var currentUsername
   var isAnonymousPermitted
   <% if (req.user) { %>
     currentUser = '<%= req.user.id %>'
+    var currentUsername = '<%= req.user.username %>'
     isAnonymousPermitted = '<%= req.isAnonymousPermitted %>'
   <% } %>
 
