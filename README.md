@@ -107,9 +107,9 @@ API
 - GET /v1/users/:username/subscriptions
 - GET /v1/users/:username/subscribers - returns Posts timeline subscribers
 - not implemented yet
-- POST /v1/users/:username/subscriptions/:userId/remove
-- POST /v1/users/:username/subscriptions/:userId/admin
-- POST /v1/users/:username/subscriptions/:userId/unadmin
+- DELETE /v1/users/:username/subscribers/:userId
+- POST /v1/users/:username/subscribers/:userId/admin
+- POST /v1/users/:username/subscribers/:userId/unadmin
 - POST /v1/users # it's a dup of sign up
 - PATCH /v1/users/:userId
 - DELETE /v1/users/:userId
