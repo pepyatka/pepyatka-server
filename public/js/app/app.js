@@ -870,6 +870,12 @@ App.UserTimelineView = Ember.View.extend({
 
   unsubscribeTo: function() {
     App.userTimelineController.unsubscribeTo(App.postsController.id)
+  },
+
+  submitPost: function() {
+    App.postsController.submitPost()
+    // dirty way to restore original height of post textarea
+    this.$().find('textarea').height('56px')
   }
 })
 
