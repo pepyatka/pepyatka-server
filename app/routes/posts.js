@@ -11,20 +11,18 @@ exports.addRoutes = function(app) {
 
   app.get('/v1/posts/:postId', function(req, res) {
     models.Post.findById(req.params.postId, function(err, post) {
-      if (post) {
-        post.toJSON(postSerializer, function(err, json) {
-          res.jsonp(json);
-        })
-      } else {
-        res.jsonp({'error': 'Not found'}, 404);
-      }
+      if (!post)
+        return res.jsonp({'error': 'Not found'}, 404);
+
+      post.toJSON(postSerializer, function(err, json) {
+        res.jsonp(json);
+      })
     })
   })
 
   app.post('/v1/posts/:postId/like', function(req, res) {
-    if(!req.user) {
+    if (!req.user)
       return res.jsonp({})
-    }
 
     models.Post.addLike(req.params.postId, req.user.id, function(err, r) {
       // post.toJSON({}, function(err, json) { res.jsonp(json) })
@@ -35,9 +33,8 @@ exports.addRoutes = function(app) {
   })
 
   app.post('/v1/posts/:postId/unlike', function(req, res) {
-    if(!req.user) {
+    if (!req.user)
       return res.jsonp({})
-    }
 
     models.Post.removeLike(req.params.postId, req.user.id, function(err, r) {
       if (err) return res.jsonp({}, 422)

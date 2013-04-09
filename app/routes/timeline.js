@@ -58,13 +58,12 @@ exports.addRoutes = function(app) {
     models.Timeline.getEveryoneTimeline({
       start: req.query.start
     }, function(err, timeline) {
-      if (timeline) {
-        timeline.toJSON(timelineSerializer, function(err, json) {
-          res.jsonp(json);
-        })
-      } else {
-        res.jsonp({});
-      }
+      if (!timeline)
+        return res.jsonp({});
+
+      timeline.toJSON(timelineSerializer, function(err, json) {
+        res.jsonp(json);
+      })
     })
   }),
 
@@ -76,80 +75,72 @@ exports.addRoutes = function(app) {
     // additional assoc array as a second parameter
 
     models.User.findByUsername(req.params.username, function(err, user) {
-      if (user) {
-        user.getPostsTimeline({
-          start: req.query.start
-        }, function(err, timeline) {
-          if (timeline) {
-            timeline.toJSON(timelineSerializer, function(err, json) {
-              res.jsonp(json);
-            })
-          } else {
-            res.jsonp({});
-          }
+      if (!user)
+        return res.jsonp({}, 404)
+
+      user.getPostsTimeline({
+        start: req.query.start
+      }, function(err, timeline) {
+        if (!timeline)
+          return res.jsonp({});
+
+        timeline.toJSON(timelineSerializer, function(err, json) {
+          res.jsonp(json);
         })
-      } else {
-        res.jsonp({}, 404)
-      }
+      })
     })
   }),
 
   app.get('/v1/timeline/:username/likes', function(req, res){
     models.User.findByUsername(req.params.username, function(err, user) {
-      if (user) {
-        user.getLikesTimeline({
-          start: req.query.start
-        }, function(err, timeline) {
-          if (timeline) {
-            timeline.toJSON(timelineSerializer, function(err, json) {
-              res.jsonp(json);
-            })
-          } else {
-            res.jsonp({});
-          }
+      if (!user)
+        return res.jsonp({}, 404)
+
+      user.getLikesTimeline({
+        start: req.query.start
+      }, function(err, timeline) {
+        if (!timeline)
+          return res.jsonp({});
+
+        timeline.toJSON(timelineSerializer, function(err, json) {
+          res.jsonp(json);
         })
-      } else {
-        res.jsonp({}, 404)
-      }
+      })
     })
   }),
 
   app.get('/v1/timeline/:username/comments', function(req, res){
     models.User.findByUsername(req.params.username, function(err, user) {
-      if (user) {
-        user.getCommentsTimeline({
-          start: req.query.start
-        }, function(err, timeline) {
-          if (timeline) {
-            timeline.toJSON(timelineSerializer, function(err, json) {
-              res.jsonp(json);
-            })
-          } else {
-            res.jsonp({});
-          }
+      if (!user)
+        return res.jsonp({}, 404)
+
+      user.getCommentsTimeline({
+        start: req.query.start
+      }, function(err, timeline) {
+        if (!timeline)
+          return res.jsonp({});
+
+        timeline.toJSON(timelineSerializer, function(err, json) {
+          res.jsonp(json);
         })
-      } else {
-        res.jsonp({}, 404)
-      }
+      })
     })
   }),
 
   app.get('/v1/timeline', function(req, res) {
-    if(!req.user) {
+    if (!req.user)
       return res.jsonp({})
-    }
 
     models.User.findByUsername(req.user.username, function(err, user) {
       user.getRiverOfNews({
         start: req.query.start
       }, function(err, timeline) {
-        if (timeline) {
-          timeline.toJSON(timelineSerializer, function(err, json) {
-            res.jsonp(json);
-          })
-        } else {
-          res.jsonp({});
-        }
+        if (!timeline)
+          return res.jsonp({});
+
+        timeline.toJSON(timelineSerializer, function(err, json) {
+          res.jsonp(json);
+        })
       })
     })
   })

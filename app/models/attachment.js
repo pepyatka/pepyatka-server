@@ -35,13 +35,14 @@ exports.addModel = function(db) {
   // TODO: attachmentId -> attachmentsId
   Attachment.destroy = function(attachmentId, callback) {
     models.Attachment.findById(attachmentId, function(err, attachment) {
-      if (attachment.fsPath) {
-        fs.unlink(attachment.fsPath, function(err) {
-          db.del('attachment:' + attachment.id, function(err, res) {
-            callback(err, res)
-          })
+      if (!attachment.fsPath)
+        return callback(err, null)
+
+      fs.unlink(attachment.fsPath, function(err) {
+        db.del('attachment:' + attachment.id, function(err, res) {
+          callback(err, res)
         })
-      }
+      })
     })
   }
 
@@ -75,28 +76,26 @@ exports.addModel = function(db) {
 
       if (this.thumbnailId) {
         this.thumbnailId = this.thumbnailId.toString()
-        params['thumbnailId'] = this.thumbnailId
+        params.thumbnailId = this.thumbnailId
       }
 
       if (this.postId) {
         this.postId = this.postId.toString()
-        params['postId'] = this.postId.toString()
+        params.postId = this.postId.toString()
       }
 
       this.validate(function(valid) {
-        if (valid) {
-          db.hmset('attachment:' + that.id, params, function(err, res) {
-            if (that.postId) {
-              models.Post.addAttachment(that.postId, that.id, function(err, count) {
-                callback(err, that)
-              })
-            } else {
-              callback(null, that)
-            }
+        if (!valid)
+          return callback(1, that)
+
+        db.hmset('attachment:' + that.id, params, function(err, res) {
+          if (!that.postId)
+            return callback(null, that)
+
+          models.Post.addAttachment(that.postId, that.id, function(err, count) {
+            callback(err, that)
           })
-        } else {
-          callback(1, that)
-        }
+        })
       })
     },
     
@@ -108,19 +107,18 @@ exports.addModel = function(db) {
         path: this.path
       }
 
-      if (this.thumbnailId) {
-        models.Attachment.findById(this.thumbnailId, function(err, thumbnail) {
-          attrs['thumbnail'] = {
-            id: thumbnail.id,
-            // ext: thumbnail.ext,
-            // filename: thumbnail.filename,
-            path: thumbnail.path
-          }
-          callback(err, attrs)
-        })
-      } else { 
-        callback(null, attrs)
-      }
+      if (!this.thumbnailId)
+        return callback(null, attrs)
+
+      models.Attachment.findById(this.thumbnailId, function(err, thumbnail) {
+        attrs.thumbnail = {
+          id: thumbnail.id,
+          // ext: thumbnail.ext,
+          // filename: thumbnail.filename,
+          path: thumbnail.path
+        }
+        callback(err, attrs)
+      })
     }
 
   }

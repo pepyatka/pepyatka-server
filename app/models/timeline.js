@@ -24,8 +24,8 @@ exports.addModel = function(db) {
         return callback(1, null)
 
       attrs.id = timelineId
-      attrs['start'] = params['start']
-      attrs['num'] = params['num']
+      attrs.start = params.start
+      attrs.num = params.num
 
       callback(err, new Timeline(attrs))
     })
@@ -96,95 +96,89 @@ exports.addModel = function(db) {
 
   Timeline.prototype = {
     getSubscribersIds: function(callback) {
-      if (this.subscribersIds) {
-        callback(null, this.subscribersIds)
-      } else {
-        var that = this
-        db.zrevrange('timeline:' + this.id + ':subscribers', 0, -1, function(err, subscribersIds) {
-          that.subscribersIds = subscribersIds || []
-          callback(err, that.subscribersIds)
-        })
-      }
+      if (this.subscribersIds)
+        return callback(null, this.subscribersIds)
+
+      var that = this
+      db.zrevrange('timeline:' + this.id + ':subscribers', 0, -1, function(err, subscribersIds) {
+        that.subscribersIds = subscribersIds || []
+        callback(err, that.subscribersIds)
+      })
     },
 
     getSubscribers: function(callback) {
-      if (this.subscribers) {
-        callback(null, this.subscribers)
-      } else {
-        var that = this
-        this.getSubscribersIds(function(err, subscribersIds) {
-          async.map(Object.keys(subscribersIds), function(subscriberId, callback) {
-            models.User.findById(subscribersIds[subscriberId], function(err, subscriber) {
-              callback(err, subscriber)
-            })
-          }, function(err, subscribers) {
-            that.subscribers = subscribers.compact()
-            callback(err, that.subscribers)
+      if (this.subscribers)
+        return callback(null, this.subscribers)
+
+      var that = this
+      this.getSubscribersIds(function(err, subscribersIds) {
+        async.map(Object.keys(subscribersIds), function(subscriberId, callback) {
+          models.User.findById(subscribersIds[subscriberId], function(err, subscriber) {
+            callback(err, subscriber)
           })
+        }, function(err, subscribers) {
+          that.subscribers = subscribers.compact()
+          callback(err, that.subscribers)
         })
-      }
+      })
     },
 
     getPostsIds: function(start, num, callback) {
-      if (this.postsIds) {
-        callback(null, this.postsIds)
-      } else {
-        var that = this
-        db.zrevrange('timeline:' + this.id + ':posts', start, start+num-1, function(err, postsIds) {
-          that.postsIds = postsIds || []
-          callback(err, that.postsIds)
-        })
-      }
+      if (this.postsIds)
+        return callback(null, this.postsIds)
+
+      var that = this
+      db.zrevrange('timeline:' + this.id + ':posts', start, start+num-1, function(err, postsIds) {
+        that.postsIds = postsIds || []
+        callback(err, that.postsIds)
+      })
     },
 
     getPosts: function(start, num, callback) {
-      if (this.posts) {
-        callback(null, this.posts)
-      } else {
-        var that = this
-        this.getPostsIds(start, num, function(err, postsIds) {
-          async.map(postsIds, function(postId, callback) {
-            models.Post.findById(postId, function(err, post) {
-              callback(err, post)
-            })
-          }, function(err, posts) {
-            that.posts = posts
-            callback(err, that.posts)
+      if (this.posts)
+        return callback(null, this.posts)
+
+      var that = this
+      this.getPostsIds(start, num, function(err, postsIds) {
+        async.map(postsIds, function(postId, callback) {
+          models.Post.findById(postId, function(err, post) {
+            callback(err, post)
           })
+        }, function(err, posts) {
+          that.posts = posts
+          callback(err, that.posts)
         })
-      }
+      })
     },
 
     // Not used
     getUsersIds: function(callback) {
-      if (this.usersIds) {
-        callback(null, this.usersIds)
-      } else {
-        var that = this;
-        db.lrange('timeline:' + this.id + ':users', 0, -1, function(err, usersIds) {
-          that.usersIds = usersIds || []
-          callback(err, that.usersIds)
-        })
-      }
+      if (this.usersIds)
+        return callback(null, this.usersIds)
+
+      var that = this;
+      db.lrange('timeline:' + this.id + ':users', 0, -1, function(err, usersIds) {
+        that.usersIds = usersIds || []
+        callback(err, that.usersIds)
+      })
     },
 
     // Not used
     getUsers: function(callback) {
-      if (this.users) {
-        callback(null, this.users)
-      } else {
-        var that = this
-        this.getUsersIds(function(err, usersIds) {
-          async.map(usersIds, function(userId, callback) {
-            models.User.findById(userId, function(err, user) {
-              callback(err, user)
-            })
-          }, function(err, users) {
-            that.users = users
-            callback(err, that.users)
+      if (this.users)
+        return callback(null, this.users)
+
+      var that = this
+      this.getUsersIds(function(err, usersIds) {
+        async.map(usersIds, function(userId, callback) {
+          models.User.findById(userId, function(err, user) {
+            callback(err, user)
           })
+        }, function(err, users) {
+          that.users = users
+          callback(err, that.users)
         })
-      }
+      })
     },
 
     getPostsCount: function(callback) {
@@ -196,7 +190,7 @@ exports.addModel = function(db) {
     toJSON: function(params, callback) {
       var that = this
         , json = {}
-        , select = params['select'] ||
+        , select = params.select ||
             models.Timeline.getAttributes()
 
       if (select.indexOf('id') != -1)

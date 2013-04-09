@@ -410,8 +410,8 @@ exports.addModel = function(db) {
     getRiverOfNewsId: function(callback) {
       var that = this;
       this.getTimelinesIds(function(err, timelines) {
-        if (timelines['RiverOfNews']) {
-          callback(null, timelines['RiverOfNews'])
+        if (timelines.RiverOfNews) {
+          callback(null, timelines.RiverOfNews)
         } else {
           // somehow this user has deleted its main timeline - let's
           // recreate from the scratch
@@ -446,8 +446,8 @@ exports.addModel = function(db) {
     getPostsTimelineId: function(callback) {
       var that = this;
       this.getTimelinesIds(function(err, timelines) {
-        if (timelines['Posts']) {
-          callback(null, timelines['Posts'])
+        if (timelines.Posts) {
+          callback(null, timelines.Posts)
         } else {
           // somehow this user has deleted its main timeline - let's
           // recreate from the scratch
@@ -482,8 +482,8 @@ exports.addModel = function(db) {
     getLikesTimelineId: function(callback) {
       var that = this;
       this.getTimelinesIds(function(err, timelines) {
-        if (timelines['Likes']) {
-          callback(null, timelines['Likes'])
+        if (timelines.Likes) {
+          callback(null, timelines.Likes)
         } else {
           // somehow this user has deleted its main timeline - let's
           // recreate from the scratch
@@ -518,8 +518,8 @@ exports.addModel = function(db) {
     getCommentsTimelineId: function(callback) {
       var that = this;
       this.getTimelinesIds(function(err, timelines) {
-        if (timelines['Comments']) {
-          callback(null, timelines['Comments'])
+        if (timelines.Comments) {
+          callback(null, timelines.Comments)
         } else {
           // somehow this user has deleted its main timeline - let's
           // recreate from the scratch

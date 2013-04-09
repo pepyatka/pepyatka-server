@@ -76,26 +76,24 @@ exports.addModel = function(db) {
                 function(callback) {
                   db.scard('post:' + postId + ':timelines', function(err, res) {
                     // post does not belong to any timelines
-                    if (res === 0) {
-                      db.del('post:' + postId + ':timelines', function(err, res) {
-                        callback(err)
-                      })
-                    } else {
+                    if (res !== 0)
+                      return callback(err)
+
+                    db.del('post:' + postId + ':timelines', function(err, res) {
                       callback(err)
-                    }
+                    })
                   })
                 },
                 function(callback) {
                   async.forEach(timelinesIds, function(timelineId, callback) {
                     db.zcard('timeline:' + timelineId + ':posts', function(err, res) {
                       // that timeline is empty
-                      if (res === 0) {
-                        db.del('post:' + postId + ':timelines', function(err, res) {
-                          callback(err)
-                        })
-                      } else {
+                      if (res !== 0)
+                        return callback(err)
+
+                      db.del('post:' + postId + ':timelines', function(err, res) {
                         callback(err)
-                      }
+                      })
                     })
                   }, function(err) {
                     callback(err)
@@ -131,25 +129,23 @@ exports.addModel = function(db) {
                 models.Attachment.destroy(attachment.id, function(err, res) {
                   // TODO: encapsulate thumbnail deletion inside of
                   // Attachment.destroy function
-                  if (attachment.thumbnailId) {
-                    models.Attachment.destroy(attachment.thumbnailId, function(err, res) {
-                      callback(err)
-                    })
-                  } else {
+                  if (!attachment.thumbnailId)
+                    return callback(err)
+
+                  models.Attachment.destroy(attachment.thumbnailId, function(err, res) {
                     callback(err)
-                  }
+                  })
                 })
               })
             }, function(err) {
               db.llen('post:' + postId + ':attachments', function(err, res) {
-                if (res === 0) {
-                  // this post does not have any associated with it attachments
-                  db.del('post:' + postId + ':attachments', function(err, res) {
-                    callback(err)
-                  })
-                } else {
+                if (res !== 0)
+                  return callback(err)
+
+                // this post does not have any associated with it attachments
+                db.del('post:' + postId + ':attachments', function(err, res) {
                   callback(err)
-                }
+                })
               })
             })
           })
@@ -170,7 +166,7 @@ exports.addModel = function(db) {
         //remove post from statistics
         models.Stats.findByUserId(post.userId, function(err, stats) {
           if (!stats) {
-              stats = new models.Stats({
+            stats = new models.Stats({
               userId: post.userId
             })
             stats.create(function(err, stats) {
@@ -211,7 +207,11 @@ exports.addModel = function(db) {
 
             timelinesIds = _.uniq(timelinesIds)
             async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
-              if (bumpable) {
+              // FIXME: defect: if post is not bumpable we won't send
+              // removeLike event
+              if (!bumpable)
+                return callback(err, res)
+
                 models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
                   pub.publish('removeLike',
                               JSON.stringify({ timelineId: timelinesIds[timelineId],
@@ -220,9 +220,6 @@ exports.addModel = function(db) {
 
                   callback(err, res);
                 })
-              } else {
-                callback(err, res);
-              }
             }, function(err) {
               //remove like from statistics
               models.Stats.findByUserId(userId, function(err, stats) {
@@ -278,17 +275,16 @@ exports.addModel = function(db) {
 
                       timelinesIds = _.uniq(timelinesIds)
                       async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
-                        if (bumpable) {
-                          models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
-                            pub.publish('newLike',
-                                        JSON.stringify({ timelineId: timelinesIds[timelineId],
-                                                         userId: userId,
-                                                         postId: postId }))
-                            callback(err, res);
-                          })
-                        } else {
+                        if (!bumpable)
+                          return callback(err, res);
+
+                        models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
+                          pub.publish('newLike',
+                                      JSON.stringify({ timelineId: timelinesIds[timelineId],
+                                                       userId: userId,
+                                                       postId: postId }))
                           callback(err, res);
-                        }
+                        })
                       }, function(err) {
                         //add like into statistics
                         models.Stats.findByUserId(userId, function(err, stats) {
@@ -350,18 +346,17 @@ exports.addModel = function(db) {
 
                         timelinesIds = _.uniq(timelinesIds)
                         async.forEach(Object.keys(timelinesIds), function(timelineId, callback) {
-                          if (bumpable) {
-                            models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
-                              pub.publish('newComment', JSON.stringify({
-                                timelineId: timelinesIds[timelineId],
-                                commentId: commentId
-                              }))
+                          if (!bumpable)
+                            return callback(err)
 
-                              callback(err);
-                            })
-                          } else {
+                          models.Timeline.updatePost(timelinesIds[timelineId], postId, function(err, res) {
+                            pub.publish('newComment', JSON.stringify({
+                              timelineId: timelinesIds[timelineId],
+                              commentId: commentId
+                            }))
+
                             callback(err);
-                          }
+                          })
                         }, function(err) {
                           callback(err)
                         })
@@ -395,23 +390,23 @@ exports.addModel = function(db) {
             timelinesIds.push(timelineId)
             async.map(timelinesIds, function(timelineId, callback) {
               models.Timeline.findById(timelineId, {}, function(err, timeline) {
-                if (timeline)
-                  timeline.getSubscribersIds(function(err, subscribersIds) {
-                    callback(err, subscribersIds)
-                  })
-                else
-                  callback(null, null)
+                if (!timeline)
+                  return callback(null, null)
+
+                timeline.getSubscribersIds(function(err, subscribersIds) {
+                  callback(err, subscribersIds)
+                })
               })
             }, function(err, subscribersIds) {
               async.forEach(subscribersIds.flatten(), function(subscriberId, callback) {
                 models.User.findById(subscriberId, function(err, user) {
-                  if (user)
-                    user.getRiverOfNewsId(function(err, riverId) {
-                      timelinesIds.push(riverId)
-                      callback(err)
-                    })
-                  else
-                    callback(null)
+                  if (!user)
+                    return callback(null)
+
+                  user.getRiverOfNewsId(function(err, riverId) {
+                    timelinesIds.push(riverId)
+                    callback(err)
+                  })
                 })
               }, function(err) {
                 timelinesIds = _.uniq(timelinesIds)
@@ -425,105 +420,98 @@ exports.addModel = function(db) {
     },
 
     getAttachmentsIds: function(callback) {
-      if (this.attachmentsIds) {
-        callback(null, this.attachmentsIds)
-      } else {
-        var that = this
-        db.lrange('post:' + this.id + ':attachments', 0, -1, function(err, attachmentsIds) {
-          that.attachmentsIds = attachmentsIds || []
-          callback(err, that.attachmentsIds)
-        })
-      }
+      if (this.attachmentsIds)
+        return callback(null, this.attachmentsIds)
+
+      var that = this
+      db.lrange('post:' + this.id + ':attachments', 0, -1, function(err, attachmentsIds) {
+        that.attachmentsIds = attachmentsIds || []
+        callback(err, that.attachmentsIds)
+      })
     },
 
     getAttachments: function(callback) {
-      if (this.attachments) {
-        callback(null, this.attachments)
-      } else {
-        var that = this
-        this.getAttachmentsIds(function(err, attachmentsIds) {
-          async.map(attachmentsIds, function(attachmentId, callback) {
-            models.Attachment.findById(attachmentId, function(err, attachment) {
-              callback(err, attachment)
-            })
-          }, function(err, attachments) {
-            that.attachments = attachments
-            callback(err, that.attachments)
+      if (this.attachments)
+        return callback(null, this.attachments)
+
+      var that = this
+      this.getAttachmentsIds(function(err, attachmentsIds) {
+        async.map(attachmentsIds, function(attachmentId, callback) {
+          models.Attachment.findById(attachmentId, function(err, attachment) {
+            callback(err, attachment)
           })
+        }, function(err, attachments) {
+          that.attachments = attachments
+          callback(err, that.attachments)
         })
-      }
+      })
     },
 
     getCommentsIds: function(callback) {
-      if (this.commentsIds) {
-        callback(null, this.commentsIds)
-      } else {
-        var that = this
-        db.lrange('post:' + this.id + ':comments', 0, -1, function(err, commentsIds) {
-          that.commentsIds = commentsIds || []
-          callback(err, that.commentsIds)
-        })
-      }
+      if (this.commentsIds)
+        return callback(null, this.commentsIds)
+
+      var that = this
+      db.lrange('post:' + this.id + ':comments', 0, -1, function(err, commentsIds) {
+        that.commentsIds = commentsIds || []
+        callback(err, that.commentsIds)
+      })
     },
 
     getComments: function(callback) {
-      if (this.comments) {
-        callback(null, this.comments)
-      } else {
-        var that = this
-        this.getCommentsIds(function(err, commentsIds) {
-          async.map(commentsIds, function(commentId, callback) {
-            models.Comment.findById(commentId, function(err, comment) {
-              callback(err, comment)
-            })
-          }, function(err, comments) {
-            that.comments = comments
-            callback(err, that.comments)
+      if (this.comments)
+        return callback(null, this.comments)
+
+      var that = this
+      this.getCommentsIds(function(err, commentsIds) {
+        async.map(commentsIds, function(commentId, callback) {
+          models.Comment.findById(commentId, function(err, comment) {
+            callback(err, comment)
           })
+        }, function(err, comments) {
+          that.comments = comments
+          callback(err, that.comments)
         })
-      }
+      })
     },
 
     getTimelinesIds: function(callback) {
-      if (this.timelinesIds) {
-        callback(null, this.timelinesIds)
-      } else {
-        var that = this
-        db.smembers('post:' + this.id + ':timelines', function(err, timelinesIds) {
-          that.timelinesIds = timelinesIds || []
-          callback(err, that.timelinesIds)
-        })
-      }
+      if (this.timelinesIds)
+        return callback(null, this.timelinesIds)
+
+      var that = this
+      db.smembers('post:' + this.id + ':timelines', function(err, timelinesIds) {
+        that.timelinesIds = timelinesIds || []
+        callback(err, that.timelinesIds)
+      })
     },
 
     getLikesIds: function(callback) {
-      if (this.likesIds) {
-        callback(null, this.likesIds)
-      } else {
-        var that = this
-        db.smembers('post:' + this.id + ':likes', function(err, likesIds) {
-          that.likesIds = likesIds || []
-          callback(err, that.likesIds)
-        })
-      }
+      if (this.likesIds)
+        return callback(null, this.likesIds)
+
+      var that = this
+      db.smembers('post:' + this.id + ':likes', function(err, likesIds) {
+        that.likesIds = likesIds || []
+        callback(err, that.likesIds)
+      })
     },
 
     getLikes: function(callback) {
-      if (this.likes) {
-        callback(null, this.likes)
-      } else {
-        var that = this
-        this.getLikesIds(function(err, likesIds) {
-          async.map(likesIds, function(userId, callback) {
-            models.User.findById(userId, function(err, user) {
-              callback(err, user)
-            })
-          }, function(err, users) {
-            that.likes = users
-            callback(err, that.likes)
+      if (this.likes)
+        return callback(null, this.likes)
+
+      var that = this
+      this.getLikesIds(function(err, likesIds) {
+        async.map(likesIds, function(userId, callback) {
+          models.User.findById(userId, function(err, user) {
+            callback(err, user)
           })
+        }, function(err, users) {
+          that.likes = users
+          callback(err, that.likes)
         })
-      }
+      })
     },
 
     validate: function(callback) {
@@ -546,55 +534,53 @@ exports.addModel = function(db) {
       this.id = uuid.v4()
 
       this.validate(function(valid) {
-        if (valid) {
-          db.exists('post:' + that.id, function(err, res) {
-            if (res === 0) {
-              var postBody = (that.body.slice(0, 512) || "").toString().trim()
-              db.hmset('post:' + that.id,
-                       { 'body': postBody,
-                         'timelineId': that.timelineId.toString(),
-                         'userId': that.userId.toString(),
-                         'createdAt': that.createdAt.toString(),
-                         'updatedAt': that.updatedAt.toString()
-                       }, function(err, res) {
-                         that.saveAttachments(function(err, res) {
-                           models.Timeline.newPost(that.id, function() {
-                             models.Tag.extract(postBody, function(err, result) {
-                               models.Tag.update(result, function(err) {
-                                 models.Stats.findByUserId(that.userId, function(err, stats) {
-                                   if (!stats) {
-                                     stats = new models.Stats({
-                                       userId: that.userId
-                                     })
-                                     stats.create(function(err, stats) {
-                                       stats.addPost(function(err, stats) {
-                                         // BUG: updatedAt is different now than we set few lines above
-                                         // XXX: we don't care (yet) if attachment wasn't saved
-                                         callback(null, that)
-                                       })
-                                     })
-                                   } else {
-                                     stats.addPost(function(err, stats) {
-                                       // BUG: updatedAt is different now than we set few lines above
-                                       // XXX: we don't care (yet) if attachment wasn't saved
-                                       callback(null, that)
-                                     })
-                                   }
+        if (!valid)
+          return callback(1, that)
+
+        db.exists('post:' + that.id, function(err, res) {
+          if (res !== 0)
+            return callback(err, res)
+
+          var postBody = (that.body.slice(0, 512) || "").toString().trim()
+          db.hmset('post:' + that.id,
+                   { 'body': postBody,
+                     'timelineId': that.timelineId.toString(),
+                     'userId': that.userId.toString(),
+                     'createdAt': that.createdAt.toString(),
+                     'updatedAt': that.updatedAt.toString()
+                   }, function(err, res) {
+                     that.saveAttachments(function(err, res) {
+                       models.Timeline.newPost(that.id, function() {
+                         models.Tag.extract(postBody, function(err, result) {
+                           models.Tag.update(result, function(err) {
+                             models.Stats.findByUserId(that.userId, function(err, stats) {
+                               if (!stats) {
+                                 stats = new models.Stats({
+                                   userId: that.userId
                                  })
-                               })
+                                 stats.create(function(err, stats) {
+                                   stats.addPost(function(err, stats) {
+                                     // BUG: updatedAt is different now than we set few lines above
+                                     // XXX: we don't care (yet) if attachment wasn't saved
+                                     callback(null, that)
+                                   })
+                                 })
+                               } else {
+                                 stats.addPost(function(err, stats) {
+                                   // BUG: updatedAt is different now than we set few lines above
+                                   // XXX: we don't care (yet) if attachment wasn't saved
+                                   callback(null, that)
+                                 })
+                               }
                              })
                            })
                          })
                        })
-            } else {
-              callback(err, res)
-            }
-          })
-        } else {
-          callback(1, that)
-        }
+                     })
+                   })
+        })
       })
-    },
+  },
 
     update: function(params, callback) {
       var that = this
@@ -602,47 +588,45 @@ exports.addModel = function(db) {
       this.updatedAt = new Date().getTime()
 
       this.validate(function(valid) {
-        if (valid) {
-          db.exists('post:' + that.id, function(err, res) {
-            if (res == 1) {
-              var newBody = (params.body.slice(0, 512) || that.body).toString().trim()
-              models.Tag.extract(that.body, function(err, oldPostTagsInfo) {
-                models.Tag.extract(newBody, function(err, newPostTagsInfo) {
-                  models.Tag.diff(oldPostTagsInfo, newPostTagsInfo, function(err, diffTagsInfo) {
-                    models.Tag.update(diffTagsInfo, function(err) {
-                      db.hmset('post:' + that.id,
-                        { 'body': newBody,
-                          'updatedAt': that.updatedAt.toString()
-                        }, function(err, res) {
-                          // TODO: a bit mess here: update method calls
-                          // pubsub event and Timeline.newPost calls
-                          // them as well
-                          var pub = redis.createClient();
+        if (!valid)
+          return callback(1, that)
 
-                          that.getSubscribedTimelinesIds(function(err, timelinesIds) {
-                            async.forEach(timelinesIds, function(timelineId, callback) {
-                              pub.publish('updatePost', JSON.stringify({
-                                postId: that.id,
-                                timelineId: timelineId
-                              }))
+        db.exists('post:' + that.id, function(err, res) {
+          if (res !== 1)
+            return callback(err, res)
 
-                              callback(null)
-                            }, function(err) {
-                              callback(err, that)
-                            })
-                          })
-                        })
-                    })
-                  })
+          var newBody = (params.body.slice(0, 512) || that.body).toString().trim()
+          models.Tag.extract(that.body, function(err, oldPostTagsInfo) {
+            models.Tag.extract(newBody, function(err, newPostTagsInfo) {
+              models.Tag.diff(oldPostTagsInfo, newPostTagsInfo, function(err, diffTagsInfo) {
+                models.Tag.update(diffTagsInfo, function(err) {
+                  db.hmset('post:' + that.id,
+                           { 'body': newBody,
+                             'updatedAt': that.updatedAt.toString()
+                           }, function(err, res) {
+                             // TODO: a bit mess here: update method calls
+                             // pubsub event and Timeline.newPost calls
+                             // them as well
+                             var pub = redis.createClient();
+
+                             that.getSubscribedTimelinesIds(function(err, timelinesIds) {
+                               async.forEach(timelinesIds, function(timelineId, callback) {
+                                 pub.publish('updatePost', JSON.stringify({
+                                   postId: that.id,
+                                   timelineId: timelineId
+                                 }))
+
+                                 callback(null)
+                               }, function(err) {
+                                 callback(err, that)
+                               })
+                             })
+                           })
                 })
               })
-            } else {
-              callback(err, res)
-            }
+            })
           })
-        } else {
-          callback(1, that)
-        }
+        })
       })
     },
 
@@ -722,7 +706,7 @@ exports.addModel = function(db) {
     toJSON: function(params, callback) {
       var that = this
         , json = {}
-        , select = params['select'] ||
+        , select = params.select ||
             models.Post.getAttributes()
 
       if (select.indexOf('id') != -1)
