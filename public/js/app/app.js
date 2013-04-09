@@ -864,6 +864,11 @@ App.UserTimelineView = Ember.View.extend({
   templateName: 'user-timeline',
   currentUser: currentUser,
 
+  isOwner: function() {
+    return App.postsController.user &&
+      App.postsController.user.id == currentUser
+  }.property('App.postsController.user'),
+
   subscribeTo: function() {
     App.userTimelineController.subscribeTo(App.postsController.id)
   },
