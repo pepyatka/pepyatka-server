@@ -1,6 +1,10 @@
 var models = require('../models');
 
 exports.addRoutes = function(app) {
+  app.get('/create-group', function(req, res) {
+    res.render('./home')
+  });
+
   app.get('/signin', function(req, res) {
     res.render('./home')
   });

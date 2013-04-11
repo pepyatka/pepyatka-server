@@ -5,6 +5,10 @@ var uuid = require('node-uuid')
   , crypto = require('crypto')
 
 exports.addModel = function(db) {
+  var statisticsSerializer = {
+    select: ['userId', 'posts', 'likes', 'discussions', 'subscribers', 'subscriptions']
+  }
+
   function Group(params) {
 //    Group.super_.call(this, params);
     this.id = params.id
@@ -16,21 +20,25 @@ exports.addModel = function(db) {
 
   util.inherits(Group, models.User)
 
-  Group.findById = function(userId, callback) {
-    db.hgetall('user:' + userId, function(err, attrs) {
+  Group.getAttributes = function() {
+    return ['id', 'username', 'subscribers', 'createdAt', 'updatedAt', 'administrators']
+  }
+
+  Group.findById = function(groupId, callback) {
+    db.hgetall('user:' + groupId, function(err, attrs) {
       if (attrs === null)
         return callback(1, null)
 
-      attrs.id = userId
+      attrs.id = groupId
       var newGroup = new Group(attrs)
 
       callback(err, newGroup)
     })
   }
 
-  Group.destroy = function(userId, callback) {
-    var destroyAllPosts = function(user, callback) {
-      user.getPostsTimeline({start: 0}, function(err, timeline) {
+  Group.destroy = function(groupId, callback) {
+    var destroyAllPosts = function(group, callback) {
+      group.getPostsTimeline({start: 0}, function(err, timeline) {
         if (err)
           return callback(err)
 
@@ -55,8 +63,8 @@ exports.addModel = function(db) {
       })
     }
 
-    var unsubscribeAllUsers = function(user, callback) {
-      user.getPostsTimeline({start: 0}, function(err, timeline) {
+    var unsubscribeAllUsers = function(group, callback) {
+      group.getPostsTimeline({start: 0}, function(err, timeline) {
         if (err)
           return callback(err)
 
@@ -76,8 +84,8 @@ exports.addModel = function(db) {
       })
     }
 
-    var destroyAllTimelines = function(user, callback) {
-      user.getTimelinesIds(function(err, timelinesIds) {
+    var destroyAllTimelines = function(group, callback) {
+      group.getTimelinesIds(function(err, timelinesIds) {
         if (err)
           return callback(err)
 
@@ -102,16 +110,16 @@ exports.addModel = function(db) {
       })
     }
 
-    var deleteStats = function(user, callback) {
-      db.del('stats:' + user.id, function(err, res) {
+    var deleteStats = function(group, callback) {
+      db.del('stats:' + group.id, function(err, res) {
         callback(err)
       })
     }
 
-    var deleteUser = function(user, callback) {
+    var deleteGroup = function(group, callback) {
       async.parallel([
         function(done) {
-          db.keys('user:' + user.id + '*', function(err, keys) {
+          db.keys('user:' + group.id + '*', function(err, keys) {
             async.forEach(keys, function(key, done) {
               db.del(key, function(err, res) {
                 done(err)
@@ -123,7 +131,7 @@ exports.addModel = function(db) {
           })
         },
         function(done) {
-          db.del('username:' + user.username + ':uid', function(err, res) {
+          db.del('username:' + group.username + ':uid', function(err, res) {
             done(err)
           })
         }],
@@ -132,29 +140,29 @@ exports.addModel = function(db) {
         })
     }
 
-    models.User.findById(userId, function(err, user) {
+    models.User.findById(groupId, function(err, group) {
       if (err)
         return callback(err)
 
-      unsubscribeAllUsers(user, function(err) {
+      unsubscribeAllUsers(group, function(err) {
         if (err)
           return callback(err)
 
-        destroyAllPosts(user, function(err) {
+        destroyAllPosts(group, function(err) {
           if (err)
             return callback(err)
 
           async.parallel([
             function(done) {
-              destroyAllTimelines(user, function(err) {
+              destroyAllTimelines(group, function(err) {
                 if (err)
                   return done(err)
 
-                deleteUser(user, done)
+                deleteGroup(group, done)
               })
           },
           function(done) {
-            deleteStats(user, done)
+            deleteStats(group, done)
           }],
           function(err) {
             callback(err)
@@ -186,7 +194,7 @@ exports.addModel = function(db) {
         })
     },
 
-    create: function(callback) {
+    create: function(ownerId, callback) {
       var that = this
 
       this.createdAt = new Date().getTime()
@@ -224,6 +232,11 @@ exports.addModel = function(db) {
               stats.create(function(err, stats) {
                 done(err, stats)
               })
+            },
+            function(done) {
+              db.zadd('user:' + that.id + ':administrators', new Date().getTime().toString(), ownerId, function(err, res) {
+                done(err, res)
+              })
             }
           ], function(err, res) {
             callback(err, that)
@@ -256,6 +269,79 @@ exports.addModel = function(db) {
             })
         })
       })
+    },
+
+    getAdministratorsIds: function(callback) {
+      var that = this
+
+      db.zrevrange('user:' + that.id + ':administrators', 0, -1, function(err, res) {
+        callback(err, res)
+      })
+    },
+
+    toJSON: function(params, callback) {
+      var that = this
+        , json = {}
+        , select = params.select ||
+          models.Group.getAttributes()
+
+      var returnJSON = function(err) {
+        var isReady = true
+        if(select.indexOf('administrators') != -1) {
+          isReady = json.administrators !== undefined
+        }
+        if(select.indexOf('statistics') != -1) {
+          isReady = json.statistics !== undefined
+        }
+
+        if(isReady) {
+          callback(err, json)
+        }
+      }
+
+      if (select.indexOf('id') != -1)
+        json.id = that.id
+
+      if (select.indexOf('username') != -1)
+        json.username = that.username
+
+      if (select.indexOf('createdAt') != -1)
+        json.createdAt = that.createdAt
+
+      if (select.indexOf('updatedAt') != -1)
+        json.updatedAt = that.updatedAt
+
+      if (select.indexOf('administrators') != -1) {
+        that.getAdministratorsIds(function(err, administratorsIds) {
+          async.map(administratorsIds, function(administratorId, callback) {
+            models.FeedFactory.findById(administratorId, function(err, user) {
+              user.toJSON({ select: ['id', 'username'] }, function(err, json) {
+                callback(err, json)
+              })
+            })
+          }, function(err, administratorsJSON) {
+            json.administrators = administratorsJSON
+
+            returnJSON(err)
+          })
+        })
+      } else {
+        returnJSON(null)
+      }
+
+      if (select.indexOf('statistics') != -1) {
+        var statistics = {}
+        models.Stats.findByUserId(that.id, function(err, stats) {
+          if (stats) {
+            stats.toJSON(statisticsSerializer, function(err, statistics) {
+              json.statistics = statistics
+              returnJSON(err)
+            })
+          } else {
+            callback(null)
+          }
+        })
+      }
     }
   }
 

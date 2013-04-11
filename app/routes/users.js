@@ -68,4 +68,28 @@ exports.addRoutes = function(app) {
       user.toJSON(userSerializer, function(err, json) { res.jsonp(json) })
     })
   })
+
+  app.delete('/v1/users/:username/subscriptions/:userId', function(req, res) {
+    models.User.findByUsername(req.params.username, function(err, userOwner) {
+      if (err)
+        return res.jsonp({}, 422)
+
+      models.User.findById(req.params.userId, function(err, subscribedUser) {
+        if(err)
+          return res.jsonp({}, 422)
+
+        userOwner.getPostsTimelineId(function(err, timelineId) {
+          if(err)
+            return res.jsonp({}, 422)
+
+          subscribedUser.unsubscribeTo(timelineId, function(err) {
+            if(err)
+              return res.jsonp({}, 422)
+
+            res.jsonp({})
+          })
+        })
+      })
+    })
+  })
 }

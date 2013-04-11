@@ -615,6 +615,9 @@ exports.addModel = function(db) {
       if (select.indexOf('updatedAt') != -1)
         json.updatedAt = that.updatedAt
 
+      if (select.indexOf('type') != -1)
+        json.type = that.type
+
       if (select.indexOf('subscriptions') != -1) {
         that.getSubscriptions(function(err, subscriptions) {
           async.map(subscriptions, function(subscription, callback) {

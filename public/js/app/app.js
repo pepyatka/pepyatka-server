@@ -896,6 +896,7 @@ App.User = Ember.Object.extend({
   createdAt: null,
   updatedAt: null,
   statistics: {},
+  administrators: [],
 
   subscriptionsLength: function() {
 //    return this.subscriptions.filter(function(s) { return s.name == 'Posts'}).length
@@ -1216,12 +1217,35 @@ App.SubscribersController = Ember.ArrayController.extend({
       }
     })
     return this
+  },
+
+  removeSubscriber: function(event) {
+    console.log(event)
+
+    $.ajax({
+      url: this.resourceUrl + '/' + this.get('username') + '/subscriptions/' + event.context,
+      dataType: 'jsonp',
+      type: 'post',
+      data: {'_method': 'delete'},
+      context: this,
+      success: function(response) {
+        console.log(response)
+        var obj = this.findProperty('id', event.context);
+        this.removeObject(obj);
+      }
+    })
+
+    return this
   }
 })
 App.subscribersController = App.SubscribersController.create()
 
 App.SubscribersView = Ember.View.extend({
-  templateName: 'subscribers'
+  templateName: 'subscribers',
+
+  isOwner: function() {
+    return App.subscribersController.username  == App.properties.username
+  }.property('App.subscribersController.username', 'App.properties.username')
 });
 
 App.TopController = Ember.ArrayController.extend({
@@ -1333,6 +1357,45 @@ App.SigninView = Ember.View.extend({
 
   signin: function() {
     App.signinController.signin()
+  }
+});
+
+App.GroupCreationController = Ember.ArrayController.extend({
+  resourceUrl: '/v1/users',
+  groupName: '',
+
+  create: function() {
+    $.ajax({
+      url: this.resourceUrl,
+      data: { username: this.get('groupName'), ownerName: App.properties.get('username') },
+      dataType: 'jsonp',
+      type: 'post',
+      context: this,
+      success: function(response) {
+        switch (response.status) {
+          case 'success' :
+            App.router.transitionTo('posts')
+            break
+          case 'fail' :
+            App.router.transitionTo('groupCreation')
+            break
+        }
+      }
+    })
+    return this
+  }
+})
+App.groupCreationController = App.GroupCreationController.create()
+
+App.GroupCreationView = Ember.View.extend({
+  templateName: 'create-group-view',
+
+  insertNewline: function() {
+    this.triggerAction();
+  },
+
+  create: function() {
+    App.groupCreationController.create()
   }
 });
 
@@ -1675,6 +1738,7 @@ App.Router = Ember.Router.extend({
       showTop: Ember.Route.transitionTo('top'),
       doSignup: Ember.Route.transitionTo('signup'),
       doSignin: Ember.Route.transitionTo('signin'),
+      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
 
       connectOutlets: function(router, username) {
         App.postsController.set('timeline', username)
@@ -1849,6 +1913,16 @@ App.Router = Ember.Router.extend({
 
       connectOutlets: function(routes, context) {
         App.router.get('applicationController').connectOutlet('signin', App.signinController);
+      }
+    }),
+
+    groupCreation: Ember.Route.extend({
+      route: '/create-group',
+
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+
+      connectOutlets: function(routes, context) {
+        App.router.get('applicationController').connectOutlet('groupCreation', App.groupCreationController);
       }
     })
   })
