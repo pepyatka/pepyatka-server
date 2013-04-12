@@ -25,4 +25,17 @@ exports.addModel = function(db) {
       }
     })
   }
+
+  FeedFactory.findByName = function(feedName, callback) {
+    db.get('username:' + feedName + ':uid', function(err, feedId) {
+      if (err)
+        return callback(err, null)
+
+      FeedFactory.findById(feedId, function(err, feed) {
+        callback(err, feed)
+      })
+    })
+  }
+
+  return FeedFactory;
 }

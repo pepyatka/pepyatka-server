@@ -203,7 +203,7 @@ exports.addModel = function(db) {
         json.userId = that.userId
 
       if (select.indexOf('user') != -1) {
-        models.User.findById(that.userId, function(err, user) {
+        models.FeedFactory.findById(that.userId, function(err, feed) {
           var fn = function() {
             if (select.indexOf('posts') != -1) {
               that.getPosts(that.start, that.num, function(err, posts) {
@@ -237,10 +237,10 @@ exports.addModel = function(db) {
           }
 
           // most likely this is everyone timeline
-          if (user === null)
+          if (feed === null)
             return fn()
 
-          user.toJSON(params.user || {}, function(err, userJSON) {
+          feed.toJSON(params.user || {}, function(err, userJSON) {
             json.user = userJSON
 
             fn()

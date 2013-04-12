@@ -662,9 +662,16 @@
         <a {{action showUserTimeline username href="true"}}>{{username}}</a>
           {{#if view.isOwner}}
             (<a {{action removeSubscriber id target='App.subscribersController' href="true"}}>remove</a>)
+
+            {{#if view.hasAdmins}}
+              {{#if isAdmin}}
+                (<a {{action removeAdmin id target='App.subscribersController' href="true"}}>unadmin</a>)
+              {{else}}
+                (<a {{action addAdmin id target='App.subscribersController' href="true"}}>admin</a>)
+              {{/if}}
+            {{/if}}
           {{/if}}
-          (<a {{action removeSubscriber id target='App.subscribersController' href="true"}}>admin</a>)
-          (<a {{action removeSubscriber id target='App.subscribersController' href="true"}}>unadmin</a>)
+
       </li>
     {{/each}}
   </ul>

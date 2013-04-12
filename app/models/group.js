@@ -15,13 +15,14 @@ exports.addModel = function(db) {
     this.username = params.username
     this.createdAt = params.createdAt
     this.updatedAt = params.updatedAt
+    this.admins = params.admins
     this.type = "group"
   }
 
   util.inherits(Group, models.User)
 
   Group.getAttributes = function() {
-    return ['id', 'username', 'subscribers', 'createdAt', 'updatedAt', 'administrators']
+    return ['id', 'username', 'subscribers', 'createdAt', 'updatedAt', 'admins', 'type']
   }
 
   Group.findById = function(groupId, callback) {
@@ -172,177 +173,208 @@ exports.addModel = function(db) {
     })
   }
 
-  Group.prototype = {
-    validate: function(callback) {
-      var that = this
+  Group.prototype.validate = function(callback) {
+    var that = this
 
-      async.parallel([
-        function(done) {
-          db.exists('user:' + this.id, function(err, groupExists) {
-            done(err, groupExists === 0 &&
-                     that.username.length > 1)
-          })
-        },
-        function(done) {
-          db.exists('username:' + that.username + ':uid', function(err, usernameExists) {
-            done(err, usernameExists === 0 &&
-              that.username.length > 1)
-          })
-        }],
-        function(err, res) {
-          callback(res.indexOf(false) == -1)
+    async.parallel([
+      function(done) {
+        db.exists('user:' + this.id, function(err, groupExists) {
+          done(err, groupExists === 0 &&
+                   that.username.length > 1)
         })
-    },
+      },
+      function(done) {
+        db.exists('username:' + that.username + ':uid', function(err, usernameExists) {
+          done(err, usernameExists === 0 &&
+            that.username.length > 1)
+        })
+      }],
+      function(err, res) {
+        callback(res.indexOf(false) == -1)
+      })
+  }
 
-    create: function(ownerId, callback) {
-      var that = this
+  Group.prototype.create = function(ownerId, callback) {
+    var that = this
 
-      this.createdAt = new Date().getTime()
-      this.updatedAt = new Date().getTime()
-      this.id = uuid.v4()
+    this.createdAt = new Date().getTime()
+    this.updatedAt = new Date().getTime()
+    this.id = uuid.v4()
 
-      this.validate(function(valid) {
-        if (!valid)
-          return callback(1, that)
+    var subscribeOwner = function(callback) {
+      models.FeedFactory.findById(that.id, function(err, groupFeed) {
+        groupFeed.getPostsTimelineId(function(err, timelineId) {
+          models.FeedFactory.findById(ownerId, function(err, ownerFeed) {
+            ownerFeed.subscribeTo(timelineId, function(err, res) {
+              callback(err, res)
+            })
+          })
+        })
+      })
+    }
 
-        db.exists('user:' + that.id, function(err, res) {
-          if (res !== 0)
-            return callback(err, res)
+    this.validate(function(valid) {
+      if (!valid)
+        return callback(1, that)
 
-          async.parallel([
-            function(done) {
-              db.hmset('user:' + that.id,
-                { 'username': that.username,
-                  'createdAt': that.createdAt.toString(),
-                  'updatedAt': that.updatedAt.toString(),
-                  'type': that.type
-                }, function(err, res) {
-                    done(err, res)
-                })
-            },
-            function(done) {
-              db.set('username:' + that.username + ':uid', that.id, function(err, res) {
-                done(err, res)
+      db.exists('user:' + that.id, function(err, res) {
+        if (res !== 0)
+          return callback(err, res)
+
+        async.parallel([
+          function(done) {
+            db.hmset('user:' + that.id,
+              { 'username': that.username,
+                'createdAt': that.createdAt.toString(),
+                'updatedAt': that.updatedAt.toString(),
+                'type': that.type
+              }, function(err, res) {
+                  done(err, res)
               })
-            },
-            function(done) {
-              var stats = new models.Stats({
-                userId: that.id
-              })
-              stats.create(function(err, stats) {
-                done(err, stats)
-              })
-            },
-            function(done) {
-              db.zadd('user:' + that.id + ':administrators', new Date().getTime().toString(), ownerId, function(err, res) {
-                done(err, res)
-              })
-            }
-          ], function(err, res) {
+          },
+          function(done) {
+            db.set('username:' + that.username + ':uid', that.id, function(err, res) {
+              done(err, res)
+            })
+          },
+          function(done) {
+            var stats = new models.Stats({
+              userId: that.id
+            })
+            stats.create(function(err, stats) {
+              done(err, stats)
+            })
+          },
+          function(done) {
+            db.zadd('user:' + that.id + ':administrators', new Date().getTime().toString(), ownerId, function(err, res) {
+              done(err, res)
+            })
+          }
+        ], function(err, res) {
+          subscribeOwner(function(err, res) {
             callback(err, that)
           })
         })
       })
-    },
+    })
+  }
 
-    update: function(callback) {
-      var that = this
+  Group.prototype.update = function(callback) {
+    var that = this
 
-      this.updatedAt = new Date().getTime()
+    this.updatedAt = new Date().getTime()
 
-      this.validate(function(valid) {
-        if (!valid)
-          return callback(1, that)
+    this.validate(function(valid) {
+      if (!valid)
+        return callback(1, that)
 
-        db.exists('user:' + that.id, function(err, res) {
-          if (res !== 1)
-            return callback(err, res)
+      db.exists('user:' + that.id, function(err, res) {
+        if (res !== 1)
+          return callback(err, res)
 
-          db.hmset('user:' + that.id,
-            { 'username': that.username,
-              'updatedAt': that.updatedAt.toString()
-            }, function(err, res) {
-              if (err)
-                return callback(err, that)
+        db.hmset('user:' + that.id,
+          { 'username': that.username,
+            'updatedAt': that.updatedAt.toString()
+          }, function(err, res) {
+            if (err)
+              return callback(err, that)
 
-              callback(null, that)
-            })
-        })
-      })
-    },
-
-    getAdministratorsIds: function(callback) {
-      var that = this
-
-      db.zrevrange('user:' + that.id + ':administrators', 0, -1, function(err, res) {
-        callback(err, res)
-      })
-    },
-
-    toJSON: function(params, callback) {
-      var that = this
-        , json = {}
-        , select = params.select ||
-          models.Group.getAttributes()
-
-      var returnJSON = function(err) {
-        var isReady = true
-        if(select.indexOf('administrators') != -1) {
-          isReady = json.administrators !== undefined
-        }
-        if(select.indexOf('statistics') != -1) {
-          isReady = json.statistics !== undefined
-        }
-
-        if(isReady) {
-          callback(err, json)
-        }
-      }
-
-      if (select.indexOf('id') != -1)
-        json.id = that.id
-
-      if (select.indexOf('username') != -1)
-        json.username = that.username
-
-      if (select.indexOf('createdAt') != -1)
-        json.createdAt = that.createdAt
-
-      if (select.indexOf('updatedAt') != -1)
-        json.updatedAt = that.updatedAt
-
-      if (select.indexOf('administrators') != -1) {
-        that.getAdministratorsIds(function(err, administratorsIds) {
-          async.map(administratorsIds, function(administratorId, callback) {
-            models.FeedFactory.findById(administratorId, function(err, user) {
-              user.toJSON({ select: ['id', 'username'] }, function(err, json) {
-                callback(err, json)
-              })
-            })
-          }, function(err, administratorsJSON) {
-            json.administrators = administratorsJSON
-
-            returnJSON(err)
+            callback(null, that)
           })
-        })
-      } else {
-        returnJSON(null)
+      })
+    })
+  }
+
+  Group.prototype.getAdministratorsIds = function(callback) {
+    var that = this
+
+    db.zrevrange('user:' + that.id + ':administrators', 0, -1, function(err, res) {
+      callback(err, res)
+    })
+  }
+
+  Group.prototype.addAdministrator = function(feedId, callback) {
+    var that = this
+
+    db.zadd('user:' + that.id + ':administrators', new Date().getTime().toString(), feedId, function(err, res) {
+      callback(err, res)
+    })
+  }
+
+  Group.prototype.removeAdministrator = function(feedId, callback) {
+    var that = this
+
+    db.zrem('user:' + that.id + ':administrators', feedId, function(err, res) {
+      callback(err, res)
+    })
+  }
+
+  Group.prototype.toJSON = function(params, callback) {
+    var that = this
+      , json = {}
+      , select = params.select ||
+        models.Group.getAttributes()
+
+    var returnJSON = function(err) {
+      var isReady = true
+      if(select.indexOf('admins') != -1) {
+        isReady = isReady && json.admins !== undefined
+      }
+      if(select.indexOf('statistics') != -1) {
+        isReady = isReady && json.statistics !== undefined
       }
 
-      if (select.indexOf('statistics') != -1) {
-        var statistics = {}
-        models.Stats.findByUserId(that.id, function(err, stats) {
-          if (stats) {
-            stats.toJSON(statisticsSerializer, function(err, statistics) {
-              json.statistics = statistics
-              returnJSON(err)
-            })
-          } else {
-            callback(null)
-          }
-        })
+      if(isReady) {
+        callback(err, json)
       }
     }
+
+    if (select.indexOf('id') != -1)
+      json.id = that.id
+
+    if (select.indexOf('username') != -1)
+      json.username = that.username
+
+    if (select.indexOf('createdAt') != -1)
+      json.createdAt = that.createdAt
+
+    if (select.indexOf('updatedAt') != -1)
+      json.updatedAt = that.updatedAt
+
+    if (select.indexOf('type') != -1)
+      json.type = that.type
+
+    if (select.indexOf('admins') != -1) {
+      that.getAdministratorsIds(function(err, administratorsIds) {
+        async.map(administratorsIds, function(administratorId, callback) {
+          models.FeedFactory.findById(administratorId, function(err, user) {
+            user.toJSON({ select: ['id', 'username'] }, function(err, json) {
+              callback(err, json)
+            })
+          })
+        }, function(err, administratorsJSON) {
+          json.admins = administratorsJSON
+
+          returnJSON(err)
+        })
+      })
+    }
+
+    if (select.indexOf('statistics') != -1) {
+      models.Stats.findByUserId(that.id, function(err, stats) {
+        if (stats) {
+          stats.toJSON(statisticsSerializer, function(err, statistics) {
+            json.statistics = statistics
+            returnJSON(err)
+          })
+        } else {
+          json.statistics = null
+          returnJSON(null)
+        }
+      })
+    }
+
+    returnJSON(null)
   }
 
   return Group;

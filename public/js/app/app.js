@@ -896,7 +896,7 @@ App.User = Ember.Object.extend({
   createdAt: null,
   updatedAt: null,
   statistics: {},
-  administrators: [],
+  admins: [],
 
   subscriptionsLength: function() {
 //    return this.subscriptions.filter(function(s) { return s.name == 'Posts'}).length
@@ -1210,8 +1210,17 @@ App.SubscribersController = Ember.ArrayController.extend({
       success: function(response) {
         App.ApplicationController.subscription.unsubscribe()
 
-        this.set('content', response)
+        var subscribers = []
+        $.each(response.subscribers, function(number, subscriber) {
+          if (response.admins)
+            subscriber.isAdmin = response.admins.indexOf(subscriber.id) != -1
+
+          subscribers.push(subscriber)
+        })
+
+        this.set('content', subscribers)
         this.set('username', username)
+        this.set('admins', response.admins)
 
         this.set('isLoaded', true)
       }
@@ -1220,8 +1229,6 @@ App.SubscribersController = Ember.ArrayController.extend({
   },
 
   removeSubscriber: function(event) {
-    console.log(event)
-
     $.ajax({
       url: this.resourceUrl + '/' + this.get('username') + '/subscriptions/' + event.context,
       dataType: 'jsonp',
@@ -1229,9 +1236,46 @@ App.SubscribersController = Ember.ArrayController.extend({
       data: {'_method': 'delete'},
       context: this,
       success: function(response) {
-        console.log(response)
-        var obj = this.findProperty('id', event.context);
-        this.removeObject(obj);
+        if (response.status == 'success') {
+          var obj = this.findProperty('id', event.context);
+          this.removeObject(obj);
+        }
+      }
+    })
+
+    return this
+  },
+
+  addAdmin: function(event) {
+    $.ajax({
+      url: this.resourceUrl + '/' + this.get('username') + '/subscriptions/' + event.context + '/admin',
+      dataType: 'jsonp',
+      type: 'post',
+      context: this,
+      success: function(response) {
+        if (response.status == 'success') {
+          var obj = this.findProperty('id', event.context);
+          if (obj)
+            obj.set('isAdmin', true)
+        }
+      }
+    })
+
+    return this
+  },
+
+  removeAdmin: function(event) {
+    $.ajax({
+      url: this.resourceUrl + '/' + this.get('username') + '/subscriptions/' + event.context + '/unadmin',
+      dataType: 'jsonp',
+      type: 'post',
+      context: this,
+      success: function(response) {
+        if (response.status == 'success') {
+          var obj = this.findProperty('id', event.context);
+          if (obj)
+            obj.set('isAdmin', false)
+        }
       }
     })
 
@@ -1244,8 +1288,12 @@ App.SubscribersView = Ember.View.extend({
   templateName: 'subscribers',
 
   isOwner: function() {
-    return App.subscribersController.username  == App.properties.username
-  }.property('App.subscribersController.username', 'App.properties.username')
+    return App.subscribersController.username  == App.properties.username || App.subscribersController.admins.indexOf(currentUser) != -1
+  }.property('App.subscribersController.username', 'App.properties.username'),
+
+  hasAdmins: function() {
+    return App.subscribersController.admins !== undefined
+  }.property('App.subscribersController.admins')
 });
 
 App.TopController = Ember.ArrayController.extend({

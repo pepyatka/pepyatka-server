@@ -13,7 +13,7 @@ exports.addRoutes = function(app) {
       likes: { select: ['id', 'username'] }
     },
     user: {
-      select: ['id', 'username', 'subscribers', 'subscriptions', 'statistics', 'type'],
+      select: ['id', 'username', 'subscribers', 'subscriptions', 'statistics', 'type', 'admins'],
       subscriptions: { select: ['id', 'user', 'name'],
                        user: { select: ['id', 'username'] } }
     },
@@ -74,7 +74,7 @@ exports.addRoutes = function(app) {
     // priority right now, but must be fixed, for example, with
     // additional assoc array as a second parameter
 
-    models.User.findByUsername(req.params.username, function(err, user) {
+    models.FeedFactory.findByName(req.params.username, function(err, user) {
       if (!user)
         return res.jsonp({}, 404)
 

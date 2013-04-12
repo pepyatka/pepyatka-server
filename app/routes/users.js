@@ -3,7 +3,7 @@ var models = require('../models')
 
 exports.addRoutes = function(app) {
   var userSerializer = {
-    select: ['id', 'username']
+    select: ['id', 'username', 'admins', 'type']
   }
 
   var subscriptionSerializer = {
@@ -28,17 +28,24 @@ exports.addRoutes = function(app) {
   })
 
   app.get('/v1/users/:username/subscribers', function(req, res) {
-    models.User.findByUsername(req.params.username, function(err, user) {
-      if (err) return res.jsonp({}, 404)
-
-      user.getPostsTimeline({}, function(err, timeline) {
+    models.FeedFactory.findByName(req.params.username, function(err, feed) {
+      feed.getPostsTimeline({}, function(err, timeline) {
         timeline.getSubscribers(function(err, subscribers) {
           async.map(subscribers, function(subscriber, callback) {
             subscriber.toJSON(subscriberSerializer, function(err, json) {
               callback(err, json)
             })
           }, function(err, json) {
-            res.jsonp(json)
+            var response = { subscribers: json }
+            if (feed.type == 'group') {
+              feed.getAdministratorsIds(function(err, administratorsIds) {
+                response.admins = administratorsIds
+
+                res.jsonp(response)
+              })
+            } else {
+              res.jsonp(response)
+            }
           })
         })
       })
@@ -62,34 +69,64 @@ exports.addRoutes = function(app) {
   })
 
   app.get('/v1/users/:userId', function(req, res) {
-    models.User.findById(req.params.userId, function(err, user) {
+    models.FeedFactory.findById(req.params.userId, function(err, feed) {
       if (err) return res.jsonp({}, 404)
 
-      user.toJSON(userSerializer, function(err, json) { res.jsonp(json) })
+      feed.toJSON(userSerializer, function(err, json) { res.jsonp(json) })
     })
   })
 
   app.delete('/v1/users/:username/subscriptions/:userId', function(req, res) {
-    models.User.findByUsername(req.params.username, function(err, userOwner) {
+    models.FeedFactory.findByName(req.params.username, function(err, feedOwner) {
       if (err)
         return res.jsonp({}, 422)
 
-      models.User.findById(req.params.userId, function(err, subscribedUser) {
-        if(err)
-          return res.jsonp({}, 422)
+      var unsubscribe = function() {
+        async.parallel([
+          function(done) {
+            models.FeedFactory.findById(req.params.userId, function(err, subscribedFeed) {
+              if(err)
+                return done(err)
 
-        userOwner.getPostsTimelineId(function(err, timelineId) {
-          if(err)
-            return res.jsonp({}, 422)
+              feedOwner.getPostsTimelineId(function(err, timelineId) {
+                if(err)
+                  return done(err)
 
-          subscribedUser.unsubscribeTo(timelineId, function(err) {
-            if(err)
+                subscribedFeed.unsubscribeTo(timelineId, function(err) {
+                  if(err)
+                    return done(err)
+
+                  done(null)
+                })
+              })
+            })
+          },
+          function(done) {
+            if (feedOwner.type != 'group')
+              return done(null)
+
+            feedOwner.removeAdministrator(req.params.userId, function(err, res) {
+              done(err)
+            })
+          }],
+          function(err) {
+            if (err)
               return res.jsonp({}, 422)
 
-            res.jsonp({})
+            res.jsonp({err: err, status: 'success'})
           })
+      }
+
+      if (feedOwner.type == 'group') {
+        feedOwner.getAdministratorsIds(function(err, administratorsIds) {
+          if (administratorsIds.length == 1)
+            return res.jsonp({err: err, status: 'fail'})
+
+          unsubscribe()
         })
-      })
+      } else {
+        unsubscribe()
+      }
     })
   })
 }

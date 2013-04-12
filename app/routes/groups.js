@@ -40,16 +40,28 @@ exports.addRoutes = function(app) {
     })
   })
 
-  //temp rout for testing
-  app.get('/v1/groups/create/:name', function(req, res) {
-    var newGroup = new models.Group({
-      username: req.params.name
+  app.post('/v1/users/:username/subscriptions/:userId/admin', function(req, res) {
+    models.FeedFactory.findByName(req.params.username, function(err, mainFeed) {
+        mainFeed.addAdministrator(req.params.userId, function(err, result) {
+        if (err) return res.jsonp({ err: err, status: 'fail'})
+
+        res.jsonp({ err: null, status: 'success'})
+      })
     })
+  })
 
-    newGroup.create(function(err, group) {
-      if (err) return res.jsonp({}, 422)
+  app.post('/v1/users/:username/subscriptions/:userId/unadmin', function(req, res) {
+    models.FeedFactory.findByName(req.params.username, function(err, mainFeed) {
+      mainFeed.getAdministratorsIds(function(err, administratorsIds) {
+        if (err || administratorsIds.length == 1)
+          return res.jsonp({ err: err, status: 'fail'})
 
-      res.jsonp({})
+        mainFeed.removeAdministrator(req.params.userId, function(err, result) {
+          if (err) return res.jsonp({ err: err, status: 'fail'})
+
+          res.jsonp({ err: null, status: 'success'})
+        })
+      })
     })
   })
 }

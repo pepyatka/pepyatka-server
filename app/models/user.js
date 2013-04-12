@@ -42,7 +42,9 @@ exports.addModel = function(db) {
     db.setnx('username:anonymous:uid', userId, function(err, res) {
       if (res == 1) {
         db.hsetnx('user:' + userId, 'username', 'anonymous', function(err, res) {
-          returnAnon()
+          db.hsetnx('user:' + userId, 'type', 'user', function(err, res) {
+            returnAnon()
+          })
         })
       } else {
         returnAnon()
@@ -146,7 +148,8 @@ exports.addModel = function(db) {
                                'createdAt': that.createdAt.toString(),
                                'updatedAt': that.updatedAt.toString(),
                                'salt': that.salt.toString(),
-                               'hashedPassword': that.hashedPassword.toString()
+                               'hashedPassword': that.hashedPassword.toString(),
+                               'type': that.type
                              }, function(err, res) {
                                done(err, res)
                              })
@@ -592,10 +595,10 @@ exports.addModel = function(db) {
       var returnJSON = function(err) {
         var isReady = true
         if(select.indexOf('subscriptions') != -1) {
-          isReady = json.subscriptions !== undefined
+          isReady = isReady && json.subscriptions !== undefined
         }
         if(select.indexOf('statistics') != -1) {
-          isReady = json.statistics !== undefined
+          isReady = isReady && json.statistics !== undefined
         }
 
         if(isReady) {
@@ -635,7 +638,6 @@ exports.addModel = function(db) {
       }
 
       if (select.indexOf('statistics') != -1) {
-        var statistics = {}
         models.Stats.findByUserId(that.id, function(err, stats) {
           if (stats) {
             stats.toJSON(statisticsSerializer, function(err, statistics) {
@@ -643,7 +645,8 @@ exports.addModel = function(db) {
               returnJSON(err)
             })
           } else {
-            callback(null)
+            json.statistics = null
+            returnJSON(null)
           }
         })
       }
