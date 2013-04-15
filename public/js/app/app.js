@@ -869,6 +869,12 @@ App.UserTimelineView = Ember.View.extend({
       App.postsController.user.id == currentUser
   }.property('App.postsController.user'),
 
+  showPostCreationForm: function() {
+    return App.postsController.user &&
+      ((App.postsController.user.type == 'user' && App.postsController.user.id == currentUser)
+      || (App.postsController.user.type == 'group' && App.postsController.subscribers.filter(function(subscriber) { return subscriber.id == currentUser})))
+  }.property('App.postsController.user'),
+
   subscribeTo: function() {
     App.userTimelineController.subscribeTo(App.postsController.id)
   },
@@ -903,6 +909,7 @@ App.User = Ember.Object.extend({
   updatedAt: null,
   statistics: {},
   admins: [],
+  type: null,
 
   subscriptionsLength: function() {
 //    return this.subscriptions.filter(function(s) { return s.name == 'Posts'}).length
@@ -957,7 +964,6 @@ App.User = Ember.Object.extend({
   ownProfile: function() {
     return App.postsController.user.id == currentUser
   }.property()
-
 })
 
 App.CommentsController = Ember.ArrayController.extend({
@@ -1223,7 +1229,7 @@ App.SubscribersController = Ember.ArrayController.extend({
 
           var subscriber = App.Subscriber.create(attrs)
           this.addObject(subscriber)
-        }, this)  
+        }, this)
 
         this.set('username', username)
         this.set('admins', response.admins)

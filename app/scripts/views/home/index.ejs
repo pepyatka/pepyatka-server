@@ -503,8 +503,11 @@
   {{#if view.isOwner}}
   <br/>
     <a {{action showGroupCreation href="true"}}>Create group</a>
-  <br/>
-  <br/>
+  {{/if}}
+
+  {{#if view.showPostCreationForm}}
+    <br/>
+    <br/>
 
     <div class="clearfix submitForm">
       <div>
