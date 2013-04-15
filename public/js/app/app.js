@@ -1244,7 +1244,7 @@ App.SubscribersController = Ember.ArrayController.extend({
 
   removeSubscriber: function(event) {
     $.ajax({
-      url: this.resourceUrl + '/' + this.get('username') + '/subscriptions/' + event.context,
+      url: this.resourceUrl + '/' + this.get('username') + '/subscribers/' + event.context,
       dataType: 'jsonp',
       type: 'post',
       data: {'_method': 'delete'},
@@ -1262,7 +1262,7 @@ App.SubscribersController = Ember.ArrayController.extend({
 
   addAdmin: function(event) {
     $.ajax({
-      url: this.resourceUrl + '/' + this.get('username') + '/subscriptions/' + event.context + '/admin',
+      url: this.resourceUrl + '/' + this.get('username') + '/subscribers/' + event.context + '/admin',
       dataType: 'jsonp',
       type: 'post',
       context: this,
@@ -1280,7 +1280,7 @@ App.SubscribersController = Ember.ArrayController.extend({
 
   removeAdmin: function(event) {
     $.ajax({
-      url: this.resourceUrl + '/' + this.get('username') + '/subscriptions/' + event.context + '/unadmin',
+      url: this.resourceUrl + '/' + this.get('username') + '/subscribers/' + event.context + '/unadmin',
       dataType: 'jsonp',
       type: 'post',
       context: this,

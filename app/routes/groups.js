@@ -40,7 +40,7 @@ exports.addRoutes = function(app) {
 //    })
 //  })
 
-  app.post('/v1/users/:username/subscriptions/:userId/admin', function(req, res) {
+  app.post('/v1/users/:username/subscribers/:userId/admin', function(req, res) {
     models.FeedFactory.findByName(req.params.username, function(err, mainFeed) {
         mainFeed.addAdministrator(req.params.userId, function(err, result) {
         if (err) return res.jsonp({ err: err, status: 'fail'})
@@ -50,7 +50,7 @@ exports.addRoutes = function(app) {
     })
   })
 
-  app.post('/v1/users/:username/subscriptions/:userId/unadmin', function(req, res) {
+  app.post('/v1/users/:username/subscribers/:userId/unadmin', function(req, res) {
     models.FeedFactory.findByName(req.params.username, function(err, mainFeed) {
       mainFeed.getAdministratorsIds(function(err, administratorsIds) {
         if (err || administratorsIds.length == 1)

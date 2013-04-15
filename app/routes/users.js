@@ -76,7 +76,7 @@ exports.addRoutes = function(app) {
     })
   })
 
-  app.delete('/v1/users/:username/subscriptions/:userId', function(req, res) {
+  app.delete('/v1/users/:username/subscribers/:userId', function(req, res) {
     models.FeedFactory.findByName(req.params.username, function(err, feedOwner) {
       if (err)
         return res.jsonp({}, 422)
