@@ -890,6 +890,12 @@ App.Comment = Ember.Object.extend({
   user: null
 });
 
+App.Subscriber = Ember.Object.extend({
+  id: null,
+  username: null,
+  isAdmin: null
+})
+
 App.User = Ember.Object.extend({
   id: null,
   username: null,
@@ -1210,15 +1216,15 @@ App.SubscribersController = Ember.ArrayController.extend({
       success: function(response) {
         App.ApplicationController.subscription.unsubscribe()
 
-        var subscribers = []
-        $.each(response.subscribers, function(number, subscriber) {
+        this.set('content', [])
+        response.subscribers.forEach(function(attrs) {
           if (response.admins)
-            subscriber.isAdmin = response.admins.indexOf(subscriber.id) != -1
+            attrs.isAdmin = response.admins.indexOf(attrs.id) != -1
 
-          subscribers.push(subscriber)
-        })
+          var subscriber = App.Subscriber.create(attrs)
+          this.addObject(subscriber)
+        }, this)  
 
-        this.set('content', subscribers)
         this.set('username', username)
         this.set('admins', response.admins)
 
