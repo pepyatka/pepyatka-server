@@ -1,4 +1,5 @@
 var models = require('../models')
+  , async = require('async')
 
 exports.addRoutes = function(app) {
   var postSerializer = { 
@@ -80,18 +81,40 @@ exports.addRoutes = function(app) {
     if(!req.user)
       return res.jsonp({})
 
-    req.user.getPostsTimelineId(function(err, timelineId) {
-      req.user.newPost({
-        body: req.body.body,
-        timelineId: timelineId,
-        files: req.files
-      }, function(err, newPost) {
-        newPost.create(function(err, post) {
+    if(req.body.timelinesIds && req.body.timelinesIds.length > 0) {
+      var timelinesIds = Array.isArray(req.body.timelinesIds) ? req.body.timelinesIds : [req.body.timelinesIds]
+
+      async.forEach(timelinesIds, function(timelineId, done) {
+        req.user.newPost({
+          body: req.body.body,
+          files: req.files
+        }, function(err, newPost) {
+          newPost.timelineId = timelineId
+          
+          newPost.create(function(err, post) {
+            done(err)
+          })
+        },
+        function(err) {
           if (err) return res.jsonp({}, 422)
 
-          post.toJSON(postSerializer, function(err, json) { res.jsonp(json) })
+          res.jsonp({})
         })
       })
-    })
+    } else {
+      req.user.getPostsTimelineId(function(err, timelineId) {
+        req.user.newPost({
+          body: req.body.body,
+          timelineId: timelineId,
+          files: req.files
+        }, function(err, newPost) {
+          newPost.create(function(err, post) {
+            if (err) return res.jsonp({}, 422)
+
+            post.toJSON(postSerializer, function(err, json) { res.jsonp(json) })
+          })
+        })
+      })
+    }
   })
 }

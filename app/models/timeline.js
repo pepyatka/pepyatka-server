@@ -65,6 +65,7 @@ exports.addModel = function(db) {
 
   Timeline.newPost = function(postId, callback) {
     var currentTime = new Date().getTime()
+    console.log('addd')
 
     models.Post.findById(postId, function(err, post) {
       post.getSubscribedTimelinesIds(function(err, timelinesIds) {

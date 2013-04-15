@@ -884,6 +884,7 @@ App.UserTimelineView = Ember.View.extend({
   },
 
   submitPost: function() {
+    App.postsController.set('receiveTimelinesIds', [ App.postsController.get('timelineId') ])
     App.postsController.submitPost()
     // dirty way to restore original height of post textarea
     this.$().find('textarea').height('56px')
@@ -1461,9 +1462,11 @@ App.GroupCreationView = Ember.View.extend({
 
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.PaginationHelper, {
   resourceUrl: '/v1/posts',
+  timelineId: null,
   content: [],
   body: '',
   isProgressBarHidden: 'hidden',
+  receiveTimelinesIds: [],
 
   sortProperties: ['updatedAt'],
   sortAscending: false,
@@ -1474,6 +1477,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
     if (this.body) {
       App.postsController.createPost(this.body);
       this.set('body', '')
+      this.set('receiveTimelinesIds', [])
     }
   },
 
@@ -1537,6 +1541,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       data.append('file-'+i, file);
     });
     data.append('body', $('.submitForm textarea')[0].value) // XXX: dirty!
+    data.append('timelinesIds', App.postsController.get('receiveTimelinesIds')) // XXX: dirty!
 
     var xhr = new XMLHttpRequest();
 				
@@ -1628,6 +1633,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
         App.ApplicationController.subscription.subscribe('timeline', response.id)
 
         this.set('content', [])
+        this.set('timelineId', response.id)
         if(response.posts) {
           response.posts.forEach(function(attrs) {
             var post = App.Post.create(attrs)
