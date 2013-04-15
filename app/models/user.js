@@ -28,6 +28,10 @@ exports.addModel = function(db) {
     return ['id', 'username', 'subscriptions', 'subscribers', 'createdAt', 'updatedAt']
   }
 
+  User.destroy = function(userId, callback) {
+    callback(null)
+  }
+
   // TODO: create Anonymous model which is inherited from User
   // TODO: create new function findAnonId
   User.findAnon = function(callback) {

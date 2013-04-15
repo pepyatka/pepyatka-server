@@ -3,7 +3,7 @@ var models = require('../models')
 
 exports.addRoutes = function(app) {
   app.delete('/v1/users/:userId', function(req, res) {
-    models.Group.destroy(req.params.userId, function(err) {
+    models.FeedFactory.destroy(req.params.userId, function(err) {
       if(err)
         return res.jsonp({}, 422)
 
@@ -25,20 +25,20 @@ exports.addRoutes = function(app) {
     })
   })
 
-  app.patch('/v1/users/:userId', function(req, res) {
-    models.Group.findById(req.params.userId, function(err, group) {
-      if (err)
-        return res.jsonp({ err: err, status: 'fail'})
-
-      group.username = req.body.username
-      group.update(function(err, group) {
-        if (err)
-          return res.jsonp({ err: err, status: 'fail'})
-
-        res.jsonp({ err: null, status: 'success'})
-      })
-    })
-  })
+//  app.patch('/v1/users/:userId', function(req, res) {
+//    models.Group.findById(req.params.userId, function(err, group) {
+//      if (err)
+//        return res.jsonp({ err: err, status: 'fail'})
+//
+//      group.username = req.body.username
+//      group.update(function(err, group) {
+//        if (err)
+//          return res.jsonp({ err: err, status: 'fail'})
+//
+//        res.jsonp({ err: null, status: 'success'})
+//      })
+//    })
+//  })
 
   app.post('/v1/users/:username/subscriptions/:userId/admin', function(req, res) {
     models.FeedFactory.findByName(req.params.username, function(err, mainFeed) {

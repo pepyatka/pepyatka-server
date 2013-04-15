@@ -871,7 +871,7 @@ App.UserTimelineView = Ember.View.extend({
 
   showPostCreationForm: function() {
     return App.postsController.user &&
-      ((App.postsController.user.type == 'user' && App.postsController.user.id == currentUser)
+      (((App.postsController.user.type == 'user' || !App.postsController.user.type) && App.postsController.user.id == currentUser)
       || (App.postsController.user.type == 'group' && App.postsController.subscribers.filter(function(subscriber) { return subscriber.id == currentUser})))
   }.property('App.postsController.user'),
 
