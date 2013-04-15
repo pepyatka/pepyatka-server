@@ -2,6 +2,19 @@ var models = require('../models')
   , async = require('async')
 
 exports.addRoutes = function(app) {
+  var validate = function(requestingUser, feed, callback) {
+    switch(feed.type) {
+      case 'group' :
+        feed.getAdministratorsIds(function(err, administratorsIds) {
+          callback(err, administratorsIds.indexOf(requestingUser.id) != -1)
+        })
+        break
+
+      default :
+        callback(null, requestingUser.id == feed.id)
+    }
+  }
+
   app.delete('/v1/users/:userId', function(req, res) {
     models.FeedFactory.destroy(req.params.userId, function(err) {
       if(err)
@@ -42,24 +55,32 @@ exports.addRoutes = function(app) {
 
   app.post('/v1/users/:username/subscribers/:userId/admin', function(req, res) {
     models.FeedFactory.findByName(req.params.username, function(err, mainFeed) {
-        mainFeed.addAdministrator(req.params.userId, function(err, result) {
-        if (err) return res.jsonp({ err: err, status: 'fail'})
+      validate(req.user, mainFeed, function(err, valid) {
+        if (!valid)
+          return res.jsonp({ err: err, status: 'fail'})
 
-        res.jsonp({ err: null, status: 'success'})
+        mainFeed.addAdministrator(req.params.userId, function(err, result) {
+          if (err) return res.jsonp({ err: err, status: 'fail'})
+
+          res.jsonp({ err: null, status: 'success'})
+        })
       })
     })
   })
 
   app.post('/v1/users/:username/subscribers/:userId/unadmin', function(req, res) {
     models.FeedFactory.findByName(req.params.username, function(err, mainFeed) {
-      mainFeed.getAdministratorsIds(function(err, administratorsIds) {
-        if (err || administratorsIds.length == 1)
-          return res.jsonp({ err: err, status: 'fail'})
+      validate(req.user, mainFeed, function(err, valid) {
+        if (!valid)
+        mainFeed.getAdministratorsIds(function(err, administratorsIds) {
+          if (err || administratorsIds.length == 1)
+            return res.jsonp({ err: err, status: 'fail'})
 
-        mainFeed.removeAdministrator(req.params.userId, function(err, result) {
-          if (err) return res.jsonp({ err: err, status: 'fail'})
+          mainFeed.removeAdministrator(req.params.userId, function(err, result) {
+            if (err) return res.jsonp({ err: err, status: 'fail'})
 
-          res.jsonp({ err: null, status: 'success'})
+            res.jsonp({ err: null, status: 'success'})
+          })
         })
       })
     })

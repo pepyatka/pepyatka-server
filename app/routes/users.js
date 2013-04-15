@@ -2,6 +2,19 @@ var models = require('../models')
   , async = require('async')
 
 exports.addRoutes = function(app) {
+  var validate = function(requestingUser, feed, callback) {
+    switch(feed.type) {
+      case 'group' :
+        feed.getAdministratorsIds(function(err, administratorsIds) {
+          callback(err, administratorsIds.indexOf(requestingUser.id) != -1)
+        })
+        break
+
+      default :
+        callback(null, requestingUser.id == feed.id)
+    }
+  }
+
   var userSerializer = {
     select: ['id', 'username', 'admins', 'type']
   }
@@ -117,16 +130,21 @@ exports.addRoutes = function(app) {
           })
       }
 
-      if (feedOwner.type == 'group') {
-        feedOwner.getAdministratorsIds(function(err, administratorsIds) {
-          if (administratorsIds.length == 1)
-            return res.jsonp({err: err, status: 'fail'})
+      validate(req.user, feedOwner, function(err, valid) {
+        if(!valid)
+          return res.jsonp({err: err, status: 'fail'})
 
+        if (feedOwner.type == 'group') {
+          feedOwner.getAdministratorsIds(function(err, administratorsIds) {
+            if (administratorsIds.length == 1)
+              return res.jsonp({err: err, status: 'fail'})
+
+            unsubscribe()
+          })
+        } else {
           unsubscribe()
-        })
-      } else {
-        unsubscribe()
-      }
+        }
+      })
     })
   })
 }
