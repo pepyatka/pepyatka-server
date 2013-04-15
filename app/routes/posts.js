@@ -2,6 +2,30 @@ var models = require('../models')
   , async = require('async')
 
 exports.addRoutes = function(app) {
+  var validate = function(requestingUser, timelineId, callback) {
+    models.Timeline.findById(timelineId, { start : 0 }, function(err, timeline) {
+      if (err)
+        callback(err, null)
+
+      models.FeedFactory.findById(timeline.userId, function(err, feed) {
+        if (err)
+          callback(err, null)
+
+        switch (feed.type) {
+          case 'group' :
+            feed.getAdministratorsIds(function(err, administratorsIds) {
+              callback(err, administratorsIds.indexOf(requestingUser.id) != -1)
+            })
+            break
+
+          default :
+            callback(null, feed.id == requestingUser.id)
+            break
+        }
+      })
+    })
+  }
+
   var postSerializer = { 
     select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
     createdBy: { select: ['id', 'username'] },
@@ -85,14 +109,19 @@ exports.addRoutes = function(app) {
       var timelinesIds = Array.isArray(req.body.timelinesIds) ? req.body.timelinesIds : [req.body.timelinesIds]
 
       async.forEach(timelinesIds, function(timelineId, done) {
-        req.user.newPost({
-          body: req.body.body,
-          files: req.files
-        }, function(err, newPost) {
-          newPost.timelineId = timelineId
+          validate(req.user, timelineId, function(err, valid) {
+            if (!valid)
+              done(err)
 
-          newPost.create(function(err, post) {
-            done(err)
+            req.user.newPost({
+              body: req.body.body,
+              files: req.files
+            }, function(err, newPost) {
+              newPost.timelineId = timelineId
+
+              newPost.create(function(err, post) {
+                done(err)
+              })
           })
         },
         function(err) {
