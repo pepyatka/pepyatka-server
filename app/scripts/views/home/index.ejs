@@ -659,22 +659,31 @@
 <script type="text/x-handlebars" data-template-name="subscribers">
   <h3>Subscribers {{App.subscribersController.username}}</h3>
 
+  {{#if view.isOwner}}
+    {{#unless view.showManagement}}
+      <br>
+      <button {{action manage target="view"}}>Manage</button>
+      <br>
+      <br>
+    {{/unless}}
+  {{/if}}
+
   <ul>
     {{#each content}}
       <li>
         <a {{action showUserTimeline username href="true"}}>{{username}}</a>
           {{#if view.isOwner}}
-            (<a {{action removeSubscriber id target='App.subscribersController' href="true"}}>remove</a>)
-
-            {{#if view.hasAdmins}}
-              {{#if isAdmin}}
-                (<a {{action removeAdmin id target='App.subscribersController' href="true"}}>unadmin</a>)
-              {{else}}
-                (<a {{action addAdmin id target='App.subscribersController' href="true"}}>admin</a>)
+            {{#if view.showManagement}}
+              (<a {{action removeSubscriber id target='App.subscribersController' href="true"}}>remove</a>)
+              {{#if view.hasAdmins}}
+                {{#if isAdmin}}
+                  (<a {{action removeAdmin id target='App.subscribersController' href="true"}}>unadmin</a>)
+                {{else}}
+                  (<a {{action addAdmin id target='App.subscribersController' href="true"}}>admin</a>)
+                {{/if}}
               {{/if}}
             {{/if}}
           {{/if}}
-
       </li>
     {{/each}}
   </ul>

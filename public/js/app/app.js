@@ -1212,6 +1212,7 @@ App.SubscriptionsView = Ember.View.extend({
 App.SubscribersController = Ember.ArrayController.extend({
   resourceUrl: '/v1/users',
   verb: 'subscribers',
+  showManagement: false,
 
   findAll: function(username) {
     this.set('isLoaded', false)
@@ -1300,13 +1301,21 @@ App.subscribersController = App.SubscribersController.create()
 App.SubscribersView = Ember.View.extend({
   templateName: 'subscribers',
 
+  manage: function() {
+    App.router.transitionTo('showManagement', App.subscribersController.get('username'))
+  },
+
   isOwner: function() {
-    return App.subscribersController.username  == App.properties.username || App.subscribersController.admins.indexOf(currentUser) != -1
+    return App.subscribersController.username  == App.properties.username || App.subscribersController.admins && App.subscribersController.admins.indexOf(currentUser) != -1
   }.property('App.subscribersController.username', 'App.properties.username'),
 
   hasAdmins: function() {
     return App.subscribersController.admins !== undefined
-  }.property('App.subscribersController.admins')
+  }.property('App.subscribersController.admins'),
+
+  showManagement: function() {
+    return App.subscribersController.showManagement
+  }.property('App.subscribersController.showManagement')
 });
 
 App.TopController = Ember.ArrayController.extend({
@@ -1837,6 +1846,7 @@ App.Router = Ember.Router.extend({
 
       connectOutlets: function(routes, context) {
         App.router.get('applicationController').connectOutlet('subscribers', App.subscribersController.findAll(context));
+        App.subscribersController.set('showManagement', false)
       },
 
       serialize: function(router, username) {
@@ -1989,6 +1999,35 @@ App.Router = Ember.Router.extend({
 
       connectOutlets: function(routes, context) {
         App.router.get('applicationController').connectOutlet('groupCreation', App.groupCreationController);
+      }
+    }),
+
+    showManagement: Ember.Route.extend({
+      route: '/users/:username/subscribers/manage',
+
+      showPost: Ember.Route.transitionTo('aPost'),
+      showAllPosts: Ember.Route.transitionTo('posts'),
+      showSubscribers: Ember.Route.transitionTo('subscribers'),
+      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
+      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+      showTop: Ember.Route.transitionTo('top'),
+      doSignup: Ember.Route.transitionTo('signup'),
+      doSignin: Ember.Route.transitionTo('signin'),
+
+      connectOutlets: function(routes, context) {
+        App.router.get('applicationController').connectOutlet('subscribers', App.subscribersController.findAll(context));
+        App.subscribersController.set('showManagement', true)
+      },
+
+      serialize: function(router, username) {
+        return {username: username}
+      },
+
+      deserialize: function(router, urlParams) {
+        return urlParams.username
       }
     })
   })

@@ -90,7 +90,7 @@ exports.addRoutes = function(app) {
           files: req.files
         }, function(err, newPost) {
           newPost.timelineId = timelineId
-          
+
           newPost.create(function(err, post) {
             done(err)
           })
