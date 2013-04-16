@@ -10,6 +10,9 @@ App.properties = App.Properties.create({
   username:currentUsername,
   userLink: function() {
     return '/users/' + this.get('username')
+  }.property('username'),
+  isAnonym: function() {
+    return this.get('username') == 'anonymous'
   }.property('username')
 });
 
@@ -120,6 +123,32 @@ App.Tags = Ember.View.extend({
       type: 'get',
       success: function(response) {
         that.set('content', response)
+      }
+    })
+  }
+});
+
+App.Groups = Ember.View.extend({
+  resourceUrl: '/v1/users/',
+  suffix: '/subscriptions',
+
+  templateName: 'groups',
+  tagName: 'ul',
+
+  willInsertElement: function() {
+    var that = this
+
+    $.ajax({
+      url: this.resourceUrl + App.properties.get('username') + this.suffix,
+      type: 'get',
+      success: function(response) {
+        var groups = []
+        response.forEach(function(subscription) {
+          if (subscription.user.type == 'group' && groups.indexOf(subscription.user.username) == -1) {
+            groups.push(subscription.user.username)
+          }
+        }, this)
+        that.set('content', groups)
       }
     })
   }
@@ -853,14 +882,8 @@ App.UserTimelineController = Ember.ObjectController.extend({
       url: this.resourceUrl + '/' + timelineId + '/unsubscribe',
       type: 'post',
       success: function(response) {
-        switch (response.status) {
-          case 'success' :
-            App.router.transitionTo('posts')
-            break
-          case 'fail' :
-            App.router.transitionTo('userTimeline', this.get('username'))
-            break
-        }
+        if (response.status == 'success')
+          App.router.transitionTo('posts')
       }
     })
   }
@@ -869,11 +892,6 @@ App.userTimelineController = App.UserTimelineController.create()
 App.UserTimelineView = Ember.View.extend({
   templateName: 'user-timeline',
   currentUser: currentUser,
-
-  isOwner: function() {
-    return App.postsController.user &&
-      App.postsController.user.id == currentUser
-  }.property('App.postsController.user'),
 
   showPostCreationForm: function() {
     return App.postsController.user &&
@@ -1710,6 +1728,7 @@ App.Router = Ember.Router.extend({
       showTop: Ember.Route.transitionTo('top'),
       doSignup: Ember.Route.transitionTo('signup'),
       doSignin: Ember.Route.transitionTo('signin'),
+      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
 
       connectOutlets: function(router, searchQuery) {
         router.get('applicationController').connectOutlet('search', App.searchController.searchByPhrase(searchQuery));
@@ -1744,6 +1763,7 @@ App.Router = Ember.Router.extend({
       showTop: Ember.Route.transitionTo('top'),
       doSignup: Ember.Route.transitionTo('signup'),
       doSignin: Ember.Route.transitionTo('signin'),
+      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
       
       connectOutlets: function(router) {
         App.postsController.set('timeline', null)
@@ -1765,6 +1785,7 @@ App.Router = Ember.Router.extend({
       showTop: Ember.Route.transitionTo('top'),
       doSignup: Ember.Route.transitionTo('signup'),
       doSignin: Ember.Route.transitionTo('signin'),
+      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
 
       connectOutlets: function(router, username) {
         App.postsController.set('timeline', 'everyone')
@@ -1789,6 +1810,7 @@ App.Router = Ember.Router.extend({
       showTop: Ember.Route.transitionTo('top'),
       doSignup: Ember.Route.transitionTo('signup'),
       doSignin: Ember.Route.transitionTo('signin'),
+      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
 
       connectOutlets: function(router, context) {
         // FIXME: obviouly a defect. content should be set automagically
@@ -1849,6 +1871,7 @@ App.Router = Ember.Router.extend({
       showTop: Ember.Route.transitionTo('top'),
       doSignup: Ember.Route.transitionTo('signup'),
       doSignin: Ember.Route.transitionTo('signin'),
+      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
 
       connectOutlets: function(routes, context) {
         App.router.get('applicationController').connectOutlet('subscribers', App.subscribersController.findAll(context));
@@ -1878,6 +1901,7 @@ App.Router = Ember.Router.extend({
       showTop: Ember.Route.transitionTo('top'),
       doSignup: Ember.Route.transitionTo('signup'),
       doSignin: Ember.Route.transitionTo('signin'),
+      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
 
       connectOutlets: function(routes, context) {
         App.router.get('applicationController').connectOutlet('subscriptions', App.subscriptionsController.findAll(context));
@@ -1906,6 +1930,7 @@ App.Router = Ember.Router.extend({
       showTop: Ember.Route.transitionTo('top'),
       doSignup: Ember.Route.transitionTo('signup'),
       doSignin: Ember.Route.transitionTo('signin'),
+      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
 
       connectOutlets: function(router, username) {
         App.postsController.set('timeline', username)
@@ -1935,6 +1960,7 @@ App.Router = Ember.Router.extend({
       showTop: Ember.Route.transitionTo('top'),
       doSignup: Ember.Route.transitionTo('signup'),
       doSignin: Ember.Route.transitionTo('signin'),
+      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
 
       connectOutlets: function(router, username) {
         App.postsController.set('timeline', username)
@@ -1964,6 +1990,7 @@ App.Router = Ember.Router.extend({
       showTop: Ember.Route.transitionTo('top'),
       doSignup: Ember.Route.transitionTo('signup'),
       doSignin: Ember.Route.transitionTo('signin'),
+      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
 
       connectOutlets: function(routes, context) {
         App.router.get('applicationController').connectOutlet('top', App.topController.getTop(context));
@@ -2002,6 +2029,8 @@ App.Router = Ember.Router.extend({
       route: '/create-group',
 
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
 
       connectOutlets: function(routes, context) {
         App.router.get('applicationController').connectOutlet('groupCreation', App.groupCreationController);
@@ -2022,6 +2051,7 @@ App.Router = Ember.Router.extend({
       showTop: Ember.Route.transitionTo('top'),
       doSignup: Ember.Route.transitionTo('signup'),
       doSignin: Ember.Route.transitionTo('signin'),
+      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
 
       connectOutlets: function(routes, context) {
         App.router.get('applicationController').connectOutlet('subscribers', App.subscribersController.findAll(context));

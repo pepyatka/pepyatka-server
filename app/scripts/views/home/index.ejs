@@ -73,6 +73,14 @@
       </div>
 
       <div class="span3">
+        {{#unless App.properties.isAnonym}}
+          <h5>Groups</h5>
+
+          {{view App.Groups}}
+
+          <br>
+        {{/unless}}
+
         <h5>Tags</h5>
 
         {{view App.Tags}}
@@ -87,6 +95,15 @@
   {{#each view.content}}
     <li><a {{action searchByPhrase this href="true"}}>{{this}}</a></li>
   {{/each}}
+</script>
+
+<script type="text/x-handlebars" data-template-name="groups">
+  {{#each view.content}}
+    <li><a {{action showUserTimeline this href="true"}}>{{this}}</a></li>
+  {{/each}}
+
+  <br/>
+  <a {{action showGroupCreation href="true"}}>Create group</a>
 </script>
 
 <script type="text/x-handlebars" data-template-name="pagination">
@@ -510,11 +527,6 @@
       </div>
     </div>
   </div>
-
-  {{#if view.isOwner}}
-  <br/>
-    <a {{action showGroupCreation href="true"}}>Create group</a>
-  {{/if}}
 
   {{#if view.showPostCreationForm}}
     <br>

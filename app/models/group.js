@@ -333,6 +333,9 @@ exports.addModel = function(db) {
       if(select.indexOf('statistics') != -1) {
         isReady = isReady && json.statistics !== undefined
       }
+      if(select.indexOf('subscribers') != -1) {
+        isReady = isReady && json.subscribers !== undefined
+      }
 
       if(isReady) {
         callback(err, json)
@@ -381,6 +384,34 @@ exports.addModel = function(db) {
           json.statistics = null
           returnJSON(null)
         }
+      })
+    }
+
+    if (select.indexOf('subscribers') != -1) {
+      var subscribersIds = []
+      var subscribersJSON = []
+      that.getTimelines( {start: 0}, function(err, timelines) {
+        async.forEach(timelines, function(timeline, done) {
+            timeline.getSubscribers(function(err, subscribers) {
+              async.forEach(subscribers, function(subscriber, done) {
+                  if (subscribersIds.indexOf(subscriber.id) != -1)
+                    return done(null)
+
+                  subscribersIds.push(subscriber.id)
+                  subscriber.toJSON(params.subscribers || {},function(err, subscriberJSON) {
+                    subscribersJSON.push(subscriberJSON)
+                    done(err)
+                  })
+                },
+                function(err) {
+                  done(err)
+                })
+            })
+          },
+          function(err) {
+            json.subscribers = subscribersJSON
+            returnJSON(err)
+          })
       })
     }
 

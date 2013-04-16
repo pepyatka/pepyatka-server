@@ -590,6 +590,36 @@ exports.addModel = function(db) {
       }
     },
 
+    getAdministratedFeeds: function(callback) {
+      this.getSubscriptions(function(err, subscriptions) {
+        var subscriptionUsersIds = []
+        var administratedFeeds = []
+
+        async.forEach(subscriptions, function(subscription, callback) {
+          if (subscriptionUsersIds.indexOf(subscription.userId) != -1)
+            return callback(null)
+
+          subscriptionUsersIds.push(subscription.userId)
+          models.FeedFactory.findById(subscription.userId, function(err, feed) {
+            if (feed.type != 'group')
+              return callback(null)
+
+            feed.getAdministratorsIds(function(err, administratorIds) {
+              if (administratorIds.indexOf(subscription.userId) == -1)
+                return callback(null)
+
+              administratedFeeds.push(feed)
+              callback(err)
+            })
+          })
+        },
+        function(err) {
+          console.log(administratedFeeds)
+          callback(err, administratedFeeds)
+        })
+      })
+    },
+
     toJSON: function(params, callback) {
       var that = this
         , json = {}
@@ -603,6 +633,12 @@ exports.addModel = function(db) {
         }
         if(select.indexOf('statistics') != -1) {
           isReady = isReady && json.statistics !== undefined
+        }
+        if(select.indexOf('subscribers') != -1) {
+          isReady = isReady && json.subscribers !== undefined
+        }
+        if(select.indexOf('administratedFeeds') != -1) {
+          isReady = isReady && json.administratedFeeds !== undefined
         }
 
         if(isReady) {
@@ -625,6 +661,20 @@ exports.addModel = function(db) {
       if (select.indexOf('type') != -1)
         json.type = that.type
 
+      if (select.indexOf('administratedFeeds') != -1) {
+        that.getAdministratedFeeds(function(err, administratedFeeds) {
+          async.map(administratedFeeds, function(administratedFeed, callback) {
+            administratedFeed.toJSON(params.administratedFeeds || {}, function(err, json) {
+              callback(err, json)
+            })
+          }, function(err, administratedFeedsJSON) {
+            json.administratedFeeds = administratedFeedsJSON
+
+            returnJSON(err)
+          })
+        })
+      }
+
       if (select.indexOf('subscriptions') != -1) {
         that.getSubscriptions(function(err, subscriptions) {
           async.map(subscriptions, function(subscription, callback) {
@@ -637,8 +687,6 @@ exports.addModel = function(db) {
             returnJSON(err)
           })
         })
-      } else {
-        returnJSON(null)
       }
 
       if (select.indexOf('statistics') != -1) {
@@ -654,6 +702,36 @@ exports.addModel = function(db) {
           }
         })
       }
+
+      if (select.indexOf('subscribers') != -1) {
+        var subscribersIds = []
+        var subscribersJSON = []
+        that.getTimelines( {start: 0}, function(err, timelines) {
+          async.forEach(timelines, function(timeline, done) {
+            timeline.getSubscribers(function(err, subscribers) {
+              async.forEach(subscribers, function(subscriber, done) {
+                if (subscribersIds.indexOf(subscriber.id) != -1)
+                  return done(null)
+
+                subscribersIds.push(subscriber.id)
+                subscriber.toJSON(params.subscribers || {},function(err, subscriberJSON) {
+                  subscribersJSON.push(subscriberJSON)
+                  done(err)
+                })
+              },
+              function(err) {
+                done(err)
+              })
+            })
+          },
+          function(err) {
+            json.subscribers = subscribersJSON
+            returnJSON(err)
+          })
+        })
+      }
+
+      returnJSON(null)
     }
   }
   

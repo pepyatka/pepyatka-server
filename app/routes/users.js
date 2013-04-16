@@ -21,7 +21,7 @@ exports.addRoutes = function(app) {
 
   var subscriptionSerializer = {
     select: ['id', 'user', 'name'],
-    user: { select: ['id', 'username'] }
+    user: { select: ['id', 'username', 'type'] }
   }
 
   var subscriberSerializer = {
@@ -139,6 +139,30 @@ exports.addRoutes = function(app) {
         } else {
           unsubscribe()
         }
+      })
+    })
+  })
+
+  app.get('/v1/users/:userId/feedInfo', function(req, res) {
+    var feedInfoSerializer = {
+      select: ['id', 'username', 'type', 'subscriptions', 'subscribers', 'admins', 'administratedFeeds'],
+      subscriptions: {
+        select: ['id', 'user'],
+        user: {select: ['id', 'username', 'type', 'admins'] }
+      },
+      subscribers: {
+        select: ['id', 'username', 'type', 'admins']
+      },
+      administratedFeeds: {
+
+      }
+    }
+
+    models.FeedFactory.findById(req.params.userId, function(err, feed) {
+      if (err) return res.jsonp({}, 404)
+
+      feed.toJSON(feedInfoSerializer, function(err, json) {
+        res.jsonp(json)
       })
     })
   })
