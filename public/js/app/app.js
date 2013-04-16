@@ -914,7 +914,7 @@ App.User = Ember.Object.extend({
 
   subscriptionsLength: function() {
 //    return this.subscriptions.filter(function(s) { return s.name == 'Posts'}).length
-    if(this.statistics.subscriptions) {
+    if(this.statistics && this.statistics.subscriptions) {
       return this.statistics.subscriptions
     } else {
       return 0
@@ -923,7 +923,7 @@ App.User = Ember.Object.extend({
 
   subscribersLength: function() {
 //    return App.postsController.subscribers.length
-    if(this.statistics.subscribers) {
+    if(this.statistics && this.statistics.subscribers) {
       return this.statistics.subscribers
     } else {
       return 0
@@ -931,7 +931,7 @@ App.User = Ember.Object.extend({
   }.property(),
 
   postsLength: function() {
-    if(this.statistics.posts) {
+    if(this.statistics && this.statistics.posts) {
       return this.statistics.posts
     } else {
       return 0
@@ -940,7 +940,7 @@ App.User = Ember.Object.extend({
   }.property(),
 
   commentsLength: function() {
-    if(this.statistics.discussions) {
+    if(this.statistics && this.statistics.discussions) {
       return this.statistics.discussions
     } else {
       return 0
@@ -948,7 +948,7 @@ App.User = Ember.Object.extend({
   }.property(),
 
   likesLength: function() {
-    if(this.statistics.likes) {
+    if(this.statistics && this.statistics.likes) {
       return this.statistics.likes
     } else {
       return 0
@@ -1444,7 +1444,7 @@ App.GroupCreationController = Ember.ArrayController.extend({
       success: function(response) {
         switch (response.status) {
           case 'success' :
-            App.router.transitionTo('posts')
+            App.router.transitionTo('userTimeline', this.get('groupName'))
             break
           case 'fail' :
             App.router.transitionTo('groupCreation')

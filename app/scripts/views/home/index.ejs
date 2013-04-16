@@ -495,6 +495,17 @@
           <div><a {{action showUserTimeline App.postsController.timeline href="true"}}>{{content.user.postsLength}} {{t label.posts}}</a></div>
           <div><a {{action showLikesTimeline App.postsController.timeline href="true"}}>{{content.user.likesLength}} {{t label.likes}}</a></div>
           <div><a {{action showCommentsTimeline App.postsController.timeline href="true"}}>{{content.user.commentsLength}} {{t label.comments}}</a></div>
+
+          {{#unless content.user.ownProfile}}
+            {{#if view.currentUser}}
+              <br>
+              <div class="row profile-actions">
+                {{#if content.user.subscribedTo}}
+                  <a {{action unsubscribeTo target="view"}}>Unsubscribe</a>
+                {{/if}}
+              </div>
+            {{/if}}
+          {{/unless}}
         </div>
       </div>
     </div>
@@ -506,9 +517,7 @@
   {{/if}}
 
   {{#if view.showPostCreationForm}}
-    <br/>
-    <br/>
-
+    <br>
     <div class="clearfix submitForm">
       <div>
         {{view App.CreatePostView target="parentView" action="submitPost"
@@ -526,10 +535,6 @@
   {{#unless content.user.ownProfile}}
     {{#if view.currentUser}}
       <div class="row profile-actions">
-        {{#if content.user.subscribedTo}}
-          <a {{action unsubscribeTo target="view"}}>Unsubscribe</a>
-        {{/if}}
-
         {{#unless content.user.subscribedTo}}
           <a {{action subscribeTo target="view"}}>Subscribe</a>
         {{/unless}}
@@ -659,34 +664,34 @@
 <script type="text/x-handlebars" data-template-name="subscribers">
   <h3>Subscribers {{App.subscribersController.username}}</h3>
 
-  {{#if view.isOwner}}
-    {{#unless view.showManagement}}
-      <br>
-      <button {{action manage target="view"}}>Manage</button>
-      <br>
-      <br>
-    {{/unless}}
-  {{/if}}
-
   <ul>
     {{#each content}}
       <li>
         <a {{action showUserTimeline username href="true"}}>{{username}}</a>
           {{#if view.isOwner}}
             {{#if view.showManagement}}
-              (<a {{action removeSubscriber id target='App.subscribersController' href="true"}}>remove</a>)
+              (
+              <a {{action removeSubscriber id target='App.subscribersController' href="true"}}>remove</a>
               {{#if view.hasAdmins}}
+                |
                 {{#if isAdmin}}
-                  (<a {{action removeAdmin id target='App.subscribersController' href="true"}}>unadmin</a>)
+                  <a {{action removeAdmin id target='App.subscribersController' href="true"}}>unadmin</a>
                 {{else}}
-                  (<a {{action addAdmin id target='App.subscribersController' href="true"}}>admin</a>)
+                  <a {{action addAdmin id target='App.subscribersController' href="true"}}>admin</a>
                 {{/if}}
               {{/if}}
+              )
             {{/if}}
           {{/if}}
       </li>
     {{/each}}
   </ul>
+
+  {{#if view.isOwner}}
+    {{#unless view.showManagement}}
+      <a {{action manage target="view" href=true}}>Manage</a>
+    {{/unless}}
+  {{/if}}
 </script>
 
 <script type="text/x-handlebars" data-template-name="top-view">
