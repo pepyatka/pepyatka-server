@@ -304,8 +304,18 @@ exports.addModel = function(db) {
   Group.prototype.removeAdministrator = function(feedId, callback) {
     var that = this
 
-    db.zrem('user:' + that.id + ':administrators', feedId, function(err, res) {
-      callback(err, res)
+    that.getAdministratorsIds(function(err, administratorsIds) {
+      if (err)
+        return callback(err)
+
+      if (administratorsIds.length == 1) {
+        err = 1
+        return callback(err)
+      }
+
+      db.zrem('user:' + that.id + ':administrators', feedId, function(err, res) {
+        callback(err, res)
+      })
     })
   }
 

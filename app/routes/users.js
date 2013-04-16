@@ -115,12 +115,7 @@ exports.addRoutes = function(app) {
             })
           },
           function(done) {
-            if (feedOwner.type != 'group')
-              return done(null)
-
-            feedOwner.removeAdministrator(req.params.userId, function(err, res) {
-              done(err)
-            })
+            done(null)
           }],
           function(err) {
             if (err)
@@ -135,8 +130,8 @@ exports.addRoutes = function(app) {
           return res.jsonp({err: err, status: 'fail'})
 
         if (feedOwner.type == 'group') {
-          feedOwner.getAdministratorsIds(function(err, administratorsIds) {
-            if (administratorsIds.length == 1)
+          feedOwner.removeAdministrator(req.params.userId, function(err, result) {
+            if (err)
               return res.jsonp({err: err, status: 'fail'})
 
             unsubscribe()

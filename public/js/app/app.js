@@ -853,8 +853,14 @@ App.UserTimelineController = Ember.ObjectController.extend({
       url: this.resourceUrl + '/' + timelineId + '/unsubscribe',
       type: 'post',
       success: function(response) {
-        console.log(response)
-        App.router.transitionTo('posts')
+        switch (response.status) {
+          case 'success' :
+            App.router.transitionTo('posts')
+            break
+          case 'fail' :
+            App.router.transitionTo('userTimeline', this.get('username'))
+            break
+        }
       }
     })
   }

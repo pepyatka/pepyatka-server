@@ -72,15 +72,12 @@ exports.addRoutes = function(app) {
     models.FeedFactory.findByName(req.params.username, function(err, mainFeed) {
       validate(req.user, mainFeed, function(err, valid) {
         if (!valid)
-        mainFeed.getAdministratorsIds(function(err, administratorsIds) {
-          if (err || administratorsIds.length == 1)
-            return res.jsonp({ err: err, status: 'fail'})
+          return res.jsonp({ err: err, status: 'fail'})
 
-          mainFeed.removeAdministrator(req.params.userId, function(err, result) {
-            if (err) return res.jsonp({ err: err, status: 'fail'})
+        mainFeed.removeAdministrator(req.params.userId, function(err, result) {
+          if (err) return res.jsonp({ err: err, status: 'fail'})
 
-            res.jsonp({ err: null, status: 'success'})
-          })
+          res.jsonp({ err: null, status: 'success'})
         })
       })
     })

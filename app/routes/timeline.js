@@ -47,10 +47,30 @@ exports.addRoutes = function(app) {
   })
 
   app.post('/v1/timeline/:timelineId/unsubscribe', function(req, res) {
-    req.user.unsubscribeTo(req.params.timelineId, function(err, r) {
-      if (err) return res.jsonp({}, 422)
+    var unsubscribe = function() {
+      req.user.unsubscribeTo(req.params.timelineId, function(err, r) {
+        if (err) return res.jsonp({}, 422)
 
-      res.jsonp({})
+        res.jsonp({ err: err, status: 'success'})
+      })
+    }
+
+    models.Timeline.findById(req.params.timelineId, { start: 0 }, function(err, timeline) {
+      if (err)
+        return res.jsonp({}, 422)
+
+      models.FeedFactory.findById(timeline.userId, function(err, ownerFeed) {
+        if (ownerFeed.type == 'group') {
+          ownerFeed.removeAdministrator(req.user.id, function(err, result) {
+            if (err)
+              return res.jsonp({ err: err, status: 'fail'})
+
+            unsubscribe()
+          })
+        } else {
+          unsubscribe()
+        }
+      })
     })
   })
 
