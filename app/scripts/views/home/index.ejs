@@ -25,7 +25,8 @@
           <a href="/">{{t title.title}}</a> <small class="mutted">{{t label.version}}</small>
         </h1>
       </div>
-	  <div class="span4 searchFieldView">
+
+      <div class="span4 searchFieldView clearfix">
         <div>
           {{view App.CreateSearchFieldView target="parentView" action="searchPhrase"
                 class="span3"}}
@@ -73,17 +74,18 @@
       </div>
 
       <div class="span3">
-        {{#unless App.properties.isAnonym}}
+        <div>
           <h5>Groups</h5>
 
           {{view App.Groups}}
+          <p><small><a {{action showGroupCreation href="true"}}>Create group</a></small></p>
+        </div>
 
-          <br>
-        {{/unless}}
+        <div>
+          <h5>Tags</h5>
 
-        <h5>Tags</h5>
-
-        {{view App.Tags}}
+          {{view App.Tags}}
+        </div>
       </div>
     </div>
 
@@ -101,9 +103,6 @@
   {{#each view.content}}
     <li><a {{action showUserTimeline this href="true"}}>{{this}}</a></li>
   {{/each}}
-
-  <br/>
-  <a {{action showGroupCreation href="true"}}>Create group</a>
 </script>
 
 <script type="text/x-handlebars" data-template-name="pagination">
