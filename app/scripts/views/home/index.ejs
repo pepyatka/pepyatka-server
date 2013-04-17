@@ -77,7 +77,7 @@
         <div>
           <h5>Groups</h5>
 
-          {{view App.Groups}}
+          {{view App.GroupsView}}
           <p><small><a {{action showGroupCreation href="true"}}>Create group</a></small></p>
         </div>
 
@@ -100,7 +100,7 @@
 </script>
 
 <script type="text/x-handlebars" data-template-name="groups">
-  {{#each view.content}}
+  {{#each  App.groupsController.content}}
     <li><a {{action showUserTimeline this href="true"}}>{{this}}</a></li>
   {{/each}}
 </script>
@@ -678,7 +678,7 @@
 </script>
 
 <script type="text/x-handlebars" data-template-name="subscribers">
-  <h3>Subscribers {{App.subscribersController.username}}</h3>
+  <h3>Subscribers <a {{action showUserTimeline App.subscribersController.username href="true"}}>{{App.subscribersController.username}}</a></h3>
 
   <ul>
     {{#each content}}

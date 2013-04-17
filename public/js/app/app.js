@@ -128,14 +128,12 @@ App.Tags = Ember.View.extend({
   }
 });
 
-App.Groups = Ember.View.extend({
+App.GroupsController = Ember.ArrayController.extend({
   resourceUrl: '/v1/users/',
   suffix: '/subscriptions',
+  content: [],
 
-  templateName: 'groups',
-  tagName: 'ul',
-
-  willInsertElement: function() {
+  loadGroups: function() {
     var that = this
 
     $.ajax({
@@ -151,6 +149,36 @@ App.Groups = Ember.View.extend({
         that.set('content', groups)
       }
     })
+
+    return this
+  }
+})
+App.groupsController = App.GroupsController.create()
+
+App.GroupsView = Ember.View.extend({
+  resourceUrl: '/v1/users/',
+  suffix: '/subscriptions',
+
+  templateName: 'groups',
+  tagName: 'ul',
+
+  willInsertElement: function() {
+    App.groupsController.loadGroups()
+//    var that = this
+//
+//    $.ajax({
+//      url: this.resourceUrl + App.properties.get('username') + this.suffix,
+//      type: 'get',
+//      success: function(response) {
+//        var groups = []
+//        response.forEach(function(subscription) {
+//          if (subscription.user.type == 'group' && groups.indexOf(subscription.user.username) == -1) {
+//            groups.push(subscription.user.username)
+//          }
+//        }, this)
+//        that.set('content', groups)
+//      }
+//    })
   }
 });
 
@@ -1476,6 +1504,7 @@ App.GroupCreationController = Ember.ArrayController.extend({
       success: function(response) {
         switch (response.status) {
           case 'success' :
+            App.groupsController.addObject(this.get('groupName'))
             App.router.transitionTo('userTimeline', this.get('groupName'))
             break
           case 'fail' :
