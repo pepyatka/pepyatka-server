@@ -2,7 +2,7 @@ var models = require('../models')
   , async = require('async')
 
 exports.addRoutes = function(app) {
-  var validate = function(requestingUser, feed, callback) {
+  var requireAuthorization = function(requestingUser, feed, callback) {
     switch(feed.type) {
       case 'group' :
         feed.getAdministratorsIds(function(err, administratorsIds) {
@@ -125,8 +125,8 @@ exports.addRoutes = function(app) {
           })
       }
 
-      validate(req.user, feedOwner, function(err, valid) {
-        if(!valid)
+      requireAuthorization(req.user, feedOwner, function(err, isAuthorized) {
+        if(!isAuthorized)
           return res.jsonp({err: err, status: 'fail'})
 
         if (feedOwner.type == 'group') {

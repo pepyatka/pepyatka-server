@@ -2,7 +2,7 @@ var models = require('../models')
   , async = require('async')
 
 exports.addRoutes = function(app) {
-  var validate = function(requestingUser, feed, callback) {
+  var requireAuthorization = function(requestingUser, feed, callback) {
     switch(feed.type) {
       case 'group' :
         feed.getAdministratorsIds(function(err, administratorsIds) {
@@ -55,8 +55,8 @@ exports.addRoutes = function(app) {
 
   app.post('/v1/users/:username/subscribers/:userId/admin', function(req, res) {
     models.FeedFactory.findByName(req.params.username, function(err, mainFeed) {
-      validate(req.user, mainFeed, function(err, valid) {
-        if (!valid)
+      requireAuthorization(req.user, mainFeed, function(err, isAuthorized) {
+        if (!isAuthorized)
           return res.jsonp({ err: err, status: 'fail'})
 
         mainFeed.addAdministrator(req.params.userId, function(err, result) {
@@ -70,8 +70,8 @@ exports.addRoutes = function(app) {
 
   app.post('/v1/users/:username/subscribers/:userId/unadmin', function(req, res) {
     models.FeedFactory.findByName(req.params.username, function(err, mainFeed) {
-      validate(req.user, mainFeed, function(err, valid) {
-        if (!valid)
+      requireAuthorization(req.user, mainFeed, function(err, isAuthorized) {
+        if (!isAuthorized)
           return res.jsonp({ err: err, status: 'fail'})
 
         mainFeed.removeAdministrator(req.params.userId, function(err, result) {
