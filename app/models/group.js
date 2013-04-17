@@ -308,10 +308,11 @@ exports.addModel = function(db) {
       if (err)
         return callback(err)
 
-      if (administratorsIds.length == 1) {
-        err = 1
-        return callback(err)
-      }
+      if (administratorsIds.indexOf(feedId) == -1)
+        return callback(null)
+
+      if (administratorsIds.length === 1)
+        return callback(1)
 
       db.zrem('user:' + that.id + ':administrators', feedId, function(err, res) {
         callback(err, res)

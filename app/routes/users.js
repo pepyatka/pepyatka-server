@@ -15,6 +15,17 @@ exports.addRoutes = function(app) {
     }
   }
 
+  var feedInfoSerializer = {
+    select: ['id', 'username', 'type', 'subscriptions', 'subscribers', 'admins'],
+    subscriptions: {
+      select: ['id', 'user'],
+      user: {select: ['id', 'username', 'type', 'admins'] }
+    },
+    subscribers: {
+      select: ['id', 'username', 'type', 'admins']
+    }
+  }
+
   var userSerializer = {
     select: ['id', 'username', 'admins', 'type']
   }
@@ -95,34 +106,17 @@ exports.addRoutes = function(app) {
         return res.jsonp({}, 422)
 
       var unsubscribe = function() {
-        async.parallel([
-          function(done) {
-            models.FeedFactory.findById(req.params.userId, function(err, subscribedFeed) {
-              if(err)
-                return done(err)
+          models.FeedFactory.findById(req.params.userId, function(err, subscribedFeed) {
+          if(err)
+            return res.jsonp({}, 422)
 
-              feedOwner.getPostsTimelineId(function(err, timelineId) {
-                if(err)
-                  return done(err)
+          feedOwner.getPostsTimelineId(function(err, timelineId) {
+            subscribedFeed.unsubscribeTo(timelineId, function(err) {
 
-                subscribedFeed.unsubscribeTo(timelineId, function(err) {
-                  if(err)
-                    return done(err)
-
-                  done(null)
-                })
-              })
+              res.jsonp({err: err, status: 'success'})
             })
-          },
-          function(done) {
-            done(null)
-          }],
-          function(err) {
-            if (err)
-              return res.jsonp({}, 422)
-
-            res.jsonp({err: err, status: 'success'})
           })
+        })
       }
 
       requireAuthorization(req.user, feedOwner, function(err, isAuthorized) {
@@ -144,17 +138,6 @@ exports.addRoutes = function(app) {
   })
 
   app.get('/v1/users/:username/feedinfo', function(req, res) {
-    var feedInfoSerializer = {
-      select: ['id', 'username', 'type', 'subscriptions', 'subscribers', 'admins'],
-      subscriptions: {
-        select: ['id', 'user'],
-        user: {select: ['id', 'username', 'type', 'admins'] }
-      },
-      subscribers: {
-        select: ['id', 'username', 'type', 'admins']
-      }
-    }
-
     models.FeedFactory.findByName(req.params.username, function(err, feed) {
       if (err) return res.jsonp({}, 404)
 
