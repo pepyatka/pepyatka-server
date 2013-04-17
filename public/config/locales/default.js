@@ -49,5 +49,7 @@ Em.I18n.translations = {
   'header.subscriprions': 'Subscriptions',
   'header.subscribers': 'Subscribers',
   'header.top': 'Top',
-  'header.signUp': 'Sign up'
+  'header.signUp': 'Sign up',
+  'header.members': 'Members',
+  'header.admins': 'Admins'
 };

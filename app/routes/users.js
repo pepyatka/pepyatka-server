@@ -124,8 +124,8 @@ exports.addRoutes = function(app) {
           return res.jsonp({err: err, status: 'fail'})
 
         if (feedOwner.type == 'group') {
-          feedOwner.removeAdministrator(req.params.userId, function(err, result) {
-            if (err)
+          feedOwner.getAdministratorsIds(function(err, administratorsIds) {
+            if (administratorsIds.indexOf(req.params.userId) != -1)
               return res.jsonp({err: err, status: 'fail'})
 
             unsubscribe()
