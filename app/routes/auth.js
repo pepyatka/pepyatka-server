@@ -1,6 +1,8 @@
 var models = require('../models');
 
 exports.addRoutes = function(app) {
+  var userSerializer = { select: ['id', 'username'] }
+
   app.post('/v1/signup', function(req, res) {
     var newUser = new models.User( {
       username: req.body.username,
@@ -13,7 +15,9 @@ exports.addRoutes = function(app) {
 
       newUser.save(function(err, user) {
         req.logIn(user, function(err) {
-          res.jsonp({ err: null, status: 'success'})
+          user.toJSON(userSerializer, function(err, userJSON) {
+            res.jsonp({ err: null, status: 'success', user: userJSON })
+          })
         })
       })
     })

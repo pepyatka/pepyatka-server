@@ -7,7 +7,8 @@ App.Properties = Em.Object.extend({
 
 App.properties = App.Properties.create({
   isAuthorized: false,
-  username:currentUsername,
+  username: currentUsername,
+  userId: currentUser,
   userLink: function() {
     return '/users/' + this.get('username')
   }.property('username'),
@@ -899,7 +900,7 @@ App.UserTimelineController = Ember.ObjectController.extend({
       url: this.resourceUrl + '/' + timelineId + '/subscribe',
       type: 'post',
       success: function(response) {
-        console.log(response)
+        App.groupsController.addObject(App.postsController.user.get('username'))
         App.router.transitionTo('posts')
       }
     })
@@ -910,8 +911,10 @@ App.UserTimelineController = Ember.ObjectController.extend({
       url: this.resourceUrl + '/' + timelineId + '/unsubscribe',
       type: 'post',
       success: function(response) {
-        if (response.status == 'success')
+        if (response.status == 'success') {
+          App.groupsController.removeObject(App.postsController.user.get('username'))
           App.router.transitionTo('posts')
+        }
       }
     })
   }
@@ -1013,7 +1016,7 @@ App.User = Ember.Object.extend({
 
   subscribedTo: function() {
     var subscribed = App.postsController.subscribers.filter(function(subscriber) {
-      return subscriber.id == currentUser
+      return subscriber.id == App.properties.get('userId')
     })
     return subscribed.length > 0 ? true : false
   }.property(),
@@ -1422,7 +1425,8 @@ App.SignupController = Ember.ArrayController.extend({
         switch (response.status) {
           case 'success' :
             App.properties.set('isAuthorized', true)
-            App.properties.set('username', this.get('username'))
+            App.properties.set('username', response.user.username)
+            App.properties.set('userId', response.user.id)
             App.router.transitionTo('posts')
             break
           case 'fail' :
@@ -1464,7 +1468,8 @@ App.SigninController = Ember.ArrayController.extend({
         switch (response.status) {
           case 'success' :
             App.properties.set('isAuthorized', true)
-            App.properties.set('username', this.get('username'))
+            App.properties.set('username', response.user.username)
+            App.properties.set('userId', response.user.id)
             App.groupsController.loadGroups()
             App.router.transitionTo('posts')
             break

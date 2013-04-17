@@ -2,6 +2,8 @@ var models = require('../models')
   , passport = require('passport')
 
 exports.addRoutes = function(app) {
+  var userSerializer = { select: ['id', 'username'] }
+
   app.post('/v1/session', function(req, res, next) {
     passport.authenticate('local', function(err, user, info) {
       if (err) { return next(err); }
@@ -9,7 +11,9 @@ exports.addRoutes = function(app) {
       req.logIn(user, function(err) {
         if (err) { return next(err); }
         // everything is OK - let's redirect user to river of news
-        return res.jsonp({err: null, status: 'success' })
+        user.toJSON(userSerializer, function(err, userJSON) {
+          return res.jsonp({err: null, status: 'success', user: userJSON })
+        })
       });
     })(req, res, next);
   })
