@@ -3,7 +3,8 @@ exports.getAppConfig = function () {
     secret: 'sectet token',
     saltSecret: 'sectet token',
     port: 3000,
-    loggerLevel: 'info'
+    loggerLevel: 'info',
+    remoteUser: false
   }
 
   return configValues;

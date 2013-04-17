@@ -2,6 +2,7 @@ Em.I18n.translations = {
   'title.title': 'Pepyatka',
 
   'message.welcome': 'Seems like you\'ve just started using Pepyatka?',
+  'message.footer': '<s>Всем похiй</s> помощь всегда нужна, тыкать сюда: <a href="http://friendfeed.com/epicmonkey">@epicmonkey</a> или сюда <a href="https://github.com/epicmonkey/pepyatka"><i class="icon-github"></i> github</a>. It\'s already available... for free. For free? We can do anything. That\'s fucking brilliant, that is. Have you seen this? This is fucking brilliant.',
 
   'label.signin': 'Sign in',
   'label.signup': 'Join Pepyatka',

@@ -56,6 +56,26 @@ exports.addModel = function(db) {
     })
   }
 
+  User.findOrCreateByUsername = function(username, callback) {
+    // init new user if it doesn't exist yet
+    var returnUser = function() {
+      User.findByUsername(username, function(err, user) { callback(err, user); })
+    }
+
+    var userId = uuid.v4();
+    db.setnx('username:' + username +':uid', userId, function(err, res) {
+      if (res == 1) {
+        db.hsetnx('user:' + userId, 'username', username, function(err, res) {
+          db.hsetnx('user:' + userId, 'type', 'user', function(err, res) {
+            returnUser()
+          })
+        })
+      } else {
+        returnUser()
+      }
+    })
+  }
+
   User.findByUsername = function(username, callback) {
     db.get('username:' + username + ':uid', function (err, userId) {
       User.findById(userId, function(err, user) {

@@ -2,7 +2,7 @@ var models = require('../models')
   , async = require('async')
 
 exports.addRoutes = function(app) {
-  var validate = function(requestingUser, timelineId, callback) {
+  var requireAuthorization = function(requestingUser, timelineId, callback) {
     models.Timeline.findById(timelineId, { start : 0 }, function(err, timeline) {
       if (err)
         callback(err, null)
@@ -109,26 +109,25 @@ exports.addRoutes = function(app) {
       var timelinesIds = Array.isArray(req.body.timelinesIds) ? req.body.timelinesIds : [req.body.timelinesIds]
 
       async.forEach(timelinesIds, function(timelineId, done) {
-          validate(req.user, timelineId, function(err, valid) {
-            if (!valid)
+        requireAuthorization(req.user, timelineId, function(err, valid) {
+          if (err || !valid)
+            done(err)
+
+          req.user.newPost({
+            body: req.body.body,
+            files: req.files
+          }, function(err, newPost) {
+            newPost.timelineId = timelineId
+
+            newPost.create(function(err, post) {
               done(err)
-
-            req.user.newPost({
-              body: req.body.body,
-              files: req.files
-            }, function(err, newPost) {
-              newPost.timelineId = timelineId
-
-              newPost.create(function(err, post) {
-                done(err)
-              })
+            })
           })
-        },
-        function(err) {
-          if (err) return res.jsonp({}, 422)
-
-          res.jsonp({})
         })
+      }, function(err) {
+        if (err) return res.jsonp({}, 422)
+
+        res.jsonp({})
       })
     } else {
       req.user.getPostsTimelineId(function(err, timelineId) {

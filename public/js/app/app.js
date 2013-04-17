@@ -1617,7 +1617,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       data.append('file-'+i, file);
     });
     data.append('body', $('.submitForm textarea')[0].value) // XXX: dirty!
-    data.append('timelinesIds', App.postsController.get('receiveTimelinesIds')) // XXX: dirty!
+    data.append('timelinesIds', App.postsController.get('receiveTimelinesIds').toString()) // XXX: dirty!
 
     var xhr = new XMLHttpRequest();
 				

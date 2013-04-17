@@ -34,14 +34,16 @@
         </div>
       </div>
 
-      <% if (!req.user || req.user.username == 'anonymous') { %>
-        {{#unless App.properties.isAuthorized}}
-          <div class="span3 signin-toolbar">
-            <a {{action signin target="view"}} href="true">{{t label.signin}}</a>
-            or
-            <a {{action signup target="view"}} href="true">{{t label.signup}}</a>
-          </div>
-        {{/unless}}
+      <% if (!conf.remoteUser) { %>
+        <% if (!req.user || req.user.username == 'anonymous') { %>
+          {{#unless App.properties.isAuthorized}}
+            <div class="span3 signin-toolbar">
+              <a {{action signin target="view"}} href="true">{{t label.signin}}</a>
+              or
+              <a {{action signup target="view"}} href="true">{{t label.signup}}</a>
+            </div>
+          {{/unless}}
+        <% } %>
       <% } %>
     </div>
 
@@ -66,7 +68,9 @@
 
                 <!--<a>{{t label.settings}}</a>
                 --->
-                <a href="/logout">{{t label.signout}}</a>
+                <% if (!conf.remoteUser) { %>
+                  <a href="/logout">{{t label.signout}}</a>
+                <% } %>
               </div>
             </div>
           </div>
@@ -89,7 +93,12 @@
       </div>
     </div>
 
-    <% include ../../layouts/_footer %>
+    <div class="row">
+      <div class="span9">
+        <hr/>
+        <footer>{{t message.footer}}</footer>
+      </div>
+    </div>
   </div>
 </script>
 

@@ -22,7 +22,21 @@ var helpers = function(req, res, next) {
 };
 
 var findUser = function(req, res, next) {
-  if (!req.user && localConf.isAnonymousPermitted()) {
+  if (conf.remoteUser) {
+    if (req.headers['x-remote-user']) {
+      models.User.findOrCreateByUsername(req.headers['x-remote-user'], function(err, user) {
+        if (user) {
+          req.logIn(user, function(err) { next(); })
+        } else {
+          next()
+        }
+      })
+    } else {
+      req.client.destroy();
+      res.writeHead(200, {'Connection': 'close'});
+      res.end()
+    }
+  } else if (!req.user && localConf.isAnonymousPermitted()) {
     models.User.findAnon(function(err, user) {
       if (user) {
         req.logIn(user, function(err) {
