@@ -1465,6 +1465,7 @@ App.SigninController = Ember.ArrayController.extend({
           case 'success' :
             App.properties.set('isAuthorized', true)
             App.properties.set('username', this.get('username'))
+            App.groupsController.loadGroups()
             App.router.transitionTo('posts')
             break
           case 'fail' :
