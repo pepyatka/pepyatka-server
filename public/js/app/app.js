@@ -2071,7 +2071,7 @@ App.Router = Ember.Router.extend({
     }),
 
     groupCreation: Ember.Route.extend({
-      route: '/create-group',
+      route: '/groups',
 
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
       showGroupCreation: Ember.Route.transitionTo('groupCreation'),

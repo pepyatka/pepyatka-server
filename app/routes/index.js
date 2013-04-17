@@ -5,7 +5,7 @@ exports.addRoutes = function(app) {
     res.render('./home')
   });
 
-  app.get('/create-group', function(req, res) {
+  app.get('/groups', function(req, res) {
     res.render('./home')
   });
 
