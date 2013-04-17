@@ -16,11 +16,21 @@ exports.addRoutes = function(app) {
   }
 
   app.delete('/v1/users/:userId', function(req, res) {
-    models.FeedFactory.destroy(req.params.userId, function(err) {
+    models.FeedFactory.findById(req.params.userId, function(err, mainFeed) {
       if(err)
         return res.jsonp({}, 422)
 
-      res.jsonp({})
+      requireAuthorization(req.user, mainFeed, function(err, isAuthorized) {
+        if (!isAuthorized)
+          return res.jsonp({ err: err, status: 'fail'})
+
+        models.FeedFactory.destroy(req.params.userId, function(err) {
+          if(err)
+            res.jsonp({ err: err, status: 'fail'})
+
+          res.jsonp({ err: err, status: 'success'})
+        })
+      })
     })
   })
 
