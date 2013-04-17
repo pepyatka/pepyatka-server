@@ -145,16 +145,13 @@ exports.addRoutes = function(app) {
 
   app.get('/v1/users/:userId/feedinfo', function(req, res) {
     var feedInfoSerializer = {
-      select: ['id', 'username', 'type', 'subscriptions', 'subscribers', 'admins', 'administratedFeeds'],
+      select: ['id', 'username', 'type', 'subscriptions', 'subscribers', 'admins'],
       subscriptions: {
         select: ['id', 'user'],
         user: {select: ['id', 'username', 'type', 'admins'] }
       },
       subscribers: {
         select: ['id', 'username', 'type', 'admins']
-      },
-      administratedFeeds: {
-
       }
     }
 

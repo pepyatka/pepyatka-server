@@ -591,7 +591,9 @@ exports.addModel = function(db) {
     },
 
     getAdministratedFeeds: function(callback) {
-      this.getSubscriptions(function(err, subscriptions) {
+      var that = this
+
+      that.getSubscriptions(function(err, subscriptions) {
         var subscriptionUsersIds = []
         var administratedFeeds = []
 
@@ -605,7 +607,7 @@ exports.addModel = function(db) {
               return callback(null)
 
             feed.getAdministratorsIds(function(err, administratorIds) {
-              if (administratorIds.indexOf(subscription.userId) == -1)
+              if (administratorIds.indexOf(that.id) == -1)
                 return callback(null)
 
               administratedFeeds.push(feed)
@@ -614,7 +616,6 @@ exports.addModel = function(db) {
           })
         },
         function(err) {
-          console.log(administratedFeeds)
           callback(err, administratedFeeds)
         })
       })
