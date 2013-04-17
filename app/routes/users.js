@@ -143,7 +143,7 @@ exports.addRoutes = function(app) {
     })
   })
 
-  app.get('/v1/users/:userId/feedinfo', function(req, res) {
+  app.get('/v1/users/:username/feedinfo', function(req, res) {
     var feedInfoSerializer = {
       select: ['id', 'username', 'type', 'subscriptions', 'subscribers', 'admins'],
       subscriptions: {
@@ -155,7 +155,7 @@ exports.addRoutes = function(app) {
       }
     }
 
-    models.FeedFactory.findById(req.params.userId, function(err, feed) {
+    models.FeedFactory.findByName(req.params.username, function(err, feed) {
       if (err) return res.jsonp({}, 404)
 
       feed.toJSON(feedInfoSerializer, function(err, json) {
