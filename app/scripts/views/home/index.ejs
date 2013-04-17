@@ -75,14 +75,14 @@
 
       <div class="span3">
         <div>
-          <h5>Groups</h5>
+          <h5>{{t header.groups}}</h5>
 
           {{view App.GroupsView}}
-          <p><small><a {{action showGroupCreation href="true"}}>Create group</a></small></p>
+          <p><small><a {{action showGroupCreation href="true"}}>{{t label.createGroup}}</a></small></p>
         </div>
 
         <div>
-          <h5>Tags</h5>
+          <h5>{{t header.tags}}</h5>
 
           {{view App.Tags}}
         </div>
@@ -208,7 +208,7 @@
           -
           <span class="author">
             {{#if view.commentOwner}}
-              <a {{action showUserTimeline createdBy.username href="true"}}>You</a>
+              <a {{action showUserTimeline createdBy.username href="true"}}>{{t label.you}}</a>
             {{else}}
               <a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a>
             {{/if}}
@@ -336,7 +336,7 @@
           {{#if partial}}
             {{view App.CommentContainerView contentBinding="firstComment"}}
             <li class="media more-comments">
-              <a {{action showAllComments target="view"}}>{{skippedCommentsLength}} more comments</a>
+              <a {{action showAllComments target="view"}}>{{skippedCommentsLength}} {{t label.moreComments}}</a>
             </li>
             {{view App.CommentContainerView contentBinding="lastComment"}}
           {{else}}
@@ -347,7 +347,7 @@
               <li class="media new-comment-link">
                 <i class="icon-pencil media-object pull-left"></i>
                 <div class="media-body">
-                    <a {{action toggleVisibility target="view"}}>Add comment</a>
+                    <a {{action toggleVisibility target="view"}}>{{t label.addComment}}</a>
                 </div>
               </li>
             {{/view}}
@@ -456,7 +456,7 @@
           {{#if partial}}
             {{view App.CommentContainerView contentBinding="firstComment"}}
             <li class="media more-comments">
-              <a {{action showAllComments target="view"}}>{{skippedCommentsLength}} more comments</a>
+              <a {{action showAllComments target="view"}}>{{skippedCommentsLength}} {{t label.moreComments}}</a>
             </li>
             {{view App.CommentContainerView contentBinding="lastComment"}}
           {{else}}
@@ -467,7 +467,7 @@
               <li class="media new-comment-link">
                 <i class="icon-pencil media-object pull-left"></i>
                 <div class="media-body">
-                    <a {{action toggleVisibility target="view"}}>Add comment</a>
+                    <a {{action toggleVisibility target="view"}}>{{t label.addComment}}</a>
                 </div>
               </li>
             {{/view}}
@@ -517,7 +517,7 @@
               <br>
               <div class="row profile-actions">
                 {{#if content.user.subscribedTo}}
-                  <a {{action unsubscribeTo target="view"}}>Unsubscribe</a>
+                  <a {{action unsubscribeTo target="view"}}>{{t label.unsubscribe}}</a>
                 {{/if}}
               </div>
             {{/if}}
@@ -547,7 +547,7 @@
     {{#if view.currentUser}}
       <div class="row profile-actions">
         {{#unless content.user.subscribedTo}}
-          <a {{action subscribeTo target="view"}}>Subscribe</a>
+          <a {{action subscribeTo target="view"}}>{{t label.subscribe}}</a>
         {{/unless}}
       </div>
     {{/if}}
@@ -668,7 +668,7 @@
 </script>
 
 <script type="text/x-handlebars" data-template-name="subscriptions">
-  <h3>Subscriptions {{App.subscriptionsController.username}}</h3>
+  <h3>{{t header.subscriprions}} {{App.subscriptionsController.username}}</h3>
 
   <ul>
     {{#each content}}
@@ -678,7 +678,7 @@
 </script>
 
 <script type="text/x-handlebars" data-template-name="subscribers">
-  <h3>Subscribers <a {{action showUserTimeline App.subscribersController.username href="true"}}>{{App.subscribersController.username}}</a></h3>
+  <h3>{{t header.subscribers}} <a {{action showUserTimeline App.subscribersController.username href="true"}}>{{App.subscribersController.username}}</a></h3>
 
   <ul>
     {{#each content}}
@@ -687,13 +687,13 @@
           {{#if view.isOwner}}
             {{#if view.showManagement}}
               (
-              <a {{action removeSubscriber id target='App.subscribersController' href="true"}}>remove</a>
+              <a {{action removeSubscriber id target='App.subscribersController' href="true"}}>{{t label.remove}}</a>
               {{#if view.hasAdmins}}
                 |
                 {{#if isAdmin}}
-                  <a {{action removeAdmin id target='App.subscribersController' href="true"}}>Remove admin rights</a>
+                  <a {{action removeAdmin id target='App.subscribersController' href="true"}}>{{t label.removeAdminRights}}</a>
                 {{else}}
-                  <a {{action addAdmin id target='App.subscribersController' href="true"}}>Make admin</a>
+                  <a {{action addAdmin id target='App.subscribersController' href="true"}}>{{t label.makeAdmin}}</a>
                 {{/if}}
               {{/if}}
               )
@@ -705,15 +705,15 @@
 
   {{#if view.isOwner}}
     {{#if view.showManagement}}
-      <a {{action browseSubscribers target="view" href=true}}>Browse subscribers</a>
+      <a {{action browseSubscribers target="view" href=true}}>{{t label.browseSubscribers}}</a>
     {{else}}
-      <a {{action manageSubscribers target="view" href=true}}>Manage subscribers</a>
+      <a {{action manageSubscribers target="view" href=true}}>{{t label.manageSubscribers}}</a>
     {{/if}}
   {{/if}}
 </script>
 
 <script type="text/x-handlebars" data-template-name="top-view">
-  <h3>Top {{App.topController.category}}</h3>
+  <h3>{{t header.top}} {{App.topController.category}}</h3>
 
   <ul>
     {{#each content}}
@@ -724,7 +724,7 @@
 
 <script type="text/x-handlebars" data-template-name="create-group-view">
   <div class="span3">
-    <h2>Create group</h2>
+    <h2>{{t header.createGroup}}</h2>
 
     <form action="/signup" method="post" class="form-horizontal">
       <div class="control-group">
@@ -736,7 +736,7 @@
 
       <div class="control-group">
         <div class="controls span2">
-          <button {{action create target="view"}} class="btn btn-primary">Create</button>
+          <button {{action create target="view"}} class="btn btn-primary">{{t button.create}}</button>
         </div>
       </div>
     </form>
@@ -745,18 +745,18 @@
 
 <script type="text/x-handlebars" data-template-name="signup-view">
   <div class="span3">
-    <h2>Sign up</h2>
+    <h2>{{t header.signUp}}</h2>
 
     <form action="/signup" method="post" class="form-horizontal">
       <div class="control-group">
-        <label class="control-label" for="username">Username</label>
+        <label class="control-label" for="username">{{t label.username}}</label>
         <div class="controls">
           {{view Ember.TextField valueBinding="App.signupController.username" type="text" id="username" name="username"}}
         </div>
       </div>
 
       <div class="control-group">
-        <label class="control-label" for="password">Password</label>
+        <label class="control-label" for="password">{{t label.password}}</label>
         <div class="controls">
           {{view Ember.TextField valueBinding="App.signupController.password" type="password" id="password" name="password"}}
         </div>
@@ -764,7 +764,7 @@
 
       <div class="control-group">
         <div class="controls span2">
-          <button {{action signup target="view"}} class="btn btn-primary">Sign up</button>
+          <button {{action signup target="view"}} class="btn btn-primary">{{t button.signUp}}</button>
         </div>
       </div>
     </form>
@@ -777,14 +777,14 @@
 
     <form action="/session" method="post" class="form-horizontal">
       <div class="control-group">
-        <label class="control-label" for="username">Username</label>
+        <label class="control-label" for="username">{{t label.username}}</label>
         <div class="controls">
           {{view Ember.TextField valueBinding="App.signinController.username" type="text" id="username" name="username"}}
         </div>
       </div>
 
       <div class="control-group">
-        <label class="control-label" for="password">Password</label>
+        <label class="control-label" for="password">{{t label.password}}</label>
         <div class="controls">
           {{view Ember.TextField valueBinding="App.signinController.password" type="password" id="password" name="password"}}
         </div>
@@ -792,7 +792,7 @@
 
       <div class="control-group">
         <div class="controls span2">
-          <button {{action signin target="view"}} class="btn btn-primary">Sign in</button>
+          <button {{action signin target="view"}} class="btn btn-primary">{{t button.signIn}}</button>
         </div>
       </div>
     </form>
