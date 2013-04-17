@@ -899,6 +899,10 @@ App.UserTimelineView = Ember.View.extend({
       || (App.postsController.user.type == 'group' && App.postsController.subscribers.filter(function(subscriber) { return subscriber.id == currentUser})))
   }.property('App.postsController.user'),
 
+  isGroup: function() {
+    return App.postsController.user && App.postsController.user.type == 'group'
+  }.property('App.postsController.user'),
+
   subscribeTo: function() {
     App.userTimelineController.subscribeTo(App.postsController.id)
   },
@@ -1325,7 +1329,11 @@ App.subscribersController = App.SubscribersController.create()
 App.SubscribersView = Ember.View.extend({
   templateName: 'subscribers',
 
-  manage: function() {
+  browseSubscribers: function() {
+    App.router.transitionTo('subscribers', App.subscribersController.get('username'))
+  },
+
+  manageSubscribers: function() {
     App.router.transitionTo('showManagement', App.subscribersController.get('username'))
   },
 

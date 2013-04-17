@@ -555,8 +555,13 @@
 
   <div class="posts">
     <ul class="media-list">
-      {{view Ember.CollectionView contentBinding="App.postsController"
-             itemViewClass="App.OwnPostContainerView"}}
+      {{#if view.isGroup}}
+        {{view Ember.CollectionView contentBinding="App.postsController"
+              itemViewClass="App.PostContainerView"}}
+      {{else}}
+        {{view Ember.CollectionView contentBinding="App.postsController"
+                      itemViewClass="App.OwnPostContainerView"}}
+      {{/if}}
     </ul>
 
     {{view App.Pagination}}
@@ -686,9 +691,9 @@
               {{#if view.hasAdmins}}
                 |
                 {{#if isAdmin}}
-                  <a {{action removeAdmin id target='App.subscribersController' href="true"}}>unadmin</a>
+                  <a {{action removeAdmin id target='App.subscribersController' href="true"}}>Remove admin rights</a>
                 {{else}}
-                  <a {{action addAdmin id target='App.subscribersController' href="true"}}>admin</a>
+                  <a {{action addAdmin id target='App.subscribersController' href="true"}}>Make admin</a>
                 {{/if}}
               {{/if}}
               )
@@ -699,9 +704,11 @@
   </ul>
 
   {{#if view.isOwner}}
-    {{#unless view.showManagement}}
-      <a {{action manage target="view" href=true}}>Manage</a>
-    {{/unless}}
+    {{#if view.showManagement}}
+      <a {{action browseSubscribers target="view" href=true}}>Browse subscribers</a>
+    {{else}}
+      <a {{action manageSubscribers target="view" href=true}}>Manage subscribers</a>
+    {{/if}}
   {{/if}}
 </script>
 
