@@ -638,9 +638,6 @@ exports.addModel = function(db) {
         if(select.indexOf('subscribers') != -1) {
           isReady = isReady && json.subscribers !== undefined
         }
-        if(select.indexOf('administratedFeeds') != -1) {
-          isReady = isReady && json.administratedFeeds !== undefined
-        }
 
         if(isReady) {
           callback(err, json)
@@ -661,20 +658,6 @@ exports.addModel = function(db) {
 
       if (select.indexOf('type') != -1)
         json.type = that.type
-
-      if (select.indexOf('administratedFeeds') != -1) {
-        that.getAdministratedFeeds(function(err, administratedFeeds) {
-          async.map(administratedFeeds, function(administratedFeed, callback) {
-            administratedFeed.toJSON(params.administratedFeeds || {}, function(err, json) {
-              callback(err, json)
-            })
-          }, function(err, administratedFeedsJSON) {
-            json.administratedFeeds = administratedFeedsJSON
-
-            returnJSON(err)
-          })
-        })
-      }
 
       if (select.indexOf('subscriptions') != -1) {
         that.getSubscriptions(function(err, subscriptions) {

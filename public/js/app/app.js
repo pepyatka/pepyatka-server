@@ -2046,6 +2046,7 @@ App.Router = Ember.Router.extend({
       route: '/signup',
 
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
 
       connectOutlets: function(routes, context) {
         App.router.get('applicationController').connectOutlet('signup', App.signupController);
@@ -2056,6 +2057,7 @@ App.Router = Ember.Router.extend({
       route: '/signin',
 
       searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
 
       connectOutlets: function(routes, context) {
         App.router.get('applicationController').connectOutlet('signin', App.signinController);
