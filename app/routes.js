@@ -24,7 +24,7 @@ var helpers = function(req, res, next) {
 var findUser = function(req, res, next) {
   if (conf.remoteUser) {
     if (req.headers['x-remote-user']) {
-      models.User.findOrCreateByUsername(req.headers['x-remote-user'], function(err, user) {
+      models.User.findOrCreateByUsername(req.headers['x-remote-user'].toLowerCase(), function(err, user) {
         if (user) {
           req.logIn(user, function(err) { next(); })
         } else {
