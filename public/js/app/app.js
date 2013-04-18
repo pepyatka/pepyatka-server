@@ -910,7 +910,7 @@ App.UserTimelineController = Ember.ObjectController.extend({
       success: function(response) {
         if (App.postsController.user.type == 'group')
           App.groupsController.addObject(App.postsController.user.get('username'))
-        
+
         App.router.transitionTo('posts')
       }
     })

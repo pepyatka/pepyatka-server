@@ -112,7 +112,7 @@ API
 - POST /v1/users # it's a dup of sign up
 - DELETE /v1/users/:userId
 - GET /v1/users/:userId/feedinfo
--not implemented yet
+- not implemented yet
 - PATCH /v1/users/:userId
 
 ### Statistics
