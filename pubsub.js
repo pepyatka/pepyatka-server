@@ -83,6 +83,7 @@ exports.listen = function(server) {
       var event = { postId: data.postId }
 
       io.sockets.in('timeline:' + data.timelineId).emit('destroyPost', event)
+      io.sockets.in('post:' + data.postId).emit('destroyPost', event)
       break
 
     case 'newPost':
@@ -116,6 +117,7 @@ exports.listen = function(server) {
                       }, function(err, json) {
             var event = { post: json }
             io.sockets.in('timeline:' + data.timelineId).emit('updatePost', event)
+            io.sockets.in('post:' + data.postId).emit('updatePost', event)
           })
         }
       })

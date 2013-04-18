@@ -238,6 +238,7 @@ App.Subscription = Ember.Object.extend({
 
     this.socket.on('destroyPost', function(data) {
       App.postsController.removePost('id', data.postId)
+      App.searchController.removePost('id', data.postId)
     })
 
     this.socket.on('newComment', function (data) {
@@ -477,11 +478,11 @@ App.PostContainerView = Ember.View.extend({
   currentUser: currentUser,
 
   sourceName: function() {
-    if (!this.content.source || this.content.createdBy.username == this.content.source.username)
+    if (!this.content.source || this.content.createdBy.username == this.content.source.username || App.postsController.user.username == this.content.source.username)
       return null
 
     return this.content.source.username
-  }.property('this.content'),
+  }.property('this.content', 'App.postsController.user'),
 
   toggleVisibility: function() {
     this.toggleProperty('isFormVisible');
@@ -907,7 +908,9 @@ App.UserTimelineController = Ember.ObjectController.extend({
       url: this.resourceUrl + '/' + timelineId + '/subscribe',
       type: 'post',
       success: function(response) {
-        App.groupsController.addObject(App.postsController.user.get('username'))
+        if (App.postsController.user.type == 'group')
+          App.groupsController.addObject(App.postsController.user.get('username'))
+        
         App.router.transitionTo('posts')
       }
     })
@@ -1220,6 +1223,11 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Sea
       });
       this.set('body', '');
     }
+  },
+
+  removePost: function(propName, value) {
+    var obj = this.findProperty(propName, value);
+    this.removeObject(obj);
   },
 
   didRequestRange: function(pageStart) {
