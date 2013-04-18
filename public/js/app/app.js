@@ -476,6 +476,13 @@ App.PostContainerView = Ember.View.extend({
   isEditFormVisible: false,
   currentUser: currentUser,
 
+  sourceName: function() {
+    if (!this.content.source || this.content.createdBy.username == this.content.source.username)
+      return null
+
+    return this.content.source.username
+  }.property('this.content'),
+
   toggleVisibility: function() {
     this.toggleProperty('isFormVisible');
   },
