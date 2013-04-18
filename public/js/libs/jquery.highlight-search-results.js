@@ -34,7 +34,7 @@
         tail.nodeValue = tail.nodeValue.substring(tail.nodeValue.indexOf(m[0]) + m[0].length);
 
         // Rebuild the DOM inserting the new bold search word between the split text nodes
-        $(el).after(tail).after($("<strong></strong>").html(m[0]));
+        $(el).after(tail).after($("<em class=\"search\"></em>").html(m[0]));
 
         // Recurse on the new tail node to check for more search words
         testAndTag(tail);

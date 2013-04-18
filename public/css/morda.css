@@ -190,3 +190,8 @@ footer {
 .searchFieldView {
     margin-top: 17px;
 }
+
+.search {
+    color: #000000;
+    font-weight: bold;
+}
