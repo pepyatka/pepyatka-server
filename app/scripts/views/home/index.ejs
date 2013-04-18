@@ -338,7 +338,7 @@
                 {{view Ember.CollectionView contentBinding="likes"
                        itemViewClass="App.LikeView"}}
               </ul>
-              <span>{{t label.liked}}</span>
+              <span class="liked">{{t label.liked}}</span>
               {{#if currentUserLiked}}
                 <span>(<a {{action unlikePost id target="parentView"}}>{{t label.unlike}}</a>)</span>
               {{/if}}
@@ -458,7 +458,7 @@
                 {{view Ember.CollectionView contentBinding="likes"
                        itemViewClass="App.LikeView"}}
               </ul>
-              <span>{{t label.liked}}</span>
+              <span class="liked">{{t label.liked}}</span>
               {{#if currentUserLiked}}
                 <span>(<a {{action unlikePost id target="parentView"}}>{{t label.unlike}}</a>)</span>
               {{/if}}
@@ -648,7 +648,7 @@
               {{view Ember.CollectionView contentBinding="likes"
                      itemViewClass="App.LikeView"}}
             </ul>
-            <span>{{t label.liked}}</span>
+            <span class="liked">{{t label.liked}}</span>
             {{#if currentUserLiked}}
               <span>(<a {{action unlikePost target="parentView"}}>{{t label.unlike}}</a>)</span>
             {{/if}}
