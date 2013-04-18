@@ -411,8 +411,20 @@ exports.addModel = function(db) {
 
     getSubscriptionsCount: function(callback) {
       var that = this
-      db.zcount('user:' + this.id + ':subscriptions', '-inf', '+inf', function(err, res){
-        callback(err, res)
+      var subscritionFeedsIds = []
+      db.zrevrange('user:' + this.id + ':subscriptions', 0, -1, function(err, subscriptionsIds) {
+        async.forEach(subscriptionsIds, function(subscriptionId, done) {
+          models.Timeline.findById(subscriptionId, {}, function(err, timeline) {
+            if (subscritionFeedsIds.indexOf(timeline.userId) != -1)
+              return done(err)
+
+            subscritionFeedsIds.push(timeline.userId)
+            done(err)
+          },
+          function(err) {
+            callback(err, subscritionFeedsIds.length)
+          })
+        })
       })
     },
 
