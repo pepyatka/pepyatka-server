@@ -703,11 +703,44 @@ exports.addModel = function(db) {
       return new models.Attachment(attrs)
     },
 
+    getSourseFeed: function(callback) {
+      var that = this
+
+      models.Timeline.findById(that.timelineId, {}, function(err, timeline) {
+        models.FeedFactory.findById(timeline.userId, function(err, feed) {
+          callback(err, feed)
+        })
+      })
+    },
+
     toJSON: function(params, callback) {
       var that = this
         , json = {}
         , select = params.select ||
             models.Post.getAttributes()
+
+      var returnJSON = function(err) {
+        var isReady = true
+        if(select.indexOf('comments') != -1) {
+          isReady = isReady && json.comments !== undefined
+        }
+        if(select.indexOf('attachments') != -1) {
+          isReady = isReady && json.attachments !== undefined
+        }
+        if(select.indexOf('createdBy') != -1) {
+          isReady = isReady && json.createdBy !== undefined
+        }
+        if(select.indexOf('likes') != -1) {
+          isReady = isReady && json.likes !== undefined
+        }
+        if(select.indexOf('source') != -1) {
+          isReady = isReady && json.source !== undefined
+        }
+
+        if(isReady) {
+          callback(err, json)
+        }
+      }
 
       if (select.indexOf('id') != -1)
         json.id = that.id
@@ -736,50 +769,60 @@ exports.addModel = function(db) {
           }, function(err, commentsJSON) {
             json.comments = commentsJSON
 
-            if (select.indexOf('attachments') != -1) {
-              that.getAttachments(function(err, attachments) {
-                async.map(attachments, function(attachment, callback) {
-                  attachment.toJSON(function(err, json) {
-                    callback(err, json)
-                  })
-                }, function(err, attachmentsJSON) {
-                  json.attachments = attachmentsJSON
-
-                  if (select.indexOf('createdBy') != -1) {
-                    models.User.findById(that.userId, function(err, user) {
-                      user.toJSON(params.createdBy || {}, function(err, userJSON) {
-                        json.createdBy = userJSON
-
-                        if (select.indexOf('likes') != -1) {
-                          that.getLikes(function(err, likes) {
-                            async.map(likes, function(like, callback) {
-                              like.toJSON(params.likes || {}, function(err, json) {
-                                callback(err, json)
-                              })
-                            }, function(err, likesJSON) {
-                              json.likes = likesJSON
-
-                              callback(err, json)
-                            })
-                          })
-                        } else {
-                          callback(err, json)
-                        }
-                      })
-                    })
-                  } else {
-                    callback(err, json)
-                  }
-                })
-              })
-            } else {
-              callback(err, json)
-            }
+            returnJSON(err)
           })
         })
-      } else {
-        callback(null, json)
       }
+
+      if (select.indexOf('attachments') != -1) {
+        that.getAttachments(function(err, attachments) {
+          async.map(attachments, function(attachment, callback) {
+            attachment.toJSON(function(err, json) {
+              callback(err, json)
+            })
+          }, function(err, attachmentsJSON) {
+            json.attachments = attachmentsJSON
+
+            returnJSON(err)
+          })
+        })
+      }
+
+      if (select.indexOf('createdBy') != -1) {
+        models.User.findById(that.userId, function(err, user) {
+          user.toJSON(params.createdBy || {}, function(err, userJSON) {
+            json.createdBy = userJSON
+
+            returnJSON(err)
+          })
+        })
+      }
+
+      if (select.indexOf('likes') != -1) {
+        that.getLikes(function(err, likes) {
+          async.map(likes, function(like, callback) {
+            like.toJSON(params.likes || {}, function(err, json) {
+              callback(err, json)
+            })
+          }, function(err, likesJSON) {
+            json.likes = likesJSON
+
+            returnJSON(err)
+          })
+        })
+      }
+
+      if (select.indexOf('source') != -1) {
+        that.getSourseFeed(function(err, feed) {
+          feed.toJSON(params.source, function(err, sourceJSON) {
+            json.source = sourceJSON
+
+            returnJSON(err)
+          })
+        })
+      }
+
+      returnJSON(null)
     }
 
   }
