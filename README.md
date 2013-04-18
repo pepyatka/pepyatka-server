@@ -106,13 +106,14 @@ API
 - GET /v1/users/:userId
 - GET /v1/users/:username/subscriptions
 - GET /v1/users/:username/subscribers - returns Posts timeline subscribers
-- not implemented yet
-- DELETE /v1/users/:username/subscribers/:userId
-- POST /v1/users/:username/subscribers/:userId/admin
-- POST /v1/users/:username/subscribers/:userId/unadmin
+- DELETE /v1/users/:username/subscribers/:userId - unsubscribe :userId from :username
+- POST /v1/users/:username/subscribers/:userId/admin - add admin rights for :userId to administrate :username
+- POST /v1/users/:username/subscribers/:userId/unadmin - remove admin rights from :userId to administrate :username
 - POST /v1/users # it's a dup of sign up
-- PATCH /v1/users/:userId
 - DELETE /v1/users/:userId
+- GET /v1/users/:userId/feedinfo
+-not implemented yet
+- PATCH /v1/users/:userId
 
 ### Statistics
 - GET /v1/top/:category - returns an array of users with the highest
