@@ -704,9 +704,7 @@ exports.addModel = function(db) {
     },
 
     getSourseFeed: function(callback) {
-      var that = this
-
-      models.Timeline.findById(that.timelineId, {}, function(err, timeline) {
+      models.Timeline.findById(this.timelineId, {}, function(err, timeline) {
         models.FeedFactory.findById(timeline.userId, function(err, feed) {
           callback(err, feed)
         })
