@@ -270,8 +270,8 @@
       <div class="media-body post">
         <h5 class="media-heading author">
           <a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a>
-          {{#if view.groupNames}}
-            (<a {{action showUserTimeline view.groupNames href="true"}}>{{view.groupNames}}</a>)
+          {{#if view.groupsNames}}
+            (<a {{action showUserTimeline view.groupsNames href="true"}}>{{view.groupsNames}}</a>)
           {{/if}}
         </h5>
 
@@ -542,7 +542,6 @@
 
           {{#unless content.user.ownProfile}}
             {{#if view.currentUser}}
-              <br>
               <div class="row profile-actions">
                 {{#if content.user.subscribedTo}}
                   <a {{action unsubscribeTo target="view"}}>{{t label.unsubscribe}}</a>
@@ -556,7 +555,6 @@
   </div>
 
   {{#if view.showPostCreationForm}}
-    <br>
     <div class="clearfix submitForm">
       <div>
         {{view App.CreatePostView target="parentView" action="submitPost"
@@ -604,7 +602,12 @@
     
     <div class="media-body post">
       <!-- FIXME: showUserTimeline createdBy.username is undefined on a deserialized view -->
-      <h5 class="media-heading author"><a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a></h5>
+      <h5 class="media-heading author">
+        <a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a>
+        {{#if view.groupsNames}}
+          (<a {{action showUserTimeline view.groupsNames href="true"}}>{{view.groupsNames}}</a>)
+        {{/if}}
+      </h5>
     
       {{#if view.isEditFormVisible}}
         {{#view App.EditPostForm}}
@@ -753,8 +756,6 @@
   {{/if}}
 
   {{#if view.isOwner}}
-    <br>
-    <br>
     {{#if view.showManagement}}
       <a {{action browseSubscribers target="view" href=true}}>{{t label.browseSubscribers}}</a>
     {{else}}

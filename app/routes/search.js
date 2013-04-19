@@ -1,8 +1,18 @@
 var searchClient = require('../../elastic-search/elastic-search-client.js')
   , async = require('async')
   , configLocal = require('../../conf/envLocal.js')
+  , models = require('../models.js')
 
 var indicators = ['intitle', 'incomments', 'from'];
+
+var postSerializer = {
+  select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'groups'],
+  createdBy: { select: ['id', 'username'] },
+  comments: { select: ['id', 'body', 'createdBy'],
+    createdBy: { select: ['id', 'username'] }},
+  likes: { select: ['id', 'username']},
+  groups: { select: ['id', 'username'] }
+}
 
 // TODO: refactor me to Search model
 
@@ -31,7 +41,15 @@ exports.addRoutes = function(app) {
     };
 
     startSearching(query, function(json){
-      res.jsonp(json);
+      async.map(json.posts, function(post, done) {
+        var newPost = new models.Post(post)
+        newPost.toJSON(postSerializer, function(err, postJSON) {
+          done(err, postJSON)
+        })
+      },
+      function(err, postsJSON) {
+        res.jsonp({posts: postsJSON})
+      })
     })
   })
 }

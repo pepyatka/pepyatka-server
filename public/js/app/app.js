@@ -477,11 +477,11 @@ App.PostContainerView = Ember.View.extend({
   isEditFormVisible: false,
   currentUser: currentUser,
 
-  groupNames: function() {
+  groupsNames: function() {
     if (!this.content.groups ||
         this.content.createdBy.username == this.content.groups.username ||
-        !App.postsController.user || 
-        App.postsController.user.username == this.content.groups.username)
+        (App.postsController.user &&
+         App.postsController.user.username == this.content.groups.username))
       return null
 
     return this.content.groups.username
@@ -882,6 +882,14 @@ App.OnePostView = Ember.View.extend({
   toggleVisibility: function() {
     this.toggleProperty('isFormVisible');
   },
+
+  groupsNames: function() {
+    if (!App.onePostController.content.groups ||
+      App.onePostController.content.createdBy.username == App.onePostController.content.groups.username)
+      return null
+
+    return App.onePostController.content.groups.username
+  }.property('App.onePostController.content', 'App.postsController.user'),
 
   didInsertElement: function() {
     // wrap anchor tags around links in comments
@@ -1793,6 +1801,7 @@ App.Router = Ember.Router.extend({
 
         App.searchController.set('body', searchQuery)
         App.searchController.set('query', searchQuery)
+        App.postsController.set('user', null)
       },
 
       serialize: function(router, searchQuery) {

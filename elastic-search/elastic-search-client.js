@@ -49,8 +49,8 @@ exports.indexElement = function(index, type, element) {
           .on('error', function(error){
             console.log(error)
           })
-          .exec();
-      });
+          .exec()
+      })
     }
   }
 
@@ -107,6 +107,7 @@ exports.parse = function(elasticSearchData) {
     pepyatka_post_parse : function(elasticSearchDataItem) {
       var post = {
         id: elasticSearchDataItem._source.id,
+        userId: elasticSearchDataItem._source.createdBy.id,
         createdAt: elasticSearchDataItem._source.createdAt,
         updatedAt: elasticSearchDataItem._source.updatedAt,
         body: elasticSearchDataItem._source.body,
