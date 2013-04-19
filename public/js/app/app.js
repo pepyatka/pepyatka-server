@@ -478,7 +478,10 @@ App.PostContainerView = Ember.View.extend({
   currentUser: currentUser,
 
   groupNames: function() {
-    if (!this.content.groups || this.content.createdBy.username == this.content.groups.username || App.postsController.user.username == this.content.groups.username)
+    if (!this.content.groups ||
+        this.content.createdBy.username == this.content.groups.username ||
+        !App.postsController.user || 
+        App.postsController.user.username == this.content.groups.username)
       return null
 
     return this.content.groups.username

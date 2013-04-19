@@ -53,6 +53,9 @@ exports.addRoutes = function(app) {
 
   app.get('/v1/users/:username/subscribers', function(req, res) {
     models.FeedFactory.findByName(req.params.username, function(err, feed) {
+      if (!feed)
+        return res.jsonp({}, 404)
+
       feed.getPostsTimeline({}, function(err, timeline) {
         timeline.getSubscribers(function(err, subscribers) {
           async.map(subscribers, function(subscriber, callback) {
