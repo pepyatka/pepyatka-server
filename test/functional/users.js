@@ -20,7 +20,7 @@ describe('Users API', function() {
     newUser.save(function(err, user) {
       userAgent = agent.agent();
       userAgent
-        .post('localhost:' + server.get('port') + '/session')
+        .post('localhost:' + server.get('port') + '/v1/session')
         .send({ username: 'username', password: 'password' })
         .end(function(err, res) {
           done()
@@ -56,7 +56,7 @@ describe('Users API', function() {
             request(server)
               .get('/v1/users/anonymous/subscribers')
               .end(function(err, res) {
-                assert(res.body.length > 0)
+                assert(res.body.subscribers.length > 0)
                 done()
               })
           })
@@ -76,13 +76,13 @@ describe('Users API', function() {
     })
   })
 
-  it('GET /v1/users/user-not-exist/subscriptions should return 422', function(done) {
+  it('GET /v1/users/user-not-exist/subscriptions should return 404', function(done) {
     request(server)
       .get('/v1/users/user-not-exist/subscriptions')
       .expect(404, done)
   })
 
-  it('GET /v1/users/user-not-exist/subscribers should return 422', function(done) {
+  it('GET /v1/users/user-not-exist/subscribers should return 404', function(done) {
     request(server)
       .get('/v1/users/user-not-exist/subscribers')
       .expect(404, done)

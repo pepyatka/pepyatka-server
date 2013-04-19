@@ -28,7 +28,7 @@ describe('Timeline API', function() {
     newUser.save(function(err, user) {
       userAgent = agent.agent();
       userAgent
-        .post('localhost:' + server.get('port') + '/session')
+        .post('localhost:' + server.get('port') + '/v1/session')
         .send({ username: 'username', password: 'password' })
         .end(function(err, res) {
           userAgentCreated = true
@@ -43,7 +43,7 @@ describe('Timeline API', function() {
     newUser2.save(function(err, user) {
       user2Agent = agent.agent();
       user2Agent
-        .post('localhost:' + server.get('port') + '/session')
+        .post('localhost:' + server.get('port') + '/v1/session')
         .send({ username: 'username2', password: 'password' })
         .end(function(err, res) {
           user2AgentCreated = true

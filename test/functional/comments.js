@@ -17,7 +17,7 @@ describe('Comment API', function() {
     newUser.save(function(err, user) {
       userAgent = agent.agent();
       userAgent
-        .post('localhost:' + server.get('port') + '/session')
+        .post('localhost:' + server.get('port') + '/v1/session')
         .send({ username: 'username', password: 'password' })
         .end(function(err, res) {
           done()

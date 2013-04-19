@@ -17,7 +17,7 @@ describe('Post API', function() {
     newUser.save(function(err, user) {
       userAgent = agent.agent();
       userAgent
-        .post('localhost:' + server.get('port') + '/session')
+        .post('localhost:' + server.get('port') + '/v1/session')
         .send({ username: 'username', password: 'password' })
         .end(function(err, res) {
           done()
@@ -339,7 +339,9 @@ describe('Post API', function() {
           timeline.getPostsIds(0, 25, function(err, postsIds) {
             var isLikeAdded = false;
             async.forEach(postsIds, function(postId, done) {
-                if (that.postId == postId) isLikeAdded = true
+                if (that.postId == postId)
+                  isLikeAdded = true
+
                 done()
               },
               function(err) {
