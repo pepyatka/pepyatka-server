@@ -703,7 +703,7 @@ exports.addModel = function(db) {
       return new models.Attachment(attrs)
     },
 
-    getSourseFeed: function(callback) {
+    getGroups: function(callback) {
       models.Timeline.findById(this.timelineId, {}, function(err, timeline) {
         models.FeedFactory.findById(timeline.userId, function(err, feed) {
           callback(err, feed)
@@ -731,8 +731,8 @@ exports.addModel = function(db) {
         if(select.indexOf('likes') != -1) {
           isReady = isReady && json.likes !== undefined
         }
-        if(select.indexOf('source') != -1) {
-          isReady = isReady && json.source !== undefined
+        if(select.indexOf('groups') != -1) {
+          isReady = isReady && json.groups !== undefined
         }
 
         if(isReady) {
@@ -810,10 +810,10 @@ exports.addModel = function(db) {
         })
       }
 
-      if (select.indexOf('source') != -1) {
-        that.getSourseFeed(function(err, feed) {
-          feed.toJSON(params.source, function(err, sourceJSON) {
-            json.source = sourceJSON
+      if (select.indexOf('groups') != -1) {
+        that.getGroups(function(err, feed) {
+          feed.toJSON(params.groups, function(err, groupsJSON) {
+            json.groups = groupsJSON
 
             returnJSON(err)
           })

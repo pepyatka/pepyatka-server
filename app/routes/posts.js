@@ -27,12 +27,12 @@ exports.addRoutes = function(app) {
   }
 
   var postSerializer = { 
-    select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'source'],
+    select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'groups'],
     createdBy: { select: ['id', 'username'] },
     comments: { select: ['id', 'body', 'createdBy'],
                 createdBy: { select: ['id', 'username'] }},
     likes: { select: ['id', 'username']},
-    source: { select: ['id', 'username'] }
+    groups: { select: ['id', 'username'] }
   }
 
   app.get('/v1/posts/:postId', function(req, res) {

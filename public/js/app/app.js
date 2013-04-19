@@ -477,11 +477,11 @@ App.PostContainerView = Ember.View.extend({
   isEditFormVisible: false,
   currentUser: currentUser,
 
-  sourceName: function() {
-    if (!this.content.source || this.content.createdBy.username == this.content.source.username || App.postsController.user.username == this.content.source.username)
+  groupNames: function() {
+    if (!this.content.groups || this.content.createdBy.username == this.content.groups.username || App.postsController.user.username == this.content.groups.username)
       return null
 
-    return this.content.source.username
+    return this.content.groups.username
   }.property('this.content', 'App.postsController.user'),
 
   toggleVisibility: function() {
@@ -910,7 +910,7 @@ App.UserTimelineController = Ember.ObjectController.extend({
       success: function(response) {
         if (App.postsController.user.type == 'group')
           App.groupsController.addObject(App.postsController.user.get('username'))
-        
+
         App.router.transitionTo('posts')
       }
     })

@@ -5,13 +5,13 @@ exports.addRoutes = function(app) {
   var timelineSerializer = { 
     select: ['id', 'posts', 'user', 'subscribers'],
     posts: {
-      select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'source'],
+      select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'groups'],
       createdBy: { select: ['id', 'username'] },
       comments: { select: ['id', 'body', 'createdBy'],
                   createdBy: { select: ['id', 'username'] }
                 },
       likes: { select: ['id', 'username'] },
-      source: { select: ['id', 'username'] }
+      groups: { select: ['id', 'username'] }
     },
     user: {
       select: ['id', 'username', 'subscribers', 'subscriptions', 'statistics', 'type', 'admins'],

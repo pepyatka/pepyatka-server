@@ -270,8 +270,8 @@
       <div class="media-body post">
         <h5 class="media-heading author">
           <a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a>
-          {{#if view.sourceName}}
-            (<a {{action showUserTimeline view.sourceName href="true"}}>{{view.sourceName}}</a>)
+          {{#if view.groupNames}}
+            (<a {{action showUserTimeline view.groupNames href="true"}}>{{view.groupNames}}</a>)
           {{/if}}
         </h5>
 
