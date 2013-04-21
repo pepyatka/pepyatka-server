@@ -9,8 +9,6 @@ var express = require('express')
   , passport = require('passport')
   , environment = require('./environment.js')
 
-require('./public/js/libs/core_ext')
-
 module.exports = app;
 
 if (fs.existsSync('./conf/envLocal.js')) {

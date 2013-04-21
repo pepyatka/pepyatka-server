@@ -3,6 +3,8 @@ var express = require('express')
   , redis = require('./db')
   , db = redis.connect()
 
+require('./public/js/libs/core_ext')
+
 app.configure('development', function() {
   app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
   app.set('redisdb', 1);
