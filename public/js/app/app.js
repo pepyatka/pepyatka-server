@@ -199,6 +199,9 @@ App.Subscription = Ember.Object.extend({
     var that = this
     var isFirstPage = function() {
       switch (App.router.currentState.name) {
+        case "aPost":
+          return true
+          break;
         case "root":
         case "posts":
         case "userTimeline":
@@ -209,9 +212,6 @@ App.Subscription = Ember.Object.extend({
           break;
         case "searchPhrase":
           return App.searchController.pageStart == 0
-        default :
-          return true
-          break
       }
     }
 
@@ -257,8 +257,21 @@ App.Subscription = Ember.Object.extend({
     })
 
     this.socket.on('destroyPost', function(data) {
-      App.postsController.removePost('id', data.postId)
-      App.searchController.removePost('id', data.postId)
+      switch (App.router.currentState.name) {
+        case "aPost":
+          App.router.transitionTo('posts')
+          break
+        case "root":
+        case "posts":
+        case "userTimeline":
+        case "publicTimeline":
+        case "userLikesTimeline":
+        case "userCommentsTimeline":
+          App.postsController.removePost('id', data.postId)
+          break;
+        case "searchPhrase":
+          App.searchController.removePost('id', data.postId)
+      }
     })
 
     this.socket.on('newComment', function (data) {
@@ -953,7 +966,6 @@ App.OnePostView = Ember.View.extend({
 
   destroyPost: function() {
     App.postsController.destroyPost(App.onePostController.content.id)
-    App.router.transitionTo('posts')
   }
 });
 
