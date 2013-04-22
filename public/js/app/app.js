@@ -961,7 +961,7 @@ App.OnePostView = Ember.View.extend({
   },
 
   postOwner: function() {
-    return App.onePostController.content.createdBy && App.onePostController.content.createdBy.id == currentUser
+    return App.onePostController.content.createdBy && App.onePostController.content.createdBy.id == App.properties.userId
   }.property('App.onePostController.content'),
 
   destroyPost: function() {
