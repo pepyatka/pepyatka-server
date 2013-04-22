@@ -653,6 +653,14 @@
               <a {{action likePost target="parentView"}}>{{t label.like}}</a>
             {{/view}}
           {{/unless}}
+
+          {{#if view.postOwner}}
+            <span class="links">
+              (<a {{action editFormVisibility target="view"}}>{{t label.edit}}</a>
+              |
+              <a {{action destroyPost target="view"}}>{{t label.delete}}</a>)
+            </span>
+          {{/if}}
         {{/if}}
       </div>
     

@@ -900,10 +900,15 @@ App.onePostController = App.OnePostController.create()
 App.OnePostView = Ember.View.extend({
   templateName: 'a-post',
   isFormVisible: false,
+  isEditFormVisible: false,
   currentUser: currentUser,
 
   toggleVisibility: function() {
     this.toggleProperty('isFormVisible');
+  },
+
+  editFormVisibility: function() {
+    this.toggleProperty('isEditFormVisible');
   },
 
   groupsNames: function() {
@@ -931,6 +936,15 @@ App.OnePostView = Ember.View.extend({
   // XXX: kind of dup of App.PostContainerView.unlikePost function
   unlikePost: function() {
     App.postsController.unlikePost(App.onePostController.content.id)
+  },
+
+  postOwner: function() {
+    return App.onePostController.content.createdBy && App.onePostController.content.createdBy.id == currentUser
+  }.property('App.onePostController.content'),
+
+  destroyPost: function() {
+    App.postsController.destroyPost(App.onePostController.content.id)
+    App.router.transitionTo('posts')
   }
 });
 
