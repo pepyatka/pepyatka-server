@@ -209,6 +209,9 @@ App.Subscription = Ember.Object.extend({
           break;
         case "searchPhrase":
           return App.searchController.pageStart == 0
+        default :
+          return true
+          break
       }
     }
 
