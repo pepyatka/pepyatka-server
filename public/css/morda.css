@@ -200,3 +200,7 @@ footer {
 .liked {
     color: #666666;
 }
+
+.postCreationField {
+    margin-top: 10px;
+}
