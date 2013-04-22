@@ -808,6 +808,12 @@ App.CommentForm = Ember.View.extend({
   // function. I just do not know how to access it from UI bindings
   toggleVisibility: function() {
     this.toggleProperty('parentView.isFormVisible');
+  },
+
+  cancelComment: function() {
+    console.log('asd')
+    this.set('parentView.isFormVisible', false)
+    this.set('body', '')
   }
 });
 
