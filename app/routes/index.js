@@ -1,6 +1,10 @@
 var models = require('../models');
 
 exports.addRoutes = function(app) {
+  app.get('/error', function(req, res) {
+    res.render('./home')
+  });
+
   app.get('/users/:username/subscribers/manage', function(req, res) {
     res.render('./home')
   });

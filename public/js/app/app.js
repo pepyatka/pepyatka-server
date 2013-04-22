@@ -1345,6 +1345,15 @@ App.SubscriptionsView = Ember.View.extend({
   templateName: 'subscriptions'
 });
 
+App.ErrorController = Ember.ArrayController.extend({
+
+})
+App.errorController = App.ErrorController.create()
+
+App.ErrorView = Ember.View.extend({
+  templateName: 'error-view'
+});
+
 App.SubscribersController = Ember.ArrayController.extend({
   resourceUrl: '/v1/users',
   verb: 'subscribers',
@@ -1825,6 +1834,10 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
         }
         this.setProperties(response)
         App.onePostController.set('content', response)
+      },
+      error: function(XMLHttpRequest, textStatus, errorThrown) {
+        if (errorThrown == 'Not Found')
+          App.router.transitionTo('error')
       }
     })
     return post;
@@ -2188,6 +2201,18 @@ App.Router = Ember.Router.extend({
 
       deserialize: function(router, urlParams) {
         return urlParams.username
+      }
+    }),
+
+    error: Ember.Route.extend({
+      route: '/error',
+
+      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
+      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
+      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
+
+      connectOutlets: function(routes, context) {
+        App.router.get('applicationController').connectOutlet('error', App.errorController)
       }
     })
   })
