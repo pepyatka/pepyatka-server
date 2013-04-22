@@ -197,6 +197,21 @@ App.Subscription = Ember.Object.extend({
 
   init: function() {
     var that = this
+    var isFirstPage = function() {
+      switch (App.router.currentState.name) {
+        case "root":
+        case "posts":
+        case "userTimeline":
+        case "publicTimeline":
+        case "userLikesTimeline":
+        case "userCommentsTimeline":
+          return App.postsController.pageStart == 0
+          break;
+        case "searchPhrase":
+          return App.searchController.pageStart == 0
+      }
+    }
+
     var findPost = function(postId) {
       switch (App.router.currentState.name) {
       case "aPost":
@@ -223,8 +238,10 @@ App.Subscription = Ember.Object.extend({
     this.socket = io.connect('/');
 
     this.socket.on('newPost', function (data) {
-      var post = App.Post.create(data.post)
+      if (!isFirstPage())
+        return
 
+      var post = App.Post.create(data.post)
       App.postsController.addObject(post)
     });
 
@@ -242,6 +259,9 @@ App.Subscription = Ember.Object.extend({
     })
 
     this.socket.on('newComment', function (data) {
+      if (!isFirstPage())
+        return
+
       var comment = App.Comment.create(data.comment)
       var post = findPost(data.comment.postId)
 
@@ -280,6 +300,9 @@ App.Subscription = Ember.Object.extend({
     })
 
     this.socket.on('newLike', function(data) {
+      if (!isFirstPage())
+        return
+
       var user = App.User.create(data.user)
       var post = findPost(data.postId)
 
@@ -1238,7 +1261,8 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Sea
 
   removePost: function(propName, value) {
     var obj = this.findProperty(propName, value);
-    this.removeObject(obj);
+    if (obj)
+      this.removeObject(obj);
   },
 
   didRequestRange: function(pageStart) {
@@ -1577,7 +1601,8 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
 
   removePost: function(propName, value) {
     var obj = this.findProperty(propName, value);
-    this.removeObject(obj);
+    if (obj)
+      this.removeObject(obj);
   },
 
   // TODO: like model
