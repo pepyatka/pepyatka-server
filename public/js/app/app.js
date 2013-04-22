@@ -824,7 +824,6 @@ App.CommentForm = Ember.View.extend({
   },
 
   cancelComment: function() {
-    console.log('asd')
     this.set('parentView.isFormVisible', false)
     this.set('body', '')
   }
