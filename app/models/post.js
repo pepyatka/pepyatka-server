@@ -541,7 +541,7 @@ exports.addModel = function(db) {
           if (res !== 0)
             return callback(err, res)
 
-          var postBody = (that.body.slice(0, 512) || "").toString().trim()
+          var postBody = (that.body.slice(0, 8192) || "").toString().trim()
           db.hmset('post:' + that.id,
                    { 'body': postBody,
                      'timelineId': that.timelineId.toString(),

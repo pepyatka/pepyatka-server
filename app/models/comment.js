@@ -107,7 +107,7 @@ exports.addModel = function(db) {
           if (res !== 1)
             return callback(err, that)
 
-          var newBody = (params.body.slice(0, 4096) || that.body).toString().trim()
+          var newBody = (params.body.slice(0, 8192) || that.body).toString().trim()
           models.Tag.extract(that.body, function(err, oldPostTagsInfo) {
             models.Tag.extract(newBody, function(err, newPostTagsInfo) {
               models.Tag.diff(oldPostTagsInfo, newPostTagsInfo, function(err, diffTagsInfo) {
