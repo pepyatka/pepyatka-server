@@ -495,7 +495,7 @@ App.JustStarted = Ember.View.extend({
   // },
 
   justStarted: function() {
-    return App.router.location.lastSetURL != "/users/anonymous"
+    return true
   }.property()
 });
 
