@@ -1,6 +1,7 @@
 Em.I18n.translations = {
   'title.title': 'Pepyatka',
 
+  'message.notFound': 'The file you requested is no longer on Pepyatka\'s servers. You may have followed an out-dated link, or there may be an error in our service. We apologize for the inconvenience. <a href="/">Return to the Pepyatka homepage</a>',
   'message.welcome': "Seems like you've just started using Pepyatka? You can check out <a href='/public'>all posts</a>.",
   'message.footer': '<s>Всем похiй</s> помощь всегда нужна, тыкать сюда: <a href="http://friendfeed.com/epicmonkey">@epicmonkey</a> или сюда <a href="https://github.com/epicmonkey/pepyatka"><i class="icon-github"></i> github</a>. It\'s already available... for free. For free? We can do anything. That\'s fucking brilliant, that is. Have you seen this? This is fucking brilliant.',
 
@@ -52,5 +53,6 @@ Em.I18n.translations = {
   'header.top': 'Top',
   'header.signUp': 'Sign up',
   'header.members': 'Members',
-  'header.admins': 'Admins'
+  'header.admins': 'Admins',
+  'header.notFound': 'File not found'
 };
