@@ -1,11 +1,9 @@
-App = Ember.Application.create();
+App = Ember.Application.create({
+  LOG_TRANSITIONS: true
+});
 
-App.Properties = Em.Object.extend({
-  isAuthorized: null,
-  username:null
-})
-
-App.properties = App.Properties.create({
+// WTF?
+App.Properties = Ember.Object.extend({
   isAuthorized: false,
   username: currentUsername,
   userId: currentUser,
@@ -15,7 +13,9 @@ App.properties = App.Properties.create({
   isAnonym: function() {
     return this.get('username') == 'anonymous'
   }.property('username')
-});
+})
+
+App.properties = App.Properties.create();
 
 App.ShowSpinnerWhileRendering = Ember.Mixin.create({
   layout: Ember.Handlebars.compile('<div {{bindAttr class="isLoaded"}}>{{ yield }}</div>'),
@@ -134,6 +134,30 @@ App.GroupsController = Ember.ArrayController.extend({
   suffix: '/subscriptions',
   content: [],
 
+  create: function() {
+    var that = this
+
+    $.ajax({
+      url: this.resourceUrl,
+      data: { username: this.get('groupName') },
+      dataType: 'jsonp',
+      type: 'post',
+      context: this,
+      success: function(response) {
+        switch (response.status) {
+        case 'success' :
+          App.groupsController.addObject(this.get('groupName'))
+          that.transitionToRoute('users', this.get('groupName'))
+          break
+        case 'fail' :
+          that.transitionToRoute('groups')
+          break
+        }
+      }
+    })
+    return this
+  },
+
   loadGroups: function() {
     var that = this
 
@@ -165,21 +189,6 @@ App.GroupsView = Ember.View.extend({
 
   willInsertElement: function() {
     App.groupsController.loadGroups()
-//    var that = this
-//
-//    $.ajax({
-//      url: this.resourceUrl + App.properties.get('username') + this.suffix,
-//      type: 'get',
-//      success: function(response) {
-//        var groups = []
-//        response.forEach(function(subscription) {
-//          if (subscription.user.type == 'group' && groups.indexOf(subscription.user.username) == -1) {
-//            groups.push(subscription.user.username)
-//          }
-//        }, this)
-//        that.set('content', groups)
-//      }
-//    })
   }
 });
 
@@ -199,19 +208,20 @@ App.Subscription = Ember.Object.extend({
     var that = this
     var isFirstPage = function() {
       switch (App.router.currentState.name) {
-        case "aPost":
-          return true
-          break;
-        case "root":
-        case "posts":
-        case "userTimeline":
-        case "publicTimeline":
-        case "userLikesTimeline":
-        case "userCommentsTimeline":
-          return App.postsController.pageStart == 0
-          break;
-        case "searchPhrase":
-          return App.searchController.pageStart == 0
+      case "aPost":
+        return true
+        break;
+      case "root":
+      case "posts":
+      case "userTimeline":
+      case "publicTimeline":
+      case "userLikesTimeline":
+      case "userCommentsTimeline":
+        return App.postsController.pageStart == 0
+        break;
+      case "searchPhrase":
+        return App.searchController.pageStart == 0
+        break
       }
     }
 
@@ -235,6 +245,7 @@ App.Subscription = Ember.Object.extend({
         return App.searchController.find(function(post) {
           return post.id == postId
         })
+        break
       }
     }
 
@@ -258,19 +269,20 @@ App.Subscription = Ember.Object.extend({
 
     this.socket.on('destroyPost', function(data) {
       switch (App.router.currentState.name) {
-        case "aPost":
-          App.router.transitionTo('posts')
-          break
-        case "root":
-        case "posts":
-        case "userTimeline":
-        case "publicTimeline":
-        case "userLikesTimeline":
-        case "userCommentsTimeline":
-          App.postsController.removePost('id', data.postId)
-          break;
-        case "searchPhrase":
-          App.searchController.removePost('id', data.postId)
+      case "aPost":
+        App.router.transitionTo('posts')
+        break
+      case "root":
+      case "posts":
+      case "userTimeline":
+      case "publicTimeline":
+      case "userLikesTimeline":
+      case "userCommentsTimeline":
+        App.postsController.removePost('id', data.postId)
+        break;
+      case "searchPhrase":
+        App.searchController.removePost('id', data.postId)
+        break
       }
     })
 
@@ -407,14 +419,6 @@ App.Subscription = Ember.Object.extend({
 App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
   templateName: 'application',
 
-  signin: function() {
-    App.router.transitionTo('signin')
-  },
-
-  signup: function() {
-    App.router.transitionTo('signup')
-  },
-
   searchPhrase: function() {
     query = App.searchController.body
 
@@ -424,14 +428,17 @@ App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
     App.router.transitionTo('searchPhrase', query);
   }
 });
+
 App.ApplicationController = Ember.Controller.extend({
   subscription: null,
   top: null,
 
   init: function() {
-    App.ApplicationController.subscription = App.Subscription.create()
+    this.set('subscription', App.Subscription.create())
+    this._super()
   }
 });
+App.applicationController = App.ApplicationController.create()
 
 // Index view to display all posts on the page
 App.SearchView = Ember.View.extend({
@@ -474,7 +481,8 @@ App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
 
   didInsertElement: function() {
     // FIXME: bind as valueBinding property
-    this.set('value', this.bindingContext.body)
+    if (this.bindingContext)
+      this.set('value', this.bindingContext.body)
 
     this.$().autogrow();
   }
@@ -705,7 +713,7 @@ App.LikePostView = Ember.View.extend(Ember.TargetActionSupport, {
 
   likePost: function() {
     // XXX: rather strange bit of code here -- potentially a defect
-    var post = this.bindingContext.content || this.bindingContext
+    var post = this._context
     App.postsController.likePost(post.id)
   }
 })
@@ -933,6 +941,9 @@ App.OnePostView = Ember.View.extend({
   },
 
   groupsNames: function() {
+    if (!App.onePostController.content)
+      return 
+
     if (!App.onePostController.content.groups ||
       App.onePostController.content.createdBy.username == App.onePostController.content.groups.username)
       return null
@@ -941,16 +952,22 @@ App.OnePostView = Ember.View.extend({
   }.property('App.onePostController.content', 'App.postsController.user'),
 
   didInsertElement: function() {
-    // wrap anchor tags around links in comments
-    this.$().find('.body').anchorTextUrls();
-    // wrap hashtags around text in post text
-    this.$().find('.body').hashTagsUrls();
+    if (this.$()) {
+      // TODO: replace to boundhelpers
+      // wrap anchor tags around links in comments
+      this.$().find('.body').anchorTextUrls();
+      // wrap hashtags around text in post text
+      this.$().find('.body').hashTagsUrls();
+    }
   },
 
   postLoaded: function() {
+    // TODO: WTF! Replace to boundHelpers
     Ember.run.next(this, function() {
-      this.$().find('.body').anchorTextUrls()
-      this.$().find('.body').hashTagsUrls()
+      if (this.$()) {
+        this.$().find('.body').anchorTextUrls()
+        this.$().find('.body').hashTagsUrls()
+      }
     })
   }.observes('App.onePostController.content'),
 
@@ -1246,7 +1263,7 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Sea
   isLoaded: true,
 
   insertPostsIntoMediaList : function(posts) {
-    App.ApplicationController.subscription.unsubscribe();
+    App.applicationController.get('subscription').unsubscribe();
 
     App.searchController.set('content', []);
     var postIds = [];
@@ -1256,7 +1273,7 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Sea
       postIds.push(post.id)
     })
 
-    App.ApplicationController.subscription.subscribe('post', postIds);
+    App.applicationController.get('subscription').subscribe('post', postIds);
     App.searchController.set('isLoaded', true)
   },
 
@@ -1327,7 +1344,7 @@ App.SubscriptionsController = Ember.ArrayController.extend({
       dataType: 'jsonp',
       context: this,
       success: function(response) {
-        App.ApplicationController.subscription.unsubscribe()
+        App.applicationController.get('subscription').unsubscribe()
 
         this.set('content', filterSubscriptionsByUsername(response))
         this.set('username', username)
@@ -1366,7 +1383,7 @@ App.SubscribersController = Ember.ArrayController.extend({
       dataType: 'jsonp',
       context: this,
       success: function(response) {
-        App.ApplicationController.subscription.unsubscribe()
+        App.applicationController.get('subscription').unsubscribe()
 
         this.set('content', [])
         response.subscribers.forEach(function(attrs) {
@@ -1446,10 +1463,12 @@ App.SubscribersView = Ember.View.extend({
   templateName: 'subscribers',
 
   browseSubscribers: function() {
+    // FIXME: this should be a route, not an action!
     App.router.transitionTo('subscribers', App.subscribersController.get('username'))
   },
 
   manageSubscribers: function() {
+    // FIXME: this should be a route, not an action!
     App.router.transitionTo('showManagement', App.subscribersController.get('username'))
   },
 
@@ -1477,7 +1496,7 @@ App.TopController = Ember.ArrayController.extend({
       dataType: 'jsonp',
       context: this,
       success: function(response) {
-        App.ApplicationController.subscription.unsubscribe()
+        App.applicationController.get('subscription').unsubscribe()
 
         this.set('content', response)
         this.set('category', category)
@@ -1494,7 +1513,7 @@ App.TopView = Ember.View.extend({
   templateName: 'top-view'
 });
 
-App.SignupController = Ember.ArrayController.extend({
+App.SignupController = Ember.ObjectController.extend({
   resourceUrl: '/v1/signup',
   username: '',
   password: '',
@@ -1508,15 +1527,15 @@ App.SignupController = Ember.ArrayController.extend({
       context: this,
       success: function(response) {
         switch (response.status) {
-          case 'success' :
-            App.properties.set('isAuthorized', true)
-            App.properties.set('username', response.user.username)
-            App.properties.set('userId', response.user.id)
-            App.router.transitionTo('posts')
-            break
-          case 'fail' :
-              App.router.transitionTo('signup')
-            break
+        case 'success' :
+          App.properties.set('isAuthorized', true)
+          App.properties.set('username', response.user.username)
+          App.properties.set('userId', response.user.id)
+          this.transitionToRoute('posts')
+          break
+        case 'fail' :
+          this.transitionToRoute('signup')
+          break
         }
       }
     })
@@ -1537,12 +1556,14 @@ App.SignupView = Ember.View.extend({
   }
 });
 
-App.SigninController = Ember.ArrayController.extend({
+App.SigninController = Ember.ObjectController.extend({
   resourceUrl: '/v1/session',
   username: '',
   password: '',
 
   signin: function() {
+    var that = this;
+    
     $.ajax({
       url: this.resourceUrl,
       data: { username: this.get('username'), password: this.get('password') },
@@ -1551,61 +1572,35 @@ App.SigninController = Ember.ArrayController.extend({
       context: this,
       success: function(response) {
         switch (response.status) {
-          case 'success' :
-            App.properties.set('isAuthorized', true)
-            App.properties.set('username', response.user.username)
-            App.properties.set('userId', response.user.id)
-            App.groupsController.loadGroups()
-            App.router.transitionTo('posts')
-            break
-          case 'fail' :
-            App.router.transitionTo('signin')
-            break
+        case 'success':
+          App.properties.set('isAuthorized', true)
+          App.properties.set('username', response.user.username)
+          App.properties.set('userId', response.user.id)
+          App.groupsController.loadGroups()
+          //App.router.transitionTo('posts')
+          this.transitionToRoute('posts')
+          break
+        case 'fail':
+          that.transitionToRoute('signin')
+          //App.router.transitionTo('signin')
+          break
         }
       }
     })
     return this
   }
 })
-App.signinController = App.SigninController.create()
+//App.signinController = App.SigninController.create()
 
 App.SigninView = Ember.View.extend({
   templateName: 'signin-view',
 
   insertNewline: function() {
     this.triggerAction();
-  },
-
-  signin: function() {
-    App.signinController.signin()
   }
 });
 
 App.GroupCreationController = Ember.ArrayController.extend({
-  resourceUrl: '/v1/users',
-  groupName: '',
-
-  create: function() {
-    $.ajax({
-      url: this.resourceUrl,
-      data: { username: this.get('groupName'), ownerName: App.properties.get('username') },
-      dataType: 'jsonp',
-      type: 'post',
-      context: this,
-      success: function(response) {
-        switch (response.status) {
-          case 'success' :
-            App.groupsController.addObject(this.get('groupName'))
-            App.router.transitionTo('userTimeline', this.get('groupName'))
-            break
-          case 'fail' :
-            App.router.transitionTo('groupCreation')
-            break
-        }
-      }
-    })
-    return this
-  }
 })
 App.groupCreationController = App.GroupCreationController.create()
 
@@ -1614,10 +1609,6 @@ App.GroupCreationView = Ember.View.extend({
 
   insertNewline: function() {
     this.triggerAction();
-  },
-
-  create: function() {
-    App.groupCreationController.create()
   }
 });
 
@@ -1770,7 +1761,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
   },
 
   didTimelineChange: function() {
-    App.ApplicationController.subscription.unsubscribe()
+    App.applicationController.get('subscription').unsubscribe()
     this.resetPage()
   }.observes('timeline'),
 
@@ -1791,8 +1782,8 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       context: this,
       success: function(response) {
         // TODO: extract to an observer
-        App.ApplicationController.subscription.unsubscribe()
-        App.ApplicationController.subscription.subscribe('timeline', response.id)
+        App.applicationController.get('subscription').unsubscribe()
+        App.applicationController.get('subscription').subscribe('timeline', response.id)
 
         this.set('content', [])
         this.set('timelineId', response.id)
@@ -1825,12 +1816,13 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       dataType: 'jsonp',
       context: post,
       success: function(response) {
-        if (App.router.currentState.name == 'aPost') {
+        // FIXME: EMBER10
+        //if (App.router.currentState.name == 'aPost') {
           // TODO: we are not unsubscribing from all posts since we add
           // posts to content by this method if it's missing on a page
-          App.ApplicationController.subscription.unsubscribe()
-          App.ApplicationController.subscription.subscribe('post', response.id)
-        }
+          App.applicationController.get('subscription').unsubscribe()
+          App.applicationController.get('subscription').subscribe('post', response.id)
+        //}
         this.setProperties(response)
         App.onePostController.set('content', response)
       },
@@ -1844,377 +1836,82 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
 })
 App.postsController = App.PostsController.create()
 
-App.Router = Ember.Router.extend({
-  // enableLogging: true,
-  location: 'history',
-
-  root: Ember.Route.extend({
-    searchPhrase: Ember.Route.extend({
-      route: '/search/:searchQuery',
-
-      showPost: Ember.Route.transitionTo('aPost'),
-      showAllPosts: Ember.Route.transitionTo('posts'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
-      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      showTop: Ember.Route.transitionTo('top'),
-      doSignup: Ember.Route.transitionTo('signup'),
-      doSignin: Ember.Route.transitionTo('signin'),
-      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
-
-      connectOutlets: function(router, searchQuery) {
-        router.get('applicationController').connectOutlet('search', App.searchController.searchByPhrase(searchQuery));
-
-        if (/%23/g.test(searchQuery))
-          searchQuery = searchQuery.replace(/%23/g, '#')
-
-        searchQuery = decodeURIComponent(searchQuery)
-
-        App.searchController.set('body', searchQuery)
-        App.searchController.set('query', searchQuery)
-        App.postsController.set('user', null)
-      },
-
-      serialize: function(router, searchQuery) {
-        return {searchQuery: searchQuery}
-      },
-
-      deserialize: function(router, urlParams) {
-        return urlParams.searchQuery
-      }
-    }),
-
-    posts: Ember.Route.extend({
-      route: '/',
-
-      showPost: Ember.Route.transitionTo('aPost'),
-      showAllPosts: Ember.Route.transitionTo('posts'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
-      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      showTop: Ember.Route.transitionTo('top'),
-      doSignup: Ember.Route.transitionTo('signup'),
-      doSignin: Ember.Route.transitionTo('signin'),
-      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
-      
-      connectOutlets: function(router) {
-        App.postsController.set('timeline', null)
-        router.get('applicationController').connectOutlet('posts', App.postsController.findAll());
-      }
-    }),
-
-    publicTimeline: Ember.Route.extend({
-      route: '/public',
-
-      showPost: Ember.Route.transitionTo('aPost'),
-      showAllPosts: Ember.Route.transitionTo('posts'),
-      showSubscribers: Ember.Route.transitionTo('subscribers'),
-      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
-      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      showTop: Ember.Route.transitionTo('top'),
-      doSignup: Ember.Route.transitionTo('signup'),
-      doSignin: Ember.Route.transitionTo('signin'),
-      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
-
-      connectOutlets: function(router, username) {
-        App.postsController.set('timeline', 'everyone')
-        router.get('applicationController').connectOutlet('posts', App.postsController.findAll(0));
-      },
-
-      serialize: function(router) {
-        return {username: 'everyone'}
-      },
-
-      deserialize: function(router, urlParams) {
-        return 'everyone'
-      }
-    }),
-
-    aPost: Ember.Route.extend({
-      route: '/posts/:postId',
-
-      showAllPosts: Ember.Route.transitionTo('posts'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      showTop: Ember.Route.transitionTo('top'),
-      doSignup: Ember.Route.transitionTo('signup'),
-      doSignin: Ember.Route.transitionTo('signin'),
-      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
-
-      connectOutlets: function(router, context) {
-        // FIXME: obviouly a defect. content should be set automagically
-        App.onePostController.set('content', context)
-        router.get('applicationController').connectOutlet('onePost', context);
-      },
-
-      serialize: function(router, context) {
-        return { postId: context.get('id') }
-      },
-
-      deserialize: function(router, urlParams) {
-        return App.postsController.findOne(urlParams.postId);
-      }
-    }),
-
-    userTimeline: Ember.Route.extend({
-      route: '/users/:username',
-
-      showPost: Ember.Route.transitionTo('aPost'),
-      showAllPosts: Ember.Route.transitionTo('posts'),
-      showSubscribers: Ember.Route.transitionTo('subscribers'),
-      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
-      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      showTop: Ember.Route.transitionTo('top'),
-      doSignup: Ember.Route.transitionTo('signup'),
-      doSignin: Ember.Route.transitionTo('signin'),
-      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
-
-      connectOutlets: function(router, username) {
-        App.postsController.set('timeline', username)
-        router.get('applicationController').connectOutlet('userTimeline', App.postsController.findAll());
-      },
-
-      serialize: function(router, username) {
-        return {username: username}
-      },
-
-      deserialize: function(router, urlParams) {
-        return urlParams.username
-      }
-    }),
-
-    subscribers: Ember.Route.extend({
-      route: '/users/:username/subscribers',
-
-      showPost: Ember.Route.transitionTo('aPost'),
-      showAllPosts: Ember.Route.transitionTo('posts'),
-      showSubscribers: Ember.Route.transitionTo('subscribers'),
-      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
-      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      showTop: Ember.Route.transitionTo('top'),
-      doSignup: Ember.Route.transitionTo('signup'),
-      doSignin: Ember.Route.transitionTo('signin'),
-      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
-
-      connectOutlets: function(routes, context) {
-        App.router.get('applicationController').connectOutlet('subscribers', App.subscribersController.findAll(context));
-        App.subscribersController.set('showManagement', false)
-      },
-
-      serialize: function(router, username) {
-        return {username: username}
-      },
-
-      deserialize: function(router, urlParams) {
-        return urlParams.username
-      }
-    }),
-
-    subscriptions: Ember.Route.extend({
-      route: '/users/:username/subscriptions',
-
-      showPost: Ember.Route.transitionTo('aPost'),
-      showAllPosts: Ember.Route.transitionTo('posts'),
-      showSubscribers: Ember.Route.transitionTo('subscribers'),
-      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
-      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      showTop: Ember.Route.transitionTo('top'),
-      doSignup: Ember.Route.transitionTo('signup'),
-      doSignin: Ember.Route.transitionTo('signin'),
-      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
-
-      connectOutlets: function(routes, context) {
-        App.router.get('applicationController').connectOutlet('subscriptions', App.subscriptionsController.findAll(context));
-     },
-
-      serialize: function(router, username) {
-        return {username: username}
-      },
-
-      deserialize: function(router, urlParams) {
-        return urlParams.username
-      }
-    }),
-
-    userLikesTimeline: Ember.Route.extend({
-      route: '/users/:username/likes',
-
-      showPost: Ember.Route.transitionTo('aPost'),
-      showAllPosts: Ember.Route.transitionTo('posts'),
-      showSubscribers: Ember.Route.transitionTo('subscribers'),
-      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
-      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      showTop: Ember.Route.transitionTo('top'),
-      doSignup: Ember.Route.transitionTo('signup'),
-      doSignin: Ember.Route.transitionTo('signin'),
-      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
-
-      connectOutlets: function(router, username) {
-        App.postsController.set('timeline', username)
-        router.get('applicationController').connectOutlet('posts', App.postsController.findAll(0, 'likes'));
-      },
-
-      serialize: function(router, username) {
-        return {username: username}
-      },
-
-      deserialize: function(router, urlParams) {
-        return urlParams.username
-      }
-    }),
-
-    userCommentsTimeline: Ember.Route.extend({
-      route: '/users/:username/comments',
-
-      showPost: Ember.Route.transitionTo('aPost'),
-      showAllPosts: Ember.Route.transitionTo('posts'),
-      showSubscribers: Ember.Route.transitionTo('subscribers'),
-      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
-      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      showTop: Ember.Route.transitionTo('top'),
-      doSignup: Ember.Route.transitionTo('signup'),
-      doSignin: Ember.Route.transitionTo('signin'),
-      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
-
-      connectOutlets: function(router, username) {
-        App.postsController.set('timeline', username)
-        router.get('applicationController').connectOutlet('posts', App.postsController.findAll(0, 'comments'));
-      },
-
-      serialize: function(router, username) {
-        return {username: username}
-      },
-
-      deserialize: function(router, urlParams) {
-        return urlParams.username
-      }
-    }),
-
-    top: Ember.Route.extend({
-      route: '/top/:category',
-
-      showPost: Ember.Route.transitionTo('aPost'),
-      showAllPosts: Ember.Route.transitionTo('posts'),
-      showSubscribers: Ember.Route.transitionTo('subscribers'),
-      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
-      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      showTop: Ember.Route.transitionTo('top'),
-      doSignup: Ember.Route.transitionTo('signup'),
-      doSignin: Ember.Route.transitionTo('signin'),
-      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
-
-      connectOutlets: function(routes, context) {
-        App.router.get('applicationController').connectOutlet('top', App.topController.getTop(context));
-      },
-
-      serialize: function(router, category) {
-        return {category: category}
-      },
-
-      deserialize: function(router, urlParams) {
-        return urlParams.category
-      }
-    }),
-
-    signup: Ember.Route.extend({
-      route: '/signup',
-
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
-
-      connectOutlets: function(routes, context) {
-        App.router.get('applicationController').connectOutlet('signup', App.signupController);
-      }
-    }),
-
-    signin: Ember.Route.extend({
-      route: '/signin',
-
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
-
-      connectOutlets: function(routes, context) {
-        App.router.get('applicationController').connectOutlet('signin', App.signinController);
-      }
-    }),
-
-    groupCreation: Ember.Route.extend({
-      route: '/groups',
-
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-
-      connectOutlets: function(routes, context) {
-        App.router.get('applicationController').connectOutlet('groupCreation', App.groupCreationController);
-      }
-    }),
-
-    showManagement: Ember.Route.extend({
-      route: '/users/:username/subscribers/manage',
-
-      showPost: Ember.Route.transitionTo('aPost'),
-      showAllPosts: Ember.Route.transitionTo('posts'),
-      showSubscribers: Ember.Route.transitionTo('subscribers'),
-      showSubscriptions: Ember.Route.transitionTo('subscriptions'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-      showLikesTimeline: Ember.Route.transitionTo('userLikesTimeline'),
-      showCommentsTimeline: Ember.Route.transitionTo('userCommentsTimeline'),
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      showTop: Ember.Route.transitionTo('top'),
-      doSignup: Ember.Route.transitionTo('signup'),
-      doSignin: Ember.Route.transitionTo('signin'),
-      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
-
-      connectOutlets: function(routes, context) {
-        App.router.get('applicationController').connectOutlet('subscribers', App.subscribersController.findAll(context));
-        App.subscribersController.set('showManagement', true)
-      },
-
-      serialize: function(router, username) {
-        return {username: username}
-      },
-
-      deserialize: function(router, urlParams) {
-        return urlParams.username
-      }
-    }),
-
-    error: Ember.Route.extend({
-      route: '/error',
-
-      searchByPhrase: Ember.Route.transitionTo('searchPhrase'),
-      showGroupCreation: Ember.Route.transitionTo('groupCreation'),
-      showUserTimeline: Ember.Route.transitionTo('userTimeline'),
-
-      connectOutlets: function(routes, context) {
-        App.router.get('applicationController').connectOutlet('error', App.errorController)
-      }
+App.PostsRoute = Ember.Route.extend({
+  model: function() {
+    // TODO: findAll method to accept timeline parameter
+    App.postsController.set('timeline', null)
+    return App.postsController.findAll()
+  }
+})
+
+App.PostRoute = Ember.Route.extend({
+  model: function(params) {
+    // TODO: move findOne to model and make it like this
+    // App.Post.find(params_post_id) then we are good to delete this method
+    return App.postsController.findOne(params.post_id);
+  },
+
+  setupController: function(controller, model) {
+    // TODO: one we migrate onePostController to postController we are
+    // good to drop this method
+    this.controllerFor('onePost').set('content', model);
+  },
+
+  renderTemplate: function() {
+    // TODO: one we migrate onePostController to postController AND
+    // rename a-post view to post we can drop this method
+    this.render('a-post', {
+      outlet: 'main',
+      controller: this.controllerFor('onePost')
     })
-  })
-});
+  }
+})
 
-App.initialize();
+App.PublicRoute = Ember.Route.extend({
+  model: function() {
+    // TODO: findAll method to accept timeline parameter
+    App.postsController.set('timeline', 'everyone')
+    return App.postsController.findAll()
+  },
+
+  renderTemplate: function() {
+    this.render('posts')
+  }
+})
+
+App.GroupsRoute = Ember.Route.extend({
+  renderTemplate: function() {
+    this.render('create-group-view', {
+      outlet: 'main',
+      controller: 'groups'
+    })
+  }
+})
+
+App.Router.map(function() {
+  this.resource('search', { path: "/search/:search_query" }) // TODO
+
+  this.resource('public', { path: "/public" })
+  this.resource('posts', { path: "/" })
+  this.resource('post', { path: "/posts/:post_id" }) // TODO
+
+  this.resource('users', { path: "/users/:username" }) // TODO
+  this.resource('subscribers', { path: "/users/:username/subscribers" }) // TODO
+  this.resource('manage', { path: "/users/:username/subscribers/manage" }) // TODO
+  this.resource('subscriptions', { path: "/users/:username/subscriptions" }) // TODO
+  this.resource('likes', { path: "/users/:username/likes" }) // TODO
+  this.resource('comments', { path: "/users/:username/comments" }) // TODO
+
+  this.resource('groups', { path: "/groups" }) // TODO
+
+  this.resource('signup', { path: "/signup" }) // TODO
+  this.resource('signin', { path: "/signin" }) // TODO
+
+  this.resource('stats', { path: "/top/:category" }) // TODO
+
+  this.resource('error', { path: "/error" }) // TODO
+})
+
+App.Router.reopen({
+  location: 'history'
+})

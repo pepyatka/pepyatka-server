@@ -15,6 +15,8 @@ exports.addRoutes = function(app) {
           return res.jsonp({ err: 'user ' + user.username + ' exists', status: 'fail'})
 
         newUser.save(function(err, user) {
+          if (err) return res.jsonp({}, 422)
+
           req.logIn(user, function(err) {
             user.toJSON(userSerializer, function(err, userJSON) {
               res.jsonp({ err: null, status: 'success', user: userJSON })

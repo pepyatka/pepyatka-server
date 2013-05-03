@@ -13,12 +13,12 @@ Configuration
 - Install graphicsmagick (ensure jpeg and png flags are set)
 - Install nodejs
 - Install elasticsearch (and java as a dependency ;-)
-- Install forever: npm install -g forever
 - Make sure to update secret token: cp ./conf/envDefault.js to
   ./conf/envLocal.js.
 - Install dependencies: npm install
 - Update translation file: cp ./public/config/envDefault.js
   ./public/config/envLocal.js
+- Install mocha globally in the system: npm install -g mocha 
 - Check there are no broken tests: jake test
 - Run elasticsearch
 - Run server: node ./server.js

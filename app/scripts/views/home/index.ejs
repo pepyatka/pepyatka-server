@@ -3,7 +3,7 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/libs/holder.js"></script>
 <script src="/js/libs/moment.min.js"></script>
-<script src="/js/libs/handlebars-1.0.rc.1.js"></script>
+<script src="/js/libs/handlebars-1.0.0-rc.3.js"></script>
 <script src="/js/libs/jquery.anchorlinks.js"></script>
 <script src="/js/libs/jquery.hashtags.js"></script>
 <script src="/js/libs/jquery.highlight-search-results.js"></script>
@@ -12,9 +12,10 @@
 <script src="/js/libs/core_ext.js"></script>
 <script src="/js/libs/bootstrap.min.js"></script>
 <script src="/js/libs/bootstrap.file-input.js"></script>
-<script src="/js/libs/ember-1.0.0-pre.2.js"></script>
+<script src="/js/libs/ember-1.0.0-rc.3.js"></script>
 <script src="/js/libs/ember-bootstrap.prod.js"></script>
 <script src="/js/libs/ember-i18n.js"></script>
+<script src="/js/libs/ember-data-0.5.0.pre.js"></script>
 <script src="/config/envLocal.js"></script>
 
 <script type="text/x-handlebars" data-template-name="application">
@@ -38,9 +39,9 @@
         <% if (!req.user || req.user.username == 'anonymous') { %>
           {{#unless App.properties.isAuthorized}}
             <div class="span3 signin-toolbar">
-              <a {{action signin target="view"}} href="true">{{t label.signin}}</a>
+              {{#linkTo 'signin'}}{{t label.signin}}{{/linkTo}}
               or
-              <a {{action signup target="view"}} href="true">{{t label.signup}}</a>
+              {{#linkTo 'signup'}}{{t label.signup}}{{/linkTo}}
             </div>
           {{/unless}}
         <% } %>
@@ -50,7 +51,7 @@
 
     <div class="row">
       <div class="span9">
-        {{outlet}}
+        {{outlet main}}
       </div>
 
       <div class="span3">
@@ -82,7 +83,7 @@
           <h5>{{t header.groups}}</h5>
 
           {{view App.GroupsView}}
-          <p><small><a {{action showGroupCreation href="true"}}>{{t label.createGroup}}</a></small></p>
+          <p><small>{{#linkTo 'groups'}}{{t label.createGroup}}{{/linkTo}}</small></p>
         </div>
 
         <div>
@@ -225,7 +226,7 @@
 
           {{#if view.commentOwner}}
             <span class="links">
-              (<a {{action editFormVisibility target="parentView"}}>{{t label.edit}}</a>
+              (<a {{action editFormVisibility target="view"}}>{{t label.edit}}</a>
               |
               <a {{action destroyComment target="view"}}>{{t label.delete}}</a>)
             </span>
@@ -302,25 +303,23 @@
         {{/if}}
 
         <div class="tagline">
-          <a {{action showPost this href="true"}} class="datetime">
-            <time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>
-          </a>
+          {{#linkTo 'post' this class="datetime"}}<time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>{{/linkTo}}
 
           {{#if currentUser}}
             {{#view App.CommentPostView}}
               -
-              <a {{action toggleVisibility target="parentView"}}>{{t label.comment}}</a>
+              <a {{action toggleVisibility target="view"}}>{{t label.comment}}</a>
             {{/view}}
 
             {{#unless currentUserLiked}}
               {{#view App.LikePostView}}
                 -
-                <a {{action likePost target="parentView"}}>{{t label.like}}</a>
+                <a {{action likePost target="view"}}>{{t label.like}}</a>
               {{/view}}
             {{/unless}}
 
             {{#if postOwner}}
-              (<a {{action editFormVisibility target="parentView"}}>{{t label.edit}}</a>
+              (<a {{action editFormVisibility target="view"}}>{{t label.edit}}</a>
               |
               <a {{action destroyPost target="view"}}>{{t label.delete}}</a>)
             {{/if}}
@@ -340,7 +339,7 @@
               </ul>
               <span class="liked">{{t label.liked}}</span>
               {{#if currentUserLiked}}
-                <span>(<a {{action unlikePost id target="parentView"}}>{{t label.unlike}}</a>)</span>
+                <span>(<a {{action unlikePost id target="view"}}>{{t label.unlike}}</a>)</span>
               {{/if}}
             </div>
           </div>
@@ -379,7 +378,7 @@
               </div>
               <div>
                 <button {{action submitComment target="view"}} class="btn btn-small">{{t button.post}}</button>
-                <a {{action cancelComment target="parentView"}}>{{t label.cancel}}</a>
+                <a {{action cancelComment target="view"}}>{{t label.cancel}}</a>
               </div>
             </div>
           </div>
@@ -422,9 +421,7 @@
         {{/if}}
 
         <div class="tagline">
-          <a {{action showPost this href="true"}} class="datetime">
-            <time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>
-          </a>
+          {{#linkTo 'post' this class="datetime"}}<time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>{{/linkTo}}
 
           {{#if currentUser}}
             {{#view App.CommentPostView}}
@@ -596,7 +593,7 @@
   </div>
 </script>
 
-<script type="text/x-handlebars" data-template-name="a-post">
+<script type="text/x-handlebars" id="a-post">
   <div class="media a-post">
     <div class="pull-left">
       <img class="media-object" src="/img/64x64.png">
@@ -616,13 +613,13 @@
           <div class="edit-post-form media">
             <div class="media-body">
               <div>
-                {{view App.CreatePostView target="parentView"
+                {{view App.CreatePostView target="view"
                       action="updatePost" valueBinding="view.body"
                       class="span8 input-tiny comment-area"}}
               </div>
               <div>
                 <button {{action updatePost target="view"}} class="btn btn-small">{{t button.post}}</button>
-                <a {{action toggleVisibility target="parentView"}}>{{t label.cancel}}</a>
+                <a {{action toggleVisibility target="view"}}>{{t label.cancel}}</a>
               </div>
             </div>
           </div>
@@ -638,19 +635,18 @@
       {{/if}}
     
       <div class="tagline">
-        <a {{action showPost this}} class="datetime">
-          <time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>
-        </a>
+        {{#linkTo 'post' this class="datetime"}}<time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>{{/linkTo}}
+
         {{#if currentUser}}
           {{#view App.CommentPostView}}
             -
-            <a {{action toggleVisibility target="parentView"}}>{{t label.comment}}</a>
+            <a {{action toggleVisibility target="view"}}>{{t label.comment}}</a>
           {{/view}}
 
           {{#unless currentUserLiked}}
             {{#view App.LikePostView}}
               -
-              <a {{action likePost target="parentView"}}>{{t label.like}}</a>
+              <a {{action likePost target="view"}}>{{t label.like}}</a>
             {{/view}}
           {{/unless}}
 
@@ -677,7 +673,7 @@
             </ul>
             <span class="liked">{{t label.liked}}</span>
             {{#if currentUserLiked}}
-              <span>(<a {{action unlikePost target="parentView"}}>{{t label.unlike}}</a>)</span>
+              <span>(<a {{action unlikePost target="view"}}>{{t label.unlike}}</a>)</span>
             {{/if}}
           </div>
         </div>
@@ -693,13 +689,13 @@
           <i class="icon-comment-alt media-object pull-left"></i>
           <div class="media-body">
             <div>
-              {{view App.CreateCommentView target="parentView"
+              {{view App.CreateCommentView target="view"
                     action="submitComment" valueBinding="view.body"
                     class="span7 input-tiny comment-area"}}
             </div>
             <div>
               <button {{action submitComment target="view"}} class="btn btn-small">{{t button.post}}</button>
-              <a {{action cancelComment target="parentView"}}>{{t label.cancel}}</a>
+              <a {{action cancelComment target="view"}}>{{t label.cancel}}</a>
             </div>
           </div>
         </div>
@@ -797,13 +793,13 @@
       <div class="control-group">
         <label class="control-label" for="username">Group name</label>
         <div class="controls">
-          {{view Ember.TextField valueBinding="App.groupCreationController.groupName" type="text" id="groupName" name="groupName"}}
+          {{view Ember.TextField valueBinding="groupName" type="text" id="groupName" name="groupName"}}
         </div>
       </div>
 
       <div class="control-group">
         <div class="controls span2">
-          <button {{action create target="view"}} class="btn btn-primary">{{t button.create}}</button>
+          <button {{action create}} class="btn btn-primary">{{t button.create}}</button>
         </div>
       </div>
     </form>
@@ -818,20 +814,20 @@
       <div class="control-group">
         <label class="control-label" for="username">{{t label.username}}</label>
         <div class="controls">
-          {{view Ember.TextField valueBinding="App.signupController.username" type="text" id="username" name="username"}}
+          {{view Ember.TextField valueBinding="username" type="text" id="username" name="username"}}
         </div>
       </div>
 
       <div class="control-group">
         <label class="control-label" for="password">{{t label.password}}</label>
         <div class="controls">
-          {{view Ember.TextField valueBinding="App.signupController.password" type="password" id="password" name="password"}}
+          {{view Ember.TextField valueBinding="password" type="password" id="password" name="password"}}
         </div>
       </div>
 
       <div class="control-group">
         <div class="controls span2">
-          <button {{action signup target="view"}} class="btn btn-primary">{{t button.signUp}}</button>
+          <button {{action signup}} class="btn btn-primary">{{t button.signUp}}</button>
         </div>
       </div>
     </form>
@@ -846,20 +842,20 @@
       <div class="control-group">
         <label class="control-label" for="username">{{t label.username}}</label>
         <div class="controls">
-          {{view Ember.TextField valueBinding="App.signinController.username" type="text" id="username" name="username"}}
+          {{view Ember.TextField valueBinding="username" type="text" id="username" name="username"}}
         </div>
       </div>
 
       <div class="control-group">
         <label class="control-label" for="password">{{t label.password}}</label>
         <div class="controls">
-          {{view Ember.TextField valueBinding="App.signinController.password" type="password" id="password" name="password"}}
+          {{view Ember.TextField valueBinding="password" type="password" id="password" name="password"}}
         </div>
       </div>
 
       <div class="control-group">
         <div class="controls span2">
-          <button {{action signin target="view"}} class="btn btn-primary">{{t button.signIn}}</button>
+          <button {{action signin}} class="btn btn-primary">{{t button.signIn}}</button>
         </div>
       </div>
     </form>

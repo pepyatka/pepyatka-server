@@ -176,17 +176,18 @@ exports.addModel = function(db) {
   Group.prototype.validate = function(callback) {
     var that = this
 
+    // TODO: review this code
     async.parallel([
       function(done) {
         db.exists('user:' + this.id, function(err, groupExists) {
           done(err, groupExists === 0 &&
-                   that.username.length > 1)
+                   that.username && that.username.length > 1)
         })
       },
       function(done) {
         db.exists('username:' + that.username + ':uid', function(err, usernameExists) {
           done(err, usernameExists === 0 &&
-            that.username.length > 1)
+            that.username && that.username.length > 1)
         })
       }],
       function(err, res) {
@@ -194,6 +195,7 @@ exports.addModel = function(db) {
       })
   }
 
+  // TODO: review design on passing ownerId as a parameter
   Group.prototype.create = function(ownerId, callback) {
     var that = this
 

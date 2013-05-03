@@ -34,17 +34,19 @@ exports.addRoutes = function(app) {
     })
   })
 
+  // TODO: this shouldn't be POST /v1/users route
   app.post('/v1/users', function(req, res) {
-    models.User.findByUsername(req.body.ownerName, function(err, user) {
-      var newGroup = new models.Group({
-        username: req.body.username
-      })
+    if (!req.user)
+      return res.jsonp({}, 422)
 
-      newGroup.create(user.id, function(err, group) {
-        if (err) return res.jsonp({ err: err, status: 'fail'})
+    var newGroup = new models.Group({
+      username: req.body.username
+    })
 
-        res.jsonp({ err: null, status: 'success'})
-      })
+    newGroup.create(req.user.id, function(err, group) {
+      if (err) return res.jsonp({ err: err, status: 'fail'})
+      
+      res.jsonp({ err: null, status: 'success'})
     })
   })
 
