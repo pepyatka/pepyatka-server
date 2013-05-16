@@ -1,0 +1,183 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Pepyatka by epicmonkey</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">Pepyatka</h1>
+        <p class="header">Open source FriendFeed clone.</p>
+
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/epicmonkey/pepyatka/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/epicmonkey/pepyatka/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/epicmonkey/pepyatka">View On GitHub</a></li>
+        </ul>
+
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/epicmonkey">epicmonkey</a></p>
+
+
+      </header>
+      <section>
+        <h1>Pepyatka</h1>
+
+<p>Pepyatka is another attempt to open source FriendFeed social
+network/aggregator. At this stage it's a semi-anonymous imageboard.</p>
+
+<p><img src="http://epicmonkey.org/b/2013-03-10_Pepyatka.png" alt="Pepyatka screenshot"></p>
+
+<h2>Configuration</h2>
+
+<ul>
+<li>Install redis</li>
+<li>Install graphicsmagick (ensure jpeg and png flags are set)</li>
+<li>Install nodejs</li>
+<li>Install elasticsearch (and java as a dependency ;-)</li>
+<li>Install forever: npm install -g forever</li>
+<li>Make sure to update secret token: cp ./conf/envDefault.js to
+./conf/envLocal.js.</li>
+<li>Install dependencies: npm install</li>
+<li>Update translation file: cp ./public/config/envDefault.js
+./public/config/envLocal.js</li>
+<li>Check there are no broken tests: jake test</li>
+<li>Run elasticsearch</li>
+<li>Run server: node ./server.js</li>
+<li>Run search daemon: node ./bin/search-daemon.js</li>
+</ul><h2>Roadmap</h2>
+
+<p>Tasks: <a href="https://trello.com/b/uvRkkOTH">https://trello.com/b/uvRkkOTH</a></p>
+
+<h2>Database</h2>
+
+<pre><code>username:&lt;username&gt;:uid
+
+type is a enum of set of { "user", "group" } # not implemented yet
+
+user:&lt;userId&gt; { username, hashedPassword, salt, createdAt, updatedAt, type }
+user:&lt;userId&gt;:timelines { RiverOfNews, Posts, Likes, Comments, DirectMessages, [name*] }
+user:&lt;userId&gt;:administrators { &lt;userId&gt;:&lt;timestamp&gt; } # not implemented yet
+* DirectMessages not implemented yet
+* Custom lists not implemented yet
+user:&lt;userId&gt;:subscriptions ( &lt;timelineId&gt;:&lt;timestamp&gt; )
+
+reserved usernames:
+- anonymous
+- everyone
+
+timeline:&lt;timelineId&gt; { name, userId }
+timeline:&lt;timelineId&gt;:posts ( &lt;postId&gt;:&lt;timestamp&gt; )
+timeline:&lt;timelineId&gt;:subscribers ( &lt;userId&gt;:&lt;timestamp&gt; )
+
+as special case there is timeline: timeline:everyone
+
+post:&lt;postId&gt; { body, createdAt, updatedAt, userId, timelineId }
+post:&lt;postId&gt;:comments [ &lt;commentId&gt; ]
+post:&lt;postId&gt;:attachments [ &lt;attachmentId&gt; ]
+post:&lt;postId&gt;:timelines ( &lt;timelineId&gt; )
+post:&lt;postId&gt;:likes ( &lt;userId&gt; )
+
+comment:&lt;commentId&gt; { body, createdAt, updatedAt, createdBy, postId }
+
+attachment:&lt;attachmentId&gt; { mimeType, filename, extension, path, createdAt, updatedAt, postId, thumbnailId? }
+
+stats:&lt;userId&gt; { posts, likes, discussions, subscribers, subscriptions }
+stats:posts { &lt;userId&gt;:&lt;posts&gt; }
+stats:likes { &lt;userId&gt;:&lt;likes&gt; }
+stats:discussions { &lt;userId&gt;:&lt;discussions&gt; }
+stats:subscribers { &lt;userId&gt;:&lt;subscribers&gt; }
+stats:subscripions { &lt;userId&gt;:&lt;subscriptions&gt; }
+
+tags:&lt;userId&gt; { &lt;tag&gt;:&lt;score&gt; } # implemented only for everyone, see below
+
+as special case there are tags: tags:everyone
+</code></pre>
+
+<h2>API</h2>
+
+<h3>Timeline</h3>
+
+<ul>
+<li>GET /v1/timeline/:username - returns all posts from user </li>
+<li>GET /v1/timeline/everyone - returns all posts from everyone</li>
+<li>GET /v1/timeline - returns river of news for auth user</li>
+<li>POST /v1/timeline/:timelineId/subscribe</li>
+<li>POST /v1/timeline/:timelineId/unsubscribe</li>
+<li>GET /v1/timeline/:timelineId/subcribers</li>
+</ul><h3>Posts</h3>
+
+<ul>
+<li>GET /v1/posts/:postId</li>
+<li>DELETE /v1/posts/:postId</li>
+<li>PATCH /v1/posts/:postId</li>
+<li>GET /v1/posts/:postId/comments # not implemented yet</li>
+<li>GET /v1/posts/:postId/likes # not implemented yet</li>
+<li>POST /v1/posts</li>
+<li>POST /v1/posts/:postId/like</li>
+<li>POST /v1/posts/:postId/unlike</li>
+</ul><h3>Comments</h3>
+
+<ul>
+<li>POST /v1/comments</li>
+<li>DELETE /v1/comments/:commentId</li>
+<li>PATCH /v1/comments/:commentId</li>
+</ul><h3>Users and groups</h3>
+
+<ul>
+<li>GET /v1/users/:userId</li>
+<li>GET /v1/users/:username/subscriptions</li>
+<li>GET /v1/users/:username/subscribers - returns Posts timeline subscribers</li>
+<li>DELETE /v1/users/:username/subscribers/:userId - unsubscribe :userId from :username</li>
+<li>POST /v1/users/:username/subscribers/:userId/admin - add admin rights for :userId to administrate :username</li>
+<li>POST /v1/users/:username/subscribers/:userId/unadmin - remove admin rights from :userId to administrate :username</li>
+<li>POST /v1/users # it's a dup of sign up</li>
+<li>DELETE /v1/users/:userId</li>
+<li>GET /v1/users/:userId/feedinfo</li>
+<li>not implemented yet</li>
+<li>PATCH /v1/users/:userId</li>
+</ul><h3>Statistics</h3>
+
+<ul>
+<li>GET /v1/top/:category - returns an array of users with the highest
+statistics in a category. Category could be one of { "posts",
+"likes", "discussions", "subscriptions", "subscribers" }</li>
+</ul><h2>SEARCH API</h2>
+
+<ul>
+<li>GET /v1/search/:searchQuery - returns all posts which equals searchQuery.</li>
+</ul><p>Search query is a string of keywords.
+Keywords:</p>
+
+<ul>
+<li>intitle:query (search query in post's body)</li>
+<li>incomment:query (search query in comment's body)</li>
+<li>from:username (search by username)</li>
+<li>AND</li>
+<li>OR</li>
+<li>' ' (whitespace)</li>
+</ul><p>If you enter a search phrase that does not match keywords above,
+search engine will search it in post's and comment's bodies.</p>
+
+<p>Example: this AND intitle:that OR incomment:comment from:user. Search
+engine will return posts that contain 'that' in post's body and 'this'
+in post's or comment's body, also it will return posts that contain
+'comment' in comment's body and written by user 'user'.</p>
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		
+  </body>
+</html>
