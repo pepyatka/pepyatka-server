@@ -1,5 +1,11 @@
 App = Ember.Application.create({
-  LOG_TRANSITIONS: true
+  LOG_TRANSITIONS: true,  
+  currentPath: '',
+  ApplicationController : Ember.Controller.extend({
+    updateCurrentPath: function() {
+      App.set('currentPath', this.get('currentPath'));
+    }.observes('currentPath')
+}),
 });
 
 // WTF?
@@ -207,7 +213,7 @@ App.Subscription = Ember.Object.extend({
   init: function() {
     var that = this
     var isFirstPage = function() {
-      switch (App.router.currentState.name) {
+      switch (App.currentPath) {
       case "aPost":
         return true
         break;
@@ -226,7 +232,7 @@ App.Subscription = Ember.Object.extend({
     }
 
     var findPost = function(postId) {
-      switch (App.router.currentState.name) {
+      switch (App.currentPath) {
       case "aPost":
         if (App.onePostController.content.id == postId)
           return App.onePostController.content
@@ -268,7 +274,7 @@ App.Subscription = Ember.Object.extend({
     })
 
     this.socket.on('destroyPost', function(data) {
-      switch (App.router.currentState.name) {
+      switch (App.currentPath) {
       case "aPost":
         App.router.transitionTo('posts')
         break
@@ -818,7 +824,8 @@ App.CommentForm = Ember.View.extend({
   submitComment: function() {
     if (this.body) {
       // XXX: rather strange bit of code here -- potentially a defect
-      var post = this.bindingContext.content || this.bindingContext;
+      //var post = this.bindingContext.content || this.bindingContext;
+      var post = this._context
       App.commentsController.createComment(post, this.body)
       this.set('parentView.isFormVisible', false)
       this.set('body', '')
@@ -857,7 +864,8 @@ App.EditPostForm = Ember.View.extend({
   updatePost: function() {
     if (this.body) {
       // XXX: rather strange bit of code here -- potentially a defect
-      var post = this.bindingContext.content || this.bindingContext;
+      //var post = this.bindingContext.content || this.bindingContext;
+      var post = this._context
       App.postsController.updatePost(post, this.body)
       this.set('parentView.isEditFormVisible', false)
     }
@@ -1697,12 +1705,12 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
     data.append('timelinesIds', App.postsController.get('receiveTimelinesIds').toString()) // XXX: dirty!
 
     var xhr = new XMLHttpRequest();
-				
+
     // Progress listerner.
     xhr.upload.addEventListener("progress", function (evt) {
 
       if (evt.lengthComputable) {
-	var percentComplete = Math.round(evt.loaded * 100 / evt.total);
+        var percentComplete = Math.round(evt.loaded * 100 / evt.total);
         App.postsController.set('progress', percentComplete)
       } else {
         // unable to compute
