@@ -217,11 +217,13 @@
           </span>
           -
           <span class="author">
-            {{#if view.commentOwner}}
-              {{#linkTo user createdBy.username}}{{t label.you}}{{/linkTo}}
-            {{else}}
-              {{#linkTo user createdBy.username}}{{createdBy.username}}{{/linkTo}}
-            {{/if}}
+            {{#linkTo user createdBy.username}}
+              {{#if view.commentOwner}}
+                {{t label.you}}
+              {{else}}
+                {{createdBy.username}}
+              {{/if}}
+            {{/linkTo}}
           </span>
 
           {{#if view.commentOwner}}

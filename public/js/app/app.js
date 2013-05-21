@@ -1589,12 +1589,10 @@ App.SigninController = Ember.ObjectController.extend({
           App.properties.set('username', response.user.username)
           App.properties.set('userId', response.user.id)
           App.groupsController.loadGroups()
-          //App.router.transitionTo('posts')
           this.transitionToRoute('posts')
           break
         case 'fail':
           that.transitionToRoute('signin')
-          //App.router.transitionTo('signin')
           break
         }
       }
@@ -1975,10 +1973,10 @@ App.Router.map(function() {
   this.resource('likes', { path: "/users/:username/likes" })
   this.resource('comments', { path: "/users/:username/comments" })
 
-  this.resource('groups', { path: "/groups" }) // TODO
+  this.resource('groups', { path: "/groups" })
 
-  this.resource('signup', { path: "/signup" }) // TODO
-  this.resource('signin', { path: "/signin" }) // TODO
+  this.resource('signup', { path: "/signup" })
+  this.resource('signin', { path: "/signin" })
 
   this.resource('stats', { path: "/top/:category" }) // TODO
 
