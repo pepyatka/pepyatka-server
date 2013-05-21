@@ -519,23 +519,23 @@
 
         <div class="pull-right profile-extra-info">
           {{#if content.user.subscriptionsLength}}
-            <div><a {{action showSubscriptions App.postsController.timeline href="true"}}>{{content.user.subscriptionsLength}} {{t label.subscriptions}}</a></div>
+            <div>{{#linkTo subscriptions App.postsController.timeline}}{{content.user.subscriptionsLength}} {{t label.subscriptions}}{{/linkTo}}</div>
           {{/if}}
 
           {{#if content.user.subscribersLength}}
-          <div><a {{action showSubscribers App.postsController.timeline href="true"}}>{{content.user.subscribersLength}} {{t label.subscribers}}</a></div>
+            <div>{{#linkTo subscribers App.postsController.timeline}}{{content.user.subscribersLength}} {{t label.subscribers}}{{/linkTo}}</div>
           {{/if}}
 
           {{#if content.user.postsLength}}
-          <div>{{#linkTo user App.postsController.timeline}}{{App.postsController.timeline}}{{/linkTo}}</div>
+            <div>{{#linkTo user App.postsController.timeline}}{{content.user.postsLength}} {{t label.posts}}{{/linkTo}}</div>
           {{/if}}
 
           {{#if content.user.likesLength}}
-          <div><a {{action showLikesTimeline App.postsController.timeline href="true"}}>{{content.user.likesLength}} {{t label.likes}}</a></div>
+            <div>{{#linkTo likes App.postsController.timeline}}{{content.user.likesLength}} {{t label.likes}}{{/linkTo}}</div>
           {{/if}}
 
           {{#if content.user.commentsLength}}
-          <div><a {{action showCommentsTimeline App.postsController.timeline href="true"}}>{{content.user.commentsLength}} {{t label.comments}}</a></div>
+            <div>{{#linkTo comments App.postsController.timeline}}{{content.user.commentsLength}} {{t label.comments}}{{/linkTo}}</div>
           {{/if}}
 
           {{#unless content.user.ownProfile}}
@@ -721,7 +721,7 @@
   <p>{{t message.notFound}}</p>
 </script>
 
-<script type="text/x-handlebars" data-template-name="subscribers">
+<script type="text/x-handlebars" id="subscribers">
   <h3>{{t header.subscribers}} {{#linkTo user App.subscribersController.username}}{{App.subscribersController.username}}{{/linkTo}}</h3>
 
   <h3>{{t header.members}}</h3>

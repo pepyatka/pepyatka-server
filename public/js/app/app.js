@@ -1811,7 +1811,10 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
           }, this)
 
         if (response.subscribers)  this.set('subscribers', response.subscribers)
-        if (response.user) this.set('user', App.User.create(response.user))
+        if (response.user) {
+          this.set('user', App.User.create(response.user))
+          this.set('timeline', response.user.username)
+        }
 
         this.set('isLoaded', true)
       }
@@ -1899,7 +1902,7 @@ App.GroupsRoute = Ember.Route.extend({
 })
 
 App.UserRoute = Ember.Route.extend({
-  model: function(params) {
+  model: function() {
     return App.postsController.findAll()
   },
 
@@ -1914,19 +1917,63 @@ App.UserRoute = Ember.Route.extend({
   }
 })
 
+App.LikesRoute = Ember.Route.extend({
+  model: function() {
+    return App.postsController.findAll(0, 'likes')
+  },
+
+  setupController: function(controller, model) {
+    this.controllerFor('posts').set('content', model);
+  },
+
+  renderTemplate: function() {
+    this.render('user-timeline', {
+      controller: this.controllerFor('posts')
+    })
+  }
+})
+
+App.CommentsRoute = Ember.Route.extend({
+  model: function() {
+    return App.postsController.findAll(0, 'comments')
+  },
+
+  setupController: function(controller, model) {
+    this.controllerFor('posts').set('content', model);
+  },
+
+  renderTemplate: function() {
+    this.render('user-timeline', {
+      controller: this.controllerFor('posts')
+    })
+  }
+})
+
+App.SubscribersRoute = Ember.Route.extend({
+  model: function(username) {
+    return App.subscribersController.findAll(username)
+  }
+})
+
+App.SubscriptionsRoute = Ember.Route.extend({
+  model: function(username) {
+    return App.subscriptionsController.findAll(username)
+  }
+})
+
 App.Router.map(function() {
   this.resource('search', { path: "/search/:search_query" }) // TODO
 
   this.resource('public', { path: "/public" })
   this.resource('posts', { path: "/" })
-  this.resource('post', { path: "/posts/:post_id" }) // TODO
+  this.resource('post', { path: "/posts/:post_id" })
 
-  this.resource('user', { path: "/users/:username" }) // TODO
-  this.resource('subscribers', { path: "/users/:username/subscribers" }) // TODO
+  this.resource('user', { path: "/users/:username" })
+  this.resource('subscribers', { path: "/users/:username/subscribers" })
   this.resource('manage', { path: "/users/:username/subscribers/manage" }) // TODO
-  this.resource('subscriptions', { path: "/users/:username/subscriptions" }) // TODO
-  this.resource('likes', { path: "/users/:username/likes" }) // TODO
-  this.resource('comments', { path: "/users/:username/comments" }) // TODO
+  this.resource('subscriptions', { path: "/users/:username/subscriptions" })
+  this.resource('likes', { path: "/users/:username/likes" })
+  this.resource('comments', { path: "/users/:username/comments" })
 
   this.resource('groups', { path: "/groups" }) // TODO
 
