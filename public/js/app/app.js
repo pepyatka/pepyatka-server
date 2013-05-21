@@ -208,11 +208,11 @@ App.Subscription = Ember.Object.extend({
 
   init: function() {
     var that = this
+
     var isFirstPage = function() {
       switch (App.properties.get('currentPath')) {
       case "aPost":
         return true
-        break;
       case "root":
       case "posts":
       case "userTimeline":
@@ -220,10 +220,8 @@ App.Subscription = Ember.Object.extend({
       case "userLikesTimeline":
       case "userCommentsTimeline":
         return App.postsController.pageStart == 0
-        break;
       case "searchPhrase":
         return App.searchController.pageStart == 0
-        break
       }
     }
 
@@ -232,7 +230,6 @@ App.Subscription = Ember.Object.extend({
       case "aPost":
         if (App.onePostController.content.id == postId)
           return App.onePostController.content
-        break;
       case "root":
       case "posts":
       case "userTimeline":
@@ -242,12 +239,10 @@ App.Subscription = Ember.Object.extend({
         return App.postsController.find(function(post) {
           return post.id == postId
         })
-        break;
       case "searchPhrase":
         return App.searchController.find(function(post) {
           return post.id == postId
         })
-        break
       }
     }
 
