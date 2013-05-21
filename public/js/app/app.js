@@ -824,7 +824,7 @@ App.CommentForm = Ember.View.extend({
   submitComment: function() {
     if (this.body) {
       // XXX: rather strange bit of code here -- potentially a defect
-      var post = this.bindingContext.content || this.bindingContext;
+      var post = this._context
       App.commentsController.createComment(post, this.body)
       this.set('parentView.isFormVisible', false)
       this.set('body', '')
@@ -863,7 +863,7 @@ App.EditPostForm = Ember.View.extend({
   updatePost: function() {
     if (this.body) {
       // XXX: rather strange bit of code here -- potentially a defect
-      var post = this.bindingContext.content || this.bindingContext;
+      var post = this._context
       App.postsController.updatePost(post, this.body)
       this.set('parentView.isEditFormVisible', false)
     }
@@ -895,7 +895,7 @@ App.EditCommentForm = Ember.View.extend({
   updateComment: function() {
     if (this.body) {
       // XXX: rather strange bit of code here -- potentially a defect
-      var comment = this.bindingContext.content || this.bindingContext;
+      var comment = this._context
       App.commentsController.updateComment(comment, this.body)
       this.set('parentView.isEditFormVisible', false)
       this.set('body', '')
