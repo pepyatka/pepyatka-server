@@ -137,6 +137,7 @@ App.GroupsController = Ember.ArrayController.extend({
   suffix: '/subscriptions',
   content: [],
 
+  // TODO: rename "groupName" property just to "name"
   create: function() {
     $.ajax({
       url: this.resourceUrl,
