@@ -487,8 +487,8 @@ App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
 
   didInsertElement: function() {
     // FIXME: bind as valueBinding property
-    if (this.bindingContext)
-      this.set('value', this.bindingContext.body)
+    if (this._context)
+      this.set('value', this._context.body)
 
     this.$().autogrow();
   }
@@ -923,7 +923,7 @@ App.CreateCommentView = Ember.TextArea.extend(Ember.TargetActionSupport, {
   didInsertElement: function() {
     // FIXME: bind as valueBinding property
     if (this.action != 'submitComment')
-      this.set('value', this.bindingContext.body)
+      this.set('value', this._context.body)
 
     this.$().autogrow();
   }
