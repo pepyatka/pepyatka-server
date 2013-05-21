@@ -18,7 +18,6 @@ App.Properties = Ember.Object.extend({
 
   currentPath: null
 })
-
 App.properties = App.Properties.create()
 
 App.ShowSpinnerWhileRendering = Ember.Mixin.create({
@@ -162,6 +161,7 @@ App.GroupsController = Ember.ArrayController.extend({
     return this
   },
 
+  // TODO: rename to findAll
   loadGroups: function() {
     var that = this
 
@@ -435,18 +435,16 @@ App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
 
 App.ApplicationController = Ember.Controller.extend({
   subscription: null,
-  top: null,
 
   currentPathDidChange: function() {
-    App.properties.set("currentPath", this.get('currentPath'));
+    App.properties.set('currentPath', this.get('currentPath'));
   }.observes('currentPath'),
 
   init: function() {
-    this.set('subscription', App.Subscription.create())
+    App.properties.set('subscription', App.Subscription.create())
     this._super()
   }
 });
-App.applicationController = App.ApplicationController.create()
 
 // Index view to display all posts on the page
 App.SearchView = Ember.View.extend({
@@ -1023,6 +1021,7 @@ App.UserTimelineController = Ember.ObjectController.extend({
   }
 });
 App.userTimelineController = App.UserTimelineController.create()
+
 App.UserTimelineView = Ember.View.extend({
   templateName: 'user-timeline',
   currentUser: currentUser,
@@ -1271,7 +1270,7 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Sea
   isLoaded: true,
 
   insertPostsIntoMediaList : function(posts) {
-    App.applicationController.get('subscription').unsubscribe();
+    App.properties.get('subscription').unsubscribe();
 
     App.searchController.set('content', []);
     var postIds = [];
@@ -1281,7 +1280,7 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Sea
       postIds.push(post.id)
     })
 
-    App.applicationController.get('subscription').subscribe('post', postIds);
+    App.properties.get('subscription').subscribe('post', postIds);
     App.searchController.set('isLoaded', true)
   },
 
@@ -1352,7 +1351,7 @@ App.SubscriptionsController = Ember.ArrayController.extend({
       dataType: 'jsonp',
       context: this,
       success: function(response) {
-        App.applicationController.get('subscription').unsubscribe()
+        App.properties.get('subscription').unsubscribe()
 
         this.set('content', filterSubscriptionsByUsername(response))
         this.set('username', username)
@@ -1391,7 +1390,7 @@ App.SubscribersController = Ember.ArrayController.extend({
       dataType: 'jsonp',
       context: this,
       success: function(response) {
-        App.applicationController.get('subscription').unsubscribe()
+        App.properties.get('subscription').unsubscribe()
 
         this.set('content', [])
         response.subscribers.forEach(function(attrs) {
@@ -1504,7 +1503,7 @@ App.TopController = Ember.ArrayController.extend({
       dataType: 'jsonp',
       context: this,
       success: function(response) {
-        App.applicationController.get('subscription').unsubscribe()
+        App.properties.get('subscription').unsubscribe()
 
         this.set('content', response)
         this.set('category', category)
@@ -1769,7 +1768,10 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
   },
 
   didTimelineChange: function() {
-    App.applicationController.get('subscription').unsubscribe()
+    // NOTE: this method might be called even when we have not
+    // initialized subscription property
+    if (App.properties.get('subscription'))
+      App.properties.get('subscription').unsubscribe()
     this.resetPage()
   }.observes('timeline'),
 
@@ -1790,8 +1792,8 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       context: this,
       success: function(response) {
         // TODO: extract to an observer
-        App.applicationController.get('subscription').unsubscribe()
-        App.applicationController.get('subscription').subscribe('timeline', response.id)
+       App.properties.get('subscription').unsubscribe()
+       App.properties.get('subscription').subscribe('timeline', response.id)
 
         this.set('content', [])
         this.set('timelineId', response.id)
@@ -1827,8 +1829,8 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
         if (App.properties.get('currentPath') == 'aPost') {
           // TODO: we are not unsubscribing from all posts since we add
           // posts to content by this method if it's missing on a page
-          App.applicationController.get('subscription').unsubscribe()
-          App.applicationController.get('subscription').subscribe('post', response.id)
+          App.properties.get('subscription').unsubscribe()
+          App.properties.get('subscription').subscribe('post', response.id)
         }
         this.setProperties(response)
         App.onePostController.set('content', response)
