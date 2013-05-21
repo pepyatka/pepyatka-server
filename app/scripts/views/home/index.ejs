@@ -29,9 +29,8 @@
 
       <div class="span4 searchFieldView clearfix">
         <div>
-          {{view App.CreateSearchFieldView target="parentView" action="searchPhrase"
-                class="span3"}}
-          <button {{action searchPhrase target="view"}} class="btn pull-right">{{t button.search}}</button>
+          {{view App.CreateSearchFieldView action="searchPhrase" class="span3"}}
+          <button {{action searchPhrase}} class="btn pull-right">{{t button.search}}</button>
         </div>
       </div>
 

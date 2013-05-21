@@ -422,15 +422,6 @@ App.Subscription = Ember.Object.extend({
 
 App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
   templateName: 'application',
-
-  searchPhrase: function() {
-    query = App.searchController.body
-
-    if (/#/g.test(query))
-      query = query.replace(/#/g, '%23')
-
-    App.router.transitionTo('searchPhrase', query);
-  }
 });
 
 App.ApplicationController = Ember.Controller.extend({
@@ -439,6 +430,16 @@ App.ApplicationController = Ember.Controller.extend({
   currentPathDidChange: function() {
     App.properties.set('currentPath', this.get('currentPath'));
   }.observes('currentPath'),
+
+  searchPhrase: function() {
+    // TODO: valueBinding instead
+    query = App.searchController.body
+
+    if (/#/g.test(query))
+      query = query.replace(/#/g, '%23')
+
+    this.transitionToRoute('search', query)
+  },
 
   init: function() {
     App.properties.set('subscription', App.Subscription.create())
@@ -1775,6 +1776,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
     // initialized subscription property
     if (App.properties.get('subscription'))
       App.properties.get('subscription').unsubscribe()
+
     this.resetPage()
   }.observes('timeline'),
 
@@ -1959,8 +1961,31 @@ App.SubscriptionsRoute = Ember.Route.extend({
   }
 })
 
+App.SearchRoute = Ember.Route.extend({
+  model: function(params) {
+    // TODO: extract these side effects below to a controller or
+    // something
+    var query = params.query
+
+    if (/%23/g.test(query))
+      query = query.replace(/%23/g, '#')
+
+    query = decodeURIComponent(query)
+
+    App.searchController.set('body', query)
+    App.searchController.set('query', query)
+    App.postsController.set('user', null)
+
+    return App.searchController.searchByPhrase(query)
+  },
+
+  renderTemplate: function() {
+    this.render('search-list-view')
+  }
+})
+
 App.Router.map(function() {
-  this.resource('search', { path: "/search/:search_query" }) // TODO
+  this.resource('search', { path: "/search/:query" })
 
   this.resource('public', { path: "/public" })
   this.resource('posts', { path: "/" })
