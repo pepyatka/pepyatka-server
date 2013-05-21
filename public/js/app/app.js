@@ -2,7 +2,7 @@ App = Ember.Application.create({
   LOG_TRANSITIONS: true
 });
 
-App.properties = Ember.Object.create({
+App.Properties = Ember.Object.extend({
   isAuthorized: false,
   username: currentUsername,
   userId: currentUser,
@@ -18,6 +18,8 @@ App.properties = Ember.Object.create({
 
   currentPath: null
 })
+
+App.properties = App.Properties.create()
 
 App.ShowSpinnerWhileRendering = Ember.Mixin.create({
   layout: Ember.Handlebars.compile('<div {{bindAttr class="isLoaded"}}>{{ yield }}</div>'),
