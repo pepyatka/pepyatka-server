@@ -1897,7 +1897,6 @@ App.GroupsRoute = Ember.Route.extend({
 
 App.UserRoute = Ember.Route.extend({
   model: function(params) {
-    console.log(params)
     return App.postsController.findAll()
   },
 
