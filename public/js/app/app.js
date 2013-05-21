@@ -2,6 +2,10 @@ App = Ember.Application.create({
   LOG_TRANSITIONS: true
 });
 
+App.helpers = Ember.Object.create({
+  currentPath: null
+});
+
 // WTF?
 App.Properties = Ember.Object.extend({
   isAuthorized: false,
@@ -207,7 +211,7 @@ App.Subscription = Ember.Object.extend({
   init: function() {
     var that = this
     var isFirstPage = function() {
-      switch (App.router.currentState.name) {
+      switch (App.helpers.get('currentPath')) {
       case "aPost":
         return true
         break;
@@ -226,7 +230,7 @@ App.Subscription = Ember.Object.extend({
     }
 
     var findPost = function(postId) {
-      switch (App.router.currentState.name) {
+      switch (App.helpers.get('currentPath')) {
       case "aPost":
         if (App.onePostController.content.id == postId)
           return App.onePostController.content
@@ -268,7 +272,7 @@ App.Subscription = Ember.Object.extend({
     })
 
     this.socket.on('destroyPost', function(data) {
-      switch (App.router.currentState.name) {
+      switch (App.helpers.get('currentPath')) {
       case "aPost":
         App.router.transitionTo('posts')
         break
@@ -432,6 +436,10 @@ App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
 App.ApplicationController = Ember.Controller.extend({
   subscription: null,
   top: null,
+
+  currentPathDidChange: function() {
+    App.helpers.set("currentPath", this.get('currentPath'));
+  }.observes('currentPath'),
 
   init: function() {
     this.set('subscription', App.Subscription.create())
@@ -1816,13 +1824,12 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       dataType: 'jsonp',
       context: post,
       success: function(response) {
-        // FIXME: EMBER10
-        //if (App.router.currentState.name == 'aPost') {
+        if (App.helpers.get('currentPath') == 'aPost') {
           // TODO: we are not unsubscribing from all posts since we add
           // posts to content by this method if it's missing on a page
           App.applicationController.get('subscription').unsubscribe()
           App.applicationController.get('subscription').subscribe('post', response.id)
-        //}
+        }
         this.setProperties(response)
         App.onePostController.set('content', response)
       },
