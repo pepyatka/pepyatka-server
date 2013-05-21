@@ -2,21 +2,20 @@ App = Ember.Application.create({
   LOG_TRANSITIONS: true
 });
 
-App.helpers = Ember.Object.create({
-  currentPath: null
-});
-
-// WTF?
-App.Properties = Ember.Object.extend({
+App.properties = Ember.Object.create({
   isAuthorized: false,
   username: currentUsername,
   userId: currentUser,
+
   userLink: function() {
     return '/users/' + this.get('username')
   }.property('username'),
+
   isAnonym: function() {
     return this.get('username') == 'anonymous'
-  }.property('username')
+  }.property('username'),
+
+  currentPath: null
 })
 
 App.properties = App.Properties.create();
@@ -211,7 +210,7 @@ App.Subscription = Ember.Object.extend({
   init: function() {
     var that = this
     var isFirstPage = function() {
-      switch (App.helpers.get('currentPath')) {
+      switch (App.properties.get('currentPath')) {
       case "aPost":
         return true
         break;
@@ -230,7 +229,7 @@ App.Subscription = Ember.Object.extend({
     }
 
     var findPost = function(postId) {
-      switch (App.helpers.get('currentPath')) {
+      switch (App.properties.get('currentPath')) {
       case "aPost":
         if (App.onePostController.content.id == postId)
           return App.onePostController.content
@@ -272,7 +271,7 @@ App.Subscription = Ember.Object.extend({
     })
 
     this.socket.on('destroyPost', function(data) {
-      switch (App.helpers.get('currentPath')) {
+      switch (App.properties.get('currentPath')) {
       case "aPost":
         App.router.transitionTo('posts')
         break
@@ -438,7 +437,7 @@ App.ApplicationController = Ember.Controller.extend({
   top: null,
 
   currentPathDidChange: function() {
-    App.helpers.set("currentPath", this.get('currentPath'));
+    App.properties.set("currentPath", this.get('currentPath'));
   }.observes('currentPath'),
 
   init: function() {
@@ -1824,7 +1823,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       dataType: 'jsonp',
       context: post,
       success: function(response) {
-        if (App.helpers.get('currentPath') == 'aPost') {
+        if (App.properties.get('currentPath') == 'aPost') {
           // TODO: we are not unsubscribing from all posts since we add
           // posts to content by this method if it's missing on a page
           App.applicationController.get('subscription').unsubscribe()
