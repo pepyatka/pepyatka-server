@@ -1109,6 +1109,11 @@ App.User = Ember.Object.extend({
   }.property(),
 
   subscribedTo: function() {
+    // TODO: review this code as this models *depends* on
+    // postsController for misterious reasons
+    if (!App.postsController.subscribers)
+      return false
+
     var subscribed = App.postsController.subscribers.filter(function(subscriber) {
       return subscriber.id == App.properties.get('userId')
     })
@@ -1792,24 +1797,22 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       context: this,
       success: function(response) {
         // TODO: extract to an observer
-       App.properties.get('subscription').unsubscribe()
-       App.properties.get('subscription').subscribe('timeline', response.id)
+        App.properties.get('subscription').unsubscribe()
+        App.properties.get('subscription').subscribe('timeline', response.id)
 
         this.set('content', [])
+        this.set('id', response.id)
         this.set('timelineId', response.id)
-        if(response.posts) {
+
+        if (response.posts)
           response.posts.forEach(function(attrs) {
             var post = App.Post.create(attrs)
             this.addObject(post)
           }, this)
-        }
-        if(response.user) {
-          this.set('user', App.User.create(response.user))
-        }
-        if(response.subscribers) {
-          this.set('subscribers', response.subscribers)
-        }
-        this.set('id', response.id)
+
+        if (response.subscribers)  this.set('subscribers', response.subscribers)
+        if (response.user) this.set('user', App.User.create(response.user))
+
         this.set('isLoaded', true)
       }
     })
@@ -1901,12 +1904,12 @@ App.UserRoute = Ember.Route.extend({
   },
 
   setupController: function(controller, model) {
-    this.controllerFor('postsController').set('content', model);
+    this.controllerFor('posts').set('content', model);
   },
 
   renderTemplate: function() {
     this.render('user-timeline', {
-      controller: this.controllerFor('postsController')
+      controller: this.controllerFor('posts')
     })
   }
 })
