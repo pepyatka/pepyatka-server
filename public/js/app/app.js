@@ -1,11 +1,11 @@
 App = Ember.Application.create({
   LOG_TRANSITIONS: true,  
-  currentPath: '',
+  /*currentPath: '',
   ApplicationController : Ember.Controller.extend({
     updateCurrentPath: function() {
       App.set('currentPath', this.get('currentPath'));
     }.observes('currentPath')
-}),
+}),*/
 });
 
 // WTF?
@@ -262,6 +262,7 @@ App.Subscription = Ember.Object.extend({
         return
 
       var post = App.Post.create(data.post)
+      console.log('newPost: ' + post);
       App.postsController.addObject(post)
     });
 
@@ -1923,3 +1924,9 @@ App.Router.map(function() {
 App.Router.reopen({
   location: 'history'
 })
+
+Ember.Route.reopen({
+  redirect: function() {    
+    App.set('currentPath', this.routeName)
+  }
+});

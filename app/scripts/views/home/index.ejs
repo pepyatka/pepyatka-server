@@ -106,12 +106,14 @@
 <script type="text/x-handlebars" data-template-name="tags">
   {{#each view.content}}
     <li><a {{action searchByPhrase this href="true"}}>{{this}}</a></li>
+
   {{/each}}
 </script>
 
 <script type="text/x-handlebars" data-template-name="groups">
   {{#each  App.groupsController.content}}
-    <li><a {{action showUserTimeline this href="true"}}>{{this}}</a></li>
+    <!--<li><a {{action showUserTimeline this href="true"}}>{{this}}</a></li>-->
+    <li>{{#linkTo 'posts'}}{{this}}{{/linkTo}}</li>
   {{/each}}
 </script>
 
