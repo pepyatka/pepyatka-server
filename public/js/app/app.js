@@ -138,8 +138,6 @@ App.GroupsController = Ember.ArrayController.extend({
   content: [],
 
   create: function() {
-    var that = this
-
     $.ajax({
       url: this.resourceUrl,
       data: { username: this.get('groupName') },
@@ -150,10 +148,10 @@ App.GroupsController = Ember.ArrayController.extend({
         switch (response.status) {
         case 'success' :
           App.groupsController.addObject(this.get('groupName'))
-          that.transitionToRoute('users', this.get('groupName'))
+          this.transitionToRoute('users', this.get('groupName'))
           break
         case 'fail' :
-          that.transitionToRoute('groups')
+          this.transitionToRoute('groups')
           break
         }
       }
@@ -274,7 +272,8 @@ App.Subscription = Ember.Object.extend({
     this.socket.on('destroyPost', function(data) {
       switch (App.properties.get('currentPath')) {
       case "aPost":
-        App.router.transitionTo('posts')
+        // FIXME: it's SO wrong to do transition from the object
+        // App.router.transitionTo('posts')
         break
       case "root":
       case "posts":
@@ -998,12 +997,13 @@ App.UserTimelineController = Ember.ObjectController.extend({
   subscribeTo: function(timelineId) {
     $.ajax({
       url: this.resourceUrl + '/' + timelineId + '/subscribe',
+      context: this,
       type: 'post',
       success: function(response) {
         if (App.postsController.user.type == 'group')
           App.groupsController.addObject(App.postsController.user.get('username'))
 
-        App.router.transitionTo('posts')
+        this.transitionToRoute('posts')
       }
     })
   },
@@ -1011,11 +1011,12 @@ App.UserTimelineController = Ember.ObjectController.extend({
   unsubscribeTo: function(timelineId) {
     $.ajax({
       url: this.resourceUrl + '/' + timelineId + '/unsubscribe',
+      context: this,
       type: 'post',
       success: function(response) {
         if (response.status == 'success') {
           App.groupsController.removeObject(App.postsController.user.get('username'))
-          App.router.transitionTo('posts')
+          this.transitionToRoute('posts')
         }
       }
     })
@@ -1477,12 +1478,12 @@ App.SubscribersView = Ember.View.extend({
 
   browseSubscribers: function() {
     // FIXME: this should be a route, not an action!
-    App.router.transitionTo('subscribers', App.subscribersController.get('username'))
+    // App.router.transitionTo('subscribers', App.subscribersController.get('username'))
   },
 
   manageSubscribers: function() {
     // FIXME: this should be a route, not an action!
-    App.router.transitionTo('showManagement', App.subscribersController.get('username'))
+    // App.router.transitionTo('showManagement', App.subscribersController.get('username'))
   },
 
   isOwner: function() {
@@ -1823,6 +1824,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
   },
 
   findOne: function(postId) {
+    var that = this
     var post = App.Post.create({
       id: postId
     });
@@ -1843,7 +1845,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       },
       error: function(XMLHttpRequest, textStatus, errorThrown) {
         if (errorThrown == 'Not Found')
-          App.router.transitionTo('error')
+          that.transitionToRoute('error')
       }
     })
     return post;
