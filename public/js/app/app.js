@@ -1870,7 +1870,6 @@ App.PostRoute = Ember.Route.extend({
     // TODO: one we migrate onePostController to postController AND
     // rename a-post view to post we can drop this method
     this.render('a-post', {
-      outlet: 'main',
       controller: this.controllerFor('onePost')
     })
   }
@@ -1891,8 +1890,24 @@ App.PublicRoute = Ember.Route.extend({
 App.GroupsRoute = Ember.Route.extend({
   renderTemplate: function() {
     this.render('create-group-view', {
-      outlet: 'main',
       controller: 'groups'
+    })
+  }
+})
+
+App.UserRoute = Ember.Route.extend({
+  model: function(params) {
+    console.log(params)
+    return App.postsController.findAll()
+  },
+
+  setupController: function(controller, model) {
+    this.controllerFor('postsController').set('content', model);
+  },
+
+  renderTemplate: function() {
+    this.render('user-timeline', {
+      controller: this.controllerFor('postsController')
     })
   }
 })
@@ -1904,7 +1919,7 @@ App.Router.map(function() {
   this.resource('posts', { path: "/" })
   this.resource('post', { path: "/posts/:post_id" }) // TODO
 
-  this.resource('users', { path: "/users/:username" }) // TODO
+  this.resource('user', { path: "/users/:username" }) // TODO
   this.resource('subscribers', { path: "/users/:username/subscribers" }) // TODO
   this.resource('manage', { path: "/users/:username/subscribers/manage" }) // TODO
   this.resource('subscriptions', { path: "/users/:username/subscriptions" }) // TODO

@@ -51,7 +51,7 @@
 
     <div class="row">
       <div class="span9">
-        {{outlet main}}
+        {{outlet}}
       </div>
 
       <div class="span3">
@@ -111,7 +111,7 @@
 
 <script type="text/x-handlebars" data-template-name="groups">
   {{#each  App.groupsController.content}}
-    <li><a {{action showUserTimeline this href="true"}}>{{this}}</a></li>
+    <li>{{#linkTo user this}}{{this}}{{/linkTo}}</li>
   {{/each}}
 </script>
 
@@ -218,9 +218,9 @@
           -
           <span class="author">
             {{#if view.commentOwner}}
-              <a {{action showUserTimeline createdBy.username href="true"}}>{{t label.you}}</a>
+              {{#linkTo user createdBy.username}}{{t label.you}}{{/linkTo}}
             {{else}}
-              <a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a>
+              {{#linkTo user createdBy.username}}{{createdBy.username}}{{/linkTo}}
             {{/if}}
           </span>
 
@@ -255,7 +255,7 @@
 
 <script type="text/x-handlebars" data-template-name="like-view">
   {{#with view.content}}
-    <span class="and">and&nbsp;</span><a {{action showUserTimeline username href="true"}}>{{username}}</a><span class="comma">,&nbsp;</span>
+    <span class="and">and&nbsp;</span>{{#linkTo user username}}{{username}}{{/linkTo}}<span class="comma">,&nbsp;</span>
   {{/with}}
 </script>
 
@@ -270,9 +270,10 @@
 
       <div class="media-body post">
         <h5 class="media-heading author">
-          <a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a>
+          {{#linkTo user createdBy.username}}{{createdBy.username}}{{/linkTo}}
+
           {{#if view.groupsNames}}
-            (<a {{action showUserTimeline view.groupsNames href="true"}}>{{view.groupsNames}}</a>)
+            ({{#linkTo user view.groupsNames}}{{view.groupsNames}}{{/linkTo}})
           {{/if}}
         </h5>
 
@@ -526,7 +527,7 @@
           {{/if}}
 
           {{#if content.user.postsLength}}
-          <div><a {{action showUserTimeline App.postsController.timeline href="true"}}>{{content.user.postsLength}} {{t label.posts}}</a></div>
+          <div>{{#linkTo user App.postsController.timeline}}{{App.postsController.timeline}}{{/linkTo}}</div>
           {{/if}}
 
           {{#if content.user.likesLength}}
@@ -602,9 +603,10 @@
     <div class="media-body post">
       <!-- FIXME: showUserTimeline createdBy.username is undefined on a deserialized view -->
       <h5 class="media-heading author">
-        <a {{action showUserTimeline createdBy.username href="true"}}>{{createdBy.username}}</a>
+        {{#linkTo user createdBy.username}}{{createdBy.username}}{{/linkTo}}
+
         {{#if view.groupsNames}}
-          (<a {{action showUserTimeline view.groupsNames href="true"}}>{{view.groupsNames}}</a>)
+          ({{#linkTo user view.groupsNames}}{{view.groupsNames}}{{/linkTo}})
         {{/if}}
       </h5>
     
@@ -709,7 +711,7 @@
 
   <ul>
     {{#each content}}
-      <li><a {{action showUserTimeline user.username href="true"}}>{{user.username}}</a></li>
+      <li>{{#linkTo user user.username}}{{user.username}}{{/linkTo}}</li>
     {{/each}}
   </ul>
 </script>
@@ -720,14 +722,15 @@
 </script>
 
 <script type="text/x-handlebars" data-template-name="subscribers">
-  <h3>{{t header.subscribers}} <a {{action showUserTimeline App.subscribersController.username href="true"}}>{{App.subscribersController.username}}</a></h3>
+  <h3>{{t header.subscribers}} {{#linkTo user App.subscribersController.username}}{{App.subscribersController.username}}{{/linkTo}}</h3>
 
   <h3>{{t header.members}}</h3>
   <ul>
     {{#each content}}
       {{#unless isAdmin}}
         <li>
-          <a {{action showUserTimeline username href="true"}}>{{username}}</a>
+          {{#linkTo user username}}{{username}}{{/linkTo}}
+
           {{#if view.isOwner}}
             {{#if view.showManagement}}
               (
@@ -752,7 +755,7 @@
       {{#each content}}
         {{#if isAdmin}}
           <li>
-            <a {{action showUserTimeline username href="true"}}>{{username}}</a>
+            {{#linkTo user username}}{{username}}{{/linkTo}}
               {{#if view.isOwner}}
                 {{#if view.showManagement}}
                   (
@@ -780,7 +783,7 @@
 
   <ul>
     {{#each content}}
-      <li><a {{action showUserTimeline username href="true"}}>{{username}}</a></li>
+      <li>{{#linkTo user username}}{{username}}{{/linkTo}}</li>
     {{/each}}
   </ul>
 </script>
