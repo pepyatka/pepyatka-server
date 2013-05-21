@@ -7,6 +7,7 @@ App.properties = Ember.Object.create({
   username: currentUsername,
   userId: currentUser,
 
+  // TODO: remove this function and user proper routes instead
   userLink: function() {
     return '/users/' + this.get('username')
   }.property('username'),
@@ -17,8 +18,6 @@ App.properties = Ember.Object.create({
 
   currentPath: null
 })
-
-App.properties = App.Properties.create();
 
 App.ShowSpinnerWhileRendering = Ember.Mixin.create({
   layout: Ember.Handlebars.compile('<div {{bindAttr class="isLoaded"}}>{{ yield }}</div>'),
