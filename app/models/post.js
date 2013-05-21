@@ -705,6 +705,9 @@ exports.addModel = function(db) {
 
     getGroups: function(callback) {
       models.Timeline.findById(this.timelineId, {}, function(err, timeline) {
+        if (!timeline)
+          return callback(1, null)
+
         models.FeedFactory.findById(timeline.userId, function(err, feed) {
           callback(err, feed)
         })
@@ -812,11 +815,16 @@ exports.addModel = function(db) {
 
       if (select.indexOf('groups') != -1) {
         that.getGroups(function(err, feed) {
-          feed.toJSON(params.groups, function(err, groupsJSON) {
-            json.groups = groupsJSON
+          if (!feed) {
+            json.groups = []
+            returnJSON(1)
+          } else {
+            feed.toJSON(params.groups, function(err, groupsJSON) {
+              json.groups = groupsJSON
 
-            returnJSON(err)
-          })
+              returnJSON(err)
+            })
+          }
         })
       }
 
