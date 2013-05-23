@@ -1900,12 +1900,18 @@ App.GroupsRoute = Ember.Route.extend({
   }
 })
 
+// TODO: actually this route doesn't render a user profile, but its
+// posts instead, sounds like a wrong design and better'd be to use
+// PostsRoute instead
 App.UserRoute = Ember.Route.extend({
-  model: function() {
+  model: function(params) {
+    App.postsController.set('timeline', params.username)
     return App.postsController.findAll()
   },
 
   setupController: function(controller, model) {
+    // NOTE: please read this route's TODO comment
+    if (typeof model == 'string') model = this.model(model)
     this.controllerFor('posts').set('content', model);
   },
 
