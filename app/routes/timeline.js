@@ -45,7 +45,7 @@ exports.addRoutes = function(app) {
     req.user.subscribeTo(req.params.timelineId, function(err, r) {
       if (err) return res.jsonp({}, 422)
 
-      res.jsonp({})
+      res.jsonp({ err: err, status: 'success'})
     })
   })
 

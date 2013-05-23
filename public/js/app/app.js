@@ -996,10 +996,12 @@ App.UserTimelineController = Ember.ObjectController.extend({
       context: this,
       type: 'post',
       success: function(response) {
-        if (App.postsController.user.type == 'group')
-          App.groupsController.addObject(App.postsController.user.get('username'))
+        if (response.status == 'success') {
+          if (App.postsController.user.type == 'group')
+            App.groupsController.addObject(App.postsController.user.get('username'))
 
-        this.transitionToRoute('posts')
+          this.transitionToRoute('posts')
+        }
       }
     })
   },
@@ -1011,7 +1013,9 @@ App.UserTimelineController = Ember.ObjectController.extend({
       type: 'post',
       success: function(response) {
         if (response.status == 'success') {
-          App.groupsController.removeObject(App.postsController.user.get('username'))
+          if (App.postsController.user.type == 'group')
+            App.groupsController.removeObject(App.postsController.user.get('username'))
+
           this.transitionToRoute('posts')
         }
       }
@@ -1922,6 +1926,8 @@ App.UserRoute = Ember.Route.extend({
     App.postsController.set('timeline', model)
     var posts = App.postsController.findAll()
 
+    // TODO: this is workaround for our custom generated controller
+    App.userTimelineController.set('target', controller.target)
     this.controllerFor('posts').set('content', posts);
   },
 
@@ -2012,6 +2018,7 @@ App.Router.map(function() {
   this.resource('search', { path: "/search/:query" })
 
   this.resource('public', { path: "/public" })
+  // NOTE: rather weird name for a river of news route
   this.resource('posts', { path: "/" })
   this.resource('post', { path: "/posts/:post_id" })
 

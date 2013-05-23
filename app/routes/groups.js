@@ -50,20 +50,21 @@ exports.addRoutes = function(app) {
     })
   })
 
-//  app.patch('/v1/users/:userId', function(req, res) {
-//    models.Group.findById(req.params.userId, function(err, group) {
-//      if (err)
-//        return res.jsonp({ err: err, status: 'fail'})
-//
-//      group.username = req.body.username
-//      group.update(function(err, group) {
-//        if (err)
-//          return res.jsonp({ err: err, status: 'fail'})
-//
-//        res.jsonp({ err: null, status: 'success'})
-//      })
-//    })
-//  })
+  // NOTE: delete function is disabled mostly for huh security reasons
+  // app.patch('/v1/users/:userId', function(req, res) {
+  //   models.Group.findById(req.params.userId, function(err, group) {
+  //     if (err)
+  //       return res.jsonp({ err: err, status: 'fail'})
+
+  //     group.username = req.body.username
+  //     group.update(function(err, group) {
+  //       if (err)
+  //         return res.jsonp({ err: err, status: 'fail'})
+
+  //       res.jsonp({ err: null, status: 'success'})
+  //     })
+  //   })
+  // })
 
   app.post('/v1/users/:username/subscribers/:userId/admin', function(req, res) {
     models.FeedFactory.findByName(req.params.username, function(err, mainFeed) {
