@@ -1794,6 +1794,7 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       context: this,
       success: function(response) {
         // TODO: extract to an observer
+        if (response.subscribers) this.set('subscribers', response.subscribers)
         if (response.user) {
           this.set('user', App.User.create(response.user))
           this.set('timeline', response.user.username)
@@ -1811,8 +1812,6 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
             var post = App.Post.create(attrs)
             this.addObject(post)
           }, this)
-
-        if (response.subscribers)  this.set('subscribers', response.subscribers)
 
         this.set('isLoaded', true)
       }
@@ -1852,8 +1851,12 @@ App.postsController = App.PostsController.create()
 
 App.PostsRoute = Ember.Route.extend({
   model: function() {
+    return null
+  },
+
+  setupController: function(controller, model) {
     // TODO: findAll method to accept timeline parameter
-    App.postsController.set('timeline', null)
+    App.postsController.set('timeline', model)
     return App.postsController.findAll()
   }
 })
@@ -1861,14 +1864,16 @@ App.PostsRoute = Ember.Route.extend({
 App.PostRoute = Ember.Route.extend({
   model: function(params) {
     // TODO: move findOne to model and make it like this
-    // App.Post.find(params_post_id) then we are good to delete this method
-    return App.postsController.findOne(params.post_id);
+    // App.Post.find(params_post_id) then we are good to delete this
+    // method
+    return params.post_id
   },
 
   setupController: function(controller, model) {
     // TODO: one we migrate onePostController to postController we are
     // good to drop this method
-    this.controllerFor('onePost').set('content', model);
+    var post = App.postsController.findOne(model);
+    this.controllerFor('onePost').set('content', post);
   },
 
   renderTemplate: function() {
@@ -1882,8 +1887,12 @@ App.PostRoute = Ember.Route.extend({
 
 App.PublicRoute = Ember.Route.extend({
   model: function() {
+    return 'everyone'
+  },
+
+  setupController: function(controller, model) {
     // TODO: findAll method to accept timeline parameter
-    App.postsController.set('timeline', 'everyone')
+    App.postsController.set('timeline', model)
     return App.postsController.findAll()
   },
 
@@ -1905,14 +1914,15 @@ App.GroupsRoute = Ember.Route.extend({
 // PostsRoute instead
 App.UserRoute = Ember.Route.extend({
   model: function(params) {
-    App.postsController.set('timeline', params.username)
-    return App.postsController.findAll()
+    return params.username
   },
 
   setupController: function(controller, model) {
-    // NOTE: please read this route's TODO comment
-    if (typeof model == 'string') model = this.model(model)
-    this.controllerFor('posts').set('content', model);
+    // TODO: findAll method to accept timeline parameter
+    App.postsController.set('timeline', model)
+    var posts = App.postsController.findAll()
+
+    this.controllerFor('posts').set('content', posts);
   },
 
   renderTemplate: function() {
@@ -1923,12 +1933,9 @@ App.UserRoute = Ember.Route.extend({
 })
 
 App.LikesRoute = Ember.Route.extend({
-  model: function() {
-    return App.postsController.findAll(0, 'likes')
-  },
-
   setupController: function(controller, model) {
-    this.controllerFor('posts').set('content', model);
+    var posts = App.postsController.findAll(0, 'likes')
+    this.controllerFor('posts').set('content', posts);
   },
 
   renderTemplate: function() {
@@ -1939,12 +1946,9 @@ App.LikesRoute = Ember.Route.extend({
 })
 
 App.CommentsRoute = Ember.Route.extend({
-  model: function() {
-    return App.postsController.findAll(0, 'comments')
-  },
-
   setupController: function(controller, model) {
-    this.controllerFor('posts').set('content', model);
+    var posts = App.postsController.findAll(0, 'comments')
+    this.controllerFor('posts').set('content', posts);
   },
 
   renderTemplate: function() {
@@ -1955,33 +1959,48 @@ App.CommentsRoute = Ember.Route.extend({
 })
 
 App.SubscribersRoute = Ember.Route.extend({
-  model: function(username) {
-    return App.subscribersController.findAll(username)
+  model: function(params) {
+    return params.username
+  },
+
+  setupController: function(controller, model) {
+    var subscribers = App.subscribersController.findAll(model)
+    this.controllerFor('subscrbers').set('content', subscribers);
   }
 })
 
 App.SubscriptionsRoute = Ember.Route.extend({
-  model: function(username) {
-    return App.subscriptionsController.findAll(username)
+  model: function(params) {
+    return App.subscriptionsController.findAll(params.username)
+  },
+
+  setupController: function(controller, model) {
+    var subscriptions = App.subscribersController.findAll(model)
+    this.controllerFor('subscriptions').set('content', subscriptions);
   }
 })
 
 App.SearchRoute = Ember.Route.extend({
   model: function(params) {
-    // TODO: extract these side effects below to a controller or
-    // something
     var query = params.query
 
+    // TODO: use standard javascript function to unescape url params
     if (/%23/g.test(query))
       query = query.replace(/%23/g, '#')
 
-    query = decodeURIComponent(query)
+    return decodeURIComponent(query)
+  },
 
-    App.searchController.set('body', query)
-    App.searchController.set('query', query)
+  setupController: function(controller, model) {
+    // TODO: extract these side effects below to a controller or
+    // something
+    App.searchController.set('body', model)
+    App.searchController.set('query', model)
     App.postsController.set('user', null)
 
-    return App.searchController.searchByPhrase(query)
+    var posts = App.searchController.searchByPhrase(model)
+
+    this.controllerFor('search').set('content', posts);
   },
 
   renderTemplate: function() {
