@@ -146,11 +146,11 @@ App.GroupsController = Ember.ArrayController.extend({
       context: this,
       success: function(response) {
         switch (response.status) {
-        case 'success' :
+        case 'success':
           App.groupsController.addObject(this.get('name'))
           this.transitionToRoute('user', this.get('name'))
           break
-        case 'fail' :
+        case 'fail':
           this.transitionToRoute('groups')
           break
         }
@@ -210,36 +210,37 @@ App.Subscription = Ember.Object.extend({
     var that = this
 
     var isFirstPage = function() {
+      console.log(App.properties.get('currentPath'))
       switch (App.properties.get('currentPath')) {
-      case "aPost":
+      case "post":
         return true
       case "root":
       case "posts":
-      case "userTimeline":
-      case "publicTimeline":
-      case "userLikesTimeline":
-      case "userCommentsTimeline":
+      case "user":
+      case "public":
+      case "likes":
+      case "comments":
         return App.postsController.pageStart == 0
-      case "searchPhrase":
+      case "search":
         return App.searchController.pageStart == 0
       }
     }
 
     var findPost = function(postId) {
       switch (App.properties.get('currentPath')) {
-      case "aPost":
+      case "post":
         if (App.onePostController.content.id == postId)
           return App.onePostController.content
       case "root":
       case "posts":
-      case "userTimeline":
-      case "publicTimeline":
-      case "userLikesTimeline":
-      case "userCommentsTimeline":
+      case "user":
+      case "public":
+      case "likes":
+      case "comments":
         return App.postsController.find(function(post) {
           return post.id == postId
         })
-      case "searchPhrase":
+      case "search":
         return App.searchController.find(function(post) {
           return post.id == postId
         })
@@ -266,19 +267,19 @@ App.Subscription = Ember.Object.extend({
 
     this.socket.on('destroyPost', function(data) {
       switch (App.properties.get('currentPath')) {
-      case "aPost":
+      case "post":
         // FIXME: it's SO wrong to do transition from the object
         // App.router.transitionTo('posts')
         break
       case "root":
       case "posts":
-      case "userTimeline":
-      case "publicTimeline":
-      case "userLikesTimeline":
-      case "userCommentsTimeline":
+      case "user":
+      case "public":
+      case "likes":
+      case "comments":
         App.postsController.removePost('id', data.postId)
         break;
-      case "searchPhrase":
+      case "search":
         App.searchController.removePost('id', data.postId)
         break
       }
@@ -1536,13 +1537,13 @@ App.SignupController = Ember.ObjectController.extend({
       context: this,
       success: function(response) {
         switch (response.status) {
-        case 'success' :
+        case 'success':
           App.properties.set('isAuthorized', true)
           App.properties.set('username', response.user.username)
           App.properties.set('userId', response.user.id)
           this.transitionToRoute('posts')
           break
-        case 'fail' :
+        case 'fail':
           this.transitionToRoute('signup')
           break
         }
