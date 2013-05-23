@@ -137,19 +137,18 @@ App.GroupsController = Ember.ArrayController.extend({
   suffix: '/subscriptions',
   content: [],
 
-  // TODO: rename "groupName" property just to "name"
   create: function() {
     $.ajax({
       url: this.resourceUrl,
-      data: { username: this.get('groupName') },
+      data: { username: this.get('name') },
       dataType: 'jsonp',
       type: 'post',
       context: this,
       success: function(response) {
         switch (response.status) {
         case 'success' :
-          App.groupsController.addObject(this.get('groupName'))
-          this.transitionToRoute('users', this.get('groupName'))
+          App.groupsController.addObject(this.get('name'))
+          this.transitionToRoute('user', this.get('name'))
           break
         case 'fail' :
           this.transitionToRoute('groups')
