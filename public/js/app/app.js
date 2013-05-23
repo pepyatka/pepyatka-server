@@ -7,11 +7,6 @@ App.Properties = Ember.Object.extend({
   username: currentUsername,
   userId: currentUser,
 
-  // TODO: remove this function and user proper routes instead
-  userLink: function() {
-    return '/users/' + this.get('username')
-  }.property('username'),
-
   isAnonym: function() {
     return this.get('username') == 'anonymous'
   }.property('username'),

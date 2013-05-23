@@ -62,7 +62,7 @@
 
             <div class="media-body">
               <div class="author">
-                <a {{bindAttr href="App.properties.userLink"}}>{{App.properties.username}}</a>
+                {{#linkTo user App.properties.username}}{{App.properties.username}}{{/linkTo}}
               </div>
               <div>
 
