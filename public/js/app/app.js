@@ -1794,6 +1794,11 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       context: this,
       success: function(response) {
         // TODO: extract to an observer
+        if (response.user) {
+          this.set('user', App.User.create(response.user))
+          this.set('timeline', response.user.username)
+        }
+
         App.properties.get('subscription').unsubscribe()
         App.properties.get('subscription').subscribe('timeline', response.id)
 
@@ -1808,10 +1813,6 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
           }, this)
 
         if (response.subscribers)  this.set('subscribers', response.subscribers)
-        if (response.user) {
-          this.set('user', App.User.create(response.user))
-          this.set('timeline', response.user.username)
-        }
 
         this.set('isLoaded', true)
       }
