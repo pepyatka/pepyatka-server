@@ -414,7 +414,7 @@ App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
   templateName: 'application',
 });
 
-App.ApplicationController = Ember.ObjectController.extend({
+App.ApplicationController = Ember.Controller.extend({
   subscription: null,
 
   currentPathDidChange: function() {
@@ -1122,7 +1122,7 @@ App.User = Ember.Object.extend({
   }.property()
 })
 
-App.CommentsController = Ember.Controller.extend({
+App.CommentsController = Ember.ObjectController.extend({
   resourceUrl: '/v1/comments',
 
   // XXX: noone uses this method
@@ -2026,8 +2026,6 @@ App.SearchRoute = Ember.Route.extend({
 })
 
 App.ErrorRoute = Ember.Route.extend({
-  setupController: function(controller, model) {
-  }
 })
 
 App.Router.map(function() {
