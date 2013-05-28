@@ -109,8 +109,8 @@
 </script>
 
 <script type="text/x-handlebars" data-template-name="groups">
-  {{#each App.groupsController.content}}
-    <li>{{#linkTo user this}}{{this}}{{/linkTo}}</li>
+  {{#each content in App.groupsController.content}}
+    <li>{{#linkTo user content}}{{content}}{{/linkTo}}</li>
   {{/each}}
 </script>
 
@@ -428,13 +428,13 @@
           {{#if currentUser}}
             {{#view App.CommentPostView}}
               -
-              <a {{action toggleVisibility target="parentView"}}>{{t label.comment}}</a>
+              <a {{action toggleVisibility target="view"}}>{{t label.comment}}</a>
             {{/view}}
 
             {{#unless currentUserLiked}}
               {{#view App.LikePostView}}
                 -
-                <a {{action likePost target="parentView"}}>{{t label.like}}</a>
+                <a {{action likePost target="view"}}>{{t label.like}}</a>
               {{/view}}
             {{/unless}}
 
@@ -459,7 +459,7 @@
               </ul>
               <span class="liked">{{t label.liked}}</span>
               {{#if currentUserLiked}}
-                <span>(<a {{action unlikePost id target="parentView"}}>{{t label.unlike}}</a>)</span>
+                <span>(<a {{action unlikePost id target="view"}}>{{t label.unlike}}</a>)</span>
               {{/if}}
             </div>
           </div>

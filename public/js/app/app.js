@@ -414,7 +414,7 @@ App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
   templateName: 'application',
 });
 
-App.ApplicationController = Ember.Controller.extend({
+App.ApplicationController = Ember.ObjectController.extend({
   subscription: null,
 
   currentPathDidChange: function() {
@@ -1122,7 +1122,7 @@ App.User = Ember.Object.extend({
   }.property()
 })
 
-App.CommentsController = Ember.ArrayController.extend({
+App.CommentsController = Ember.Controller.extend({
   resourceUrl: '/v1/comments',
 
   // XXX: noone uses this method
@@ -1869,8 +1869,12 @@ App.PostRoute = Ember.Route.extend({
   },
 
   setupController: function(controller, model) {
+    // TODO: this is workaround for our custom generated controller
+    App.postsController.set('target', controller.target)
+
     // TODO: one we migrate onePostController to postController we are
     // good to drop this method
+    if (typeof model !== 'string') model = model.id
     var post = App.postsController.findOne(model);
     this.controllerFor('onePost').set('content', post);
   },
@@ -1934,7 +1938,13 @@ App.UserRoute = Ember.Route.extend({
 })
 
 App.LikesRoute = Ember.Route.extend({
+  model: function(params) {
+    return params.username
+  },
+
   setupController: function(controller, model) {
+    // TODO: findAll method to accept timeline parameter
+    App.postsController.set('timeline', model)
     var posts = App.postsController.findAll(0, 'likes')
     this.controllerFor('posts').set('content', posts);
   },
@@ -1947,7 +1957,13 @@ App.LikesRoute = Ember.Route.extend({
 })
 
 App.CommentsRoute = Ember.Route.extend({
+  model: function(params) {
+    return params.username
+  },
+
   setupController: function(controller, model) {
+    // TODO: findAll method to accept timeline parameter
+    App.postsController.set('timeline', model)
     var posts = App.postsController.findAll(0, 'comments')
     this.controllerFor('posts').set('content', posts);
   },
@@ -1972,11 +1988,11 @@ App.SubscribersRoute = Ember.Route.extend({
 
 App.SubscriptionsRoute = Ember.Route.extend({
   model: function(params) {
-    return App.subscriptionsController.findAll(params.username)
+    return params.username
   },
 
   setupController: function(controller, model) {
-    var subscriptions = App.subscribersController.findAll(model)
+    var subscriptions = App.subscriptionsController.findAll(model)
     this.controllerFor('subscriptions').set('content', subscriptions);
   }
 })
@@ -2006,6 +2022,11 @@ App.SearchRoute = Ember.Route.extend({
 
   renderTemplate: function() {
     this.render('search-list-view')
+  }
+})
+
+App.ErrorRoute = Ember.Route.extend({
+  setupController: function(controller, model) {
   }
 })
 
