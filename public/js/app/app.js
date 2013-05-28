@@ -1975,25 +1975,39 @@ App.CommentsRoute = Ember.Route.extend({
   }
 })
 
-App.SubscribersRoute = Ember.Route.extend({
+App.FeedSubscribersRoute = Ember.Route.extend({
   model: function(params) {
     return params.username
   },
 
   setupController: function(controller, model) {
     var subscribers = App.subscribersController.findAll(model)
-    this.controllerFor('subscrbers').set('content', subscribers);
+    this.controllerFor('subscribers').set('content', subscribers);
+  },
+
+  renderTemplate: function() {
+    this.render('subscribers', {
+      controller: this.controllerFor('subscribers')
+    })
   }
 })
 
-App.SubscriptionsRoute = Ember.Route.extend({
+App.FeedSubscriptionsRoute = Ember.Route.extend({
   model: function(params) {
     return params.username
   },
 
   setupController: function(controller, model) {
-    var subscriptions = App.subscriptionsController.findAll(model)
+    if (typeof model !== 'string') model = model.username
+
+    var subscriptions =  App.subscriptionsController.findAll(model)
     this.controllerFor('subscriptions').set('content', subscriptions);
+  },
+
+  renderTemplate: function() {
+    this.render('subscriptions', {
+      controller: this.controllerFor('subscriptions')
+    })
   }
 })
 
@@ -2028,6 +2042,26 @@ App.SearchRoute = Ember.Route.extend({
 App.ErrorRoute = Ember.Route.extend({
 })
 
+App.StatsRoute = Ember.Route.extend({
+  model: function(params) {
+    return params.category
+  },
+
+  setupController: function(controller, model) {
+    if (typeof model !== 'string') model = model.category
+
+    var users = App.topController.getTop(model);
+
+    this.controllerFor('top').set('content', users);
+  },
+
+  renderTemplate: function() {
+    this.render('top-view', {
+      controller: this.controllerFor('top')
+    })
+  }
+})
+
 App.Router.map(function() {
   this.resource('search', { path: "/search/:query" })
 
@@ -2037,9 +2071,9 @@ App.Router.map(function() {
   this.resource('post', { path: "/posts/:post_id" })
 
   this.resource('user', { path: "/users/:username" })
-  this.resource('subscribers', { path: "/users/:username/subscribers" })
-  this.resource('manage', { path: "/users/:username/subscribers/manage" }) // TODO
-  this.resource('subscriptions', { path: "/users/:username/subscriptions" })
+  this.resource('feedSubscribers', { path: "/users/:username/subscribers" })
+  this.resource('manageSubscribers', { path: "/users/:username/subscribers/manage" }) // TODO
+  this.resource('feedSubscriptions', { path: "/users/:username/subscriptions" })
   this.resource('likes', { path: "/users/:username/likes" })
   this.resource('comments', { path: "/users/:username/comments" })
 
@@ -2048,9 +2082,9 @@ App.Router.map(function() {
   this.resource('signup', { path: "/signup" })
   this.resource('signin', { path: "/signin" })
 
-  this.resource('stats', { path: "/top/:category" }) // TODO
+  this.resource('stats', { path: "/top/:category" })
 
-  this.resource('error', { path: "/error" }) // TODO
+  this.resource('error', { path: "/error" })
 })
 
 App.Router.reopen({

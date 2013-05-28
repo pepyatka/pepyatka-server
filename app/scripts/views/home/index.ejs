@@ -520,11 +520,11 @@
 
         <div class="pull-right profile-extra-info">
           {{#if content.user.subscriptionsLength}}
-            <div>{{#linkTo subscriptions App.postsController.timeline}}{{content.user.subscriptionsLength}} {{t label.subscriptions}}{{/linkTo}}</div>
+            <div>{{#linkTo feedSubscriptions App.postsController.timeline}}{{content.user.subscriptionsLength}} {{t label.subscriptions}}{{/linkTo}}</div>
           {{/if}}
 
           {{#if content.user.subscribersLength}}
-            <div>{{#linkTo subscribers App.postsController.timeline}}{{content.user.subscribersLength}} {{t label.subscribers}}{{/linkTo}}</div>
+            <div>{{#linkTo feedSubscribers App.postsController.timeline}}{{content.user.subscribersLength}} {{t label.subscribers}}{{/linkTo}}</div>
           {{/if}}
 
           {{#if content.user.postsLength}}
@@ -772,9 +772,9 @@
 
   {{#if view.isOwner}}
     {{#if view.showManagement}}
-      <a {{action browseSubscribers target="view" href=true}}>{{t label.browseSubscribers}}</a>
+      {{#linkTo feedSubscribers App.subscribersController.username}}{{t label.browseSubscribers}}{{/linkTo}}
     {{else}}
-      <a {{action manageSubscribers target="view" href=true}}>{{t label.manageSubscribers}}</a>
+      {{#linkTo manageSubscribers}}{{t label.manageSubscribers}}{{/linkTo}}
     {{/if}}
   {{/if}}
 </script>
