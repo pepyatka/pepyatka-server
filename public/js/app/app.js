@@ -1471,16 +1471,6 @@ App.subscribersController = App.SubscribersController.create()
 App.SubscribersView = Ember.View.extend({
   templateName: 'subscribers',
 
-  browseSubscribers: function() {
-    // FIXME: this should be a route, not an action!
-    // App.router.transitionTo('subscribers', App.subscribersController.get('username'))
-  },
-
-  manageSubscribers: function() {
-    // FIXME: this should be a route, not an action!
-    // App.router.transitionTo('showManagement', App.subscribersController.get('username'))
-  },
-
   isOwner: function() {
     return App.subscribersController.username  == App.properties.username || App.subscribersController.admins && App.subscribersController.admins.indexOf(currentUser) != -1
   }.property('App.subscribersController.username', 'App.properties.username', 'App.subscribersController.admins'),
