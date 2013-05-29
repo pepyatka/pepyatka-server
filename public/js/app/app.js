@@ -229,7 +229,6 @@ App.Subscription = Ember.Object.extend({
     var that = this
 
     var isFirstPage = function() {
-      console.log(App.properties.get('currentPath'))
       switch (App.properties.get('currentPath')) {
       case "post":
         return true
