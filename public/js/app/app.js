@@ -2091,22 +2091,70 @@ App.Router.map(function() {
   var get = Ember.get, set = Ember.set;
   var popstateFired = false;
   Ember.HistoryJsLocation = Ember.Object.extend({
+    init: function() {
+      set(this, 'location', get(this, 'location') || window.location);
+      this._initialUrl = this.getURL();
+      this.initState();
+    },
     initState: function() {
       this.replaceState(this.formatURL(this.getURL()));
       set(this, 'history', window.History);
     },
+    rootURL: '/',
+    getURL: function() {
+      var rootURL = get(this, 'rootURL'),
+      url = get(this, 'location').pathname;
+      rootURL = rootURL.replace(/\/$/, '');
+      url = url.replace(rootURL, '');
+      return url;
+    },
+    setURL: function(path) {
+      path = this.formatURL(path);
+      if (this.getState() && this.getState().path !== path) {
+        this.pushState(path);
+      }
+    },
+    replaceURL: function(path) {
+      path = this.formatURL(path);
+      if (this.getState() && this.getState().path !== path) {
+        this.replaceState(path);
+      }
+    },
     getState: function() {
-      return get(this, 'history').getState().state;
+      return get(this, 'history').getState().data;
     },
     pushState: function(path) {
       History.pushState({ path: path }, null, path);
     },
     replaceState: function(path) {
       History.replaceState({ path: path }, null, path);
+    },
+    onUpdateURL: function(callback) {
+      var guid = Ember.guidFor(this),
+      self = this;
+      Ember.$(window).bind('popstate.ember-location-'+guid, function(e) {
+        if(!popstateFired) {
+          popstateFired = true;
+          if (self.getURL() === self._initialUrl) { return; }
+        }
+        callback(self.getURL());
+      });
+    },
+    formatURL: function(url) {
+      var rootURL = get(this, 'rootURL');
+      if (url !== '') {
+        rootURL = rootURL.replace(/\/$/, '');
+      }
+      return rootURL + url;
+    },
+    willDestroy: function() {
+      var guid = Ember.guidFor(this);
+      Ember.$(window).unbind('popstate.ember-location-'+guid);
     }
   });
   Ember.Location.registerImplementation('historyJs', Ember.HistoryJsLocation);
 })();
+
 
 App.Router.reopen({
   location: 'historyJs'
