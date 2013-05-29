@@ -15,6 +15,23 @@ App.Properties = Ember.Object.extend({
 })
 App.properties = App.Properties.create()
 
+App.Helpers = Ember.Object.extend({
+  inlineFormatter: function(fn) {
+    return Ember.View.extend({
+      tagName: 'span',
+
+      template: Ember.Handlebars.compile('{{view.formattedContent}}'),
+
+      formattedContent: (function() {
+        if (this.get('content') != null) {
+          return fn(this.get('content'));
+        }
+      }).property('content')
+    });
+  }
+})
+App.helpers = App.Helpers.create()
+
 App.ShowSpinnerWhileRendering = Ember.Mixin.create({
   layout: Ember.Handlebars.compile('<div {{bindAttr class="isLoaded"}}>{{ yield }}</div>'),
 
@@ -432,23 +449,8 @@ App.ApplicationController = Ember.Controller.extend({
   init: function() {
     App.properties.set('subscription', App.Subscription.create())
     this._super()
-  },
-
-  inlineFormatter: function(fn) {
-    return Ember.View.extend({
-      tagName: 'span',
-
-      template: Ember.Handlebars.compile('{{view.formattedContent}}'),
-
-      formattedContent: (function() {
-        if (this.get('content') != null) {
-          return fn(this.get('content'));
-        }
-      }).property('content')
-    });
   }
 });
-App.applicationController = App.ApplicationController.create();
 
 // Index view to display all posts on the page
 App.SearchView = Ember.View.extend({
@@ -2178,6 +2180,6 @@ App.registerViewHelper = function(name, view) {
   });
 };
 
-App.registerViewHelper("decodeURIComponent", App.applicationController.inlineFormatter(function(content) {
+App.registerViewHelper("decodeURIComponent", App.helpers.inlineFormatter(function(content) {
   return decodeURIComponent(content)
 }))
