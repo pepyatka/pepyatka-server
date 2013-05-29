@@ -1483,7 +1483,7 @@ App.SubscribersView = Ember.View.extend({
 
   isOwner: function() {
     return App.subscribersController.username  == App.properties.username || App.subscribersController.admins && App.subscribersController.admins.indexOf(currentUser) != -1
-  }.property('App.subscribersController.username', 'App.properties.username'),
+  }.property('App.subscribersController.username', 'App.properties.username', 'App.subscribersController.admins'),
 
   hasAdmins: function() {
     return App.subscribersController.admins !== undefined
