@@ -43,7 +43,7 @@ App.PaginationHelper = Em.Mixin.create({
   },
 
   prevPageDisabled: function() {
-    return App.postsController.get('pageStart') == 0 ? 'disabled' : ''
+    return App.postsController.get('pageStart') === 0 ? 'disabled' : ''
   }.property('App.postsController.pageStart'),
 
   prevPageVisible: function() {
@@ -56,7 +56,7 @@ App.PaginationHelper = Em.Mixin.create({
 
   nextPageDisabled: function() {
     var len = this.get('content.content.length')
-    return len == 0 || len < this.get('pageSize') ? 'disabled' : ''
+    return len === 0 || len < this.get('pageSize') ? 'disabled' : ''
     // TODO: bind to generic content
   }.property('App.postsController.content'),
 
@@ -82,7 +82,7 @@ App.SearchPaginationHelper = Em.Mixin.create({
   },
 
   prevPageDisabled: function() {
-    return App.searchController.get('pageStart') == 0 ? 'disabled' : ''
+    return App.searchController.get('pageStart') === 0 ? 'disabled' : ''
   }.property('App.searchController.pageStart'),
 
   prevPageVisible: function() {
@@ -95,7 +95,7 @@ App.SearchPaginationHelper = Em.Mixin.create({
 
   nextPageDisabled: function() {
     var len = App.searchController.content.length;
-    return len == 0 || len < this.get('pageSize') ? 'disabled' : ''
+    return len === 0 || len < this.get('pageSize') ? 'disabled' : ''
     // TODO: bind to generic content
   }.property('App.searchController.content'),
 
@@ -215,9 +215,9 @@ App.Subscription = Ember.Object.extend({
       case "public":
       case "likes":
       case "comments":
-        return App.postsController.pageStart == 0
+        return App.postsController.pageStart === 0
       case "search":
-        return App.searchController.pageStart == 0
+        return App.searchController.pageStart === 0
       }
     }
 
@@ -290,7 +290,7 @@ App.Subscription = Ember.Object.extend({
       if (post) {
         post.comments.pushObject(comment)
       } else {
-        var post = App.postsController.findOne(data.comment.postId)
+        post = App.postsController.findOne(data.comment.postId)
         App.postsController.addObject(post)
       }
     });
@@ -337,7 +337,7 @@ App.Subscription = Ember.Object.extend({
           post.likes.pushObject(user)
         }
       } else {
-        var post = App.postsController.findOne(data.postId)
+        post = App.postsController.findOne(data.postId)
         App.postsController.addObject(post)
       }
     })
@@ -411,7 +411,7 @@ App.Subscription = Ember.Object.extend({
 })
 
 App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
-  templateName: 'application',
+  templateName: 'application'
 });
 
 App.ApplicationController = Ember.Controller.extend({
@@ -737,7 +737,7 @@ App.LikeView = Ember.View.extend({
       i += 1
     })
     var length = this.get('parentView.content.length')
-    return index == 0 && length == 1
+    return index === 0 && length === 1
   }.property('parentView', 'parentView.content.@each'),
 
   isLastAndNotSingle: function() {
@@ -790,7 +790,7 @@ App.CommentPostViewSubst = Ember.View.extend(Ember.TargetActionSupport, {
     // if (!exist)
     //   return false
 
-    return this.get('parentView.isFormVisible') == false;
+    return this.get('parentView.isFormVisible') === false;
   }.property('parentView.isFormVisible')
 })
 
@@ -801,11 +801,11 @@ App.CommentForm = Ember.View.extend({
   body: '',
 
   isVisible: function() {
-    return this.get('parentView.isFormVisible') == true;
+    return this.get('parentView.isFormVisible') === true;
   }.property('parentView.isFormVisible'),
 
   autoFocus: function () {
-    if (this.get('parentView.isFormVisible') == true) {
+    if (this.get('parentView.isFormVisible') === true) {
       this.$().hide().show();
       this.$('textarea').focus();
       this.$('textarea').trigger('keyup') // to apply autogrow
@@ -840,11 +840,11 @@ App.EditPostForm = Ember.View.extend({
   body: '',
 
   isVisible: function() {
-    return this.get('parentView.isEditFormVisible') == true;
+    return this.get('parentView.isEditFormVisible') === true;
   }.property('parentView.isEditFormVisible'),
 
   autoFocus: function () {
-    if (this.get('parentView.isEditFormVisible') == true) {
+    if (this.get('parentView.isEditFormVisible') === true) {
       this.$().hide().show();
       this.$('textarea').focus();
       this.$('textarea').trigger('keyup') // to apply autogrow
@@ -871,7 +871,7 @@ App.EditCommentForm = Ember.View.extend({
   body: '',
 
   autoFocus: function () {
-    if (this.get('parentView.isEditFormVisible') == true) {
+    if (this.get('parentView.isEditFormVisible') === true) {
       this.$().hide().show();
       this.$('textarea').focus();
       this.$('textarea').trigger('keyup') // to apply autogrow
@@ -1025,8 +1025,8 @@ App.UserTimelineView = Ember.View.extend({
 
   showPostCreationForm: function() {
     return App.postsController.user &&
-      (((App.postsController.user.type == 'user' || !App.postsController.user.type) && App.postsController.user.id == currentUser)
-      || (App.postsController.user.type == 'group' && App.postsController.subscribers.filter(function(subscriber) { return subscriber.id == currentUser})))
+      (((App.postsController.user.type == 'user' || !App.postsController.user.type) && App.postsController.user.id == currentUser) || 
+       (App.postsController.user.type === 'group' && App.postsController.subscribers.filter(function(subscriber) { return subscriber.id == currentUser})))
   }.property('App.postsController.user'),
 
   isGroup: function() {
@@ -2085,7 +2085,7 @@ App.Router.map(function() {
   this.resource('stats', { path: "/top/:category" })
 
   this.resource('error', { path: "/error" })
-})
+});
 
 (function() {
   var get = Ember.get, set = Ember.set;
@@ -2155,7 +2155,6 @@ App.Router.map(function() {
   Ember.Location.registerImplementation('historyJs', Ember.HistoryJsLocation);
 })();
 
-
 App.Router.reopen({
   location: 'historyJs'
-})
+});
