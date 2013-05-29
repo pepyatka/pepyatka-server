@@ -115,13 +115,14 @@ App.Tags = Ember.View.extend({
   tagName: 'ul',
 
   willInsertElement: function() {
-    var that = this
-
     $.ajax({
       url: this.resourceUrl,
+      context: this,
       type: 'get',
       success: function(response) {
-        that.set('content', response)
+        var tags = []
+        response.forEach(function(tag) { tags.push(encodeURIComponent(tag)) })
+        this.set('content', tags)
       }
     })
   }
@@ -425,17 +426,29 @@ App.ApplicationController = Ember.Controller.extend({
     // TODO: valueBinding instead
     query = App.searchController.body
 
-    if (/#/g.test(query))
-      query = query.replace(/#/g, '%23')
-
-    this.transitionToRoute('search', query)
+    this.transitionToRoute('feedSearch', encodeURIComponent(query))
   },
 
   init: function() {
     App.properties.set('subscription', App.Subscription.create())
     this._super()
+  },
+
+  inlineFormatter: function(fn) {
+    return Ember.View.extend({
+      tagName: 'span',
+
+      template: Ember.Handlebars.compile('{{view.formattedContent}}'),
+
+      formattedContent: (function() {
+        if (this.get('content') != null) {
+          return fn(this.get('content'));
+        }
+      }).property('content')
+    });
   }
 });
+App.applicationController = App.ApplicationController.create();
 
 // Index view to display all posts on the page
 App.SearchView = Ember.View.extend({
@@ -443,12 +456,12 @@ App.SearchView = Ember.View.extend({
 });
 
 App.CreateSearchFieldView = Ember.TextField.extend(Ember.TargetActionSupport, {
-    // TODO: Extract value from controller
-    valueBinding: 'App.searchController.body',
+  // TODO: Extract value from controller
+  valueBinding: 'App.searchController.body',
 
-    insertNewline: function() {
-      this.triggerAction();
-    }
+  insertNewline: function() {
+    this.triggerAction();
+  }
 })
 
 // Index view to display all posts on the page
@@ -1288,9 +1301,7 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Sea
 
   showPage: function(pageStart) {
     this.set('isLoaded', false)
-    var query = this.get('query');
-    if (/#/g.test(query))
-      query = query.replace(/#/g, '%23')
+    var query = decodeURIComponent(this.get('query'));
 
     $.ajax({
       url: this.resourceUrl + '/' + query,
@@ -2015,15 +2026,9 @@ App.FeedSubscriptionsRoute = Ember.Route.extend({
   }
 })
 
-App.SearchRoute = Ember.Route.extend({
+App.FeedSearchRoute = Ember.Route.extend({
   model: function(params) {
-    var query = params.query
-
-    // TODO: use standard javascript function to unescape url params
-    if (/%23/g.test(query))
-      query = query.replace(/%23/g, '#')
-
-    return decodeURIComponent(query)
+    return decodeURIComponent(params.query)
   },
 
   setupController: function(controller, model) {
@@ -2067,7 +2072,7 @@ App.StatsRoute = Ember.Route.extend({
 })
 
 App.Router.map(function() {
-  this.resource('search', { path: "/search/:query" })
+  this.resource('feedSearch', { path: "/search/:query" })
 
   this.resource('public', { path: "/public" })
   // NOTE: rather weird name for a river of news route
@@ -2159,6 +2164,20 @@ App.Router.map(function() {
   Ember.Location.registerImplementation('historyJs', Ember.HistoryJsLocation);
 })();
 
+// NOTE: history.js (particularly replaceState method) replaces
+// encoded URLs like %23 to # which break search by tag functionality.
 App.Router.reopen({
-  location: 'historyJs'
+  location: $.browser && $.browser.msie ? 'historyJs' : 'history'
 });
+
+App.registerViewHelper = function(name, view) {
+  Ember.Handlebars.registerHelper(name, function(property) {
+    var options = arguments[arguments.length - 1]
+    options.hash.contentBinding = property;
+    return Ember.Handlebars.helpers.view.call(this, view, options);
+  });
+};
+
+App.registerViewHelper("decodeURIComponent", App.applicationController.inlineFormatter(function(content) {
+  return decodeURIComponent(content)
+}))

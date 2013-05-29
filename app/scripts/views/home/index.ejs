@@ -30,7 +30,7 @@
 
       <div class="span4 searchFieldView clearfix">
         <div>
-          {{view App.CreateSearchFieldView action="searchPhrase" class="span3"}}
+          {{view App.CreateSearchFieldView action="searchPhrase" target="controller" class="span3"}}
           <button {{action searchPhrase}} class="btn pull-right">{{t button.search}}</button>
         </div>
       </div>
@@ -105,7 +105,7 @@
 
 <script type="text/x-handlebars" data-template-name="tags">
   {{#each view.content}}
-    <li><a {{action searchByPhrase this href="true"}}>{{this}}</a></li>
+    <li>{{#linkTo feedSearch this}}{{decodeURIComponent this}}{{/linkTo}}</li>
   {{/each}}
 </script>
 
