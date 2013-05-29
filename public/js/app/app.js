@@ -1413,14 +1413,14 @@ App.SubscribersController = Ember.ArrayController.extend({
 
   removeSubscriber: function(event) {
     $.ajax({
-      url: this.resourceUrl + '/' + this.get('username') + '/subscribers/' + event.context,
+      url: this.resourceUrl + '/' + this.get('username') + '/subscribers/' + event,
       dataType: 'jsonp',
       type: 'post',
       data: {'_method': 'delete'},
       context: this,
       success: function(response) {
         if (response.status == 'success') {
-          var obj = this.findProperty('id', event.context);
+          var obj = this.findProperty('id', event);
           this.removeObject(obj);
         }
       }
@@ -1431,15 +1431,14 @@ App.SubscribersController = Ember.ArrayController.extend({
 
   addAdmin: function(event) {
     $.ajax({
-      url: this.resourceUrl + '/' + this.get('username') + '/subscribers/' + event.context + '/admin',
+      url: this.resourceUrl + '/' + this.get('username') + '/subscribers/' + event + '/admin',
       dataType: 'jsonp',
       type: 'post',
       context: this,
       success: function(response) {
         if (response.status == 'success') {
-          var obj = this.findProperty('id', event.context);
-          if (obj)
-            obj.set('isAdmin', true)
+          var obj = this.findProperty('id', event);
+          if (obj) obj.set('isAdmin', true)
         }
       }
     })
@@ -1449,15 +1448,14 @@ App.SubscribersController = Ember.ArrayController.extend({
 
   removeAdmin: function(event) {
     $.ajax({
-      url: this.resourceUrl + '/' + this.get('username') + '/subscribers/' + event.context + '/unadmin',
+      url: this.resourceUrl + '/' + this.get('username') + '/subscribers/' + event + '/unadmin',
       dataType: 'jsonp',
       type: 'post',
       context: this,
       success: function(response) {
         if (response.status == 'success') {
-          var obj = this.findProperty('id', event.context);
-          if (obj)
-            obj.set('isAdmin', false)
+          var obj = this.findProperty('id', event);
+          if (obj) obj.set('isAdmin', false)
         }
       }
     })
