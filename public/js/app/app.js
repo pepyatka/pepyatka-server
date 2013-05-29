@@ -164,14 +164,44 @@ App.Tags = Ember.View.extend({
   tagName: 'ul',
 
   willInsertElement: function() {
+    // TODO: review this design
     this.set('content', App.Tag.findAll())
   }
 });
 
+App.Group = Ember.Object.extend({})
+App.Group.reopenClass({
+  resourceUrl: '/v1/users/',
+  suffix: '/subscriptions',
+
+  findAll: function() {
+    var groups = Ember.ArrayProxy.create({content: []});
+
+    $.ajax({
+      url: this.resourceUrl + App.properties.get('username') + this.suffix,
+      context: this,
+      type: 'get',
+      success: function(response) {
+        response.forEach(function(attrs) {
+          // NOTE: since there is no difference between a user and a
+          // group we need to process all subscriptions and select
+          // only and only objects that are:
+          // - group
+          // - this is not me
+          if (attrs.user.type === 'group' &&
+              groups.indexOf(attrs.user.username) === -1)
+            groups.addObject(attrs)
+        })
+      }
+    })
+
+    return groups
+  }
+})
+
 App.GroupsController = Ember.ArrayController.extend({
   resourceUrl: '/v1/users/',
   suffix: '/subscriptions',
-  content: [],
 
   create: function() {
     $.ajax({
@@ -193,27 +223,6 @@ App.GroupsController = Ember.ArrayController.extend({
       }
     })
     return this
-  },
-
-  // TODO: rename to findAll
-  loadGroups: function() {
-    var that = this
-
-    $.ajax({
-      url: this.resourceUrl + App.properties.get('username') + this.suffix,
-      type: 'get',
-      success: function(response) {
-        var groups = []
-        response.forEach(function(subscription) {
-          if (subscription.user.type == 'group' && groups.indexOf(subscription.user.username) == -1) {
-            groups.push(subscription.user.username)
-          }
-        }, this)
-        that.set('content', groups)
-      }
-    })
-
-    return this
   }
 })
 App.groupsController = App.GroupsController.create()
@@ -226,7 +235,7 @@ App.GroupsView = Ember.View.extend({
   tagName: 'ul',
 
   willInsertElement: function() {
-    App.groupsController.loadGroups()
+    return App.Group.findAll()
   }
 });
 
@@ -1607,7 +1616,7 @@ App.SigninController = Ember.ObjectController.extend({
           App.properties.set('isAuthorized', true)
           App.properties.set('username', response.user.username)
           App.properties.set('userId', response.user.id)
-          App.groupsController.loadGroups()
+          App.Group.findAll()
           this.transitionToRoute('posts')
           break
         case 'fail':
