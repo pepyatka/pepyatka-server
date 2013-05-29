@@ -16,6 +16,10 @@ App.Properties = Ember.Object.extend({
 App.properties = App.Properties.create()
 
 App.Helpers = Ember.Object.extend({
+  handleAjaxError: function(r) {
+    window.location.href = "/";
+  },
+  
   inlineFormatter: function(fn) {
     return Ember.View.extend({
       tagName: 'span',
@@ -38,6 +42,7 @@ App.ShowSpinnerWhileRendering = Ember.Mixin.create({
   classNameBindings: ['isLoaded::loading'],
 
   isLoaded: function() {
+    // TODO: bind to a controller which is mixed
     return this.get('isInserted') && App.postsController.isLoaded;
   }.property('isInserted', 'App.postsController.isLoaded'),
 
@@ -131,23 +136,35 @@ App.SearchPaginationHelper = Em.Mixin.create({
   }.observes('pageStart')
 });
 
-App.Tags = Ember.View.extend({
+App.Tag = Ember.Object.extend({})
+App.Tag.reopenClass({
   resourceUrl: '/v1/tags',
 
-  templateName: 'tags',
-  tagName: 'ul',
+  findAll: function() {
+    var tags = Ember.ArrayProxy.create({content: []});
 
-  willInsertElement: function() {
     $.ajax({
       url: this.resourceUrl,
       context: this,
       type: 'get',
       success: function(response) {
-        var tags = []
-        response.forEach(function(tag) { tags.push(encodeURIComponent(tag)) })
-        this.set('content', tags)
-      }
+        response.forEach(function(tag) { 
+          tags.addObject(encodeURIComponent(tag)) 
+        })
+      },
+      error: App.helpers.handleAjaxError
     })
+
+    return tags
+  }
+})
+
+App.Tags = Ember.View.extend({
+  templateName: 'tags',
+  tagName: 'ul',
+
+  willInsertElement: function() {
+    this.set('content', App.Tag.findAll())
   }
 });
 
