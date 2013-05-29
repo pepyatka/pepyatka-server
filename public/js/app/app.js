@@ -2087,6 +2087,27 @@ App.Router.map(function() {
   this.resource('error', { path: "/error" })
 })
 
+(function() {
+  var get = Ember.get, set = Ember.set;
+  var popstateFired = false;
+  Ember.HistoryJsLocation = Ember.Object.extend({
+    initState: function() {
+      this.replaceState(this.formatURL(this.getURL()));
+      set(this, 'history', window.History);
+    },
+    getState: function() {
+      return get(this, 'history').getState().state;
+    },
+    pushState: function(path) {
+      History.pushState({ path: path }, null, path);
+    },
+    replaceState: function(path) {
+      History.replaceState({ path: path }, null, path);
+    }
+  });
+  Ember.Location.registerImplementation('historyJs', Ember.HistoryJsLocation);
+})();
+
 App.Router.reopen({
-  location: 'history'
+  location: 'historyJs'
 })
