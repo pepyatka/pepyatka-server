@@ -72,7 +72,10 @@ App.PaginationHelper = Em.Mixin.create({
   }.property('App.postsController.content'),
 
   nextPageDisabled: function() {
-    var len = this.get('content.content.length')
+    var len = App.postsController.get('content').length
+    // TODO: temp solution to enable pagination while controllers are
+    // not refactored
+    len = 25
     return len === 0 || len < this.get('pageSize') ? 'disabled' : ''
     // TODO: bind to generic content
   }.property('App.postsController.content'),
@@ -112,6 +115,9 @@ App.SearchPaginationHelper = Em.Mixin.create({
 
   nextPageDisabled: function() {
     var len = App.searchController.content.length;
+    // TODO: temp solution to enable pagination while controllers are
+    // not refactored
+    len = 25
     return len === 0 || len < this.get('pageSize') ? 'disabled' : ''
     // TODO: bind to generic content
   }.property('App.searchController.content'),
