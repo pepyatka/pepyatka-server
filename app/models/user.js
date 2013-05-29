@@ -256,6 +256,7 @@ exports.addModel = function(db) {
               } else {
                 stats.addSubscription(function(err, stats) {
                   models.Stats.findByUserId(timeline.userId, function(err, stats) {
+                    // TODO: if this is a new user it has no stats yet
                     if (err || !stats) return callback(1, that)
 
                     stats.addSubscriber(function(err, stats) {
