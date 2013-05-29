@@ -775,7 +775,7 @@
     {{#if view.showManagement}}
       {{#linkTo feedSubscribers App.subscribersController.username}}{{t label.browseSubscribers}}{{/linkTo}}
     {{else}}
-      {{#linkTo manageSubscribers}}{{t label.manageSubscribers}}{{/linkTo}}
+      {{#linkTo manageSubscribers App.subscribersController.username}}{{t label.manageSubscribers}}{{/linkTo}}
     {{/if}}
   {{/if}}
 </script>

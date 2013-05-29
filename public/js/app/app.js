@@ -1382,7 +1382,6 @@ App.ErrorView = Ember.View.extend({
 App.SubscribersController = Ember.ArrayController.extend({
   resourceUrl: '/v1/users',
   verb: 'subscribers',
-  showManagement: false,
 
   findAll: function(username) {
     this.set('isLoaded', false)
@@ -1480,8 +1479,8 @@ App.SubscribersView = Ember.View.extend({
   }.property('App.subscribersController.admins'),
 
   showManagement: function() {
-    return App.subscribersController.showManagement
-  }.property('App.subscribersController.showManagement')
+    return App.properties.get('currentPath') === 'manageSubscribers'
+  }.property('App.properties.currentPath')
 });
 
 App.TopController = Ember.ArrayController.extend({
@@ -1966,6 +1965,23 @@ App.CommentsRoute = Ember.Route.extend({
 })
 
 App.FeedSubscribersRoute = Ember.Route.extend({
+  model: function(params) {
+    return params.username
+  },
+
+  setupController: function(controller, model) {
+    var subscribers = App.subscribersController.findAll(model)
+    this.controllerFor('subscribers').set('content', subscribers);
+  },
+
+  renderTemplate: function() {
+    this.render('subscribers', {
+      controller: this.controllerFor('subscribers')
+    })
+  }
+})
+
+App.ManageSubscribersRoute = Ember.Route.extend({
   model: function(params) {
     return params.username
   },
