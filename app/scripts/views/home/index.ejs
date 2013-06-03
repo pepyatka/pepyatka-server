@@ -19,7 +19,7 @@
 <script src="/js/libs/jquery.history.js"></script>
 <script src="/config/envLocal.js"></script>
 
-<script type="text/x-handlebars" data-template-name="application">
+<script type="text/x-handlebars" id="application">
   <div class="container">
     <div class="row">
       <div class="span5">
@@ -103,19 +103,20 @@
   </div>
 </script>
 
-<script type="text/x-handlebars" data-template-name="tags">
+<script type="text/x-handlebars" id="tags">
   {{#each view.content}}
     <li>{{#linkTo feedSearch this}}{{decodeURIComponent this}}{{/linkTo}}</li>
   {{/each}}
 </script>
 
-<script type="text/x-handlebars" data-template-name="groups">
-  {{#each content in App.groupsController.content}}
-    <li>{{#linkTo user content}}{{content}}{{/linkTo}}</li>
+<script type="text/x-handlebars" id="groups">
+  {{controller}}
+  {{#each group in controller.content}}
+    <li>{{#linkTo user group}}{{group}}{{/linkTo}}</li>
   {{/each}}
 </script>
 
-<script type="text/x-handlebars" data-template-name="pagination">
+<script type="text/x-handlebars" id="pagination">
   <ul class="pager">
     {{#if prevPageVisible}}
       <li {{bindAttr class="prevPageDisabled"}}><a {{action prevPage href="true" target="App.postsController"}}>{{t button.previous}}</a></li>
@@ -129,7 +130,7 @@
   </ul>
 </script>
 
-<script type="text/x-handlebars" data-template-name="search-pagination">
+<script type="text/x-handlebars" id="search-pagination">
   <ul class="pager">
     {{#if prevPageVisible}}
       <li {{bindAttr class="prevPageDisabled"}}><a {{action prevPage href="true" target="App.searchController"}}>{{t button.previous}}</a></li>
@@ -143,7 +144,7 @@
   </ul>
 </script>
 
-<script type="text/x-handlebars" data-template-name="just-started">
+<script type="text/x-handlebars" id="just-started">
   {{#if view.justStarted}}
     <div class="alert alert-info">
       {{t message.welcome}}<button class="close" data-dismiss="alert">&times;</button>
@@ -151,7 +152,7 @@
   {{/if}}
 </script>
 
-<script type="text/x-handlebars" data-template-name="search-list-view">
+<script type="text/x-handlebars" id="search-list-view">
   <div class="offset4 spinner">
     <img src="/img/spinner.gif" width="32" height="32" />
   </div>
@@ -166,7 +167,7 @@
   </div>
 </script>
 
-<script type="text/x-handlebars" data-template-name="post-list-view">
+<script type="text/x-handlebars" id="posts">
   <% if (req.user) { %>
     <div class="clearfix submitForm">
       <div>
@@ -203,7 +204,7 @@
   </div>
 </script>
 
-<script type="text/x-handlebars" data-template-name="comment-view">
+<script type="text/x-handlebars" id="comment-view">
   <li class="media">
     {{#with view.content}}
       <div class="pull-left">
@@ -255,7 +256,7 @@
   </li>
 </script>
 
-<script type="text/x-handlebars" data-template-name="like-view">
+<script type="text/x-handlebars" id="like-view">
   {{#with view.content}}
     <span class="and">and&nbsp;</span>{{#linkTo user username}}{{username}}{{/linkTo}}<span class="comma">,&nbsp;</span>
   {{/with}}
@@ -391,7 +392,7 @@
   {{/with}}
 </script>
 
-<script type="text/x-handlebars" data-template-name="own-post-view">
+<script type="text/x-handlebars" id="own-post-view">
   <li class="media">
     {{#with view.content}}
       <hr/>
@@ -509,7 +510,7 @@
   </li>
 </script>
 
-<script type="text/x-handlebars" data-template-name="user-timeline">
+<script type="text/x-handlebars" id="user-timeline">
   <div class="row">
     <div class="span9 media">
       <div class="pull-left">
@@ -596,7 +597,7 @@
   </div>
 </script>
 
-<script type="text/x-handlebars" id="a-post">
+<script type="text/x-handlebars" id="post">
   <div class="media a-post">
     <div class="pull-left">
       <img class="media-object" src="/img/64x64.png">
@@ -708,7 +709,7 @@
   </div>
 </script>
 
-<script type="text/x-handlebars" data-template-name="subscriptions">
+<script type="text/x-handlebars" id="subscriptions">
   <h3>{{t header.subscriprions}} {{App.subscriptionsController.username}}</h3>
 
   <ul>
@@ -718,7 +719,7 @@
   </ul>
 </script>
 
-<script type="text/x-handlebars" data-template-name="error-view">
+<script type="text/x-handlebars" id="error">
   <h3>{{t header.notFound}}</h3>
   <p>{{t message.notFound}}</p>
 </script>
@@ -780,7 +781,7 @@
   {{/if}}
 </script>
 
-<script type="text/x-handlebars" data-template-name="top-view">
+<script type="text/x-handlebars" id="top-view">
   <h3>{{t header.top}} {{App.topController.category}}</h3>
 
   <ul>
@@ -790,7 +791,7 @@
   </ul>
 </script>
 
-<script type="text/x-handlebars" data-template-name="create-group-view">
+<script type="text/x-handlebars" id="create-group">
   <div class="span3">
     <h2>{{t header.createGroup}}</h2>
 
@@ -811,7 +812,7 @@
   </div>
 </script>
 
-<script type="text/x-handlebars" data-template-name="signup-view">
+<script type="text/x-handlebars" id="signup">
   <div class="span3">
     <h2>{{t header.signUp}}</h2>
 
@@ -839,7 +840,7 @@
   </div>
 </script>
 
-<script type="text/x-handlebars" data-template-name="signin-view">
+<script type="text/x-handlebars" id="signin">
   <div class="span3">
     <h2>Sign in</h2>
 

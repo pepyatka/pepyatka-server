@@ -43,8 +43,8 @@ App.ShowSpinnerWhileRendering = Ember.Mixin.create({
 
   isLoaded: function() {
     // TODO: bind to a controller which is mixed
-    return this.get('isInserted') && App.postsController.isLoaded;
-  }.property('isInserted', 'App.postsController.isLoaded'),
+    return //this.get('isInserted') && App.postsController.isLoaded;
+  }, //.property('isInserted', 'App.postsController.isLoaded'),
 
   didInsertElement: function() {
     this.set('isInserted', true);
@@ -65,25 +65,25 @@ App.PaginationHelper = Em.Mixin.create({
   },
 
   prevPageDisabled: function() {
-    return App.postsController.get('pageStart') === 0 ? 'disabled' : ''
-  }.property('App.postsController.pageStart'),
+    //return App.postsController.get('pageStart') === 0 ? 'disabled' : ''
+  }, //.property('App.postsController.pageStart'),
 
   prevPageVisible: function() {
     return this.get('prevPageDisabled') != 'disabled'
-  }.property('App.postsController.pageStart'),
+  }, //.property('App.postsController.pageStart'),
 
   nextPageVisible: function() {
     return this.get('nextPageDisabled') != 'disabled'
-  }.property('App.postsController.content'),
+  }, //.property('App.postsController.content'),
 
   nextPageDisabled: function() {
-    var len = App.postsController.get('content').length
+    var len = 0// App.postsController.get('content').length
     // TODO: temp solution to enable pagination while controllers are
     // not refactored
     len = 25
     return len === 0 || len < this.get('pageSize') ? 'disabled' : ''
     // TODO: bind to generic content
-  }.property('App.postsController.content'),
+  }, //.property('App.postsController.content'),
 
   resetPage: function() {
     this.set('pageStart', 0)
@@ -177,66 +177,71 @@ App.Group.reopenClass({
   findAll: function() {
     var groups = Ember.ArrayProxy.create({content: []});
 
+    var success = function(response) {
+      response.forEach(function(attrs) {
+        // NOTE: since there is no difference between a user and a
+        // group we need to process all subscriptions and select
+        // only and only objects that are:
+        // 1) group
+        // 2) this is not me
+        // TODO: review the second condition
+        if (attrs.user.type === 'group' &&
+            groups.indexOf(attrs.user.username) === -1)
+          groups.addObject(attrs)
+      })
+    }
+
     $.ajax({
       url: this.resourceUrl + App.properties.get('username') + this.suffix,
       context: this,
       type: 'get',
-      success: function(response) {
-        response.forEach(function(attrs) {
-          // NOTE: since there is no difference between a user and a
-          // group we need to process all subscriptions and select
-          // only and only objects that are:
-          // - group
-          // - this is not me
-          if (attrs.user.type === 'group' &&
-              groups.indexOf(attrs.user.username) === -1)
-            groups.addObject(attrs)
-        })
-      }
+      success: success,
+      error: App.helpers.handleAjaxError
     })
 
     return groups
-  }
-})
+  },
 
-App.GroupsController = Ember.ArrayController.extend({
-  resourceUrl: '/v1/users/',
-  suffix: '/subscriptions',
-
-  create: function() {
+  create: function(attrs, options) {
     $.ajax({
       url: this.resourceUrl,
-      data: { username: this.get('name') },
-      dataType: 'jsonp',
       type: 'post',
-      context: this,
-      success: function(response) {
-        switch (response.status) {
-        case 'success':
-          App.groupsController.addObject(this.get('name'))
-          this.transitionToRoute('user', this.get('name'))
-          break
-        case 'fail':
-          this.transitionToRoute('groups')
-          break
-        }
-      }
+      data: { username: attrs.username },
+      dataType: 'jsonp',
+      error: options.error,
+      success: options.success
     })
     return this
   }
 })
-App.groupsController = App.GroupsController.create()
+
+App.GroupsController = Ember.ArrayController.extend({
+  create: function() {
+    var that = this
+
+    var success = function(response) {
+      // TODO: refactor using handleAjaxError method
+      switch (response.status) {
+      case 'success':
+        // TODO: how to add an object to existing view?
+        App.groupsController.addObject(this.get('name'))
+        that.transitionToRoute('user', this.get('name'))
+        break
+      case 'fail':
+        that.transitionToRoute('groups')
+        break
+      }
+    }
+
+    App.Group.create({ username: this.get('name') },
+                     { success: success,
+                       error: App.helpers.handleAjaxError })
+  }
+})
 
 App.GroupsView = Ember.View.extend({
-  resourceUrl: '/v1/users/',
-  suffix: '/subscriptions',
-
   templateName: 'groups',
-  tagName: 'ul',
-
-  willInsertElement: function() {
-    return App.Group.findAll()
-  }
+  tagName: 'ul'
 });
 
 App.SearchPagination = Ember.View.extend({
@@ -273,8 +278,8 @@ App.Subscription = Ember.Object.extend({
     var findPost = function(postId) {
       switch (App.properties.get('currentPath')) {
       case "post":
-        if (App.onePostController.content.id == postId)
-          return App.onePostController.content
+        if (App.postController.content.id == postId)
+          return App.postController.content
       case "root":
       case "posts":
       case "user":
@@ -499,7 +504,7 @@ App.CreateSearchFieldView = Ember.TextField.extend(Ember.TargetActionSupport, {
 
 // Index view to display all posts on the page
 App.PostsView = Ember.View.extend({
-  templateName: 'post-list-view',
+  templateName: 'posts',
 
   submitPost: function() {
     App.postsController.submitPost()
@@ -967,10 +972,10 @@ App.CreateCommentView = Ember.TextArea.extend(Ember.TargetActionSupport, {
 })
 
 // Separate page for a single post
-App.OnePostController = Ember.ObjectController.extend();
-App.onePostController = App.OnePostController.create()
-App.OnePostView = Ember.View.extend({
-  templateName: 'a-post',
+App.PostController = Ember.ObjectController.extend();
+App.postController = App.PostController.create()
+App.PostView = Ember.View.extend({
+  templateName: 'post',
   isFormVisible: false,
   isEditFormVisible: false,
   currentUser: currentUser,
@@ -984,15 +989,15 @@ App.OnePostView = Ember.View.extend({
   },
 
   groupsNames: function() {
-    if (!App.onePostController.content)
+    if (!App.postController.content)
       return 
 
-    if (!App.onePostController.content.groups ||
-      App.onePostController.content.createdBy.username == App.onePostController.content.groups.username)
+    if (!App.postController.content.groups ||
+      App.postController.content.createdBy.username == App.postController.content.groups.username)
       return null
 
-    return App.onePostController.content.groups.username
-  }.property('App.onePostController.content', 'App.postsController.user'),
+    return App.postController.content.groups.username
+  }.property('App.postController.content', 'App.postsController.user'),
 
   didInsertElement: function() {
     if (this.$()) {
@@ -1012,19 +1017,19 @@ App.OnePostView = Ember.View.extend({
         this.$().find('.body').hashTagsUrls()
       }
     })
-  }.observes('App.onePostController.content'),
+  }.observes('App.postController.content'),
 
   // XXX: kind of dup of App.PostContainerView.unlikePost function
   unlikePost: function() {
-    App.postsController.unlikePost(App.onePostController.content.id)
+    App.postsController.unlikePost(App.postController.content.id)
   },
 
   postOwner: function() {
-    return App.onePostController.content.createdBy && App.onePostController.content.createdBy.id == App.properties.userId
-  }.property('App.onePostController.content'),
+    return App.postController.content.createdBy && App.postController.content.createdBy.id == App.properties.userId
+  }.property('App.postController.content'),
 
   destroyPost: function() {
-    App.postsController.destroyPost(App.onePostController.content.id)
+    App.postsController.destroyPost(App.postController.content.id)
   }
 });
 
@@ -1039,6 +1044,7 @@ App.UserTimelineController = Ember.ObjectController.extend({
       success: function(response) {
         if (response.status == 'success') {
           if (App.postsController.user.type == 'group')
+            // TODO: how to add an object to existing view?
             App.groupsController.addObject(App.postsController.user.get('username'))
 
           this.transitionToRoute('posts')
@@ -1055,6 +1061,7 @@ App.UserTimelineController = Ember.ObjectController.extend({
       success: function(response) {
         if (response.status == 'success') {
           if (App.postsController.user.type == 'group')
+            // TODO: how to remove an object to existing view?
             App.groupsController.removeObject(App.postsController.user.get('username'))
 
           this.transitionToRoute('posts')
@@ -1307,6 +1314,80 @@ App.Post = Ember.Object.extend({
   }.property('attachments')
 });
 
+App.Post.reopenClass({
+  findAll: function(pageStart, suffix) {
+    //this.set('isLoaded', false)
+
+    var timeline = "" //this.get('timeline') || ""
+
+    if (suffix)
+      suffix = '/' + suffix
+    else
+      suffix = ''
+
+    var posts = Em.ArrayProxy.create({content: []});
+
+    $.ajax({
+      url: '/v1/timeline/' + timeline + suffix,
+//      data: { start: pageStart },
+      dataType: 'jsonp',
+      context: this,
+      success: function(response) {
+        // TODO: extract to an observer
+//        if (response.subscribers) this.set('subscribers', response.subscribers)
+        if (response.user) {
+//          this.set('user', App.User.create(response.user))
+//          this.set('timeline', response.user.username)
+        }
+
+        App.properties.get('subscription').unsubscribe()
+        App.properties.get('subscription').subscribe('timeline', response.id)
+
+//        this.set('content', [])
+//        this.set('id', response.id)
+//        this.set('timelineId', response.id)
+
+        if (response.posts)
+          response.posts.forEach(function(attrs) {
+            var post = App.Post.create(attrs)
+            posts.addObject(post)
+          }, this)
+
+//        this.set('isLoaded', true)
+      }
+    })
+    return posts
+  },
+
+  findOne: function(postId) {
+    var that = this
+    var post = App.Post.create({
+      id: postId
+    });
+
+    $.ajax({
+      url: this.resourceUrl + '/' + postId,
+      dataType: 'jsonp',
+      context: post,
+      success: function(response) {
+        if (App.properties.get('currentPath') == 'aPost') {
+          // TODO: we are not unsubscribing from all posts since we add
+          // posts to content by this method if it's missing on a page
+          App.properties.get('subscription').unsubscribe()
+          App.properties.get('subscription').subscribe('post', response.id)
+        }
+        this.setProperties(response)
+        App.postController.set('content', response)
+      },
+      error: function(XMLHttpRequest, textStatus, errorThrown) {
+        if (errorThrown == 'Not Found')
+          that.transitionToRoute('error')
+      }
+    })
+    return post;
+  }
+})
+
 App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.SearchPaginationHelper, {
   resourceUrl: '/v1/search',
   body: '',
@@ -1415,12 +1496,10 @@ App.SubscriptionsView = Ember.View.extend({
 });
 
 App.ErrorController = Ember.ArrayController.extend({
-
 })
-App.errorController = App.ErrorController.create()
 
 App.ErrorView = Ember.View.extend({
-  templateName: 'error-view'
+  templateName: 'error'
 });
 
 App.SubscribersController = Ember.ArrayController.extend({
@@ -1585,14 +1664,14 @@ App.SignupController = Ember.ObjectController.extend({
 App.signupController = App.SignupController.create()
 
 App.SignupView = Ember.View.extend({
-  templateName: 'signup-view',
+  templateName: 'signup',
 
   insertNewline: function() {
     this.triggerAction();
   },
 
   signup: function() {
-    App.signupController.signup()
+    this.get('controller').signup()
   }
 });
 
@@ -1628,22 +1707,9 @@ App.SigninController = Ember.ObjectController.extend({
     return this
   }
 })
-//App.signinController = App.SigninController.create()
 
 App.SigninView = Ember.View.extend({
-  templateName: 'signin-view',
-
-  insertNewline: function() {
-    this.triggerAction();
-  }
-});
-
-App.GroupCreationController = Ember.ArrayController.extend({
-})
-App.groupCreationController = App.GroupCreationController.create()
-
-App.GroupCreationView = Ember.View.extend({
-  templateName: 'create-group-view',
+  templateName: 'signin',
 
   insertNewline: function() {
     this.triggerAction();
@@ -1661,6 +1727,8 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
   sortProperties: ['updatedAt'],
   sortAscending: false,
   isLoaded: true,
+
+  needs: ['groups'],
 
   // XXX: a bit strange having this method here?
   submitPost: function() {
@@ -1805,117 +1873,28 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
       App.properties.get('subscription').unsubscribe()
 
     this.resetPage()
-  }.observes('timeline'),
-
-  findAll: function(pageStart, suffix) {
-    this.set('isLoaded', false)
-
-    var timeline = this.get('timeline') || ""
-
-    if (suffix)
-      suffix = '/' + suffix
-    else
-      suffix = ''
-
-    $.ajax({
-      url: '/v1/timeline/' + timeline + suffix,
-      data: { start: pageStart },
-      dataType: 'jsonp',
-      context: this,
-      success: function(response) {
-        // TODO: extract to an observer
-        if (response.subscribers) this.set('subscribers', response.subscribers)
-        if (response.user) {
-          this.set('user', App.User.create(response.user))
-          this.set('timeline', response.user.username)
-        }
-
-        App.properties.get('subscription').unsubscribe()
-        App.properties.get('subscription').subscribe('timeline', response.id)
-
-        this.set('content', [])
-        this.set('id', response.id)
-        this.set('timelineId', response.id)
-
-        if (response.posts)
-          response.posts.forEach(function(attrs) {
-            var post = App.Post.create(attrs)
-            this.addObject(post)
-          }, this)
-
-        this.set('isLoaded', true)
-      }
-    })
-    return this
-  },
-
-  findOne: function(postId) {
-    var that = this
-    var post = App.Post.create({
-      id: postId
-    });
-
-    $.ajax({
-      url: this.resourceUrl + '/' + postId,
-      dataType: 'jsonp',
-      context: post,
-      success: function(response) {
-        if (App.properties.get('currentPath') == 'aPost') {
-          // TODO: we are not unsubscribing from all posts since we add
-          // posts to content by this method if it's missing on a page
-          App.properties.get('subscription').unsubscribe()
-          App.properties.get('subscription').subscribe('post', response.id)
-        }
-        this.setProperties(response)
-        App.onePostController.set('content', response)
-      },
-      error: function(XMLHttpRequest, textStatus, errorThrown) {
-        if (errorThrown == 'Not Found')
-          that.transitionToRoute('error')
-      }
-    })
-    return post;
-  }
+  }.observes('timeline')
 })
-App.postsController = App.PostsController.create()
 
 App.PostsRoute = Ember.Route.extend({
   model: function() {
-    return null
+    // TODO: findAll method to accept timeline parameter
+    this.controllerFor('posts').set('timeline', null)
+    return App.Post.findAll()
   },
 
   setupController: function(controller, model) {
-    // TODO: findAll method to accept timeline parameter
-    App.postsController.set('timeline', model)
-    return App.postsController.findAll()
+    this.controllerFor('groups').set('content', App.Group.findAll())
   }
 })
 
 App.PostRoute = Ember.Route.extend({
   model: function(params) {
-    // TODO: move findOne to model and make it like this
-    // App.Post.find(params_post_id) then we are good to delete this
-    // method
-    return params.post_id
+    return App.Post.findOne(params.post_id)
   },
 
   setupController: function(controller, model) {
-    // TODO: this is workaround for our custom generated controller
-    App.postsController.set('target', controller.target)
-
-    // TODO: one we migrate onePostController to postController we are
-    // good to drop this method
-    if (typeof model !== 'string') model = model.id
-    var post = App.postsController.findOne(model);
-    this.controllerFor('onePost').set('content', post);
-  },
-
-  renderTemplate: function() {
-    // TODO: one we migrate onePostController to postController AND
-    // rename a-post view to post we can drop this method
-    this.render('a-post', {
-      controller: this.controllerFor('onePost')
-    })
+    this.controllerFor('post').set('content', model);
   }
 })
 
@@ -1937,7 +1916,7 @@ App.PublicRoute = Ember.Route.extend({
 
 App.GroupsRoute = Ember.Route.extend({
   renderTemplate: function() {
-    this.render('create-group-view', {
+    this.render('create-group', {
       controller: 'groups'
     })
   }
@@ -2048,7 +2027,7 @@ App.FeedSubscriptionsRoute = Ember.Route.extend({
   setupController: function(controller, model) {
     if (typeof model !== 'string') model = model.username
 
-    var subscriptions =  App.subscriptionsController.findAll(model)
+    var subscriptions = App.subscriptionsController.findAll(model)
     this.controllerFor('subscriptions').set('content', subscriptions);
   },
 
