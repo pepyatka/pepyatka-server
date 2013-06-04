@@ -159,14 +159,12 @@ App.Tag.reopenClass({
   }
 })
 
+App.TagsController = Ember.ArrayController.extend({
+})
+
 App.Tags = Ember.View.extend({
   templateName: 'tags',
-  tagName: 'ul',
-
-  willInsertElement: function() {
-    // TODO: review this design
-    this.set('content', App.Tag.findAll())
-  }
+  tagName: 'ul'
 });
 
 App.Group = Ember.Object.extend({})
@@ -470,7 +468,7 @@ App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
 });
 
 App.ApplicationController = Ember.Controller.extend({
-  needs: ['groups'],
+  needs: ['groups', 'tags'],
 
   subscription: null,
 
@@ -1886,6 +1884,7 @@ App.PostsRoute = Ember.Route.extend({
 
   setupController: function(controller, model) {
     this.controllerFor('groups').set('content', App.Group.findAll())
+    this.controllerFor('tags').set('content', App.Tag.findAll())
   }
 })
 
