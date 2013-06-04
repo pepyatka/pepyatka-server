@@ -43,7 +43,7 @@ App.ShowSpinnerWhileRendering = Ember.Mixin.create({
   classNameBindings: ['isLoaded::loading'],
 
   isLoaded: function() {
-    return this.get('isInserted') && this.get('controller.isLoaded')
+    return !!this.get('isInserted') && !!this.get('controller.isLoaded')
   }.property('isInserted', 'controller.isLoaded'),
 
   didInsertElement: function() {
@@ -79,7 +79,7 @@ App.PaginationHelper = Em.Mixin.create({
   nextPageDisabled: function() {
     var len = this.get('content.content.length')
     return len === 0 || len < this.get('pageSize') ? 'disabled' : ''
-  }.property('controller.content.length', 'content.content.length'),
+  }.property('content.content.length', 'pageSize'),
 
   resetPage: function() {
     this.set('pageStart', 0)
