@@ -412,10 +412,6 @@ App.Subscription = Ember.Object.extend({
   }
 })
 
-App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
-  templateName: 'application'
-});
-
 App.ApplicationController = Ember.Controller.extend({
   needs: ['groups', 'tags'],
 
@@ -437,6 +433,10 @@ App.ApplicationController = Ember.Controller.extend({
     App.properties.set('subscription', App.Subscription.create())
     this._super()
   }
+});
+
+App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
+  templateName: 'application'
 });
 
 // Index view to display all posts on the page
@@ -490,16 +490,6 @@ App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
 App.JustStarted = Ember.View.extend({
   templateName: 'just-started',
   isAnonymousPermitted: isAnonymousPermitted,
-
-  didInsertElement: function() {
-    this.$().hide().slideDown();
-  },
-
-  // willDestroyElement: function() {
-  //   var clone = this.$().clone();
-  //   this.$().replaceWith(clone);
-  //   clone.slideUp()
-  // },
 
   justStarted: function() {
     return true
@@ -622,14 +612,6 @@ App.OwnPostContainerView = Ember.View.extend({
 
     this.$().hide().slideDown('slow');
   },
-
-  // willDestroyElement: function() {
-  //   if (this.$()) {
-  //     var clone = this.$().clone();
-  //     this.$().replaceWith(clone);
-  //     clone.slideUp()
-  //   }
-  // },
 
   showAllComments: function() {
     this.content.set('showAllComments', true)

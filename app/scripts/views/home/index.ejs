@@ -181,8 +181,7 @@
 
   <div class="posts">
     <ul class="media-list">
-      {{view Ember.CollectionView contentBinding="App.postsController"
-             itemViewClass="App.PostContainerView"}}
+      {{each controller itemViewClass="App.PostContainerView"}}
     </ul>
 
     {{view App.Pagination}}
