@@ -7,10 +7,6 @@ App.Properties = Ember.Object.extend({
   username: currentUsername,
   userId: currentUser,
 
-  isAnonym: function() {
-    return this.get('username') == 'anonymous'
-  }.property('username'),
-
   currentPath: null
 })
 App.properties = App.Properties.create()
@@ -28,7 +24,7 @@ App.Helpers = Ember.Object.extend({
       template: Ember.Handlebars.compile('{{view.formattedContent}}'),
 
       formattedContent: (function() {
-        if (this.get('content') != null) {
+        if (this.get('content') !== null) {
           return fn(this.get('content'));
         }
       }).property('content')
