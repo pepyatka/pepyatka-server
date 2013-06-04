@@ -42,9 +42,8 @@ App.ShowSpinnerWhileRendering = Ember.Mixin.create({
   classNameBindings: ['isLoaded::loading'],
 
   isLoaded: function() {
-    // TODO: bind to a controller which is mixed
-    return //this.get('isInserted') && App.postsController.isLoaded;
-  }, //.property('isInserted', 'App.postsController.isLoaded'),
+    return this.get('isInserted') && this.get('controller.isLoaded')
+  }.property('isInserted', 'controller.isLoaded'),
 
   didInsertElement: function() {
     this.set('isInserted', true);
@@ -471,6 +470,7 @@ App.ApplicationController = Ember.Controller.extend({
   needs: ['groups', 'tags'],
 
   subscription: null,
+  isLoaded: true,
 
   currentPathDidChange: function() {
     App.properties.set('currentPath', this.get('currentPath'));
