@@ -185,7 +185,6 @@ App.Group.reopenClass({
         // 1) group
         // 2) this is not me
         // TODO: review the second condition
-        console.log(attrs)
         if (attrs.user.type === 'group' &&
             groups.indexOf(attrs.user.username) === -1 &&
             attrs.name === 'Posts')
