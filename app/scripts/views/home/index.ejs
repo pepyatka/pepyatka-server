@@ -129,20 +129,6 @@
   </ul>
 </script>
 
-<script type="text/x-handlebars" id="search-pagination">
-  <ul class="pager">
-    {{#if prevPageVisible}}
-      <li {{bindAttr class="prevPageDisabled"}}><a {{action prevPage href="true" target="App.searchController"}}>{{t button.previous}}</a></li>
-    {{else}}
-    {{/if}}
-
-    {{#if nextPageVisible}}
-      <li {{bindAttr class="nextPageDisabled"}}><a {{action nextPage href="true" target="App.searchController"}}>{{t button.next}}</a></li>
-    {{else}}
-    {{/if}}
-  </ul>
-</script>
-
 <script type="text/x-handlebars" id="just-started">
   {{#if view.justStarted}}
     <div class="alert alert-info">
@@ -162,7 +148,7 @@
              itemViewClass="App.PostContainerView"}}
     </ul>
 
-    {{view App.SearchPagination}}
+    {{view App.Pagination}}
   </div>
 </script>
 

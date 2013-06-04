@@ -19,7 +19,8 @@ App.Helpers = Ember.Object.extend({
   handleAjaxError: function(r) {
     window.location.href = "/";
   },
-  
+
+  // TODO: refactor to native boundHelpers
   inlineFormatter: function(fn) {
     return Ember.View.extend({
       tagName: 'span',
@@ -64,25 +65,21 @@ App.PaginationHelper = Em.Mixin.create({
   },
 
   prevPageDisabled: function() {
-    //return App.postsController.get('pageStart') === 0 ? 'disabled' : ''
-  }, //.property('App.postsController.pageStart'),
+    return this.get('controller.pageStart') === 0 ? 'disabled' : ''
+  }.property('controller.pageStart'),
 
   prevPageVisible: function() {
-    return this.get('prevPageDisabled') != 'disabled'
-  }, //.property('App.postsController.pageStart'),
+    return this.get('controller.prevPageDisabled') !== 'disabled'
+  }.property('controller.pageStart'),
 
   nextPageVisible: function() {
-    return this.get('nextPageDisabled') != 'disabled'
-  }, //.property('App.postsController.content'),
+    return this.get('controller.nextPageDisabled') !== 'disabled'
+  }.property('controller.content'),
 
   nextPageDisabled: function() {
-    var len = 0// App.postsController.get('content').length
-    // TODO: temp solution to enable pagination while controllers are
-    // not refactored
-    len = 25
+    var len = this.get('controller.content.length')
     return len === 0 || len < this.get('pageSize') ? 'disabled' : ''
-    // TODO: bind to generic content
-  }, //.property('App.postsController.content'),
+  }.property('controller.content.length'),
 
   resetPage: function() {
     this.set('pageStart', 0)
@@ -93,46 +90,8 @@ App.PaginationHelper = Em.Mixin.create({
   }.observes('pageStart')
 });
 
-App.SearchPaginationHelper = Em.Mixin.create({
-  pageSize: 25,
-  pageStart: 0,
-
-  nextPage: function() {
-    this.incrementProperty('pageStart', this.get('pageSize'))
-  },
-
-  prevPage: function() {
-    this.decrementProperty('pageStart', this.get('pageSize'))
-  },
-
-  prevPageDisabled: function() {
-    return App.searchController.get('pageStart') === 0 ? 'disabled' : ''
-  }.property('App.searchController.pageStart'),
-
-  prevPageVisible: function() {
-    return this.get('prevPageDisabled') != 'disabled'
-  }.property('App.searchController.pageStart'),
-
-  nextPageVisible: function() {
-    return this.get('nextPageDisabled') != 'disabled'
-  }.property('App.searchController.content'),
-
-  nextPageDisabled: function() {
-    var len = App.searchController.content.length;
-    // TODO: temp solution to enable pagination while controllers are
-    // not refactored
-    len = 25
-    return len === 0 || len < this.get('pageSize') ? 'disabled' : ''
-    // TODO: bind to generic content
-  }.property('App.searchController.content'),
-
-  resetPage: function() {
-    this.set('pageStart', 0)
-  },
-
-  pageDidChange: function() {
-    this.didRequestRange(this.get('pageStart'));
-  }.observes('pageStart')
+App.Pagination = Ember.View.extend({
+  templateName: 'pagination'
 });
 
 App.Tag = Ember.Object.extend({})
@@ -158,8 +117,7 @@ App.Tag.reopenClass({
   }
 })
 
-App.TagsController = Ember.ArrayController.extend({
-})
+App.TagsController = Ember.ArrayController.extend({})
 
 App.Tags = Ember.View.extend({
   templateName: 'tags',
@@ -206,8 +164,8 @@ App.Group.reopenClass({
       type: 'post',
       data: { username: attrs.username },
       dataType: 'jsonp',
-      error: options.error,
-      success: options.success
+      success: options.success,
+      error: options.error
     })
     return this
   }
@@ -240,14 +198,6 @@ App.GroupsController = Ember.ArrayController.extend({
 App.GroupsView = Ember.View.extend({
   templateName: 'groups',
   tagName: 'ul'
-});
-
-App.SearchPagination = Ember.View.extend({
-  templateName: 'search-pagination'
-});
-
-App.Pagination = Ember.View.extend({
-  templateName: 'pagination'
 });
 
 App.Subscription = Ember.Object.extend({
@@ -1389,7 +1339,7 @@ App.Post.reopenClass({
   }
 })
 
-App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.SearchPaginationHelper, {
+App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.PaginationHelper, {
   resourceUrl: '/v1/search',
   body: '',
   content: [],
