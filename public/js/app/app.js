@@ -65,21 +65,21 @@ App.PaginationHelper = Em.Mixin.create({
   },
 
   prevPageDisabled: function() {
-    return this.get('controller.pageStart') === 0 ? 'disabled' : ''
-  }.property('controller.pageStart'),
+    return this.get('pageStart') === 0 ? 'disabled' : ''
+  }.property('pageStart'),
 
   prevPageVisible: function() {
-    return this.get('controller.prevPageDisabled') !== 'disabled'
-  }.property('controller.pageStart'),
+    return this.get('prevPageDisabled') !== 'disabled'
+  }.property('prevPageDisabled'),
 
   nextPageVisible: function() {
-    return this.get('controller.nextPageDisabled') !== 'disabled'
-  }.property('controller.content'),
+    return this.get('nextPageDisabled') !== 'disabled'
+  }.property('nextPageDisabled'),
 
   nextPageDisabled: function() {
-    var len = this.get('controller.content.length')
+    var len = this.get('content.content.length')
     return len === 0 || len < this.get('pageSize') ? 'disabled' : ''
-  }.property('controller.content.length'),
+  }.property('controller.content.length', 'content.content.length'),
 
   resetPage: function() {
     this.set('pageStart', 0)

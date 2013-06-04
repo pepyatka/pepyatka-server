@@ -118,12 +118,12 @@
 <script type="text/x-handlebars" id="pagination">
   <ul class="pager">
     {{#if prevPageVisible}}
-      <li {{bindAttr class="prevPageDisabled"}}><a {{action prevPage href="true" target="App.postsController"}}>{{t button.previous}}</a></li>
+      <li {{bindAttr class="prevPageDisabled"}}><a {{action prevPage href="true" target="controller"}}>{{t button.previous}}</a></li>
     {{else}}
     {{/if}}
 
     {{#if nextPageVisible}}
-      <li {{bindAttr class="nextPageDisabled"}}><a {{action nextPage href="true" target="App.postsController"}}>{{t button.next}}</a></li>
+      <li {{bindAttr class="nextPageDisabled"}}><a {{action nextPage href="true" target="controller"}}>{{t button.next}}</a></li>
     {{else}}
     {{/if}}
   </ul>
@@ -168,9 +168,9 @@
     </div>
   <% } %>
 
-  <div id="progressBar" {{bindAttr class="App.postsController.isProgressBarHidden"}}>
+  <div id="progressBar" {{bindAttr class="controller.isProgressBarHidden"}}>
     {{view Bootstrap.ProgressBar isStriped=true isAnimated=true 
-        progressBinding="App.postsController.progress"}}
+        progressBinding="controller.progress"}}
   </div>
 
   {{view App.JustStarted}}
