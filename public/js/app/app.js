@@ -185,8 +185,10 @@ App.Group.reopenClass({
         // 1) group
         // 2) this is not me
         // TODO: review the second condition
+        console.log(attrs)
         if (attrs.user.type === 'group' &&
-            groups.indexOf(attrs.user.username) === -1)
+            groups.indexOf(attrs.user.username) === -1 &&
+            attrs.name === 'Posts')
           groups.addObject(attrs)
       })
     }
@@ -469,6 +471,8 @@ App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
 });
 
 App.ApplicationController = Ember.Controller.extend({
+  needs: ['groups'],
+
   subscription: null,
 
   currentPathDidChange: function() {
@@ -1727,8 +1731,6 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
   sortProperties: ['updatedAt'],
   sortAscending: false,
   isLoaded: true,
-
-  needs: ['groups'],
 
   // XXX: a bit strange having this method here?
   submitPost: function() {

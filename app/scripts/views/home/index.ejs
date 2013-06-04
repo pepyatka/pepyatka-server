@@ -110,9 +110,8 @@
 </script>
 
 <script type="text/x-handlebars" id="groups">
-  {{controller}}
-  {{#each group in controller.content}}
-    <li>{{#linkTo user group}}{{group}}{{/linkTo}}</li>
+  {{#each group in controllers.groups}}
+    <li>{{#linkTo user group.user.username}}{{group.user.username}}{{/linkTo}}</li>
   {{/each}}
 </script>
 
