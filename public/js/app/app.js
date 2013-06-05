@@ -1189,24 +1189,14 @@ App.Timeline.reopenClass({
       dataType: 'jsonp',
       context: this,
       success: function(response) {
-        // TODO: extract to an observer
-//        if (response.subscribers) this.set('subscribers', response.subscribers)
-//        if (response.user) {
-//          this.set('timeline', response.user.username)
-//        }
-
-//        App.properties.get('subscription').unsubscribe()
-//        App.properties.get('subscription').subscribe('timeline', response.id)
-
-        timeline.setProperties(response)
-
         if (response.posts)
           response.posts.forEach(function(attrs) {
             var post = App.Post.create(attrs)
             timeline.content.posts.addObject(post)
-          }, this)
+          })
 
-//        this.set('isLoaded', true)
+        delete response.posts
+        timeline.setProperties(response)
       }
     })
     return timeline
