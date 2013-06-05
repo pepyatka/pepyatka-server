@@ -64,7 +64,7 @@ App.ShowSpinnerWhileRendering = Ember.Mixin.create({
   }
 });
 
-App.PaginationHelper = Em.Mixin.create({
+App.PaginationHelper = Ember.Mixin.create({
   pageSize: 25,
   pageStart: 0,
 
@@ -138,7 +138,7 @@ App.Tags = Ember.View.extend({
 
 App.Group = Ember.Object.extend({})
 App.Group.reopenClass({
-  resourceUrl: '/v1/users/',
+  resourceUrl: '/v1/users',
   suffix: '/subscriptions',
 
   findAll: function() {
@@ -160,7 +160,7 @@ App.Group.reopenClass({
     }
 
     $.ajax({
-      url: this.resourceUrl + App.properties.get('username') + this.suffix,
+      url: this.resourceUrl + '/' + App.properties.get('username') + this.suffix,
       context: this,
       type: 'get',
       success: success,
@@ -1169,6 +1169,54 @@ App.CommentsController = Ember.ObjectController.extend({
 })
 App.commentsController = App.CommentsController.create()
 
+App.Timeline = Ember.Object.extend({})
+App.Timeline.reopenClass({
+  resourceUrl: '/v1/timeline',
+
+  find: function(timelineId, options) {
+    // if (suffix)
+    //   suffix = '/' + suffix
+    // else
+    //   suffix = ''
+    if (timelineId === undefined) timelineId = ''
+
+    var timeline = Ember.ObjectProxy.create({content: {}})
+    timeline.content.posts = Ember.ArrayProxy.create({content: []});
+
+    $.ajax({
+      url: this.resourceUrl + '/' + timelineId || '', // + suffix,
+//      data: { start: pageStart },
+      dataType: 'jsonp',
+      context: this,
+      success: function(response) {
+        // TODO: extract to an observer
+//        if (response.subscribers) this.set('subscribers', response.subscribers)
+//        if (response.user) {
+//          this.set('timeline', response.user.username)
+//        }
+
+//        App.properties.get('subscription').unsubscribe()
+//        App.properties.get('subscription').subscribe('timeline', response.id)
+
+        timeline.setProperties(response)
+
+        if (response.posts)
+          response.posts.forEach(function(attrs) {
+            var post = App.Post.create(attrs)
+            timeline.content.posts.addObject(post)
+          }, this)
+
+//        this.set('isLoaded', true)
+      }
+    })
+    return timeline
+  }
+})
+
+App.TimelineController = Ember.ObjectController.extend({
+  isProgressBarHidden: 'hidden'
+})
+
 App.Post = Ember.Object.extend({
   showAllComments: false,
   currentUser: currentUser,
@@ -1255,50 +1303,6 @@ App.Post = Ember.Object.extend({
 });
 
 App.Post.reopenClass({
-  findAll: function(pageStart, suffix) {
-    //this.set('isLoaded', false)
-
-    var timeline = "" //this.get('timeline') || ""
-
-    if (suffix)
-      suffix = '/' + suffix
-    else
-      suffix = ''
-
-    var posts = Em.ArrayProxy.create({content: []});
-
-    $.ajax({
-      url: '/v1/timeline/' + timeline + suffix,
-//      data: { start: pageStart },
-      dataType: 'jsonp',
-      context: this,
-      success: function(response) {
-        // TODO: extract to an observer
-//        if (response.subscribers) this.set('subscribers', response.subscribers)
-        if (response.user) {
-//          this.set('user', App.User.create(response.user))
-//          this.set('timeline', response.user.username)
-        }
-
-//        App.properties.get('subscription').unsubscribe()
-//        App.properties.get('subscription').subscribe('timeline', response.id)
-
-//        this.set('content', [])
-//        this.set('id', response.id)
-//        this.set('timelineId', response.id)
-
-        if (response.posts)
-          response.posts.forEach(function(attrs) {
-            var post = App.Post.create(attrs)
-            posts.addObject(post)
-          }, this)
-
-//        this.set('isLoaded', true)
-      }
-    })
-    return posts
-  },
-
   findOne: function(postId) {
     var that = this
     var post = App.Post.create({
@@ -1661,7 +1665,6 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
   timelineId: null,
   content: [],
   body: '',
-  isProgressBarHidden: 'hidden',
   receiveTimelinesIds: [],
 
   sortProperties: ['updatedAt'],
@@ -1814,11 +1817,9 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
   }.observes('timeline')
 })
 
-App.PostsRoute = Ember.Route.extend({
+App.HomeRoute = Ember.Route.extend({
   activate: function() {
-    console.log(this.controllerFor('posts'))
-    // TODO: subscribe to timeline id instead of null
-    this.get('comet').subscribe('timeline', null)
+    this.get('comet').subscribe('timeline', this.controllerFor('timeline').get('id'))
   },
 
   deactivate: function() {
@@ -1826,14 +1827,19 @@ App.PostsRoute = Ember.Route.extend({
   },
 
   model: function() {
-    // TODO: findAll method to accept timeline parameter
-    this.controllerFor('posts').set('timeline', null)
-    return App.Post.findAll()
+    return App.Timeline.find()
   },
 
   setupController: function(controller, model) {
     this.controllerFor('groups').set('content', App.Group.findAll())
     this.controllerFor('tags').set('content', App.Tag.findAll())
+    this.controllerFor('timeline').set('content', model)
+  },
+
+  renderTemplate: function() {
+    this.render('posts', {
+      controller: this.controllerFor('timeline')
+    })
   }
 })
 
@@ -2037,7 +2043,7 @@ App.Router.map(function() {
 
   this.resource('public', { path: "/public" })
   // NOTE: rather weird name for a river of news route
-  this.resource('posts', { path: "/" })
+  this.resource('home', { path: "/" })
   this.resource('post', { path: "/posts/:post_id" })
 
   this.resource('user', { path: "/users/:username" })

@@ -181,7 +181,7 @@
 
   <div class="posts">
     <ul class="media-list">
-      {{each controller itemViewClass="App.PostContainerView"}}
+      {{each controller.content.posts itemViewClass="App.PostContainerView"}}
     </ul>
 
     {{view App.Pagination}}
