@@ -216,6 +216,14 @@ App.Comet = Ember.Object.extend({
   socket: null,
   subscribedTo: {},
 
+  monitor: function() {
+    var channel = this.get('channel')
+    if (channel.constructor === App.Timeline)
+      this.subscribe('timeline', channel.get('id'))
+    else
+      this.subscribe('post', channel.get('id'))
+  }.observes('channel.id'),
+
   init: function() {
     // var that = this
 
@@ -1169,35 +1177,32 @@ App.CommentsController = Ember.ObjectController.extend({
 })
 App.commentsController = App.CommentsController.create()
 
-App.Timeline = Ember.Object.extend({})
+App.Timeline = Ember.Object.extend({
+  posts: Ember.ArrayProxy.create({content: []})
+})
+
 App.Timeline.reopenClass({
   resourceUrl: '/v1/timeline',
 
   find: function(timelineId, options) {
-    // if (suffix)
-    //   suffix = '/' + suffix
-    // else
-    //   suffix = ''
     if (timelineId === undefined) timelineId = ''
 
-    var timeline = Ember.ObjectProxy.create({content: {}})
-    timeline.content.posts = Ember.ArrayProxy.create({content: []});
+    var timeline = App.Timeline.create()
 
     $.ajax({
-      url: this.resourceUrl + '/' + timelineId || '', // + suffix,
+      url: this.resourceUrl + '/' + timelineId || '',
 //      data: { start: pageStart },
       dataType: 'jsonp',
-      context: this,
-      success: function(response) {
-        if (response.posts)
-          response.posts.forEach(function(attrs) {
-            var post = App.Post.create(attrs)
-            timeline.content.posts.addObject(post)
-          })
+      context: this
+    }).then(function(response) {
+      if (response.posts)
+        response.posts.forEach(function(attrs) {
+          var post = App.Post.create(attrs)
+          timeline.posts.addObject(post)
+        })
 
-        delete response.posts
-        timeline.setProperties(response)
-      }
+      delete response.posts
+      timeline.setProperties(response)
     })
     return timeline
   }
@@ -1809,7 +1814,6 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
 
 App.HomeRoute = Ember.Route.extend({
   activate: function() {
-    this.get('comet').subscribe('timeline', this.controllerFor('timeline').get('id'))
   },
 
   deactivate: function() {
@@ -1824,6 +1828,8 @@ App.HomeRoute = Ember.Route.extend({
     this.controllerFor('groups').set('content', App.Group.findAll())
     this.controllerFor('tags').set('content', App.Tag.findAll())
     this.controllerFor('timeline').set('content', model)
+
+    this.get('comet').set('channel', model)
   },
 
   renderTemplate: function() {
