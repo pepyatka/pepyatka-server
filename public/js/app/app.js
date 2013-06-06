@@ -30,21 +30,6 @@ App.properties = App.Properties.create()
 App.Helpers = Ember.Object.extend({
   handleAjaxError: function(r) {
     window.location.href = "/";
-  },
-
-  // TODO: refactor to native boundHelpers
-  inlineFormatter: function(fn) {
-    return Ember.View.extend({
-      tagName: 'span',
-
-      template: Ember.Handlebars.compile('{{view.formattedContent}}'),
-
-      formattedContent: (function() {
-        if (this.get('content') !== null) {
-          return fn(this.get('content'));
-        }
-      }).property('content')
-    });
   }
 })
 App.helpers = App.Helpers.create()
@@ -2133,14 +2118,6 @@ App.Router.reopen({
   location: $.browser && $.browser.msie ? 'historyJs' : 'history'
 });
 
-App.registerViewHelper = function(name, view) {
-  Ember.Handlebars.registerHelper(name, function(property) {
-    var options = arguments[arguments.length - 1]
-    options.hash.contentBinding = property;
-    return Ember.Handlebars.helpers.view.call(this, view, options);
-  });
-};
-
-App.registerViewHelper("decodeURIComponent", App.helpers.inlineFormatter(function(content) {
+Ember.Handlebars.registerBoundHelper('decodeURIComponent', function(content) {
   return decodeURIComponent(content)
-}))
+})
