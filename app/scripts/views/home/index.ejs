@@ -152,18 +152,18 @@
   </div>
 </script>
 
-<script type="text/x-handlebars" id="posts">
+<script type="text/x-handlebars" id="timeline">
   <% if (req.user) { %>
     <div class="clearfix submitForm">
       <div>
-        {{view App.CreatePostView target="parentView" action="submitPost"
+        {{view App.CreatePostView target="controller" action="submitPost"
               class="span9"}}
       </div>
       <div class="pull-left">
         {{t label.add.image}}{{view App.UploadFileView name="image"}}
       </div>
       <div class="pull-right">
-        <button {{action submitPost target="view"}} class="btn pull-right">{{t button.post}}</button>
+        <button {{action submitPost target="controller"}} class="btn pull-right">{{t button.post}}</button>
       </div>
     </div>
   <% } %>

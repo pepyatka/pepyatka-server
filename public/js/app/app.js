@@ -190,25 +190,9 @@ App.GroupsView = Ember.View.extend({
 });
 
 App.CometController = Ember.Controller.extend({
+  needs: ['timeline'],
+
   subscribedTo: {},
-
-  monitor: function() {
-    var channel = this.get('channel')
-    if (channel.constructor === App.Timeline)
-      this.subscribe('timeline', channel.get('id'))
-    else
-      this.subscribe('post', channel.get('id'))
-  }.observes('channel.id'),
-
-  onData: function() {
-    console.log(this.get('controllers'))
-  },
-
-  init: function() {
-    this._super();
-
-    this.set('socket', io.connect('/'));
-    this.socket.on('data', this.onData.bind(this));
 
     // var that = this
 
@@ -228,44 +212,23 @@ App.CometController = Ember.Controller.extend({
     //   }
     // }
 
-    // var findPost = function(postId) {
-    //   switch (App.properties.get('currentPath')) {
-    //   case "post":
-    //     if (App.postController.content.id == postId)
-    //       return App.postController.content
-    //   case "root":
-    //   case "posts":
-    //   case "user":
-    //   case "public":
-    //   case "likes":
-    //   case "comments":
-    //     return App.postsController.find(function(post) {
-    //       return post.id == postId
-    //     })
-    //   case "search":
-    //     return App.searchController.find(function(post) {
-    //       return post.id == postId
-    //     })
-    //   }
-    // }
-
-    // this.socket.on('newPost', function (data) {
+  newPost: function(data) {
     //   if (!isFirstPage())
     //     return
 
-    //   var post = App.Post.create(data.post)
-    //   App.postsController.addObject(post)
-    // });
+    var post = App.Post.create(data.post)
+    this.get('controllers.timeline.posts').addObject(post)
+  },
 
-    // this.socket.on('updatePost', function(data) {
+  updatePost: function(data) {
     //   var post = findPost(data.post.id)
 
     //   if (post) {
     //     post.set('body', data.post.body)
     //   }
-    // })
+  },
 
-    // this.socket.on('destroyPost', function(data) {
+  destroyPost: function(data) {
     //   switch (App.properties.get('currentPath')) {
     //   case "post":
     //     // FIXME: it's SO wrong to do transition from the object
@@ -283,13 +246,13 @@ App.CometController = Ember.Controller.extend({
     //     App.searchController.removePost('id', data.postId)
     //     break
     //   }
-    // })
+  },
 
-    // this.socket.on('newComment', function (data) {
+  newComment: function(data) {
     //   if (!isFirstPage())
     //     return
 
-    //   var comment = App.Comment.create(data.comment)
+    // var comment = App.Comment.create(data.comment)
     //   var post = findPost(data.comment.postId)
 
     //   if (post) {
@@ -298,9 +261,9 @@ App.CometController = Ember.Controller.extend({
     //     post = App.postsController.findOne(data.comment.postId)
     //     App.postsController.addObject(post)
     //   }
-    // });
+  },
 
-    // this.socket.on('updateComment', function(data) {
+  updateComment: function(data) {
     //   var post = findPost(data.comment.postId)
 
     //   var index = 0
@@ -318,15 +281,15 @@ App.CometController = Ember.Controller.extend({
     //     post.comments.removeObject(comment)
     //     post.comments.insertAt(index-1, updatedComment)
     //   }
-    // })
+  },
 
-    // this.socket.on('destroyComment', function(data) {
+  destroyComment: function(data) {
     //   var post = findPost(data.postId)
     //   var comment = post.comments.findProperty('id', data.commentId)
     //   post.comments.removeObject(comment)
-    // })
+  },
 
-    // this.socket.on('newLike', function(data) {
+  newLike: function(data) {
     //   if (!isFirstPage())
     //     return
 
@@ -345,20 +308,46 @@ App.CometController = Ember.Controller.extend({
     //     post = App.postsController.findOne(data.postId)
     //     App.postsController.addObject(post)
     //   }
-    // })
+  },
 
-    // this.socket.on('removeLike', function(data) {
+  removeLike: function(data) {
     //   var post = findPost(data.postId)
 
     //   if (post) {
     //     post.removeLike('id', data.userId)
     //   }
-    // })
-
-    // this.socket.on('disconnect', function(data) {
-    //   that.reconnect();
-    // })
   },
+
+  disconnect: function(data) {
+    this.reconnect();
+  },
+
+  init: function() {
+    this._super();
+
+    this.set('socket', io.connect('/'));
+
+    this.get('socket').on('newPost', this.newPost.bind(this));
+    this.get('socket').on('updatePost', this.updatePost.bind(this));
+    this.get('socket').on('destroyPost', this.destroyPost.bind(this));
+
+    this.get('socket').on('newComment', this.newComment.bind(this));
+    this.get('socket').on('updateComment', this.updateComment.bind(this));
+    this.get('socket').on('destroyComment', this.updateComment.bind(this));
+
+    this.get('socket').on('newLike', this.newLike.bind(this));
+    this.get('socket').on('removeLike', this.removeLike.bind(this));
+
+    this.get('socket').on('disconnect', this.disconnect.bind(this));
+  },
+
+  monitor: function() {
+    var channel = this.get('channel')
+    if (channel.constructor === App.Timeline)
+      this.subscribe('timeline', channel.get('id'))
+    else
+      this.subscribe('post', channel.get('id'))
+  }.observes('channel.id'),
 
   subscribe: function(channel, ids) {
     if (!ids) return;
@@ -413,7 +402,7 @@ App.CometController = Ember.Controller.extend({
   reconnect: function() {
     var subscribedTo = this.get('subscribedTo');
     this.unsubscribe();
-    this.socket.emit('subscribe', subscribedTo);
+    this.get('socket').emit('subscribe', subscribedTo);
   }
 })
 
@@ -454,11 +443,11 @@ App.CreateSearchFieldView = Ember.TextField.extend(Ember.TargetActionSupport, {
 })
 
 // Index view to display all posts on the page
-App.PostsView = Ember.View.extend({
-  templateName: 'posts',
+App.TimelineView = Ember.View.extend({
+  templateName: 'timeline',
 
   submitPost: function() {
-    App.postsController.submitPost()
+    this.get('controller').submitPost()
     // dirty way to restore original height of post textarea
     this.$().find('textarea').height('56px')
   }
@@ -470,7 +459,7 @@ App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
   classNames: ['autogrow-short'],
 
   // TODO: Extract value from controller 
-  valueBinding: 'App.postsController.body', 
+  valueBinding: 'controller.body',
 
   insertNewline: function() {
     this.triggerAction();
@@ -1163,7 +1152,12 @@ App.CommentsController = Ember.ObjectController.extend({
 App.commentsController = App.CommentsController.create()
 
 App.Timeline = Ember.Object.extend({
-  posts: Ember.ArrayProxy.create({content: []})
+  posts: Ember.ArrayProxy.createWithMixins(Ember.SortableMixin, {
+    content: [],
+
+    sortProperties: ['updatedAt'],
+    sortAscending: false
+  })
 })
 
 App.Timeline.reopenClass({
@@ -1193,8 +1187,91 @@ App.Timeline.reopenClass({
   }
 })
 
-App.TimelineController = Ember.ObjectController.extend({
-  isProgressBarHidden: 'hidden'
+App.TimelineController = Ember.ObjectController.extend(App.PaginationHelper, {
+  resourceUrl: '/v1/posts',
+
+  isLoaded: true,
+  isProgressBarHidden: 'hidden',
+  body: '',
+
+  // XXX: a bit strange having this method here?
+  submitPost: function() {
+    if (this.body) {
+      this.createPost(this.body);
+      this.set('body', '')
+      //this.set('receiveTimelinesIds', [])
+    }
+  },
+
+  createPost: function(body) {
+    var that = this
+
+    var data = new FormData();
+    $.each($('input[type="file"]')[0].files, function(i, file) {
+      // TODO: can do this just once outside of the loop
+      App.postsController.set('isProgressBarHidden', 'visible')
+      data.append('file-'+i, file);
+    });
+    data.append('body', $('.submitForm textarea')[0].value) // XXX: dirty!
+    // data.append('timelinesIds', this.get('receiveTimelinesIds').toString()) // XXX: dirty!
+
+    var xhr = new XMLHttpRequest();
+
+    // Progress listerner.
+    xhr.upload.addEventListener("progress", function (evt) {
+
+      if (evt.lengthComputable) {
+	var percentComplete = Math.round(evt.loaded * 100 / evt.total);
+        that.set('progress', percentComplete)
+      } else {
+        // unable to compute
+      }
+    }, false);
+
+    // On finished.
+    xhr.addEventListener("load", function (evt) {
+      // Clear file field
+      var control = $('input[type="file"]')
+      control.replaceWith( control.val('').clone( true ) );
+      $('.file-input-name').html('')
+
+      // var obj = $.parseJSON(evt.target.responseText);
+      // TODO: bind properties
+      that.set('progress', '100')
+      that.set('isProgressBarHidden', 'hidden')
+    }, false);
+
+    // On failed.
+    xhr.addEventListener("error", function (evt) {
+      that.set('isProgressBarHidden', 'hidden')
+    }, false);
+
+    // On cancel.
+    xhr.addEventListener("abort", function (evt) {
+      that.set('isProgressBarHidden', 'hidden')
+    }, false);
+
+    xhr.open("post", this.get('resourceUrl'));
+    xhr.send(data);
+
+    // fallback to simple ajax if xhr is not supported
+    // $.ajax({
+    //   url: this.resourceUrl,
+    //   type: 'post',
+    //   data: data,
+    //   cache: false,
+    //   contentType: false,
+    //   processData: false,
+    //   context: post,
+    //   success: function(response) {
+    //     this.setProperties(response);
+    //     this.attachment = null
+    //     this.loading = false
+    //     // We do not insert post right now, but wait for a socket event
+    //     // App.postsController.insertAt(0, post)
+    //   }
+    // })
+  }
 })
 
 App.Post = Ember.Object.extend({
@@ -1644,21 +1721,11 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
   resourceUrl: '/v1/posts',
   timelineId: null,
   content: [],
-  body: '',
   receiveTimelinesIds: [],
 
   sortProperties: ['updatedAt'],
   sortAscending: false,
   isLoaded: true,
-
-  // XXX: a bit strange having this method here?
-  submitPost: function() {
-    if (this.body) {
-      App.postsController.createPost(this.body);
-      this.set('body', '')
-      this.set('receiveTimelinesIds', [])
-    }
-  },
 
   removePost: function(propName, value) {
     var obj = this.findProperty(propName, value);
@@ -1711,78 +1778,6 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
     })
   },
 
-  createPost: function(body) {
-    // TODO: bind to progress property
-
-    var data = new FormData();
-    $.each($('input[type="file"]')[0].files, function(i, file) {
-      // TODO: can do this just once outside of the loop
-      App.postsController.set('isProgressBarHidden', 'visible')
-      data.append('file-'+i, file);
-    });
-    data.append('body', $('.submitForm textarea')[0].value) // XXX: dirty!
-    data.append('timelinesIds', App.postsController.get('receiveTimelinesIds').toString()) // XXX: dirty!
-
-    var xhr = new XMLHttpRequest();
-				
-    // Progress listerner.
-    xhr.upload.addEventListener("progress", function (evt) {
-
-      if (evt.lengthComputable) {
-	var percentComplete = Math.round(evt.loaded * 100 / evt.total);
-        App.postsController.set('progress', percentComplete)
-      } else {
-        // unable to compute
-      }
-    }, false);
-
-    // On finished.
-    xhr.addEventListener("load", function (evt) {
-      // Clear file field
-      var control = $('input[type="file"]')
-      control.replaceWith( control.val('').clone( true ) );
-      $('.file-input-name').html('')
-
-      // var obj = $.parseJSON(evt.target.responseText);
-      // TODO: bind properties
-      App.postsController.set('progress', '100')
-      App.postsController.set('isProgressBarHidden', 'hidden')
-    }, false);
-
-    // On failed.
-    xhr.addEventListener("error", function (evt) {
-      App.postsController.set('isProgressBarHidden', 'hidden')
-    }, false);
-
-    // On cancel.
-    xhr.addEventListener("abort", function (evt) {
-      App.postsController.set('isProgressBarHidden', 'hidden')
-    }, false);
-
-    xhr.open("post", this.resourceUrl);
-    xhr.send(data);
-
-    // fallback to simple ajax if xhr is not supported
-    // $.ajax({
-    //   url: this.resourceUrl,
-    //   type: 'post',
-    //   data: data,
-    //   cache: false,
-    //   contentType: false,
-    //   processData: false,      
-    //   context: post,
-    //   success: function(response) {
-    //     this.setProperties(response);
-    //     this.attachment = null
-    //     this.loading = false
-    //     // We do not insert post right now, but wait for a socket event
-    //     // App.postsController.insertAt(0, post)
-    //   }
-    // })
-
-    return this
-  },
-
   didRequestRange: function(pageStart) {
     App.postsController.findAll(pageStart)
   },
@@ -1818,7 +1813,7 @@ App.HomeRoute = Ember.Route.extend({
   },
 
   renderTemplate: function() {
-    this.render('posts', {
+    this.render('timeline', {
       controller: this.controllerFor('timeline')
     })
   }
