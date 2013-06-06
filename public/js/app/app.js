@@ -190,124 +190,122 @@ App.GroupsView = Ember.View.extend({
 });
 
 App.CometController = Ember.Controller.extend({
-  needs: ['timeline'],
+  needs: ['timeline', 'search', 'post'],
 
   subscribedTo: {},
 
-    // var that = this
+  // TODO: review this method -- hacky solution
+  currentController: function() {
+    switch (App.properties.get('currentPath')) {
+    case 'home':
+    case 'comments':
+    case 'likes':
+    case 'posts':
+    case 'public':
+      return this.get('controllers.timeline')
+    case 'search':
+      return this.get('controllers.search')
+    case 'post':
+      return this.get('controllers.post')
+    }
+  },
 
-    // var isFirstPage = function() {
-    //   switch (App.properties.get('currentPath')) {
-    //   case "post":
-    //     return true
-    //   case "root":
-    //   case "posts":
-    //   case "user":
-    //   case "public":
-    //   case "likes":
-    //   case "comments":
-    //     return App.postsController.pageStart === 0
-    //   case "search":
-    //     return App.searchController.pageStart === 0
-    //   }
-    // }
+  isFirstPage: function() {
+    return this.currentController().get('pageStart') === 0
+  },
 
   newPost: function(data) {
-    //   if (!isFirstPage())
-    //     return
+    if (!this.isFirstPage())
+      return
 
     var post = App.Post.create(data.post)
-    this.get('controllers.timeline.posts').addObject(post)
+    this.currentController().get('posts').addObject(post)
   },
 
   updatePost: function(data) {
-    //   var post = findPost(data.post.id)
+    var post = this.currentController().find(function(post) {
+      return post.id === data.post.id
+    })
 
-    //   if (post) {
-    //     post.set('body', data.post.body)
-    //   }
+    if (post)
+      post.set('body', data.post.body)
   },
 
   destroyPost: function(data) {
-    //   switch (App.properties.get('currentPath')) {
-    //   case "post":
-    //     // FIXME: it's SO wrong to do transition from the object
-    //     // App.router.transitionTo('posts')
-    //     break
-    //   case "root":
-    //   case "posts":
-    //   case "user":
-    //   case "public":
-    //   case "likes":
-    //   case "comments":
-    //     App.postsController.removePost('id', data.postId)
-    //     break;
-    //   case "search":
-    //     App.searchController.removePost('id', data.postId)
-    //     break
-    //   }
+    this.currentController().removePost('id', data.postId)
   },
 
   newComment: function(data) {
-    //   if (!isFirstPage())
-    //     return
+    if (!this.isFirstPage())
+      return
 
-    // var comment = App.Comment.create(data.comment)
-    //   var post = findPost(data.comment.postId)
+    var comment = App.Comment.create(data.comment)
+    var post = this.currentController().find(function(post) {
+      return post.id === data.comment.postId
+    })
 
-    //   if (post) {
-    //     post.comments.pushObject(comment)
-    //   } else {
-    //     post = App.postsController.findOne(data.comment.postId)
-    //     App.postsController.addObject(post)
-    //   }
+    if (post) {
+      post.comments.pushObject(comment)
+    } else {
+      // TODO: refactor me -- move findOne to a model
+      post = this.currentController().findOne(data.comment.postId)
+      this.currentController().addObject(post)
+    }
   },
 
   updateComment: function(data) {
-    //   var post = findPost(data.comment.postId)
+    var post = this.currentController().find(function(post) {
+      return post.id === data.comment.postId
+    })
 
-    //   var index = 0
-    //   var comment = post.comments.find(function(comment) {
-    //     index += 1
-    //     if (comment && comment.id)
-    //       return comment.id == data.comment.id
-    //   })
+    var index = 0
+    var comment = post.comments.find(function(comment) {
+      index += 1
+      if (comment && comment.id)
+        return comment.id === data.comment.id
+    })
 
-    //   if (comment) {
-    //     // FIXME: doesn't work as comment is not an Ember object
-    //     // comment.set('body', data.comment.body)
+    if (comment) {
+      // FIXME: doesn't work as comment is not an Ember object
+      // comment.set('body', data.comment.body)
 
-    //     var updatedComment = App.Comment.create(data.comment)
-    //     post.comments.removeObject(comment)
-    //     post.comments.insertAt(index-1, updatedComment)
-    //   }
+      var updatedComment = App.Comment.create(data.comment)
+      post.comments.removeObject(comment)
+      post.comments.insertAt(index-1, updatedComment)
+    }
   },
 
   destroyComment: function(data) {
-    //   var post = findPost(data.postId)
-    //   var comment = post.comments.findProperty('id', data.commentId)
-    //   post.comments.removeObject(comment)
+    var post = this.currentController().find(function(post) {
+      return post.id === data.postId
+    })
+
+    var comment = post.comments.findProperty('id', data.commentId)
+    post.comments.removeObject(comment)
   },
 
   newLike: function(data) {
-    //   if (!isFirstPage())
-    //     return
+    if (!this.isFirstPage())
+      return
 
-    //   var user = App.User.create(data.user)
-    //   var post = findPost(data.postId)
+    var user = App.User.create(data.user)
+    var post = this.currentController().find(function(post) {
+      return post.id === data.postId
+    })
 
-    //   if (post) {
-    //     var like = post.likes.find(function(like) {
-    //       return like.id == user.id
-    //     })
+    if (post) {
+      var like = post.likes.find(function(like) {
+        return like.id == user.id
+      })
 
-    //     if (!like) {
-    //       post.likes.pushObject(user)
-    //     }
-    //   } else {
-    //     post = App.postsController.findOne(data.postId)
-    //     App.postsController.addObject(post)
-    //   }
+      if (!like) {
+        post.likes.pushObject(user)
+      }
+    } else {
+      // TODO: refactor me -- move findOne to a model
+      post = this.currentController().findOne(data.postId)
+      this.currentController().addObject(post)
+    }
   },
 
   removeLike: function(data) {
@@ -1718,15 +1716,6 @@ App.SigninView = Ember.View.extend({
 });
 
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.PaginationHelper, {
-  resourceUrl: '/v1/posts',
-  timelineId: null,
-  content: [],
-  receiveTimelinesIds: [],
-
-  sortProperties: ['updatedAt'],
-  sortAscending: false,
-  isLoaded: true,
-
   removePost: function(propName, value) {
     var obj = this.findProperty(propName, value);
     if (obj)
