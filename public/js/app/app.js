@@ -456,13 +456,13 @@ App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
   attributeBindings: ['class'],
   classNames: ['autogrow-short'],
 
-  // TODO: Extract value from controller 
+  // TODO: Extract value from controller
   valueBinding: 'controller.body',
 
   insertNewline: function() {
     this.triggerAction();
     // dirty way to restore original height of post textarea
-    this.$().find('textarea').height('56px') 
+    this.$().find('textarea').height('56px')
   },
 
   didInsertElement: function() {
@@ -945,7 +945,8 @@ App.PostView = Ember.View.extend({
   },
 
   postOwner: function() {
-    return App.postController.content.createdBy && App.postController.content.createdBy.id == App.properties.userId
+    return App.postController.content.createdBy &&
+      App.postController.content.createdBy.id == App.properties.userId
   }.property('App.postController.content'),
 
   destroyPost: function() {
@@ -998,8 +999,11 @@ App.UserTimelineView = Ember.View.extend({
 
   showPostCreationForm: function() {
     return App.postsController.user &&
-      (((App.postsController.user.type == 'user' || !App.postsController.user.type) && App.postsController.user.id == currentUser) || 
-       (App.postsController.user.type === 'group' && App.postsController.subscribers.filter(function(subscriber) { return subscriber.id == currentUser})))
+      (((App.postsController.user.type == 'user' || !App.postsController.user.type) &&
+        App.postsController.user.id == currentUser) ||
+       (App.postsController.user.type === 'group' && App.postsController.subscribers.filter(function(subscriber) {
+          return subscriber.id == currentUser
+        })))
   }.property('App.postsController.user'),
 
   isGroup: function() {
@@ -1219,7 +1223,7 @@ App.TimelineController = Ember.ObjectController.extend(App.PaginationHelper, {
     xhr.upload.addEventListener("progress", function (evt) {
 
       if (evt.lengthComputable) {
-	var percentComplete = Math.round(evt.loaded * 100 / evt.total);
+        var percentComplete = Math.round(evt.loaded * 100 / evt.total);
         that.set('progress', percentComplete)
       } else {
         // unable to compute
@@ -1591,7 +1595,8 @@ App.SubscribersView = Ember.View.extend({
   templateName: 'subscribers',
 
   isOwner: function() {
-    return App.subscribersController.username  == App.properties.username || App.subscribersController.admins && App.subscribersController.admins.indexOf(currentUser) != -1
+    return App.subscribersController.username == App.properties.username ||
+      App.subscribersController.admins && App.subscribersController.admins.indexOf(currentUser) !== -1
   }.property('App.subscribersController.username', 'App.properties.username', 'App.subscribersController.admins'),
 
   hasAdmins: function() {
@@ -1681,7 +1686,7 @@ App.SigninController = Ember.ObjectController.extend({
 
   signin: function() {
     var that = this;
-    
+
     $.ajax({
       url: this.resourceUrl,
       data: { username: this.get('username'), password: this.get('password') },
