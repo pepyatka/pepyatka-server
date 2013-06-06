@@ -2,22 +2,6 @@ App = Ember.Application.create({
   LOG_TRANSITIONS: true
 });
 
-Ember.Application.initializer({
-  name: 'comet',
-
-  initialize: function(container, application) {
-    // use the same instance of Comet everywhere in the app
-    container.optionsForType('comet', { singleton: true });
-
-    // register 'comet:main' as our Comet object
-    container.register('comet:main', application.Comet);
-
-    // inject the Comet object into all controllers and routes
-    container.typeInjection('controller', 'comet', 'comet:main');
-    container.typeInjection('route', 'comet', 'comet:main');
-  }
-});
-
 App.Properties = Ember.Object.extend({
   isAuthorized: false,
   username: currentUsername,
@@ -205,8 +189,7 @@ App.GroupsView = Ember.View.extend({
   tagName: 'ul'
 });
 
-App.Comet = Ember.Object.extend({
-  socket: null,
+App.CometController = Ember.Controller.extend({
   subscribedTo: {},
 
   monitor: function() {
@@ -217,7 +200,16 @@ App.Comet = Ember.Object.extend({
       this.subscribe('post', channel.get('id'))
   }.observes('channel.id'),
 
+  onData: function() {
+    console.log(this.get('controllers'))
+  },
+
   init: function() {
+    this._super();
+
+    this.set('socket', io.connect('/'));
+    this.socket.on('data', this.onData.bind(this));
+
     // var that = this
 
     // var isFirstPage = function() {
@@ -256,8 +248,6 @@ App.Comet = Ember.Object.extend({
     //     })
     //   }
     // }
-
-    this.socket = io.connect('/');
 
     // this.socket.on('newPost', function (data) {
     //   if (!isFirstPage())
@@ -428,7 +418,7 @@ App.Comet = Ember.Object.extend({
 })
 
 App.ApplicationController = Ember.Controller.extend({
-  needs: ['groups', 'tags'],
+  needs: ['groups', 'tags', 'comet'],
 
   subscription: null,
   isLoaded: true,
@@ -1812,7 +1802,7 @@ App.HomeRoute = Ember.Route.extend({
   },
 
   deactivate: function() {
-    this.get('comet').unsubscribe()
+    this.controllerFor('comet').unsubscribe()
   },
 
   model: function() {
@@ -1824,7 +1814,7 @@ App.HomeRoute = Ember.Route.extend({
     this.controllerFor('tags').set('content', App.Tag.findAll())
     this.controllerFor('timeline').set('content', model)
 
-    this.get('comet').set('channel', model)
+    this.controllerFor('comet').set('channel', model)
   },
 
   renderTemplate: function() {
