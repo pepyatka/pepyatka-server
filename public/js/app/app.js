@@ -91,7 +91,9 @@ App.Pagination = Ember.View.extend({
   templateName: 'pagination'
 });
 
-App.Tag = Ember.Object.extend({})
+App.Tag = Ember.Object.extend({
+  content: {}
+})
 App.Tag.reopenClass({
   resourceUrl: '/v1/tags',
 
@@ -103,8 +105,10 @@ App.Tag.reopenClass({
       context: this,
       type: 'get',
       success: function(response) {
-        response.forEach(function(tag) { 
-          tags.addObject(encodeURIComponent(tag)) 
+        response.forEach(function(attrs) {
+          // TODO: return attrs as an object
+          var tag = App.Tag.create({name: encodeURIComponent(attrs)})
+          tags.addObject(tag)
         })
       },
       error: App.helpers.handleAjaxError
@@ -121,7 +125,9 @@ App.Tags = Ember.View.extend({
   tagName: 'ul'
 });
 
-App.Group = Ember.Object.extend({})
+App.Group = Ember.Object.extend({
+  content: {}
+})
 App.Group.reopenClass({
   resourceUrl: '/v1/users',
   suffix: '/subscriptions',
@@ -139,8 +145,10 @@ App.Group.reopenClass({
         // TODO: review the second condition
         if (attrs.user.type === 'group' &&
             groups.indexOf(attrs.user.username) === -1 &&
-            attrs.name === 'Posts')
+            attrs.name === 'Posts') {
+          // TODO: build Group object instead of using attrs directly
           groups.addObject(attrs)
+        }
       })
     }
 
@@ -2119,7 +2127,5 @@ App.Router.reopen({
 });
 
 Ember.Handlebars.registerBoundHelper('decodeURIComponent', function(content) {
-  if (!content) return
-
   return decodeURIComponent(content)
 })
