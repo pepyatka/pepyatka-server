@@ -371,11 +371,13 @@ App.Comet = Ember.Object.extend({
   },
 
   subscribe: function(channel, ids) {
+    if (!ids) return;
+
     var subscribedTo = {};
     var that = this
-    if (!$.isArray(ids)) {
+    if (!$.isArray(ids))
       ids = [ids];
-    }
+
     if (this.subscribedTo[channel]) {
       ids.forEach(function(id) {
         var indexOfThisId = that.subscribedTo[channel].indexOf(id);
