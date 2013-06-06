@@ -2119,5 +2119,7 @@ App.Router.reopen({
 });
 
 Ember.Handlebars.registerBoundHelper('decodeURIComponent', function(content) {
+  if (!content) return
+
   return decodeURIComponent(content)
 })
