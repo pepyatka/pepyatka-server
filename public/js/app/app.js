@@ -893,7 +893,7 @@ App.CreateCommentView = Ember.TextArea.extend(Ember.TargetActionSupport, {
 
 // Separate page for a single post
 App.PostController = Ember.ObjectController.extend();
-App.postController = App.PostController.create()
+
 App.PostView = Ember.View.extend({
   templateName: 'post',
   isFormVisible: false,
@@ -909,15 +909,14 @@ App.PostView = Ember.View.extend({
   },
 
   groupsNames: function() {
-    if (!App.postController.content)
-      return 
+    if (!this.get("controller.content.groups") ||
+        this.get("controller.content.createdBy.username") ==
+        this.get("controller.content.groups.username")) {
+      return null;
+    }
 
-    if (!App.postController.content.groups ||
-      App.postController.content.createdBy.username == App.postController.content.groups.username)
-      return null
-
-    return App.postController.content.groups.username
-  }.property('App.postController.content', 'App.postsController.user'),
+    return this.get("controller.content.groups.username");
+  }.property('controller.content', 'App.postsController.user'),
 
   didInsertElement: function() {
     if (this.$()) {
@@ -937,20 +936,20 @@ App.PostView = Ember.View.extend({
         this.$().find('.body').hashTagsUrls()
       }
     })
-  }.observes('App.postController.content'),
+  }.observes('controller.content'),
 
   // XXX: kind of dup of App.PostContainerView.unlikePost function
   unlikePost: function() {
-    App.postsController.unlikePost(App.postController.content.id)
+    App.postsController.unlikePost(this.get("controller.content.id"));
   },
 
   postOwner: function() {
-    return App.postController.content.createdBy &&
-      App.postController.content.createdBy.id == App.properties.userId
-  }.property('App.postController.content'),
+    return this.get("controller.content.createdBy") &&
+      this.get("controller.content.createdBy.id") == App.properties.userId;
+  }.property('controller.content'),
 
   destroyPost: function() {
-    App.postsController.destroyPost(App.postController.content.id)
+    App.postsController.destroyPost(this.get("controller.content.id"));
   }
 });
 
@@ -1379,8 +1378,7 @@ App.Post.reopenClass({
 //          App.properties.get('subscription').unsubscribe()
 //          App.properties.get('subscription').subscribe('post', response.id)
         }
-        this.setProperties(response)
-        App.postController.set('content', response)
+        post.setProperties(response);
       },
       error: function(XMLHttpRequest, textStatus, errorThrown) {
         if (errorThrown == 'Not Found')
@@ -1819,7 +1817,7 @@ App.PostRoute = Ember.Route.extend({
   },
 
   setupController: function(controller, model) {
-    this.controllerFor('post').set('content', model);
+    controller.set('content', model);
   }
 })
 
