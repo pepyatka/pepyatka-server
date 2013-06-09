@@ -1361,6 +1361,8 @@ App.Post = Ember.Object.extend({
 });
 
 App.Post.reopenClass({
+  resourceUrl: '/v1/posts',
+
   findOne: function(postId) {
     var that = this
     var post = App.Post.create({
@@ -1372,12 +1374,12 @@ App.Post.reopenClass({
       dataType: 'jsonp',
       context: post,
       success: function(response) {
-        if (App.properties.get('currentPath') == 'aPost') {
+//        if (App.properties.get('currentPath') == 'post') {
           // TODO: we are not unsubscribing from all posts since we add
           // posts to content by this method if it's missing on a page
 //          App.properties.get('subscription').unsubscribe()
 //          App.properties.get('subscription').subscribe('post', response.id)
-        }
+//        }
         post.setProperties(response);
       },
       error: function(XMLHttpRequest, textStatus, errorThrown) {
