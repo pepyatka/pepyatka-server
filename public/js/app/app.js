@@ -1819,6 +1819,9 @@ App.PostRoute = Ember.Route.extend({
   },
 
   setupController: function(controller, model) {
+    this.controllerFor('groups').set('content', App.Group.findAll())
+    this.controllerFor('tags').set('content', App.Tag.findAll())
+
     controller.set('content', model);
   }
 })
