@@ -242,8 +242,8 @@ App.CometController = Ember.Controller.extend({
   },
 
   destroyPost: function(data) {
-    // TODO: check me
-    this.currentController().removePost('id', data.postId)
+    var post = this.findPost(data.postId)
+    this.currentController().get('content.posts').removeObject(post)
   },
 
   newComment: function(data) {
@@ -550,10 +550,6 @@ App.PostContainerView = Ember.View.extend({
 
   showAllComments: function() {
     this.content.set('showAllComments', true)
-  },
-
-  destroyPost: function() {
-    App.postsController.destroyPost(this.content.id)
   }
 });
 
@@ -597,10 +593,6 @@ App.OwnPostContainerView = Ember.View.extend({
 
   showAllComments: function() {
     this.content.set('showAllComments', true)
-  },
-
-  destroyPost: function() {
-    App.postsController.destroyPost(this.content.id)
   }
 });
 
@@ -873,13 +865,18 @@ App.CreateCommentView = Ember.TextArea.extend(Ember.TargetActionSupport, {
 // Separate page for a single post
 App.PostController = Ember.ObjectController.extend({
   like: function() {
-    var post = this.get('content.id')
-    App.Post.like(post)
+    var postId = this.get('content.id')
+    App.Post.like(postId)
   },
 
   unlike: function() {
-    var post = this.get('content.id')
-    App.Post.unlike(post)
+    var postId = this.get('content.id')
+    App.Post.unlike(postId)
+  },
+
+  destroy: function() {
+    var postId = this.get('content.id')
+    App.Post.destroy(postId)
   }
 })
 
@@ -930,11 +927,7 @@ App.PostView = Ember.View.extend({
   postOwner: function() {
     return this.get("controller.content.createdBy") &&
       this.get("controller.content.createdBy.id") == App.properties.userId;
-  }.property('controller.content'),
-
-  destroyPost: function() {
-    App.postsController.destroyPost(this.get("controller.content.id"));
-  }
+  }.property('controller.content')
 });
 
 App.UserTimelineController = Ember.ObjectController.extend({
@@ -1187,6 +1180,10 @@ App.TimelineController = Ember.ObjectController.extend(App.PaginationHelper, {
     App.Post.unlike(postId)
   },
 
+  destroy: function(postId) {
+    App.Post.destroy(postId)
+  },
+
   // XXX: a bit strange having this method here?
   submitPost: function() {
     if (this.body) {
@@ -1390,6 +1387,17 @@ App.Post.reopenClass({
       }
     })
     return post;
+  },
+
+  destroy: function(postId) {
+    $.ajax({
+      url: this.resourceUrl + '/' + postId,
+      type: 'post',
+      data: {'_method': 'delete'},
+      success: function(response) {
+        console.log(response)
+      }
+    })
   }
 })
 
@@ -1447,12 +1455,6 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pag
       });
       this.set('body', '');
     }
-  },
-
-  removePost: function(propName, value) {
-    var obj = this.findProperty(propName, value);
-    if (obj)
-      this.removeObject(obj);
   },
 
   didRequestRange: function(pageStart) {
@@ -1724,23 +1726,6 @@ App.SigninView = Ember.View.extend({
 
 // TODO: this controller to be removed due to TimelineController
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.PaginationHelper, {
-  removePost: function(propName, value) {
-    var obj = this.findProperty(propName, value);
-    if (obj)
-      this.removeObject(obj);
-  },
-
-  destroyPost: function(postId) {
-    $.ajax({
-      url: this.resourceUrl + '/' + postId,
-      type: 'post',
-      data: {'_method': 'delete'},
-      success: function(response) {
-        console.log(response)
-      }
-    })
-  },
-
   updatePost: function(post, body) {
     $.ajax({
       url: this.resourceUrl + '/' + post.id,

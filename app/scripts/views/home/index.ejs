@@ -307,7 +307,7 @@
             {{#if postOwner}}
               (<a {{action editFormVisibility target="view"}}>{{t label.edit}}</a>
               |
-              <a {{action destroyPost target="view"}}>{{t label.delete}}</a>)
+              <a {{action destroy id target="controller"}}>{{t label.delete}}</a>)
             {{/if}}
           {{/if}}
         </div>
@@ -417,13 +417,13 @@
 
             {{#unless currentUserLiked}}
               -
-              <a {{action like target="controller"}}>{{t label.like}}</a>
+              <a {{action like id target="controller"}}>{{t label.like}}</a>
             {{/unless}}
 
             {{#if postOwner}}
               (<a {{action editFormVisibility target="view"}}>{{t label.edit}}</a>
               |
-              <a {{action destroyPost target="view"}}>{{t label.delete}}</a>)
+              <a {{action destroy id target="controller"}}>{{t label.delete}}</a>)
             {{/if}}
           {{/if}}
         </div>
@@ -637,7 +637,7 @@
             <span class="links">
               (<a {{action editFormVisibility target="view"}}>{{t label.edit}}</a>
               |
-              <a {{action destroyPost target="view"}}>{{t label.delete}}</a>)
+              <a {{action destroy target="controller"}}>{{t label.delete}}</a>)
             </span>
           {{/if}}
         {{/if}}
