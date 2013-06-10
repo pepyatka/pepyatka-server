@@ -1787,9 +1787,6 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
 })
 
 App.HomeRoute = Ember.Route.extend({
-  activate: function() {
-  },
-
   deactivate: function() {
     this.controllerFor('comet').unsubscribe()
   },
@@ -1807,13 +1804,15 @@ App.HomeRoute = Ember.Route.extend({
   },
 
   renderTemplate: function() {
-    this.render('timeline', {
-      controller: this.controllerFor('timeline')
-    })
+    this.render('timeline')
   }
 })
 
 App.PostRoute = Ember.Route.extend({
+  deactivate: function() {
+    this.controllerFor('comet').unsubscribe()
+  },
+
   model: function(params) {
     return App.Post.findOne(params.post_id)
   },
@@ -1827,18 +1826,24 @@ App.PostRoute = Ember.Route.extend({
 })
 
 App.PublicRoute = Ember.Route.extend({
+  deactivate: function() {
+    this.controllerFor('comet').unsubscribe()
+  },
+
   model: function() {
-    return 'everyone'
+    return App.Timeline.find('everyone')
   },
 
   setupController: function(controller, model) {
-    // TODO: findAll method to accept timeline parameter
-    App.postsController.set('timeline', model)
-    return App.postsController.findAll()
+    this.controllerFor('groups').set('content', App.Group.findAll())
+    this.controllerFor('tags').set('content', App.Tag.findAll())
+    this.controllerFor('timeline').set('content', model)
+
+    this.controllerFor('comet').set('channel', model)
   },
 
   renderTemplate: function() {
-    this.render('posts')
+    this.render('timeline')
   }
 })
 
