@@ -215,7 +215,7 @@ App.CometController = Ember.Controller.extend({
     if (currentController.constructor === App.PostController)
       return currentController.get('content')
     else
-      return currentController.find(function(post) {
+      return currentController.get('content.posts').find(function(post) {
         return post.id === postId
       })
   },
@@ -552,10 +552,6 @@ App.PostContainerView = Ember.View.extend({
     this.content.set('showAllComments', true)
   },
 
-  unlikePost: function() {
-    App.postsController.unlikePost(this.content.id)
-  },
-
   destroyPost: function() {
     App.postsController.destroyPost(this.content.id)
   }
@@ -601,10 +597,6 @@ App.OwnPostContainerView = Ember.View.extend({
 
   showAllComments: function() {
     this.content.set('showAllComments', true)
-  },
-
-  unlikePost: function() {
-    App.postsController.unlikePost(this.content.id)
   },
 
   destroyPost: function() {
@@ -881,12 +873,12 @@ App.CreateCommentView = Ember.TextArea.extend(Ember.TargetActionSupport, {
 // Separate page for a single post
 App.PostController = Ember.ObjectController.extend({
   like: function() {
-    var post = this.get('content')
+    var post = this.get('content.id')
     App.Post.like(post)
   },
 
   unlike: function() {
-    var post = this.get('content')
+    var post = this.get('content.id')
     App.Post.unlike(post)
   }
 })
@@ -934,11 +926,6 @@ App.PostView = Ember.View.extend({
       }
     })
   }.observes('controller.content'),
-
-  // XXX: kind of dup of App.PostContainerView.unlikePost function
-  unlikePost: function() {
-    App.postsController.unlikePost(this.get("controller.content.id"));
-  },
 
   postOwner: function() {
     return this.get("controller.content.createdBy") &&
@@ -1192,6 +1179,14 @@ App.TimelineController = Ember.ObjectController.extend(App.PaginationHelper, {
   isProgressBarHidden: 'hidden',
   body: '',
 
+  like: function(postId) {
+    App.Post.like(postId)
+  },
+
+  unlike: function(postId) {
+    App.Post.unlike(postId)
+  },
+
   // XXX: a bit strange having this method here?
   submitPost: function() {
     if (this.body) {
@@ -1360,9 +1355,9 @@ App.Post = Ember.Object.extend({
 App.Post.reopenClass({
   resourceUrl: '/v1/posts',
 
-  like: function(post) {
+  like: function(postId) {
     $.ajax({
-      url: this.resourceUrl + '/' + post.get('id') + '/like',
+      url: this.resourceUrl + '/' + postId + '/like',
       type: 'post',
       success: function(response) {
         console.log(response)
@@ -1370,9 +1365,9 @@ App.Post.reopenClass({
     })
   },
 
-  unlike: function(post) {
+  unlike: function(postId) {
     $.ajax({
-      url: this.resourceUrl + '/' + post.get('id') + '/unlike',
+      url: this.resourceUrl + '/' + postId + '/unlike',
       type: 'post',
       success: function(response) {
         console.log(response)
@@ -1727,6 +1722,7 @@ App.SigninView = Ember.View.extend({
   }
 });
 
+// TODO: this controller to be removed due to TimelineController
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.PaginationHelper, {
   removePost: function(propName, value) {
     var obj = this.findProperty(propName, value);

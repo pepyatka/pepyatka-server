@@ -301,7 +301,7 @@
 
             {{#unless currentUserLiked}}
               -
-              <a {{action like target="controller"}}>{{t label.like}}</a>
+              <a {{action like id target="controller"}}>{{t label.like}}</a>
             {{/unless}}
 
             {{#if postOwner}}
@@ -325,7 +325,7 @@
               </ul>
               <span class="liked">{{t label.liked}}</span>
               {{#if currentUserLiked}}
-                <span>(<a {{action unlikePost id target="view"}}>{{t label.unlike}}</a>)</span>
+                <span>(<a {{action unlike id target="controller"}}>{{t label.unlike}}</a>)</span>
               {{/if}}
             </div>
           </div>
@@ -441,7 +441,7 @@
               </ul>
               <span class="liked">{{t label.liked}}</span>
               {{#if currentUserLiked}}
-                <span>(<a {{action unlikePost id target="view"}}>{{t label.unlike}}</a>)</span>
+                <span>(<a {{action unlike id target="controller"}}>{{t label.unlike}}</a>)</span>
               {{/if}}
             </div>
           </div>
