@@ -300,10 +300,8 @@
             {{/view}}
 
             {{#unless currentUserLiked}}
-              {{#view App.LikePostView}}
-                -
-                <a {{action likePost target="view"}}>{{t label.like}}</a>
-              {{/view}}
+              -
+              <a {{action like target="controller"}}>{{t label.like}}</a>
             {{/unless}}
 
             {{#if postOwner}}
@@ -418,10 +416,8 @@
             {{/view}}
 
             {{#unless currentUserLiked}}
-              {{#view App.LikePostView}}
-                -
-                <a {{action likePost target="view"}}>{{t label.like}}</a>
-              {{/view}}
+              -
+              <a {{action like target="controller"}}>{{t label.like}}</a>
             {{/unless}}
 
             {{#if postOwner}}
@@ -633,10 +629,8 @@
           {{/view}}
 
           {{#unless currentUserLiked}}
-            {{#view App.LikePostView}}
-              -
-              <a {{action likePost target="view"}}>{{t label.like}}</a>
-            {{/view}}
+            -
+            <a {{action like target="controller"}}>{{t label.like}}</a>
           {{/unless}}
 
           {{#if view.postOwner}}
@@ -662,7 +656,7 @@
             </ul>
             <span class="liked">{{t label.liked}}</span>
             {{#if currentUserLiked}}
-              <span>(<a {{action unlikePost target="view"}}>{{t label.unlike}}</a>)</span>
+              <span>(<a {{action unlike target="controller"}}>{{t label.unlike}}</a>)</span>
             {{/if}}
           </div>
         </div>

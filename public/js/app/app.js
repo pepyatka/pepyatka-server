@@ -674,18 +674,6 @@ App.CommentPostView = Ember.View.extend(Ember.TargetActionSupport, {
   }
 })
 
-App.LikePostView = Ember.View.extend(Ember.TargetActionSupport, {
-  click: function() {
-    this.triggerAction();
-  },
-
-  likePost: function() {
-    // XXX: rather strange bit of code here -- potentially a defect
-    var post = this._context
-    App.postsController.likePost(post.id)
-  }
-})
-
 App.LikeView = Ember.View.extend({
   templateName: 'like-view',
   tagName: 'li',
@@ -892,7 +880,17 @@ App.CreateCommentView = Ember.TextArea.extend(Ember.TargetActionSupport, {
 })
 
 // Separate page for a single post
-App.PostController = Ember.ObjectController.extend();
+App.PostController = Ember.ObjectController.extend({
+  like: function() {
+    var post = this.get('content')
+    App.Post.like(post)
+  },
+
+  unlike: function() {
+    var post = this.get('content')
+    App.Post.unlike(post)
+  }
+})
 
 App.PostView = Ember.View.extend({
   templateName: 'post',
@@ -1363,28 +1361,38 @@ App.Post = Ember.Object.extend({
 App.Post.reopenClass({
   resourceUrl: '/v1/posts',
 
+  like: function(post) {
+    $.ajax({
+      url: this.resourceUrl + '/' + post.get('id') + '/like',
+      type: 'post',
+      success: function(response) {
+        console.log(response)
+      }
+    })
+  },
+
+  unlike: function(post) {
+    $.ajax({
+      url: this.resourceUrl + '/' + post.get('id') + '/unlike',
+      type: 'post',
+      success: function(response) {
+        console.log(response)
+      }
+    })
+  },
+
   findOne: function(postId) {
-    var that = this
-    var post = App.Post.create({
-      id: postId
-    });
+    var post = App.Post.create();
 
     $.ajax({
       url: this.resourceUrl + '/' + postId,
       dataType: 'jsonp',
-      context: post,
       success: function(response) {
-//        if (App.properties.get('currentPath') == 'post') {
-          // TODO: we are not unsubscribing from all posts since we add
-          // posts to content by this method if it's missing on a page
-//          App.properties.get('subscription').unsubscribe()
-//          App.properties.get('subscription').subscribe('post', response.id)
-//        }
         post.setProperties(response);
       },
       error: function(XMLHttpRequest, textStatus, errorThrown) {
-        if (errorThrown == 'Not Found')
-          that.transitionToRoute('error')
+        //if (errorThrown == 'Not Found')
+        //  that.transitionToRoute('error')
       }
     })
     return post;
@@ -1725,28 +1733,6 @@ App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pagi
     var obj = this.findProperty(propName, value);
     if (obj)
       this.removeObject(obj);
-  },
-
-  // TODO: like model
-  likePost: function(postId) {
-    $.ajax({
-      url: this.resourceUrl + '/' + postId + '/like',
-      type: 'post',
-      success: function(response) {
-        console.log(response)
-      }
-    })
-  },
-
-  // TODO: like model
-  unlikePost: function(postId) {
-    $.ajax({
-      url: this.resourceUrl + '/' + postId + '/unlike',
-      type: 'post',
-      success: function(response) {
-        console.log(response)
-      }
-    })
   },
 
   destroyPost: function(postId) {
