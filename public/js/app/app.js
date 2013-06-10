@@ -210,8 +210,20 @@ App.CometController = Ember.Controller.extend({
     }
   },
 
+  findPost: function(postId) {
+    var currentController = this.currentController()
+    if (currentController.constructor === App.PostController)
+      return currentController.get('content')
+    else
+      return currentController.find(function(post) {
+        return post.id === postId
+      })
+  },
+
   isFirstPage: function() {
-    return this.currentController().get('pageStart') === 0
+    var pageStart = this.currentController().get('pageStart')
+    return pageStart === 0 ||
+      pageStart === undefined
   },
 
   newPost: function(data) {
@@ -223,15 +235,14 @@ App.CometController = Ember.Controller.extend({
   },
 
   updatePost: function(data) {
-    var post = this.currentController().find(function(post) {
-      return post.id === data.post.id
-    })
+    var post = this.findPost(data.post.id)
 
     if (post)
       post.set('body', data.post.body)
   },
 
   destroyPost: function(data) {
+    // TODO: check me
     this.currentController().removePost('id', data.postId)
   },
 
@@ -240,23 +251,18 @@ App.CometController = Ember.Controller.extend({
       return
 
     var comment = App.Comment.create(data.comment)
-    var post = this.currentController().find(function(post) {
-      return post.id === data.comment.postId
-    })
+    var post = this.findPost(data.comment.postId)
 
     if (post) {
       post.comments.pushObject(comment)
     } else {
-      // TODO: refactor me -- move findOne to a model
-      post = this.currentController().findOne(data.comment.postId)
+      post = App.Post.findOne(data.comment.postId)
       this.currentController().addObject(post)
     }
   },
 
   updateComment: function(data) {
-    var post = this.currentController().find(function(post) {
-      return post.id === data.comment.postId
-    })
+    var post = this.findPost(data.comment.postId)
 
     var index = 0
     var comment = post.comments.find(function(comment) {
@@ -276,9 +282,7 @@ App.CometController = Ember.Controller.extend({
   },
 
   destroyComment: function(data) {
-    var post = this.currentController().find(function(post) {
-      return post.id === data.postId
-    })
+    var post = this.findPost(data.postId)
 
     var comment = post.comments.findProperty('id', data.commentId)
     post.comments.removeObject(comment)
@@ -289,31 +293,26 @@ App.CometController = Ember.Controller.extend({
       return
 
     var user = App.User.create(data.user)
-    var post = this.currentController().find(function(post) {
-      return post.id === data.postId
-    })
+    var post = this.findPost(data.postId)
 
     if (post) {
       var like = post.likes.find(function(like) {
         return like.id == user.id
       })
 
-      if (!like) {
+      if (!like)
         post.likes.pushObject(user)
-      }
     } else {
-      // TODO: refactor me -- move findOne to a model
-      post = this.currentController().findOne(data.postId)
+      post = App.Post.findOne(data.postId)
       this.currentController().addObject(post)
     }
   },
 
   removeLike: function(data) {
-    //   var post = findPost(data.postId)
+    var post = this.findPost(data.postId)
 
-    //   if (post) {
-    //     post.removeLike('id', data.userId)
-    //   }
+    if (post)
+      post.removeLike('id', data.userId)
   },
 
   disconnect: function(data) {
