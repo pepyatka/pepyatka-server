@@ -330,7 +330,7 @@ App.CometController = Ember.Controller.extend({
 
     this.get('socket').on('newComment', this.newComment.bind(this));
     this.get('socket').on('updateComment', this.updateComment.bind(this));
-    this.get('socket').on('destroyComment', this.updateComment.bind(this));
+    this.get('socket').on('destroyComment', this.destroyComment.bind(this));
 
     this.get('socket').on('newLike', this.newLike.bind(this));
     this.get('socket').on('removeLike', this.removeLike.bind(this));
