@@ -446,7 +446,7 @@ App.TimelineView = Ember.View.extend({
 // Separate CreatePostView to two fields:
 // - new post
 // - edit post or comment
-App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
+App.CreatePostField = Ember.TextArea.extend(Ember.TargetActionSupport, {
   attributeBindings: ['class'],
   classNames: ['autogrow-short'],
   valueBinding: Ember.Binding.oneWay('controller.body'),
@@ -456,10 +456,22 @@ App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
 
     // dirty way to restore original height of post textarea
     this.$().find('textarea').height('56px')
+
+    this.set('_parentView._parentView._parentView.isEditFormVisible', false)
   },
 
   didInsertElement: function() {
     this.$().autogrow();
+  }
+})
+
+App.SubmitPostButton = Ember.View.extend(Ember.TargetActionSupport, {
+  layout: Ember.Handlebars.compile('{{t button.post}}'),
+
+  tagName: 'button',
+
+  click: function() {
+    this.get('_parentView.textField').triggerAction();
   }
 })
 
@@ -842,22 +854,15 @@ App.CreateCommentView = Ember.TextArea.extend(Ember.TargetActionSupport, {
   }
 })
 
-// Separate page for a single post
 App.PostController = Ember.ObjectController.extend({
   update: function(attrs) {
     // FIXME: the only way to fetch context after insertNewLine action
-    if (attrs.constructor === App.EditPostForm ||
-       attrs.constructor === App.CreatePostView)
+    if (attrs.constructor === App.CreatePostField)
       attrs = { body: attrs.value }
 
     var postId = this.get('id')
 
     App.Post.update(postId, attrs)
-
-    // FIXME: move this code back to view
-    //if (attrs.body) {
-    //  this.set('parentView.isEditFormVisible', false)
-    //}
   },
 
   like: function() {
