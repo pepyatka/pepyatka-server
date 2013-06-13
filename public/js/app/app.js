@@ -978,29 +978,49 @@ App.UserTimelineView = Ember.View.extend({
   currentUser: currentUser,
 
   showPostCreationForm: function() {
-    return App.postsController.user &&
-      (((App.postsController.user.type == 'user' || !App.postsController.user.type) &&
-        App.postsController.user.id == currentUser) ||
-       (App.postsController.user.type === 'group' && App.postsController.subscribers.filter(function(subscriber) {
-          return subscriber.id == currentUser
-        })))
-  }.property('App.postsController.user'),
+    return this.get("controller.user") &&
+      (((this.get("controller.user.type") == 'user' || !this.get("controller.user.type")) &&
+        this.get("controller.user.id") == currentUser) ||
+       (this.get("controller.user.type") === 'group' && this.get("controller.subscribers").filter(function(subscriber) {
+         return subscriber.id == currentUser;
+       })));
+  }.property('controller.user'),
 
   isGroup: function() {
-    return App.postsController.user && App.postsController.user.type == 'group'
-  }.property('App.postsController.user'),
+    return this.get("controller.user") && this.get("controller.user.type") == 'group';
+  }.property('controller.user'),
 
   subscribeTo: function() {
-    App.userTimelineController.subscribeTo(App.postsController.id)
+    App.userTimelineController.subscribeTo(this.get("controller.id"));
   },
 
   unsubscribeTo: function() {
-    App.userTimelineController.unsubscribeTo(App.postsController.id)
+    App.userTimelineController.unsubscribeTo(this.get("controller.id"));
   },
 
+  subscribedTo: function() {
+    var res = false;
+    var subscribers = this.get("controller.subscribers");
+
+    if (!subscribers) return res;
+
+    for (var i = 0; i < subscribers.length; i++) {
+      if (subscribers[i].id == currentUser) {
+        res = true;
+        break;
+      }
+    }
+
+    return res;
+  }.property("controller.subscribers.@each.id", "currentUser"),
+
+  ownProfile: function() {
+    return this.get("controller.user.id") == currentUser;
+  }.property("currentUser", "controller.user.id"),
+
   submitPost: function() {
-    App.postsController.set('receiveTimelinesIds', [ App.postsController.get('timelineId') ])
-    App.postsController.submitPost()
+    this.set('controller.receiveTimelinesIds', [ this.get('controller.id') ]);
+    this.get("controller").submitPost();
     // dirty way to restore original height of post textarea
     this.$().find('textarea').height('56px')
   }
@@ -1826,18 +1846,13 @@ App.UserRoute = Ember.Route.extend({
   },
 
   setupController: function(controller, model) {
-    // TODO: findAll method to accept timeline parameter
-    App.postsController.set('timeline', model)
-    var posts = App.postsController.findAll()
-
-    // TODO: this is workaround for our custom generated controller
     App.userTimelineController.set('target', controller.target)
-    this.controllerFor('posts').set('content', posts);
+    this.controllerFor('timeline').set('content', App.Timeline.find(model));
   },
 
   renderTemplate: function() {
     this.render('user-timeline', {
-      controller: this.controllerFor('posts')
+      controller: this.controllerFor('timeline')
     })
   }
 })

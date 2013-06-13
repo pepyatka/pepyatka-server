@@ -550,10 +550,10 @@
     </div>
   {{/if}}
 
-  {{#unless content.user.ownProfile}}
+  {{#unless view.ownProfile}}
     {{#if view.currentUser}}
       <div class="row profile-actions">
-        {{#unless content.user.subscribedTo}}
+        {{#unless view.subscribedTo}}
           <a {{action subscribeTo target="view"}}>{{t label.subscribe}}</a>
         {{/unless}}
       </div>
@@ -562,13 +562,7 @@
 
   <div class="posts">
     <ul class="media-list">
-      {{#if view.isGroup}}
-        {{view Ember.CollectionView contentBinding="App.postsController"
-              itemViewClass="App.PostContainerView"}}
-      {{else}}
-        {{view Ember.CollectionView contentBinding="App.postsController"
-                      itemViewClass="App.OwnPostContainerView"}}
-      {{/if}}
+      {{each controller.posts itemViewClass="App.PartialPostView"}}
     </ul>
 
     {{view App.Pagination}}
