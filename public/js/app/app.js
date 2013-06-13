@@ -491,13 +491,12 @@ App.PartialPostView = Ember.View.extend({
 
   groupsNames: function() {
     if (!this.content.groups ||
-        this.content.createdBy.username == this.content.groups.username ||
-        (App.postsController.user &&
-         App.postsController.user.username == this.content.groups.username))
+        this.content.createdBy.username === this.content.groups.username ||
+        this.get('controller.content.createdBy.username') === this.content.groups.username)
       return null
 
     return this.content.groups.username
-  }.property('this.content', 'App.postsController.user'),
+  }.property('content', 'controller.content.createdBy.username'),
 
   toggleVisibility: function() {
     this.toggleProperty('isFormVisible');
@@ -899,7 +898,7 @@ App.PostView = Ember.View.extend({
     }
 
     return this.get("controller.content.groups.username");
-  }.property('controller.content', 'App.postsController.user'),
+  }.property('controller.content.groups.username', 'controller.content.createdBy.username'),
 
   didInsertElement: function() {
     if (this.$()) {
