@@ -213,7 +213,7 @@
             <span class="links">
               (<a {{action editFormVisibility target="view"}}>{{t label.edit}}</a>
               |
-              <a {{action destroyComment target="view"}}>{{t label.delete}}</a>)
+              <a {{action kill}}>{{t label.delete}}</a>)
             </span>
           {{/if}}
         </div>
@@ -303,7 +303,7 @@
           {{#if postOwner}}
             (<a {{action editFormVisibility target="view"}}>{{t label.edit}}</a>
             |
-            <a {{action destroy id target="controller"}}>{{t label.delete}}</a>)
+            <a {{action kill id target="controller"}}>{{t label.delete}}</a>)
           {{/if}}
         {{/if}}
       </div>
@@ -417,7 +417,7 @@
             {{#if postOwner}}
               (<a {{action editFormVisibility target="view"}}>{{t label.edit}}</a>
               |
-              <a {{action destroy id target="controller"}}>{{t label.delete}}</a>)
+              <a {{action kill id target="controller"}}>{{t label.delete}}</a>)
             {{/if}}
           {{/if}}
         </div>
@@ -625,7 +625,7 @@
             <span class="links">
               (<a {{action editFormVisibility target="view"}}>{{t label.edit}}</a>
               |
-              <a {{action destroy target="controller"}}>{{t label.delete}}</a>)
+              <a {{action kill target="controller"}}>{{t label.delete}}</a>)
             </span>
           {{/if}}
         {{/if}}

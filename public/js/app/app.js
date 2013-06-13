@@ -641,11 +641,7 @@ App.PartialCommentView = Ember.View.extend({
     // content.createdBy?
     return this.content.content.createdBy.id == currentUser &&
       this.content.content.createdBy.username != 'anonymous'
-  }.property(),
-
-  destroyComment: function() {
-    App.commentsController.destroyComment(this.content.id)
-  }
+  }.property()
 })
 
 // Create new post text field. Separate view to be able to bind events
@@ -811,16 +807,6 @@ App.EditCommentForm = Ember.View.extend({
     this.autoFocus()
   },
 
-  updateComment: function() {
-    if (this.body) {
-      // XXX: rather strange bit of code here -- potentially a defect
-      var comment = this._context
-      App.commentsController.updateComment(comment, this.body)
-      this.set('parentView.isEditFormVisible', false)
-      this.set('body', '')
-    }
-  },
-
   // XXX: this is a dup of App.PartialPostView.toggleVisibility()
   // function. I just do not know how to access it from UI bindings
   editFormVisibility: function() {
@@ -895,9 +881,9 @@ App.PostController = Ember.ObjectController.extend({
     App.Post.unlike(postId)
   },
 
-  destroy: function() {
+  kill: function() {
     var postId = this.get('content.id')
-    App.Post.destroy(postId)
+    App.Post.kill(postId)
   }
 })
 
@@ -1068,6 +1054,17 @@ App.Comment.reopenClass({
         console.log(response)
       }
     })
+  },
+
+  kill: function(commentId) {
+    $.ajax({
+      url: this.resourceUrl + '/' + commentId,
+      type: 'post',
+      data: {'_method': 'delete'},
+      success: function(response) {
+        console.log(response)
+      }
+    })
   }
 })
 
@@ -1147,6 +1144,12 @@ App.CommentController = Ember.ObjectController.extend({
     var commentId = this.get('id')
 
     App.Comment.update(commentId, attrs)
+  },
+
+  kill: function(attrs) {
+    var commentId = this.get('id')
+
+    App.Comment.kill(commentId)
   }
 })
 
@@ -1159,28 +1162,6 @@ App.CommentController.reopenClass({
     App.Comment.submit(attrs)
   }
 })
-
-App.CommentsController = Ember.ObjectController.extend({
-  resourceUrl: '/v1/comments',
-
-  // XXX: noone uses this method
-  removeComment: function(propName, value) {
-    var obj = this.findProperty(propName, value);
-    this.removeObject(obj);
-  },
-
-  destroyComment: function(commentId) {
-    $.ajax({
-      url: this.resourceUrl + '/' + commentId,
-      type: 'post',
-      data: {'_method': 'delete'},
-      success: function(response) {
-        console.log(response)
-      }
-    })
-  }
-})
-App.commentsController = App.CommentsController.create()
 
 App.Timeline = Ember.Object.extend({
   // FIXME: why is it create not extend?
@@ -1466,7 +1447,7 @@ App.Post.reopenClass({
     return post;
   },
 
-  destroy: function(postId) {
+  kill: function(postId) {
     $.ajax({
       url: this.resourceUrl + '/' + postId,
       type: 'post',
