@@ -223,7 +223,7 @@
           <div class="comment-form media">
             <div class="media-body">
               <div>
-                {{view App.CreateCommentView target="parentView"
+                {{view App.CreateCommentField target="parentView"
                       action="updateComment" valueBinding="view.body"
                       class="span7 input-tiny comment-area"}}
               </div>
@@ -357,7 +357,7 @@
           <i class="icon-comment-alt media-object pull-left"></i>
           <div class="media-body">
             <div>
-              {{view App.CreateCommentView target="parentView"
+              {{view App.CreateCommentField target="parentView"
                     action="submitComment" valueBinding="view.body"
                     class="span8 input-tiny comment-area"}}
             </div>
@@ -472,7 +472,7 @@
             <i class="icon-comment-alt media-object pull-left"></i>
             <div class="media-body">
               <div>
-                {{view App.CreateCommentView target="parentView"
+                {{view App.CreateCommentField target="parentView"
                       action="submitComment" valueBinding="view.body"
                       class="span8 input-tiny comment-area"}}
               </div>
@@ -664,7 +664,7 @@
           <i class="icon-comment-alt media-object pull-left"></i>
           <div class="media-body">
             <div>
-              {{view App.CreateCommentView target="view"
+              {{view App.CreateCommentField target="view"
                     action="submitComment" valueBinding="view.body"
                     class="span7 input-tiny comment-area"}}
             </div>

@@ -443,7 +443,7 @@ App.TimelineView = Ember.View.extend({
   }
 });
 
-// Separate CreatePostView to two fields:
+// Separate CreatePostField to two fields:
 // - new post
 // - edit post or comment
 App.CreatePostField = Ember.TextArea.extend(Ember.TargetActionSupport, {
@@ -836,7 +836,7 @@ App.EditCommentForm = Ember.View.extend({
 
 
 // Create new post text field. Separate view to be able to bind events
-App.CreateCommentView = Ember.TextArea.extend(Ember.TargetActionSupport, {
+App.CreateCommentField = Ember.TextArea.extend(Ember.TargetActionSupport, {
   attributeBindings: ['class'],
   classNames: ['autogrow-short'],
   rows: 1,
