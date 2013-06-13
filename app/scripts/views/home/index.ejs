@@ -144,8 +144,7 @@
 
   <div class="posts">
     <ul class="media-list">
-      {{view Ember.CollectionView contentBinding="App.searchController"
-             itemViewClass="App.PostContainerView"}}
+      {{each controller.posts itemViewClass="App.PartialPostView" itemController="post"}}
     </ul>
 
     {{view App.Pagination}}
@@ -563,7 +562,7 @@
 
   <div class="posts">
     <ul class="media-list">
-      {{each controller.posts itemViewClass="App.PartialPostView"}}
+      {{each controller.posts itemViewClass="App.PartialPostView" itemController="post"}}
     </ul>
 
     {{view App.Pagination}}
@@ -575,7 +574,7 @@
     <div class="pull-left">
       <img class="media-object" src="/img/64x64.png">
     </div>
-    
+
     <div class="media-body post">
       <!-- FIXME: showUserTimeline createdBy.username is undefined on a deserialized view -->
       <h5 class="media-heading author">
@@ -585,7 +584,7 @@
           ({{#linkTo user view.groupsNames}}{{view.groupsNames}}{{/linkTo}})
         {{/if}}
       </h5>
-    
+
       {{#if view.isEditFormVisible}}
         {{#view App.EditPostForm}}
           <div class="edit-post-form media">
@@ -611,7 +610,7 @@
           {{/if}}
         </div>
       {{/if}}
-    
+
       <div class="tagline">
         {{#linkTo 'post' this class="datetime"}}<time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>{{/linkTo}}
 
@@ -635,7 +634,7 @@
           {{/if}}
         {{/if}}
       </div>
-    
+
       {{#if anyLikes}}
         <div class="media likes">
           <div class="pull-left">
@@ -659,7 +658,7 @@
         {{view Ember.CollectionView contentBinding="comments"
                itemViewClass="App.CommentContainerView"}}
       </ul>
-    
+
       {{#view App.CommentForm}}
         <div class="comment-form media">
           <i class="icon-comment-alt media-object pull-left"></i>
