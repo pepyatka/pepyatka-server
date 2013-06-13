@@ -450,24 +450,29 @@ App.TimelineView = Ember.View.extend({
   }
 });
 
-// Create new post text field. Separate view to be able to bind events
+// Separate CreatePostView to two fields:
+// - new post
+// - edit post or comment
 App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
   attributeBindings: ['class'],
   classNames: ['autogrow-short'],
 
-  // TODO: Extract value from controller
-  valueBinding: 'controller.body',
-
   insertNewline: function() {
     this.triggerAction();
+
     // dirty way to restore original height of post textarea
     this.$().find('textarea').height('56px')
   },
 
   didInsertElement: function() {
-    // FIXME: bind as valueBinding property
-    if (this._context)
-      this.set('value', this._context.body)
+    // NOTE: I do not want to change post object so binding to another
+    // temp value
+    if (this._context) {
+      // FIXME: valueBinding doesn't work here or I'm missing
+      // something really obvious?
+      this.set('body', this._context.get('body'))
+      this.set('value', this._context.get('body'))
+    }
 
     this.$().autogrow();
   }
@@ -475,7 +480,6 @@ App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
 
 App.JustStarted = Ember.View.extend({
   templateName: 'just-started',
-  isAnonymousPermitted: isAnonymousPermitted,
 
   justStarted: function() {
     return true
@@ -792,15 +796,6 @@ App.EditPostForm = Ember.View.extend({
       this.$('textarea').trigger('keyup') // to apply autogrow
     }
   }.observes('parentView.isEditFormVisible'),
-
-  updatePost: function() {
-    if (this.body) {
-      // XXX: rather strange bit of code here -- potentially a defect
-      var post = this._context
-      App.postsController.updatePost(post, this.body)
-      this.set('parentView.isEditFormVisible', false)
-    }
-  },
 
   // XXX: this is a dup of App.PostContainerView.toggleVisibility()
   // function. I just do not know how to access it from UI bindings
@@ -1172,6 +1167,22 @@ App.TimelineController = Ember.ObjectController.extend(App.PaginationHelper, {
   isProgressBarHidden: 'hidden',
   body: '',
 
+  update: function(postId, attrs) {
+    // FIXME: the only way to fetch context after insertNewLine action
+    if (typeof postId !== 'string' && postId._context) {
+      postId = postId._context.get('id')
+      console.log(postId.value)
+      attrs  = { body: postId.value }
+    }
+
+    App.Post.update(postId, attrs)
+
+    // FIXME: move this code back to view
+    //if (attrs.body) {
+    //  this.set('parentView.isEditFormVisible', false)
+    //}
+  },
+
   like: function(postId) {
     App.Post.like(postId)
   },
@@ -1351,6 +1362,17 @@ App.Post = Ember.Object.extend({
 
 App.Post.reopenClass({
   resourceUrl: '/v1/posts',
+
+  update: function(postId, attrs) {
+    $.ajax({
+      url: this.resourceUrl + '/' + postId,
+      type: 'post',
+      data: { body: attrs.body, '_method': 'patch' },
+      success: function(response) {
+        console.log(response)
+      }
+    })
+  },
 
   like: function(postId) {
     $.ajax({
@@ -1726,18 +1748,6 @@ App.SigninView = Ember.View.extend({
 
 // TODO: this controller to be removed due to TimelineController
 App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.PaginationHelper, {
-  updatePost: function(post, body) {
-    $.ajax({
-      url: this.resourceUrl + '/' + post.id,
-      type: 'post',
-      data: { body: body, '_method': 'patch' },
-      context: post,
-      success: function(response) {
-        console.log(response)
-      }
-    })
-  },
-
   didRequestRange: function(pageStart) {
     App.postsController.findAll(pageStart)
   },
