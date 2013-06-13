@@ -497,8 +497,9 @@ App.UploadFileView = Ember.TextField.extend({
 // View to display single post. Post has following subviews (defined below):
 //  - link to show a comment form
 //  - form to add a new comment
-App.PostContainerView = Ember.View.extend({
-  templateName: 'post-view',
+App.PartialPostView = Ember.View.extend({
+  templateName: '_post',
+
   isFormVisible: false,
   isEditFormVisible: false,
   currentUser: currentUser,
@@ -654,7 +655,7 @@ App.CommentPostView = Ember.View.extend(Ember.TargetActionSupport, {
     this.triggerAction();
   },
 
-  // XXX: this is a dup of App.PostContainerView.toggleVisibility()
+  // XXX: this is a dup of App.PartialPostView.toggleVisibility()
   // function. I just do not know how to access it from UI bindings
   toggleVisibility: function() {
     this.toggleProperty('parentView.isFormVisible');
@@ -706,7 +707,7 @@ App.CommentPostViewSubst = Ember.View.extend(Ember.TargetActionSupport, {
     this.triggerAction();
   },
 
-  // XXX: this is a dup of App.PostContainerView.toggleVisibility()
+  // XXX: this is a dup of App.PartialPostView.toggleVisibility()
   // function. I just do not know how to access it from UI bindings
   toggleVisibility: function() {
     this.toggleProperty('parentView.isFormVisible');
@@ -715,7 +716,7 @@ App.CommentPostViewSubst = Ember.View.extend(Ember.TargetActionSupport, {
   // this method does not observe post comments as a result it won't
   // display additional Add comment link if user does not refresh the page
   isVisible: function() {
-    var post = this.get('parentView.content')
+    var post = this.get('_context')
     var comments = post.comments || []
 
     if (comments.length < 4)
@@ -768,7 +769,7 @@ App.CommentForm = Ember.View.extend({
     }
   },
 
-  // XXX: this is a dup of App.PostContainerView.toggleVisibility()
+  // XXX: this is a dup of App.PartialPostView.toggleVisibility()
   // function. I just do not know how to access it from UI bindings
   toggleVisibility: function() {
     this.toggleProperty('parentView.isFormVisible');
@@ -797,7 +798,7 @@ App.EditPostForm = Ember.View.extend({
     }
   }.observes('parentView.isEditFormVisible'),
 
-  // XXX: this is a dup of App.PostContainerView.toggleVisibility()
+  // XXX: this is a dup of App.PartialPostView.toggleVisibility()
   // function. I just do not know how to access it from UI bindings
   toggleVisibility: function() {
     this.toggleProperty('parentView.isEditFormVisible');
@@ -830,7 +831,7 @@ App.EditCommentForm = Ember.View.extend({
     }
   },
 
-  // XXX: this is a dup of App.PostContainerView.toggleVisibility()
+  // XXX: this is a dup of App.PartialPostView.toggleVisibility()
   // function. I just do not know how to access it from UI bindings
   editFormVisibility: function() {
     this.toggleProperty('parentView.isEditFormVisible');
@@ -859,6 +860,21 @@ App.CreateCommentView = Ember.TextArea.extend(Ember.TargetActionSupport, {
 
 // Separate page for a single post
 App.PostController = Ember.ObjectController.extend({
+  update: function(postId, attrs) {
+    // FIXME: the only way to fetch context after insertNewLine action
+    if (typeof postId !== 'string' && postId._context) {
+      attrs  = { body: postId.value || postId.body }
+      postId = postId._context.get('id')
+    }
+
+    App.Post.update(postId, attrs)
+
+    // FIXME: move this code back to view
+    //if (attrs.body) {
+    //  this.set('parentView.isEditFormVisible', false)
+    //}
+  },
+
   like: function() {
     var postId = this.get('content.id')
     App.Post.like(postId)
@@ -1126,6 +1142,10 @@ App.commentsController = App.CommentsController.create()
 
 App.Timeline = Ember.Object.extend({
   posts: Ember.ArrayProxy.createWithMixins(Ember.SortableMixin, {
+    // TODO: figure out why we have to add itemController="post"
+    // option to each iterator in the view
+    itemController: 'post',
+
     content: [],
 
     sortProperties: ['updatedAt'],
@@ -1166,33 +1186,6 @@ App.TimelineController = Ember.ObjectController.extend(App.PaginationHelper, {
   isLoaded: true,
   isProgressBarHidden: 'hidden',
   body: '',
-
-  update: function(postId, attrs) {
-    // FIXME: the only way to fetch context after insertNewLine action
-    if (typeof postId !== 'string' && postId._context) {
-      attrs  = { body: postId.value || postId.body }
-      postId = postId._context.get('id')
-    }
-
-    App.Post.update(postId, attrs)
-
-    // FIXME: move this code back to view
-    //if (attrs.body) {
-    //  this.set('parentView.isEditFormVisible', false)
-    //}
-  },
-
-  like: function(postId) {
-    App.Post.like(postId)
-  },
-
-  unlike: function(postId) {
-    App.Post.unlike(postId)
-  },
-
-  destroy: function(postId) {
-    App.Post.destroy(postId)
-  },
 
   // XXX: a bit strange having this method here?
   submitPost: function() {
