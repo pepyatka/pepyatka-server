@@ -450,6 +450,7 @@ App.CreatePostField = Ember.TextArea.extend(Ember.TargetActionSupport, {
   attributeBindings: ['class'],
   classNames: ['autogrow-short'],
   valueBinding: Ember.Binding.oneWay('controller.body'),
+  viewName: 'textField',
 
   insertNewline: function() {
     this.triggerAction();
@@ -597,8 +598,8 @@ App.OwnPostContainerView = Ember.View.extend({
   }
 });
 
-App.CommentContainerView = Ember.View.extend({
-  templateName: 'comment-view',
+App.PartialCommentView = Ember.View.extend({
+  templateName: '_comment',
   isEditFormVisible: false,
 
   editFormVisibility: function() {
@@ -636,8 +637,10 @@ App.CommentContainerView = Ember.View.extend({
   },
 
   commentOwner: function() {
-    return this.content.createdBy.id == currentUser &&
-      this.content.createdBy.username != 'anonymous'
+    // FIXME: why is it binded to content.content.createdBy not just
+    // content.createdBy?
+    return this.content.content.createdBy.id == currentUser &&
+      this.content.content.createdBy.username != 'anonymous'
   }.property(),
 
   destroyComment: function() {
@@ -798,7 +801,8 @@ App.EditCommentForm = Ember.View.extend({
     if (this.get('parentView.isEditFormVisible') === true) {
       this.$().hide().show();
       this.$('textarea').focus();
-      this.$('textarea').trigger('keyup') // to apply autogrow
+      // FIXME: next line breaks content.body bindings in EditCommentField?
+      //this.$('textarea').trigger('keyup') // to apply autogrow
     }
   }.observes('parentView.isEditFormVisible'),
 
@@ -824,15 +828,30 @@ App.EditCommentForm = Ember.View.extend({
   }
 });
 
-
-// FIXME: Separate CreateCommentField to two fields:
-// - new comment
-// - edit comment
 App.CreateCommentField = Ember.TextArea.extend(Ember.TargetActionSupport, {
   attributeBindings: ['class'],
   classNames: ['autogrow-short'],
   rows: 1,
   valueBinding: 'view.body',
+  viewName: 'textField',
+
+  insertNewline: function() {
+    this.triggerAction();
+
+    this.set('_parentView._parentView.isFormVisible', false)
+  },
+
+  didInsertElement: function() {
+    this.$().autogrow();
+  }
+})
+
+App.EditCommentField = Ember.TextArea.extend(Ember.TargetActionSupport, {
+  attributeBindings: ['class'],
+  classNames: ['autogrow-short'],
+  rows: 1,
+  valueBinding: Ember.Binding.oneWay('controller.content.body'),
+  viewName: 'textField',
 
   insertNewline: function() {
     this.triggerAction();
@@ -1024,11 +1043,7 @@ App.UserTimelineView = Ember.View.extend({
   }
 })
 
-App.Comment = Ember.Object.extend({
-  body: null,
-  createdAt: null,
-  user: null
-})
+App.Comment = Ember.Object.extend({})
 
 App.Comment.reopenClass({
   resourceUrl: '/v1/comments',
@@ -1038,6 +1053,17 @@ App.Comment.reopenClass({
       url: this.resourceUrl,
       type: 'post',
       data: { body: attrs.body, postId: attrs.postId },
+      success: function(response) {
+        console.log(response)
+      }
+    })
+  },
+
+  update: function(commentId, attrs) {
+    $.ajax({
+      url: this.resourceUrl + '/' + commentId,
+      type: 'post',
+      data: { body: attrs.body, '_method': 'patch' },
       success: function(response) {
         console.log(response)
       }
@@ -1113,6 +1139,15 @@ App.User = Ember.Object.extend({
 })
 
 App.CommentController = Ember.ObjectController.extend({
+  update: function(attrs) {
+    // FIXME: the only way to fetch context after insertNewLine action
+    if (attrs.constructor === App.EditCommentField)
+      attrs = { body: attrs.value }
+
+    var commentId = this.get('id')
+
+    App.Comment.update(commentId, attrs)
+  }
 })
 
 App.CommentController.reopenClass({
@@ -1143,23 +1178,12 @@ App.CommentsController = Ember.ObjectController.extend({
         console.log(response)
       }
     })
-  },
-
-  updateComment: function(comment, body) {
-    $.ajax({
-      url: this.resourceUrl + '/' + comment.id,
-      type: 'post',
-      data: { body: body, '_method': 'patch' },
-      context: comment,
-      success: function(response) {
-        console.log(response)
-      }
-    })
   }
 })
 App.commentsController = App.CommentsController.create()
 
 App.Timeline = Ember.Object.extend({
+  // FIXME: why is it create not extend?
   posts: Ember.ArrayProxy.createWithMixins(Ember.SortableMixin, {
     // TODO: figure out why we have to add itemController="post"
     // option to each iterator in the view
@@ -1188,7 +1212,25 @@ App.Timeline.reopenClass({
     }).then(function(response) {
       if (response.posts)
         response.posts.forEach(function(attrs) {
+          var comments = attrs.comments
+          delete attrs.comments
+
           var post = App.Post.create(attrs)
+          post.comments = Ember.ArrayProxy.createWithMixins(Ember.SortableMixin, {
+            // TODO: figure out why we have to add itemController="comment"
+            // option to each iterator in the view
+            itemController: 'comment',
+
+            content: []
+          })
+
+          if (comments) {
+            comments.forEach(function(attrs) {
+              var comment = App.Comment.create(attrs)
+              post.comments.addObject(comment)
+            })
+          }
+
           timeline.posts.addObject(post)
         })
 
@@ -1289,7 +1331,9 @@ App.TimelineController = Ember.ObjectController.extend(App.PaginationHelper, {
 App.Post = Ember.Object.extend({
   showAllComments: false,
   currentUser: currentUser,
-  comments: Ember.ArrayProxy.create(),
+
+  // TODO: this is overwritten in Timeline find method
+  comments: Ember.ArrayProxy.extend({content: []}),
 
   partial: function() {
     if (this.showAllComments)

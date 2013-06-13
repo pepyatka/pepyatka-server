@@ -187,9 +187,8 @@
   </div>
 </script>
 
-<script type="text/x-handlebars" id="comment-view">
+<script type="text/x-handlebars" id="_comment">
   <li class="media">
-    {{#with view.content}}
       <div class="pull-left">
         <i class="icon-comment-alt media-object"></i>
       </div>
@@ -223,19 +222,18 @@
           <div class="comment-form media">
             <div class="media-body">
               <div>
-                {{view App.CreateCommentField target="parentView"
-                      action="updateComment" valueBinding="view.body"
+                {{view App.EditCommentField action="update" target="controller"
                       class="span7 input-tiny comment-area"}}
               </div>
               <div>
-                <button {{action updateComment target="view"}} class="btn btn-small">{{t button.post}}</button>
-                <a {{action editFormVisibility target="parentView"}}>{{t label.cancel}}</a>
+                {{view App.SubmitCommentButton action="submit" target="controller"
+                      class="btn btn-small"}}
+                <a {{action editFormVisibility target="view"}}>{{t label.cancel}}</a>
               </div>
             </div>
           </div>
         {{/view}}
       {{/unless}}
-    {{/with}}
   </li>
 </script>
 
@@ -268,8 +266,7 @@
             <div class="media-body">
               <div>
                 {{view App.CreatePostField action="update" target="controller"
-                      class="span8 input-tiny comment-area"
-                      viewName="textField"}}
+                      class="span8 input-tiny comment-area"}}
               </div>
               <div>
                 {{view App.SubmitPostButton action="update" target="controller"
@@ -332,14 +329,13 @@
 
       <ul class="unstyled comments">
         {{#if partial}}
-          {{view App.CommentContainerView contentBinding="firstComment"}}
+          {{view App.PartialCommentView contentBinding="firstComment"}}
           <li class="media more-comments">
             <a {{action showAllComments target="view"}}>{{skippedCommentsLength}} {{t label.moreComments}}</a>
           </li>
-          {{view App.CommentContainerView contentBinding="lastComment"}}
+          {{view App.PartialCommentView contentBinding="lastComment"}}
         {{else}}
-          {{view Ember.CollectionView contentBinding="comments"
-                 itemViewClass="App.CommentContainerView"}}
+          {{each controller.comments itemViewClass="App.PartialCommentView" itemController="comment"}}
 
           {{#view App.CommentPostViewSubst}}
             <li class="media new-comment-link">
@@ -358,8 +354,7 @@
           <div class="media-body">
             <div>
               {{view App.CreateCommentField action="submit" target="App.CommentController"
-                    class="span8 input-tiny comment-area"
-                    viewName="textField"}}
+                    class="span8 input-tiny comment-area"}}
             </div>
             <div>
               {{view App.SubmitCommentButton action="submit" target="App.CommentController"
@@ -448,14 +443,14 @@
 
         <ul class="unstyled comments">
           {{#if partial}}
-            {{view App.CommentContainerView contentBinding="firstComment"}}
+            {{view App.PartialCommentView contentBinding="firstComment"}}
             <li class="media more-comments">
               <a {{action showAllComments target="view"}}>{{skippedCommentsLength}} {{t label.moreComments}}</a>
             </li>
-            {{view App.CommentContainerView contentBinding="lastComment"}}
+            {{view App.PartialCommentView contentBinding="lastComment"}}
           {{else}}
             {{view Ember.CollectionView contentBinding="comments"
-                   itemViewClass="App.CommentContainerView"}}
+                   itemViewClass="App.PartialCommentView"}}
 
             {{#view App.CommentPostViewSubst}}
               <li class="media new-comment-link">
@@ -657,7 +652,7 @@
 
       <ul class="unstyled comments">
         {{view Ember.CollectionView contentBinding="comments"
-               itemViewClass="App.CommentContainerView"}}
+               itemViewClass="App.PartialCommentView"}}
       </ul>
 
       {{#view App.CommentForm}}
