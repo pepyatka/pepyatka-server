@@ -443,9 +443,9 @@ App.TimelineView = Ember.View.extend({
   }
 });
 
-// Separate CreatePostField to two fields:
+// FIXME: Separate CreatePostField to two fields:
 // - new post
-// - edit post or comment
+// - edit post
 App.CreatePostField = Ember.TextArea.extend(Ember.TargetActionSupport, {
   attributeBindings: ['class'],
   classNames: ['autogrow-short'],
@@ -755,16 +755,6 @@ App.CommentForm = Ember.View.extend({
     }
   }.observes('parentView.isFormVisible'),
 
-  submitComment: function() {
-    if (this.body) {
-      // XXX: rather strange bit of code here -- potentially a defect
-      var post = this._context
-      App.commentsController.createComment(post, this.body)
-      this.set('parentView.isFormVisible', false)
-      this.set('body', '')
-    }
-  },
-
   // XXX: this is a dup of App.PartialPostView.toggleVisibility()
   // function. I just do not know how to access it from UI bindings
   toggleVisibility: function() {
@@ -835,22 +825,33 @@ App.EditCommentForm = Ember.View.extend({
 });
 
 
-// Create new post text field. Separate view to be able to bind events
+// FIXME: Separate CreateCommentField to two fields:
+// - new comment
+// - edit comment
 App.CreateCommentField = Ember.TextArea.extend(Ember.TargetActionSupport, {
   attributeBindings: ['class'],
   classNames: ['autogrow-short'],
   rows: 1,
+  valueBinding: 'view.body',
 
   insertNewline: function() {
     this.triggerAction();
+
+    this.set('_parentView._parentView.isFormVisible', false)
   },
 
   didInsertElement: function() {
-    // FIXME: bind as valueBinding property
-    if (this.action != 'submitComment')
-      this.set('value', this._context.body)
-
     this.$().autogrow();
+  }
+})
+
+App.SubmitCommentButton = Ember.View.extend(Ember.TargetActionSupport, {
+  layout: Ember.Handlebars.compile('{{t button.post}}'),
+
+  tagName: 'button',
+
+  click: function() {
+    this.get('_parentView.textField').triggerAction();
   }
 })
 
@@ -1027,7 +1028,22 @@ App.Comment = Ember.Object.extend({
   body: null,
   createdAt: null,
   user: null
-});
+})
+
+App.Comment.reopenClass({
+  resourceUrl: '/v1/comments',
+
+  submit: function(attrs) {
+    $.ajax({
+      url: this.resourceUrl,
+      type: 'post',
+      data: { body: attrs.body, postId: attrs.postId },
+      success: function(response) {
+        console.log(response)
+      }
+    })
+  }
+})
 
 App.Subscriber = Ember.Object.extend({
   id: null,
@@ -1096,6 +1112,19 @@ App.User = Ember.Object.extend({
   }.property()
 })
 
+App.CommentController = Ember.ObjectController.extend({
+})
+
+App.CommentController.reopenClass({
+  submit: function(attrs) {
+    // FIXME: the only way to fetch context after insertNewLine action
+    if (attrs.constructor === App.CreateCommentField)
+      attrs = { body: attrs.value, postId: attrs._context.content.get('id') }
+
+    App.Comment.submit(attrs)
+  }
+})
+
 App.CommentsController = Ember.ObjectController.extend({
   resourceUrl: '/v1/comments',
 
@@ -1126,26 +1155,6 @@ App.CommentsController = Ember.ObjectController.extend({
         console.log(response)
       }
     })
-  },
-
- createComment: function(post, body) {
-    var comment = App.Comment.create({ 
-      body: body,
-      postId: post.id
-    });
-    
-    $.ajax({
-      url: this.resourceUrl,
-      type: 'post',
-      data: { body: body, postId: post.id }, // XXX: we've already defined a model above
-      context: comment,
-      success: function(response) {
-        this.setProperties(response);
-        // We do not insert comment right now, but wait for a socket event
-        // post.comments.pushObject(comment)
-      }
-    })
-    return comment;
   }
 })
 App.commentsController = App.CommentsController.create()

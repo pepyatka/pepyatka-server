@@ -357,12 +357,13 @@
           <i class="icon-comment-alt media-object pull-left"></i>
           <div class="media-body">
             <div>
-              {{view App.CreateCommentField target="parentView"
-                    action="submitComment" valueBinding="view.body"
-                    class="span8 input-tiny comment-area"}}
+              {{view App.CreateCommentField action="submit" target="App.CommentController"
+                    class="span8 input-tiny comment-area"
+                    viewName="textField"}}
             </div>
             <div>
-              <button {{action submitComment target="view"}} class="btn btn-small">{{t button.post}}</button>
+              {{view App.SubmitCommentButton action="submit" target="App.CommentController"
+                    class="btn btn-small"}}
               <a {{action cancelComment target="view"}}>{{t label.cancel}}</a>
             </div>
           </div>
