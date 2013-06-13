@@ -1872,6 +1872,10 @@ App.GroupsRoute = Ember.Route.extend({
 // posts instead, sounds like a wrong design and better'd be to use
 // PostsRoute instead
 App.UserRoute = Ember.Route.extend({
+  deactivate: function() {
+    this.controllerFor('comet').unsubscribe()
+  },
+
   model: function(params) {
     return params.username
   },
@@ -1892,6 +1896,10 @@ App.UserRoute = Ember.Route.extend({
 })
 
 App.LikesRoute = Ember.Route.extend({
+  deactivate: function() {
+    this.controllerFor('comet').unsubscribe()
+  },
+
   model: function(params) {
     return params.username
   },
@@ -1911,6 +1919,10 @@ App.LikesRoute = Ember.Route.extend({
 })
 
 App.CommentsRoute = Ember.Route.extend({
+  deactivate: function() {
+    this.controllerFor('comet').unsubscribe()
+  },
+
   model: function(params) {
     return params.username
   },
@@ -1983,6 +1995,10 @@ App.FeedSubscriptionsRoute = Ember.Route.extend({
 })
 
 App.FeedSearchRoute = Ember.Route.extend({
+  deactivate: function() {
+    this.controllerFor('comet').unsubscribe()
+  },
+
   model: function(params) {
     return decodeURIComponent(params.query)
   },
