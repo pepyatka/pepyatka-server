@@ -1838,6 +1838,9 @@ App.UserRoute = Ember.Route.extend({
   },
 
   setupController: function(controller, model) {
+    this.controllerFor('groups').set('content', App.Group.findAll())
+    this.controllerFor('tags').set('content', App.Tag.findAll())
+
     App.userTimelineController.set('target', controller.target)
     this.controllerFor('timeline').set('content', App.Timeline.find(model));
   },
