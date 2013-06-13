@@ -1170,9 +1170,8 @@ App.TimelineController = Ember.ObjectController.extend(App.PaginationHelper, {
   update: function(postId, attrs) {
     // FIXME: the only way to fetch context after insertNewLine action
     if (typeof postId !== 'string' && postId._context) {
+      attrs  = { body: postId.value || postId.body }
       postId = postId._context.get('id')
-      console.log(postId.value)
-      attrs  = { body: postId.value }
     }
 
     App.Post.update(postId, attrs)
