@@ -147,40 +147,33 @@ App.Group.reopenClass({
     return groups
   },
 
-  create: function(attrs, options) {
+  make: function(attrs, options) {
     $.ajax({
       url: this.resourceUrl,
       type: 'post',
-      data: { username: attrs.username },
+      data: attrs,
       dataType: 'jsonp',
-      success: options.success,
-      error: options.error
-    })
-    return this
+      success: options && options.success ? options.success : null,
+      error: options && options.error ? options.error : null
+    });
+    return this;
   }
-})
+});
 
 App.GroupsController = Ember.ArrayController.extend({
-  create: function() {
-    var that = this
+  make: function() {
+    var controller = this;
 
-    var success = function(response) {
-      // TODO: refactor using handleAjaxError method
-      switch (response.status) {
-      case 'success':
-        // TODO: how to add an object to existing view?
-        App.groupsController.addObject(this.get('name'))
-        that.transitionToRoute('user', this.get('name'))
-        break
-      case 'fail':
-        that.transitionToRoute('groups')
-        break
+    App.Group.make({
+      username: this.get("name")
+    }, {
+      success: function() {
+        controller.transitionToRoute("user", controller.get("name"));
+      },
+      error: function() {
+        controller.transitionToRoute("groups");
       }
-    }
-
-    App.Group.create({ username: this.get('name') },
-                     { success: success,
-                       error: App.helpers.handleAjaxError })
+    });
   }
 })
 
