@@ -269,11 +269,11 @@
             <div class="media-body">
               <div>
                 {{view App.CreatePostView action="update" target="controller"
-                      valueBinding="view.body"
-                      class="span8 input-tiny comment-area"}}
+                      class="span8 input-tiny comment-area"
+                      viewName="textField"}}
               </div>
               <div>
-                <button {{action update view target="controller"}} class="btn btn-small">{{t button.post}}</button>
+                <button {{action update view.textField target="controller"}} class="btn btn-small">{{t button.post}}</button>
                 <a {{action toggleVisibility target="view"}}>{{t label.cancel}}</a>
               </div>
             </div>

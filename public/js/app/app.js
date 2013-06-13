@@ -456,6 +456,7 @@ App.TimelineView = Ember.View.extend({
 App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
   attributeBindings: ['class'],
   classNames: ['autogrow-short'],
+  valueBinding: Ember.Binding.oneWay('controller.body'),
 
   insertNewline: function() {
     this.triggerAction();
@@ -465,15 +466,6 @@ App.CreatePostView = Ember.TextArea.extend(Ember.TargetActionSupport, {
   },
 
   didInsertElement: function() {
-    // NOTE: I do not want to change post object so binding to another
-    // temp value
-    if (this._context) {
-      // FIXME: valueBinding doesn't work here or I'm missing
-      // something really obvious?
-      this.set('body', this._context.get('body'))
-      this.set('value', this._context.get('body'))
-    }
-
     this.$().autogrow();
   }
 })
@@ -860,12 +852,13 @@ App.CreateCommentView = Ember.TextArea.extend(Ember.TargetActionSupport, {
 
 // Separate page for a single post
 App.PostController = Ember.ObjectController.extend({
-  update: function(postId, attrs) {
+  update: function(attrs) {
     // FIXME: the only way to fetch context after insertNewLine action
-    if (typeof postId !== 'string' && postId._context) {
-      attrs  = { body: postId.value || postId.body }
-      postId = postId._context.get('id')
-    }
+    if (attrs.constructor === App.EditPostForm ||
+       attrs.constructor === App.CreatePostView)
+      attrs = { body: attrs.value }
+
+    var postId = this.get('id')
 
     App.Post.update(postId, attrs)
 
