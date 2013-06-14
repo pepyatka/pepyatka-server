@@ -1181,10 +1181,6 @@ App.User = Ember.Object.extend({
       return null
 
     return this.statistics.likes
-  }.property(),
-
-  ownProfile: function() {
-    return App.postsController.user.id == currentUser
   }.property()
 })
 
