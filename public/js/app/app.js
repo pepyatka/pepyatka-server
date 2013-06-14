@@ -75,6 +75,32 @@ App.Pagination = Ember.View.extend({
   templateName: 'pagination'
 });
 
+App.Top = Ember.Object.extend({});
+
+App.Top.reopenClass({
+  resourceUrl: '/v1/top',
+
+  findAll: function(category) {
+    var users = Ember.ArrayProxy.create({content: [], isLoaded: false});
+
+    $.ajax({
+      url: this.resourceUrl + '/' + category,
+      dataType: 'jsonp',
+      context: this,
+      success: function(response) {
+        response.forEach(function(user) {
+          users.addObject(App.User.create(user));
+        });
+
+        users.set('category', category);
+
+        users.set('isLoaded', true);
+      }
+    });
+    return users;
+  }
+});
+
 App.Tag = Ember.Object.extend({
   content: {}
 })
@@ -1693,30 +1719,6 @@ App.SubscribersView = Ember.View.extend({
   }.property('App.properties.currentPath')
 });
 
-App.TopController = Ember.ArrayController.extend({
-  resourceUrl: '/v1/top',
-
-  getTop: function(category) {
-    this.set('isLoaded', false)
-
-    $.ajax({
-      url: this.resourceUrl + '/' + category,
-      dataType: 'jsonp',
-      context: this,
-      success: function(response) {
-//        App.properties.get('subscription').unsubscribe()
-
-        this.set('content', response)
-        this.set('category', category)
-
-        this.set('isLoaded', true)
-      }
-    })
-    return this
-  }
-})
-App.topController = App.TopController.create()
-
 App.TopView = Ember.View.extend({
   templateName: 'top-view'
 });
@@ -2037,15 +2039,11 @@ App.StatsRoute = Ember.Route.extend({
   setupController: function(controller, model) {
     if (typeof model !== 'string') model = model.category
 
-    var users = App.topController.getTop(model);
-
-    this.controllerFor('top').set('content', users);
+    controller.set('content', App.Top.findAll(model));
   },
 
   renderTemplate: function() {
-    this.render('top-view', {
-      controller: this.controllerFor('top')
-    })
+    this.render('top-view');
   }
 })
 
