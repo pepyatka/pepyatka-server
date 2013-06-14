@@ -515,11 +515,11 @@
             <div>{{#linkTo comments App.postsController.timeline}}{{content.user.commentsLength}} {{t label.comments}}{{/linkTo}}</div>
           {{/if}}
 
-          {{#unless content.user.ownProfile}}
+          {{#unless view.ownProfile}}
             {{#if view.currentUser}}
               <div class="row profile-actions">
-                {{#if content.user.subscribedTo}}
-                  <a {{action unsubscribeTo target="view"}}>{{t label.unsubscribe}}</a>
+                {{#if view.subscribedTo}}
+                  <a {{action unsubscribeTo}}>{{t label.unsubscribe}}</a>
                 {{/if}}
               </div>
             {{/if}}
@@ -550,7 +550,7 @@
     {{#if view.currentUser}}
       <div class="row profile-actions">
         {{#unless view.subscribedTo}}
-          <a {{action subscribeTo target="view"}}>{{t label.subscribe}}</a>
+          <a {{action subscribeTo}}>{{t label.subscribe}}</a>
         {{/unless}}
       </div>
     {{/if}}

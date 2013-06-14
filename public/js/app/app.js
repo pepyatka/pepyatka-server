@@ -937,45 +937,6 @@ App.PostView = Ember.View.extend({
   }.property('controller.content')
 });
 
-App.UserTimelineController = Ember.ObjectController.extend({
-  resourceUrl: '/v1/timeline',
-
-  subscribeTo: function(timelineId) {
-    $.ajax({
-      url: this.resourceUrl + '/' + timelineId + '/subscribe',
-      context: this,
-      type: 'post',
-      success: function(response) {
-        if (response.status == 'success') {
-          if (App.postsController.user.type == 'group')
-            // TODO: how to add an object to existing view?
-            App.groupsController.addObject(App.postsController.user.get('username'))
-
-          this.transitionToRoute('posts')
-        }
-      }
-    })
-  },
-
-  unsubscribeTo: function(timelineId) {
-    $.ajax({
-      url: this.resourceUrl + '/' + timelineId + '/unsubscribe',
-      context: this,
-      type: 'post',
-      success: function(response) {
-        if (response.status == 'success') {
-          if (App.postsController.user.type == 'group')
-            // TODO: how to remove an object to existing view?
-            App.groupsController.removeObject(App.postsController.user.get('username'))
-
-          this.transitionToRoute('posts')
-        }
-      }
-    })
-  }
-});
-App.userTimelineController = App.UserTimelineController.create()
-
 App.UserTimelineView = Ember.View.extend({
   templateName: 'user-timeline',
   currentUser: currentUser,
@@ -992,14 +953,6 @@ App.UserTimelineView = Ember.View.extend({
   isGroup: function() {
     return this.get("controller.user") && this.get("controller.user.type") == 'group';
   }.property('controller.user'),
-
-  subscribeTo: function() {
-    App.userTimelineController.subscribeTo(this.get("controller.id"));
-  },
-
-  unsubscribeTo: function() {
-    App.userTimelineController.unsubscribeTo(this.get("controller.id"));
-  },
 
   subscribedTo: function() {
     var res = false;
@@ -1219,6 +1172,24 @@ App.Timeline.reopenClass({
       timeline.setProperties(response)
     })
     return timeline
+  },
+
+  subscribeTo: function(timelineId, options) {
+    $.ajax({
+      url: this.resourceUrl + '/' + timelineId + '/subscribe',
+      context: this,
+      type: 'post',
+      success: options && options.success ? options.success : null
+    });
+  },
+
+  unsubscribeTo: function(timelineId, options) {
+    $.ajax({
+      url: this.resourceUrl + '/' + timelineId + '/unsubscribe',
+      context: this,
+      type: 'post',
+      success: options && options.success ? options.success : null
+    });
   }
 })
 
@@ -1228,6 +1199,40 @@ App.TimelineController = Ember.ObjectController.extend(App.PaginationHelper, {
   isLoaded: true,
   isProgressBarHidden: 'hidden',
   body: '',
+
+  subscribeTo: function() {
+    var controller = this;
+
+    App.Timeline.subscribeTo(this.get("id"), {
+      success: function(response) {
+        if (response.status == 'success') {
+          if (App.postsController.user.type == 'group') {
+            // TODO: how to add an object to existing view?
+            App.groupsController.addObject(App.postsController.user.get('username'));
+          }
+
+          controller.transitionToRoute('posts');
+        }
+      }
+    });
+  },
+
+  unsubscribeTo: function() {
+    var controller = this;
+
+    App.Timeline.unsubscribeTo(this.get("id"), {
+      success: function(response) {
+        if (response.status == 'success') {
+          if (App.postsController.user.type == 'group') {
+            // TODO: how to remove an object to existing view?
+            App.groupsController.removeObject(App.postsController.user.get('username'));
+          }
+
+          controller.transitionToRoute('posts');
+        }
+      }
+    });
+  },
 
   // XXX: a bit strange having this method here?
   submitPost: function() {
@@ -1884,7 +1889,6 @@ App.UserRoute = Ember.Route.extend({
     this.controllerFor('groups').set('content', App.Group.findAll())
     this.controllerFor('tags').set('content', App.Tag.findAll())
 
-    App.userTimelineController.set('target', controller.target)
     this.controllerFor('timeline').set('content', App.Timeline.find(model));
   },
 
