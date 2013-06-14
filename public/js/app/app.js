@@ -512,9 +512,10 @@ App.SubmitPostButton = Ember.View.extend(Ember.TargetActionSupport, {
   tagName: 'button',
 
   click: function() {
-    this.get('_parentView.textField').triggerAction();
-    this.get('_parentView.textField').set('body', '')
+    this.get('_parentView.textField').triggerAction()
 
+    this.get('_parentView.textField').set('body', '')
+    this.set('_parentView._parentView._parentView.isEditFormVisible', false)
   }
 })
 
@@ -905,7 +906,7 @@ App.SubmitCommentButton = Ember.View.extend(Ember.TargetActionSupport, {
 App.PostController = Ember.ObjectController.extend({
   update: function(attrs) {
     // FIXME: the only way to fetch context after insertNewLine action
-    if (attrs.constructor === App.CreatePostField)
+    if (attrs.constructor === App.EditPostField)
       attrs = { body: attrs.value }
 
     var postId = this.get('id')
