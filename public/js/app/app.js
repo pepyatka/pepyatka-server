@@ -116,6 +116,33 @@ App.Group.reopenClass({
   resourceUrl: '/v1/users',
   suffix: '/subscriptions',
 
+  // TODO: Move to appropriate place
+  findAllWithUsers: function(username) {
+    var groups = Ember.ArrayProxy.create({content: [], isLoaded: false});
+
+    var success = function(response) {
+      response.forEach(function(attrs) {
+        if (groups.indexOf(attrs.user.username) === -1 &&
+            attrs.name === 'Posts') {
+          // TODO: build Group object instead of using attrs directly
+          groups.addObject(attrs);
+        }
+      });
+
+      groups.set('isLoaded', true);
+    };
+
+    $.ajax({
+      url: this.resourceUrl + '/' + App.properties.get('username') + this.suffix,
+      context: this,
+      type: 'get',
+      success: success,
+      error: App.helpers.handleAjaxError
+    });
+
+    return groups;
+  },
+
   findAll: function() {
     var groups = Ember.ArrayProxy.create({content: []});
 
@@ -1219,12 +1246,7 @@ App.TimelineController = Ember.ObjectController.extend(App.PaginationHelper, {
     App.Timeline.subscribeTo(this.get("id"), {
       success: function(response) {
         if (response.status == 'success') {
-          if (App.postsController.user.type == 'group') {
-            // TODO: how to add an object to existing view?
-            App.groupsController.addObject(App.postsController.user.get('username'));
-          }
-
-          controller.transitionToRoute('posts');
+          controller.transitionToRoute('home');
         }
       }
     });
@@ -1236,12 +1258,7 @@ App.TimelineController = Ember.ObjectController.extend(App.PaginationHelper, {
     App.Timeline.unsubscribeTo(this.get("id"), {
       success: function(response) {
         if (response.status == 'success') {
-          if (App.postsController.user.type == 'group') {
-            // TODO: how to remove an object to existing view?
-            App.groupsController.removeObject(App.postsController.user.get('username'));
-          }
-
-          controller.transitionToRoute('posts');
+          controller.transitionToRoute('home');
         }
       }
     });
@@ -1537,41 +1554,6 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pag
   }
 })
 App.searchController = App.SearchController.create()
-
-App.SubscriptionsController = Ember.ArrayController.extend({
-  resourceUrl: '/v1/users',
-  verb: 'subscriptions',
-
-  findAll: function(username) {
-    var filterSubscriptionsByUsername = function(subscriptions) {
-      var filteredSubscriptions = []
-      $.each(subscriptions, function(number, subscription) {
-        if (subscription.name == 'Posts')
-          filteredSubscriptions.push(subscription)
-      })
-
-      return filteredSubscriptions
-    }
-
-    this.set('isLoaded', false)
-
-    $.ajax({
-      url: this.resourceUrl + '/' + username + '/' + this.verb,
-      dataType: 'jsonp',
-      context: this,
-      success: function(response) {
-//        App.properties.get('subscription').unsubscribe()
-
-        this.set('content', filterSubscriptionsByUsername(response))
-        this.set('username', username)
-
-        this.set('isLoaded', true)
-      }
-    })
-    return this
-  }
-})
-App.subscriptionsController = App.SubscriptionsController.create()
 
 App.SubscriptionsView = Ember.View.extend({
   templateName: 'subscriptions'
@@ -1999,14 +1981,11 @@ App.FeedSubscriptionsRoute = Ember.Route.extend({
   setupController: function(controller, model) {
     if (typeof model !== 'string') model = model.username
 
-    var subscriptions = App.subscriptionsController.findAll(model)
-    this.controllerFor('subscriptions').set('content', subscriptions);
+    controller.set('content', App.Group.findAllWithUsers());
   },
 
   renderTemplate: function() {
-    this.render('subscriptions', {
-      controller: this.controllerFor('subscriptions')
-    })
+    this.render('subscriptions');
   }
 })
 
