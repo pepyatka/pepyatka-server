@@ -1013,14 +1013,7 @@ App.UserTimelineView = Ember.View.extend({
 
   ownProfile: function() {
     return this.get("controller.user.id") == currentUser;
-  }.property("currentUser", "controller.user.id"),
-
-  submitPost: function() {
-    this.set('controller.receiveTimelinesIds', [ this.get('controller.id') ]);
-    this.get("controller").submitPost();
-    // dirty way to restore original height of post textarea
-    this.$().find('textarea').height('56px')
-  }
+  }.property("currentUser", "controller.user.id")
 })
 
 App.Comment = Ember.Object.extend({})
