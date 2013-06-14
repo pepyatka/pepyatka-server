@@ -364,6 +364,8 @@ exports.addModel = function(db) {
       that.getAdministratorsIds(function(err, administratorsIds) {
         async.map(administratorsIds, function(administratorId, callback) {
           models.FeedFactory.findById(administratorId, function(err, user) {
+            if (!user) return callback(1, null)
+
             user.toJSON({ select: ['id', 'username'] }, function(err, json) {
               callback(err, json)
             })
