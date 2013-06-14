@@ -2015,7 +2015,6 @@ App.FeedSearchRoute = Ember.Route.extend({
     // something
     App.searchController.set('body', model)
     App.searchController.set('query', model)
-    App.postsController.set('user', null)
 
     var posts = App.searchController.searchByPhrase(model)
 
