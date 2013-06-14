@@ -524,10 +524,10 @@ App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
 
 // Index view to display all posts on the page
 App.SearchView = Ember.View.extend({
-  templateName: 'search-list-view'
+  templateName: 'search'
 });
 
-App.CreateSearchFieldView = Ember.TextField.extend(Ember.TargetActionSupport, {
+App.SearchField = Ember.TextField.extend(Ember.TargetActionSupport, {
   // TODO: Extract value from controller
   valueBinding: 'App.searchController.body',
 
@@ -1560,16 +1560,16 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pag
   insertPostsIntoMediaList : function(posts) {
 //    App.properties.get('subscription').unsubscribe();
 
-    App.searchController.set('content', []);
+    this.get('controller').set('content', []);
     var postIds = [];
     posts.forEach(function(attrs) {
       var post = App.Post.create(attrs);
-      App.searchController.addObject(post);
+      this.get('controller').addObject(post);
       postIds.push(post.id)
     })
 
 //    App.properties.get('subscription').subscribe('post', postIds);
-    App.searchController.set('isLoaded', true)
+    this.get('controller').set('isLoaded', true)
   },
 
   showPage: function(pageStart) {
@@ -1581,7 +1581,7 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pag
       type: 'get',
       data: { start: pageStart },
       success: function(response) {
-        App.searchController.insertPostsIntoMediaList(response.posts);
+        this.get('controller').insertPostsIntoMediaList(response.posts);
       }
     });
   },
@@ -1596,7 +1596,7 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pag
         url: this.resourceUrl + '/' + searchQuery,
         type: 'get',
         success: function(response) {
-          App.searchController.insertPostsIntoMediaList(response.posts);
+          this.get('controller').insertPostsIntoMediaList(response.posts);
         }
       });
       this.set('body', '');
@@ -1604,7 +1604,7 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pag
   },
 
   didRequestRange: function(pageStart) {
-    App.searchController.showPage(pageStart)
+    this.get('controller').showPage(pageStart)
   }
 })
 App.searchController = App.SearchController.create()
@@ -2022,7 +2022,7 @@ App.FeedSearchRoute = Ember.Route.extend({
   },
 
   renderTemplate: function() {
-    this.render('search-list-view')
+    this.render('search')
   }
 })
 
