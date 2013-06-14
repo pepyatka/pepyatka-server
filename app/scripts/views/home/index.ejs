@@ -693,11 +693,11 @@
 </script>
 
 <script type="text/x-handlebars" id="subscribers">
-  <h3>{{t header.subscribers}} {{#linkTo user App.subscribersController.username}}{{App.subscribersController.username}}{{/linkTo}}</h3>
+  <h3>{{t header.subscribers}} {{#linkTo user controller.content.username}}{{controller.content.username}}{{/linkTo}}</h3>
 
   <h3>{{t header.members}}</h3>
   <ul>
-    {{#each content}}
+    {{#each content itemController="subscriber"}}
       {{#unless isAdmin}}
         <li>
           {{#linkTo user username}}{{username}}{{/linkTo}}
@@ -705,11 +705,11 @@
           {{#if view.isOwner}}
             {{#if view.showManagement}}
               (
-              <a {{action removeSubscriber id target='App.subscribersController' href="true"}}>{{t label.remove}}</a>
+              <a {{action removeSubscriber href="true"}}>{{t label.remove}}</a>
               {{#if view.hasAdmins}}
                 |
                 {{#unless isAdmin}}
-                  <a {{action addAdmin id target='App.subscribersController' href="true"}}>{{t label.makeAdmin}}</a>
+                  <a {{action addAdmin href="true"}}>{{t label.makeAdmin}}</a>
                 {{/unless}}
               {{/if}}
               )
@@ -723,14 +723,14 @@
   {{#if view.hasAdmins}}
     <h3>{{t header.admins}}</h3>
     <ul>
-      {{#each content}}
+      {{#each content itemController="subscriber"}}
         {{#if isAdmin}}
           <li>
             {{#linkTo user username}}{{username}}{{/linkTo}}
               {{#if view.isOwner}}
                 {{#if view.showManagement}}
                   (
-                  <a {{action removeAdmin id target='App.subscribersController' href="true"}}>{{t label.removeAdminRights}}</a>
+                  <a {{action removeAdmin href="true"}}>{{t label.removeAdminRights}}</a>
                   )
                 {{/if}}
               {{/if}}
@@ -742,9 +742,9 @@
 
   {{#if view.isOwner}}
     {{#if view.showManagement}}
-      {{#linkTo feedSubscribers App.subscribersController.username}}{{t label.browseSubscribers}}{{/linkTo}}
+      {{#linkTo feedSubscribers controller.content.username}}{{t label.browseSubscribers}}{{/linkTo}}
     {{else}}
-      {{#linkTo manageSubscribers App.subscribersController.username}}{{t label.manageSubscribers}}{{/linkTo}}
+      {{#linkTo manageSubscribers controller.content.username}}{{t label.manageSubscribers}}{{/linkTo}}
     {{/if}}
   {{/if}}
 </script>
