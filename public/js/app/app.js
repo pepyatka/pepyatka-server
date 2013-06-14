@@ -1969,13 +1969,11 @@ App.FeedSubscriptionsRoute = Ember.Route.extend({
   setupController: function(controller, model) {
     if (typeof model !== 'string') model = model.username
 
-    this.controllerFor('subscriptions').set('content', App.Group.findAllWithUsers());
+    controller.set('content', App.Group.findAllWithUsers());
   },
 
   renderTemplate: function() {
-    this.render('subscriptions', {
-      controller: this.controllerFor('subscriptions')
-    })
+    this.render('subscriptions');
   }
 })
 
