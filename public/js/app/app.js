@@ -704,7 +704,7 @@ App.PartialPostView = Ember.View.extend({
 //  - link to show a comment form
 //  - form to add a new comment
 App.OwnPostContainerView = Ember.View.extend({
-  templateName: 'own-post-view',
+  templateName: 'own-post',
   isFormVisible: false,
   currentUser: currentUser,
 
@@ -1720,7 +1720,7 @@ App.SubscribersView = Ember.View.extend({
 });
 
 App.TopView = Ember.View.extend({
-  templateName: 'top-view'
+  templateName: 'top'
 });
 
 App.SignupController = Ember.ObjectController.extend({
@@ -2043,7 +2043,7 @@ App.StatsRoute = Ember.Route.extend({
   },
 
   renderTemplate: function() {
-    this.render('top-view');
+    this.render('top');
   }
 })
 
