@@ -379,7 +379,7 @@ App.CometController = Ember.Controller.extend({
     if (post) {
       post.comments.pushObject(comment)
     } else {
-      post = App.Post.findOne(data.comment.postId)
+      post = App.Post.find(data.comment.postId)
       this.currentController().addObject(post)
     }
   },
@@ -426,7 +426,7 @@ App.CometController = Ember.Controller.extend({
       if (!like)
         post.likes.pushObject(user)
     } else {
-      post = App.Post.findOne(data.postId)
+      post = App.Post.find(data.postId)
       this.currentController().addObject(post)
     }
   },
@@ -1511,7 +1511,7 @@ App.Post.reopenClass({
     })
   },
 
-  findOne: function(postId) {
+  find: function(postId) {
     var post = App.Post.create();
 
     $.ajax({
@@ -1835,7 +1835,7 @@ App.PostRoute = Ember.Route.extend({
   },
 
   model: function(params) {
-    return App.Post.findOne(params.post_id)
+    return App.Post.find(params.post_id)
   },
 
   setupController: function(controller, model) {
