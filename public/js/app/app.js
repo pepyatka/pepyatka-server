@@ -1183,18 +1183,6 @@ App.User = Ember.Object.extend({
     return this.statistics.likes
   }.property(),
 
-  subscribedTo: function() {
-    // TODO: review this code as this models *depends* on
-    // postsController for misterious reasons
-    if (!App.postsController.subscribers)
-      return false
-
-    var subscribed = App.postsController.subscribers.filter(function(subscriber) {
-      return subscriber.id == App.properties.get('userId')
-    })
-    return subscribed.length > 0 ? true : false
-  }.property(),
-
   ownProfile: function() {
     return App.postsController.user.id == currentUser
   }.property()
