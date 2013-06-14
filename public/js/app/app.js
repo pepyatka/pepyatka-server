@@ -435,18 +435,9 @@ App.CreateSearchFieldView = Ember.TextField.extend(Ember.TargetActionSupport, {
 // Index view to display all posts on the page
 App.TimelineView = Ember.View.extend({
   templateName: 'timeline',
-
-  submitPost: function() {
-    this.get('controller').submitPost()
-    // dirty way to restore original height of post textarea
-    this.$().find('textarea').height('56px')
-  }
 });
 
-// FIXME: Separate CreatePostField to two fields:
-// - new post
-// - edit post
-App.CreatePostField = Ember.TextArea.extend(Ember.TargetActionSupport, {
+App.EditPostField = Ember.TextArea.extend(Ember.TargetActionSupport, {
   attributeBindings: ['class'],
   classNames: ['autogrow-short'],
   valueBinding: Ember.Binding.oneWay('controller.body'),
@@ -466,6 +457,27 @@ App.CreatePostField = Ember.TextArea.extend(Ember.TargetActionSupport, {
   }
 })
 
+App.CreatePostField = Ember.TextArea.extend(Ember.TargetActionSupport, {
+  attributeBindings: ['class'],
+  classNames: ['autogrow-short'],
+  valueBinding: 'body',
+  viewName: 'textField',
+
+  insertNewline: function() {
+    this.triggerAction();
+
+    this.set('body', '')
+
+    // dirty way to restore original height of post textarea
+    this.$().find('textarea').height('56px')
+
+  },
+
+  didInsertElement: function() {
+    this.$().autogrow();
+  }
+})
+
 App.SubmitPostButton = Ember.View.extend(Ember.TargetActionSupport, {
   layout: Ember.Handlebars.compile('{{t button.post}}'),
 
@@ -473,6 +485,8 @@ App.SubmitPostButton = Ember.View.extend(Ember.TargetActionSupport, {
 
   click: function() {
     this.get('_parentView.textField').triggerAction();
+    this.get('_parentView.textField').set('body', '')
+
   }
 })
 
@@ -1198,7 +1212,6 @@ App.TimelineController = Ember.ObjectController.extend(App.PaginationHelper, {
 
   isLoaded: true,
   isProgressBarHidden: 'hidden',
-  body: '',
 
   subscribeTo: function() {
     var controller = this;
@@ -1234,83 +1247,49 @@ App.TimelineController = Ember.ObjectController.extend(App.PaginationHelper, {
     });
   },
 
-  // XXX: a bit strange having this method here?
-  submitPost: function() {
-    if (this.body) {
-      this.createPost(this.body);
-      this.set('body', '')
-      //this.set('receiveTimelinesIds', [])
-    }
-  },
-
-  createPost: function(body) {
+  submitPost: function(attrs) {
     var that = this
 
     var data = new FormData();
+
     $.each($('input[type="file"]')[0].files, function(i, file) {
       // TODO: can do this just once outside of the loop
-      App.postsController.set('isProgressBarHidden', 'visible')
+      // that.set('isProgressBarHidden', 'visible')
       data.append('file-'+i, file);
     });
     data.append('body', $('.submitForm textarea')[0].value) // XXX: dirty!
     // data.append('timelinesIds', this.get('receiveTimelinesIds').toString()) // XXX: dirty!
 
-    var xhr = new XMLHttpRequest();
+    data.body = attrs.value
 
-    // Progress listerner.
-    xhr.upload.addEventListener("progress", function (evt) {
+    callbacks = {
+      progress: function() {
+        //var percentComplete = Math.round(evt.loaded * 100 / evt.total);
+        //that.set('progress', percentComplete)
+      },
 
-      if (evt.lengthComputable) {
-        var percentComplete = Math.round(evt.loaded * 100 / evt.total);
-        that.set('progress', percentComplete)
-      } else {
-        // unable to compute
+      load: function() {
+        // Clear file field
+        //var control = $('input[type="file"]')
+        //control.replaceWith( control.val('').clone( true ) );
+        //$('.file-input-name').html('')
+
+        // var obj = $.parseJSON(evt.target.responseText);
+        // TODO: bind properties
+        //that.set('progress', '100')
+        //that.set('isProgressBarHidden', 'hidden')
+      },
+
+      error: function() {
+        //that.set('isProgressBarHidden', 'hidden')
+      },
+
+      cancel: function() {
+        //that.set('isProgressBarHidden', 'hidden')
       }
-    }, false);
+    }
 
-    // On finished.
-    xhr.addEventListener("load", function (evt) {
-      // Clear file field
-      var control = $('input[type="file"]')
-      control.replaceWith( control.val('').clone( true ) );
-      $('.file-input-name').html('')
-
-      // var obj = $.parseJSON(evt.target.responseText);
-      // TODO: bind properties
-      that.set('progress', '100')
-      that.set('isProgressBarHidden', 'hidden')
-    }, false);
-
-    // On failed.
-    xhr.addEventListener("error", function (evt) {
-      that.set('isProgressBarHidden', 'hidden')
-    }, false);
-
-    // On cancel.
-    xhr.addEventListener("abort", function (evt) {
-      that.set('isProgressBarHidden', 'hidden')
-    }, false);
-
-    xhr.open("post", this.get('resourceUrl'));
-    xhr.send(data);
-
-    // fallback to simple ajax if xhr is not supported
-    // $.ajax({
-    //   url: this.resourceUrl,
-    //   type: 'post',
-    //   data: data,
-    //   cache: false,
-    //   contentType: false,
-    //   processData: false,
-    //   context: post,
-    //   success: function(response) {
-    //     this.setProperties(response);
-    //     this.attachment = null
-    //     this.loading = false
-    //     // We do not insert post right now, but wait for a socket event
-    //     // App.postsController.insertAt(0, post)
-    //   }
-    // })
+    App.Post.submit(data, callbacks)
   }
 })
 
@@ -1461,6 +1440,39 @@ App.Post.reopenClass({
         console.log(response)
       }
     })
+  },
+
+  submit: function(attrs, options) {
+    var that = this
+
+    var xhr = new XMLHttpRequest();
+
+    // Progress listerner.
+    xhr.upload.addEventListener("progress", function (evt) {
+      if (evt.lengthComputable) {
+        options && options.progress && options.progress()
+      } else {
+        // unable to compute
+      }
+    }, false);
+
+    // On finished.
+    xhr.addEventListener("load", function (evt) {
+      options && options.load && options.load()
+    }, false);
+
+    // On failed.
+    xhr.addEventListener("error", function (evt) {
+      options && options.error && options.error()
+    }, false);
+
+    // On cancel.
+    xhr.addEventListener("abort", function (evt) {
+      options && options.cancel && options.cancel()
+    }, false);
+
+    xhr.open("post", this.resourceUrl);
+    xhr.send(attrs);
   }
 })
 

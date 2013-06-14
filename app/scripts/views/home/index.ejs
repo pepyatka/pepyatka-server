@@ -155,14 +155,15 @@
   <% if (req.user) { %>
     <div class="clearfix submitForm">
       <div>
-        {{view App.CreatePostField target="controller" action="submitPost"
+        {{view App.CreatePostField action="submitPost" target="controller"
               class="span9"}}
       </div>
       <div class="pull-left">
         {{t label.add.image}}{{view App.UploadFileView name="image"}}
       </div>
       <div class="pull-right">
-        <button {{action submitPost target="controller"}} class="btn pull-right">{{t button.post}}</button>
+        {{view App.SubmitPostButton action="submitPost" target="controller"
+              class="btn pull-right"}}
       </div>
     </div>
   <% } %>
@@ -265,7 +266,7 @@
           <div class="edit-post-form media">
             <div class="media-body">
               <div>
-                {{view App.CreatePostField action="update" target="controller"
+                {{view App.EditPostField action="update" target="controller"
                       class="span8 input-tiny comment-area"}}
               </div>
               <div>
@@ -379,13 +380,13 @@
             <div class="edit-post-form media">
               <div class="media-body">
                 <div>
-                  {{view App.CreatePostField target="parentView"
-                        action="updatePost" valueBinding="view.body"
+                  {{view App.EditPostField action="update" target="controller"
                         class="span8 input-tiny comment-area"}}
                 </div>
                 <div>
-                  <button {{action updatePost target="view"}} class="btn btn-small">{{t button.post}}</button>
-                  <a {{action toggleVisibility target="parentView"}}>{{t label.cancel}}</a>
+                  {{view App.SubmitPostButton action="update" target="controller"
+                        class="btn btn-small"}}
+                  <a {{action toggleVisibility target="view"}}>{{t label.cancel}}</a>
                 </div>
               </div>
             </div>
@@ -586,12 +587,12 @@
           <div class="edit-post-form media">
             <div class="media-body">
               <div>
-                {{view App.CreatePostField target="view"
-                      action="updatePost" valueBinding="view.body"
+                {{view App.EditPostField action="update" target="controller"
                       class="span8 input-tiny comment-area"}}
               </div>
               <div>
-                <button {{action updatePost target="view"}} class="btn btn-small">{{t button.post}}</button>
+                {{view App.SubmitPostButton action="update" target="controller"
+                      class="btn btn-small"}}
                 <a {{action toggleVisibility target="view"}}>{{t label.cancel}}</a>
               </div>
             </div>
