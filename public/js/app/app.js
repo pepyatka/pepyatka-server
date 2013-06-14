@@ -1206,12 +1206,7 @@ App.TimelineController = Ember.ObjectController.extend(App.PaginationHelper, {
     App.Timeline.subscribeTo(this.get("id"), {
       success: function(response) {
         if (response.status == 'success') {
-          if (App.postsController.user.type == 'group') {
-            // TODO: how to add an object to existing view?
-            App.groupsController.addObject(App.postsController.user.get('username'));
-          }
-
-          controller.transitionToRoute('posts');
+          controller.transitionToRoute('home');
         }
       }
     });
@@ -1223,12 +1218,7 @@ App.TimelineController = Ember.ObjectController.extend(App.PaginationHelper, {
     App.Timeline.unsubscribeTo(this.get("id"), {
       success: function(response) {
         if (response.status == 'success') {
-          if (App.postsController.user.type == 'group') {
-            // TODO: how to remove an object to existing view?
-            App.groupsController.removeObject(App.postsController.user.get('username'));
-          }
-
-          controller.transitionToRoute('posts');
+          controller.transitionToRoute('home');
         }
       }
     });
