@@ -1775,22 +1775,6 @@ App.SigninView = Ember.View.extend({
   }
 });
 
-// TODO: this controller to be removed due to TimelineController
-App.PostsController = Ember.ArrayController.extend(Ember.SortableMixin, App.PaginationHelper, {
-  didRequestRange: function(pageStart) {
-    App.postsController.findAll(pageStart)
-  },
-
-  didTimelineChange: function() {
-    // NOTE: this method might be called even when we have not
-    // initialized subscription property
-//    if (App.properties.get('subscription'))
-//      App.properties.get('subscription').unsubscribe()
-
-    this.resetPage()
-  }.observes('timeline')
-})
-
 App.HomeRoute = Ember.Route.extend({
   deactivate: function() {
     this.controllerFor('comet').unsubscribe()
@@ -1895,19 +1879,21 @@ App.LikesRoute = Ember.Route.extend({
   },
 
   model: function(params) {
-    return params.username
+    return params.username + '/likes'
   },
 
   setupController: function(controller, model) {
-    // TODO: findAll method to accept timeline parameter
-    App.postsController.set('timeline', model)
-    var posts = App.postsController.findAll(0, 'likes')
-    this.controllerFor('posts').set('content', posts);
+    this.controllerFor('groups').set('content', App.Group.findAll())
+    this.controllerFor('tags').set('content', App.Tag.findAll())
+
+    var timeline = App.Timeline.find(model)
+    this.controllerFor('timeline').set('content', timeline);
+    this.controllerFor('comet').set('channel', timeline)
   },
 
   renderTemplate: function() {
     this.render('user-timeline', {
-      controller: this.controllerFor('posts')
+      controller: this.controllerFor('timeline')
     })
   }
 })
@@ -1918,19 +1904,21 @@ App.CommentsRoute = Ember.Route.extend({
   },
 
   model: function(params) {
-    return params.username
+    return params.username + '/comments'
   },
 
   setupController: function(controller, model) {
-    // TODO: findAll method to accept timeline parameter
-    App.postsController.set('timeline', model)
-    var posts = App.postsController.findAll(0, 'comments')
-    this.controllerFor('posts').set('content', posts);
+    this.controllerFor('groups').set('content', App.Group.findAll())
+    this.controllerFor('tags').set('content', App.Tag.findAll())
+
+    var timeline = App.Timeline.find(model)
+    this.controllerFor('timeline').set('content', timeline);
+    this.controllerFor('comet').set('channel', timeline)
   },
 
   renderTemplate: function() {
     this.render('user-timeline', {
-      controller: this.controllerFor('posts')
+      controller: this.controllerFor('timeline')
     })
   }
 })
