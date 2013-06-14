@@ -30,8 +30,11 @@
 
       <div class="span4 searchFieldView clearfix">
         <div>
-          {{view App.SearchField action="searchPhrase" target="controller" class="span3"}}
-          <button {{action searchPhrase}} class="btn pull-right">{{t button.search}}</button>
+          {{view App.SearchField action="search" target="controller"
+                valueBinding="view.search"
+                class="span3" viewName="textField"}}
+          {{view App.SearchButton action="search" target="controller"
+                class="btn pull-right"}}
         </div>
       </div>
 

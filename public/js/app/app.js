@@ -529,16 +529,14 @@ App.CometController = Ember.Controller.extend({
 App.ApplicationController = Ember.Controller.extend({
   needs: ['groups', 'tags', 'comet'],
 
-  subscription: null,
   isLoaded: true,
 
   currentPathDidChange: function() {
     App.properties.set('currentPath', this.get('currentPath'));
   }.observes('currentPath'),
 
-  searchPhrase: function() {
-    // TODO: valueBinding instead
-    query = App.searchController.body
+  search: function(attrs) {
+    var query = attrs.value
 
     this.transitionToRoute('feedSearch', encodeURIComponent(query))
   }
@@ -548,17 +546,25 @@ App.ApplicationView = Ember.View.extend(App.ShowSpinnerWhileRendering, {
   templateName: 'application'
 });
 
-// Index view to display all posts on the page
 App.SearchView = Ember.View.extend({
   templateName: 'search'
 });
 
 App.SearchField = Ember.TextField.extend(Ember.TargetActionSupport, {
-  // TODO: Extract value from controller
-  valueBinding: 'App.searchController.body',
+  valueBinding: 'view.body',
 
   insertNewline: function() {
     this.triggerAction();
+  }
+})
+
+App.SearchButton = Ember.View.extend(Ember.TargetActionSupport, {
+  layout: Ember.Handlebars.compile('{{t button.search}}'),
+
+  tagName: 'button',
+
+  click: function() {
+    this.get('_parentView.textField').triggerAction()
   }
 })
 
@@ -1585,20 +1591,23 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pag
 
   insertPostsIntoMediaList : function(posts) {
 //    App.properties.get('subscription').unsubscribe();
+    var that = this
 
-    this.get('controller').set('content', []);
+    this.set('content', []);
     var postIds = [];
     posts.forEach(function(attrs) {
       var post = App.Post.create(attrs);
-      this.get('controller').addObject(post);
+      that.addObject(post);
       postIds.push(post.id)
     })
 
 //    App.properties.get('subscription').subscribe('post', postIds);
-    this.get('controller').set('isLoaded', true)
+    this.set('isLoaded', true)
   },
 
   showPage: function(pageStart) {
+    var that = this
+
     this.set('isLoaded', false)
     var query = decodeURIComponent(this.get('query'));
 
@@ -1607,12 +1616,14 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pag
       type: 'get',
       data: { start: pageStart },
       success: function(response) {
-        this.get('controller').insertPostsIntoMediaList(response.posts);
+        that.insertPostsIntoMediaList(response.posts);
       }
     });
   },
 
-  searchByPhrase: function(searchQuery) {
+  search: function(searchQuery) {
+    var that = this
+
     this.set('isLoaded', false)
     if (searchQuery) {
       if (/#/g.test(searchQuery))
@@ -1622,7 +1633,7 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pag
         url: this.resourceUrl + '/' + searchQuery,
         type: 'get',
         success: function(response) {
-          this.get('controller').insertPostsIntoMediaList(response.posts);
+          that.insertPostsIntoMediaList(response.posts);
         }
       });
       this.set('body', '');
@@ -1630,7 +1641,7 @@ App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.Pag
   },
 
   didRequestRange: function(pageStart) {
-    this.get('controller').showPage(pageStart)
+    this.showPage(pageStart)
   }
 })
 App.searchController = App.SearchController.create()
@@ -2013,12 +2024,7 @@ App.FeedSearchRoute = Ember.Route.extend({
   },
 
   setupController: function(controller, model) {
-    // TODO: extract these side effects below to a controller or
-    // something
-    App.searchController.set('body', model)
-    App.searchController.set('query', model)
-
-    var posts = App.searchController.searchByPhrase(model)
+    var posts = this.controllerFor('search').search(model)
 
     this.controllerFor('search').set('content', posts);
   },
