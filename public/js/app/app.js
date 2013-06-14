@@ -218,6 +218,7 @@ App.CometController = Ember.Controller.extend({
   currentController: function() {
     switch (App.properties.get('currentPath')) {
     case 'home':
+    case 'user':
     case 'comments':
     case 'likes':
     case 'posts':
@@ -1267,10 +1268,9 @@ App.TimelineController = Ember.ObjectController.extend(App.PaginationHelper, {
       // that.set('isProgressBarHidden', 'visible')
       data.append('file-'+i, file);
     });
-    data.append('body', $('.submitForm textarea')[0].value) // XXX: dirty!
-    // data.append('timelinesIds', this.get('receiveTimelinesIds').toString()) // XXX: dirty!
 
-    data.body = attrs.value
+    data.append('timelinesIds', this.get('content.id'))
+    data.append('body', attrs.value)
 
     callbacks = {
       progress: function() {
@@ -1876,7 +1876,9 @@ App.UserRoute = Ember.Route.extend({
     this.controllerFor('groups').set('content', App.Group.findAll())
     this.controllerFor('tags').set('content', App.Tag.findAll())
 
-    this.controllerFor('timeline').set('content', App.Timeline.find(model));
+    var timeline = App.Timeline.find(model)
+    this.controllerFor('timeline').set('content', timeline);
+    this.controllerFor('comet').set('channel', timeline)
   },
 
   renderTemplate: function() {
