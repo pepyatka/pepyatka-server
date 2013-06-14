@@ -534,14 +534,15 @@
     <div class="postCreationField">
       <div class="clearfix submitForm">
         <div>
-          {{view App.CreatePostField target="parentView" action="submitPost"
+          {{view App.CreatePostField action="submitPost" target="controller"
                 class="span9"}}
         </div>
         <div class="pull-left">
           {{t label.add.image}}{{view App.UploadFileView name="image"}}
         </div>
         <div class="pull-right">
-          <button {{action submitPost target="view"}} class="btn pull-right">{{t button.post}}</button>
+          {{view App.SubmitPostButton action="submitPost" target="controller"
+                class="btn pull-right"}}
         </div>
       </div>
     </div>
