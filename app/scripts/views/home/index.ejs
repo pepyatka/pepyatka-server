@@ -147,7 +147,7 @@
 
   <div class="posts">
     <ul class="media-list">
-      {{each controller.posts itemViewClass="App.PartialPostView" itemController="post"}}
+      {{each controller.content itemViewClass="App.PartialPostView" itemController="post"}}
     </ul>
 
     {{view App.Pagination}}
@@ -169,12 +169,12 @@
               class="btn pull-right"}}
       </div>
     </div>
-  <% } %>
 
-  <div id="progressBar" {{bindAttr class="controller.isProgressBarHidden"}}>
-    {{view Bootstrap.ProgressBar isStriped=true isAnimated=true
-        progressBinding="controller.progress"}}
-  </div>
+    <div id="progressBar" {{bindAttr class="controller.isProgressBarHidden"}}>
+      {{view Bootstrap.ProgressBar isStriped=true isAnimated=true
+          progressBinding="controller.progress"}}
+    </div>
+  <% } %>
 
   {{view App.JustStarted}}
 

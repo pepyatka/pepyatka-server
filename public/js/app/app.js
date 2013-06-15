@@ -465,9 +465,13 @@ App.CometController = Ember.Controller.extend({
     var channel = this.get('channel')
     if (channel.constructor === App.Timeline)
       this.subscribe('timeline', channel.get('id'))
-    else
+    else if (channel.constructor === App.Post)
       this.subscribe('post', channel.get('id'))
-  }.observes('channel.id'),
+    else if (channel.constructor === Ember.ArrayProxy) {
+      channel.get('content').forEach(function(post) {
+        this.subscribe('post', post.get('id'))
+      }, this)}
+  }.observes('channel.id', 'channel.content.length'),
 
   subscribe: function(channel, ids) {
     if (!ids) return;
@@ -538,7 +542,7 @@ App.ApplicationController = Ember.Controller.extend({
   search: function(attrs) {
     var query = attrs.value
 
-    this.transitionToRoute('feedSearch', encodeURIComponent(query))
+    this.transitionToRoute('search', encodeURIComponent(query))
   }
 });
 
@@ -676,7 +680,7 @@ App.PartialPostView = Ember.View.extend({
     // wrap hashtags around text in post text
     this.$().find('.text').hashTagsUrls();
     // wrap search query around text in post text
-    this.$().find('.text').highlightSearchResults(App.searchController.query);
+    //this.$().find('.text').highlightSearchResults(App.searchController.query);
     // please read https://github.com/kswedberg/jquery-expander/issues/24
     this.$().find('.text').expander({
       slicePoint: 350,
@@ -728,7 +732,7 @@ App.OwnPostContainerView = Ember.View.extend({
     // wrap hashtags around text in post text
     this.$().find('.text').hashTagsUrls();
     // wrap search query around text in post text
-    this.$().find('.text').highlightSearchResults(App.searchController.query);
+    //this.$().find('.text').highlightSearchResults(App.searchController.query);
     // please read https://github.com/kswedberg/jquery-expander/issues/24
     this.$().find('.text').expander({
       slicePoint: 350,
@@ -763,7 +767,7 @@ App.PartialCommentView = Ember.View.extend({
     // wrap hashtags around text in post text
     this.$().find('.body').hashTagsUrls();
     // wrap search query around text in post text
-    this.$().find('.body').highlightSearchResults(App.searchController.query);
+    //this.$().find('.body').highlightSearchResults(App.searchController.query);
     this.$().find('.body').expander({
       slicePoint: 512,
       expandPrefix: '&hellip; ',
@@ -1579,72 +1583,59 @@ App.Post.reopenClass({
   }
 })
 
-App.SearchController = Ember.ArrayController.extend(Ember.SortableMixin, App.PaginationHelper, {
+App.SearchController = Ember.ObjectController.extend(App.PaginationHelper, {
   resourceUrl: '/v1/search',
-  body: '',
-  content: [],
-  sortProperties: ['updatedAt'],
-  query: '',
 
-  sortAscending: false,
   isLoaded: true,
 
-  insertPostsIntoMediaList : function(posts) {
-//    App.properties.get('subscription').unsubscribe();
-    var that = this
+  search: function(query) {
+    var posts = Ember.ArrayProxy.createWithMixins(Ember.SortableMixin, {
+      // TODO: figure out why we have to add itemController="post"
+      // option to each iterator in the view
+      itemController: 'post',
 
-    this.set('content', []);
-    var postIds = [];
-    posts.forEach(function(attrs) {
-      var post = App.Post.create(attrs);
-      that.addObject(post);
-      postIds.push(post.id)
+      content: [],
+
+      sortProperties: ['updatedAt'],
+      sortAscending: false
     })
-
-//    App.properties.get('subscription').subscribe('post', postIds);
-    this.set('isLoaded', true)
-  },
-
-  showPage: function(pageStart) {
-    var that = this
-
-    this.set('isLoaded', false)
-    var query = decodeURIComponent(this.get('query'));
 
     $.ajax({
       url: this.resourceUrl + '/' + query,
       type: 'get',
-      data: { start: pageStart },
-      success: function(response) {
-        that.insertPostsIntoMediaList(response.posts);
-      }
-    });
-  },
+      context: this,
+    }).then(function(response) {
+      if (response.posts)
+        var _posts = []
+        response.posts.forEach(function(attrs) {
+          var comments = attrs.comments
+          delete attrs.comments
 
-  search: function(searchQuery) {
-    var that = this
+          var post = App.Post.create(attrs)
+          post.comments = Ember.ArrayProxy.createWithMixins(Ember.SortableMixin, {
+            // TODO: figure out why we have to add itemController="comment"
+            // option to each iterator in the view
+            itemController: 'comment',
 
-    this.set('isLoaded', false)
-    if (searchQuery) {
-      if (/#/g.test(searchQuery))
-        searchQuery = searchQuery.replace(/#/g, '%23')
+            content: []
+          })
 
-      $.ajax({
-        url: this.resourceUrl + '/' + searchQuery,
-        type: 'get',
-        success: function(response) {
-          that.insertPostsIntoMediaList(response.posts);
-        }
-      });
-      this.set('body', '');
-    }
-  },
+          if (comments) {
+            comments.forEach(function(attrs) {
+              var comment = App.Comment.create(attrs)
+              post.comments.addObject(comment)
+            })
+          }
 
-  didRequestRange: function(pageStart) {
-    this.showPage(pageStart)
+          _posts.push(post)
+        })
+
+      posts.addObjects(_posts)
+    })
+
+    return posts
   }
 })
-App.searchController = App.SearchController.create()
 
 App.SubscriptionsView = Ember.View.extend({
   templateName: 'subscriptions'
@@ -2014,7 +2005,7 @@ App.FeedSubscriptionsRoute = Ember.Route.extend({
   }
 })
 
-App.FeedSearchRoute = Ember.Route.extend({
+App.SearchRoute = Ember.Route.extend({
   deactivate: function() {
     this.controllerFor('comet').unsubscribe()
   },
@@ -2027,6 +2018,7 @@ App.FeedSearchRoute = Ember.Route.extend({
     var posts = this.controllerFor('search').search(model)
 
     this.controllerFor('search').set('content', posts);
+    this.controllerFor('comet').set('channel', posts)
   },
 
   renderTemplate: function() {
@@ -2039,13 +2031,11 @@ App.ErrorRoute = Ember.Route.extend({
 
 App.StatsRoute = Ember.Route.extend({
   model: function(params) {
-    return params.category
+    return {category: params.category}
   },
 
   setupController: function(controller, model) {
-    if (typeof model !== 'string') model = model.category
-
-    controller.set('content', App.Top.findAll(model));
+    controller.set('content', App.Top.findAll(model.category));
   },
 
   renderTemplate: function() {
@@ -2054,7 +2044,7 @@ App.StatsRoute = Ember.Route.extend({
 })
 
 App.Router.map(function() {
-  this.resource('feedSearch', { path: "/search/:query" })
+  this.resource('search', { path: "/search/:query" })
 
   this.resource('public', { path: "/public" })
   // NOTE: rather weird name for a river of news route
