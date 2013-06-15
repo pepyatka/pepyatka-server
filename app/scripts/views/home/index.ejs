@@ -108,7 +108,7 @@
 
 <script type="text/x-handlebars" id="tags">
   {{#each tag in controllers.tags}}
-    <li>{{#linkTo feedSearch tag.name}}{{decodeURIComponent tag.name}}{{/linkTo}}</li>
+    <li>{{#linkTo search tag.name}}{{decodeURIComponent tag.name}}{{/linkTo}}</li>
   {{/each}}
 </script>
 
