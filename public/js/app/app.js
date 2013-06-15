@@ -1754,7 +1754,6 @@ App.SignupController = Ember.ObjectController.extend({
     return this
   }
 })
-App.signupController = App.SignupController.create()
 
 App.SignupView = Ember.View.extend({
   templateName: 'signup',
