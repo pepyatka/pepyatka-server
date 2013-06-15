@@ -193,51 +193,51 @@
 
 <script type="text/x-handlebars" id="_comment">
   <li class="media">
-      <div class="pull-left">
-        <i class="icon-comment-alt media-object"></i>
+    <div class="pull-left">
+      <i class="icon-comment-alt media-object"></i>
+    </div>
+
+    {{#unless view.isEditFormVisible}}
+      <div class="media-body">
+        <span class="body">
+          {{body}}
+        </span>
+        -
+        <span class="author">
+          {{#linkTo user createdBy.username}}
+            {{#if view.commentOwner}}
+              {{t label.you}}
+            {{else}}
+              {{createdBy.username}}
+            {{/if}}
+          {{/linkTo}}
+        </span>
+
+        {{#if view.commentOwner}}
+          <span class="links">
+            (<a {{action editFormVisibility target="view"}}>{{t label.edit}}</a>
+            |
+            <a {{action kill}}>{{t label.delete}}</a>)
+          </span>
+        {{/if}}
       </div>
-
-      {{#unless view.isEditFormVisible}}
-        <div class="media-body">
-          <span class="body">
-            {{body}}
-          </span>
-          -
-          <span class="author">
-            {{#linkTo user createdBy.username}}
-              {{#if view.commentOwner}}
-                {{t label.you}}
-              {{else}}
-                {{createdBy.username}}
-              {{/if}}
-            {{/linkTo}}
-          </span>
-
-          {{#if view.commentOwner}}
-            <span class="links">
-              (<a {{action editFormVisibility target="view"}}>{{t label.edit}}</a>
-              |
-              <a {{action kill}}>{{t label.delete}}</a>)
-            </span>
-          {{/if}}
-        </div>
-      {{else}}
-        {{#view App.EditCommentForm}}
-          <div class="comment-form media">
-            <div class="media-body">
-              <div>
-                {{view App.EditCommentField action="update" target="controller"
-                      class="span7 input-tiny comment-area"}}
-              </div>
-              <div>
-                {{view App.SubmitCommentButton action="submit" target="controller"
-                      class="btn btn-small"}}
-                <a {{action editFormVisibility target="view"}}>{{t label.cancel}}</a>
-              </div>
+    {{else}}
+      {{#view App.EditCommentForm}}
+        <div class="comment-form media">
+          <div class="media-body">
+            <div>
+              {{view App.EditCommentField action="update" target="controller"
+                    class="span7 input-tiny comment-area"}}
+            </div>
+            <div>
+              {{view App.SubmitCommentButton action="submit" target="controller"
+                    class="btn btn-small"}}
+              <a {{action editFormVisibility target="view"}}>{{t label.cancel}}</a>
             </div>
           </div>
-        {{/view}}
-      {{/unless}}
+        </div>
+      {{/view}}
+    {{/unless}}
   </li>
 </script>
 
@@ -294,10 +294,8 @@
         {{#linkTo 'post' this class="datetime"}}<time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>{{/linkTo}}
 
         {{#if currentUser}}
-          {{#view App.CommentPostView}}
-            -
-            <a {{action toggleVisibility target="view"}}>{{t label.comment}}</a>
-          {{/view}}
+          -
+          <a {{action toggleVisibility target="view"}}>{{t label.comment}}</a>
 
           {{#unless currentUserLiked}}
             -
@@ -408,10 +406,8 @@
           {{#linkTo 'post' this class="datetime"}}<time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>{{/linkTo}}
 
           {{#if currentUser}}
-            {{#view App.CommentPostView}}
-              -
-              <a {{action toggleVisibility target="view"}}>{{t label.comment}}</a>
-            {{/view}}
+            -
+            <a {{action toggleVisibility target="view"}}>{{t label.comment}}</a>
 
             {{#unless currentUserLiked}}
               -
@@ -616,10 +612,8 @@
         {{#linkTo 'post' this class="datetime"}}<time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>{{/linkTo}}
 
         {{#if currentUser}}
-          {{#view App.CommentPostView}}
-            -
-            <a {{action toggleVisibility target="view"}}>{{t label.comment}}</a>
-          {{/view}}
+          -
+          <a {{action toggleVisibility target="view"}}>{{t label.comment}}</a>
 
           {{#unless currentUserLiked}}
             -
@@ -656,8 +650,7 @@
       {{/if}}
 
       <ul class="unstyled comments">
-        {{view Ember.CollectionView contentBinding="comments"
-               itemViewClass="App.PartialCommentView"}}
+        {{each content.comments.content itemViewClass="App.PartialCommentView" itemController="comment"}}
       </ul>
 
       {{#view App.CommentForm}}

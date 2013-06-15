@@ -434,8 +434,10 @@ App.CometController = Ember.Controller.extend({
   removeLike: function(data) {
     var post = this.findPost(data.postId)
 
-    if (post)
-      post.removeLike('id', data.userId)
+    if (post) {
+      var like = post.get('likes').findProperty('id', data.userId)
+      post.get('likes').removeObject(like)
+    }
   },
 
   disconnect: function(data) {
@@ -797,19 +799,6 @@ App.PartialCommentView = Ember.View.extend({
     return this.content.content.createdBy.id == currentUser &&
       this.content.content.createdBy.username != 'anonymous'
   }.property()
-})
-
-// Create new post text field. Separate view to be able to bind events
-App.CommentPostView = Ember.View.extend(Ember.TargetActionSupport, {
-  click: function() {
-    this.triggerAction();
-  },
-
-  // XXX: this is a dup of App.PartialPostView.toggleVisibility()
-  // function. I just do not know how to access it from UI bindings
-  toggleVisibility: function() {
-    this.toggleProperty('parentView.isFormVisible');
-  }
 })
 
 App.LikeView = Ember.View.extend({
@@ -1414,11 +1403,6 @@ App.Post = Ember.Object.extend({
       return this.comments && this.get('comments').length > 3
   }.property('showAllComments', 'comments'),
 
-  removeLike: function(propName, value) {
-    var obj = this.get('likes').findProperty(propName, value);
-    this.likes.removeObject(obj);
-  },
-
   postOwner: function() {
     return this.get('createdBy').id == currentUser &&
       this.get('createdBy').username != 'anonymous'
@@ -1528,6 +1512,23 @@ App.Post.reopenClass({
       url: this.resourceUrl + '/' + postId,
       dataType: 'jsonp',
       success: function(response) {
+        post.set('comments', Ember.ArrayProxy.createWithMixins(Ember.SortableMixin, {
+          // TODO: figure out why we have to add itemController="comment"
+          // option to each iterator in the view
+          itemController: 'comment',
+
+          content: []
+        }))
+
+        if (response.comments) {
+          response.comments.forEach(function(attrs) {
+            var comment = App.Comment.create(attrs)
+            post.comments.addObject(comment)
+          })
+        }
+
+        delete response.comments
+
         post.setProperties(response);
       },
       error: function(XMLHttpRequest, textStatus, errorThrown) {
@@ -1787,7 +1788,6 @@ App.SigninController = Ember.ObjectController.extend({
           App.properties.set('isAuthorized', true)
           App.properties.set('username', response.user.username)
           App.properties.set('userId', response.user.id)
-          App.Group.findAll()
           this.transitionToRoute('posts')
           break
         case 'fail':
