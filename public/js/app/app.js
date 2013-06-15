@@ -323,7 +323,6 @@ App.CometController = Ember.Controller.extend({
     case 'user':
     case 'comments':
     case 'likes':
-    case 'posts':
     case 'public':
       return this.get('controllers.timeline')
     case 'search':
@@ -1077,7 +1076,8 @@ App.PostView = Ember.View.extend({
 
   postOwner: function() {
     return this.get("controller.content.createdBy") &&
-      this.get("controller.content.createdBy.id") == App.properties.userId;
+      this.get("controller.content.createdBy.id") === App.properties.userId &&
+      this.get("controller.content.createdBy.id") !== 'anonymous';
   }.property('controller.content')
 });
 
@@ -1744,7 +1744,7 @@ App.SignupController = Ember.ObjectController.extend({
           App.properties.set('isAuthorized', true)
           App.properties.set('username', response.user.username)
           App.properties.set('userId', response.user.id)
-          this.transitionToRoute('posts')
+          this.transitionToRoute('home')
           break
         case 'fail':
           this.transitionToRoute('signup')
@@ -1774,8 +1774,6 @@ App.SigninController = Ember.ObjectController.extend({
   password: '',
 
   signin: function() {
-    var that = this;
-
     $.ajax({
       url: this.resourceUrl,
       data: { username: this.get('username'), password: this.get('password') },
@@ -1788,10 +1786,10 @@ App.SigninController = Ember.ObjectController.extend({
           App.properties.set('isAuthorized', true)
           App.properties.set('username', response.user.username)
           App.properties.set('userId', response.user.id)
-          this.transitionToRoute('posts')
+          this.transitionToRoute('home')
           break
         case 'fail':
-          that.transitionToRoute('signin')
+          this.transitionToRoute('signin')
           break
         }
       }
