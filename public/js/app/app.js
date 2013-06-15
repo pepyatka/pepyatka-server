@@ -711,49 +711,6 @@ App.PartialPostView = Ember.View.extend({
   }
 });
 
-// View to display single post. Post has following subviews (defined below):
-//  - link to show a comment form
-//  - form to add a new comment
-App.OwnPostContainerView = Ember.View.extend({
-  templateName: 'own-post',
-  isFormVisible: false,
-  currentUser: currentUser,
-
-  toggleVisibility: function() {
-    this.toggleProperty('isFormVisible');
-  },
-
-  editFormVisibility: function() {
-    this.toggleProperty('isEditFormVisible');
-  },
-
-  didInsertElement: function() {
-    // wrap anchor tags around links in post text
-    this.$().find('.text').anchorTextUrls();
-    // wrap hashtags around text in post text
-    this.$().find('.text').hashTagsUrls();
-    // wrap search query around text in post text
-    //this.$().find('.text').highlightSearchResults(App.searchController.query);
-    // please read https://github.com/kswedberg/jquery-expander/issues/24
-    this.$().find('.text').expander({
-      slicePoint: 350,
-      expandPrefix: '&hellip; ',
-      preserveWords: true,
-      expandText: 'more&hellip;',
-      userCollapseText: '',
-      collapseTimer: 0,
-      expandEffect: 'fadeIn',
-      collapseEffect: 'fadeOut'
-    })
-
-    this.$().hide().slideDown('slow');
-  },
-
-  showAllComments: function() {
-    this.content.set('showAllComments', true)
-  }
-});
-
 App.PartialCommentView = Ember.View.extend({
   templateName: '_comment',
   isEditFormVisible: false,
