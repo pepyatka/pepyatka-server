@@ -276,7 +276,7 @@ App.Group.reopenClass({
     return groups
   },
 
-  make: function(attrs, options) {
+  submit: function(attrs, options) {
     $.ajax({
       url: this.resourceUrl,
       type: 'post',
@@ -290,10 +290,10 @@ App.Group.reopenClass({
 });
 
 App.GroupsController = Ember.ArrayController.extend({
-  make: function() {
+  submit: function() {
     var controller = this;
 
-    App.Group.make({
+    App.Group.submit({
       username: this.get("name")
     }, {
       success: function() {
@@ -862,7 +862,7 @@ App.CommentForm = Ember.View.extend({
 
   cancelComment: function() {
     this.set('parentView.isFormVisible', false)
-    this.set('body', '')
+    this.set('textField.body', '')
   }
 });
 
@@ -918,13 +918,14 @@ App.CreateCommentField = Ember.TextArea.extend(Ember.TargetActionSupport, {
   attributeBindings: ['class'],
   classNames: ['autogrow-short'],
   rows: 1,
-  valueBinding: 'view.body',
+  valueBinding: 'body',
   viewName: 'textField',
 
   insertNewline: function() {
     this.triggerAction();
 
     this.set('_parentView._parentView.isFormVisible', false)
+    this.set('body', '')
   },
 
   didInsertElement: function() {
@@ -1794,7 +1795,7 @@ App.HomeRoute = Ember.Route.extend({
     this.controllerFor('tags').set('content', App.Tag.findAll())
     this.controllerFor('timeline').set('content', model)
 
-    // this.controllerFor('comet').set('channel', model)
+    this.controllerFor('comet').set('channel', model)
   },
 
   renderTemplate: function() {

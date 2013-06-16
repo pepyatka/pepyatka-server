@@ -39,7 +39,7 @@ exports.addModel = function(db) {
   // XXX: this is the longest method in the app. Review it once you have time
   Post.destroy = function(postId, callback) {
     models.Post.findById(postId, function(err, post) {
-      // This is a parallel process: 
+      // This is a parallel process:
       // - deletes post from all users timelines
       // - deletes comments entities and comments array
       // - deletes attachments entities and attachments array
