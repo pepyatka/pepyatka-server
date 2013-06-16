@@ -273,7 +273,7 @@ footer {
   padding: 8px 30px 8px 14px;
 }
 
-.posts .media .pull-left {
+.posts .media .pull-left, .a-post.media .pull-left  {
   float: left;
 }
 
