@@ -659,13 +659,12 @@ App.PartialPostView = Ember.View.extend({
   currentUser: currentUser,
 
   groupsNames: function() {
-    if (!this.content.groups ||
-        this.content.createdBy.username === this.content.groups.username ||
-        this.get('controller.content.createdBy.username') === this.content.groups.username)
+    if (!this.get('controller.content.groups') ||
+        this.get('controller.content.createdBy.username') === this.get('controller.content.groups.username'))
       return null
 
-    return this.content.groups.username
-  }.property('content', 'controller.content.createdBy.username'),
+    return this.get('controller.content.groups.username')
+  }.property('controller.content.createdBy.username'),
 
   toggleVisibility: function() {
     this.toggleProperty('isFormVisible');
