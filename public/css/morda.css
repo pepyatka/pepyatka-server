@@ -221,13 +221,6 @@ footer {
   }
 }
 
-@media (min-width: 1200px) {
-  .searchFieldView input.span3,
-  .searchFieldView textarea.span3,
-  .searchFieldView .uneditable-input.span3 {
-    width: 275px;
-  }
-}
 @media (min-width: 768px) and (max-width: 979px) {
   .searchFieldView input.span3,
   .searchFieldView textarea.span3,
