@@ -1,206 +1,279 @@
 a, a:hover {
-    cursor: pointer;
-    color: #000088;
+  cursor: pointer;
+  color: #000088;
 }
 
 hr {
-    margin: 10px 0;
+  margin: 10px 0;
 }
 hr.underline {
-    margin: 2px 0 10px 0;
+  margin: 2px 0 10px 0;
 }
 
 script {
-    margin: 0;
-    padding: 0;
+  margin: 0;
+  padding: 0;
 }
 
 footer {
-    font-size: 10px;
-    color: #aaa;
+  font-size: 10px;
+  color: #aaa;
 }
 
 .container .title a {
-    color: #000;
+  color: #000;
 }
 .container .title small {
-    font-size: 12px;
+  font-size: 12px;
 }
 .container .signin-toolbar {
-    margin-top: 10px;
+  margin-top: 10px;
 }
 .container .comment-area {
-    height: 16px;
-    font-size: 13px;
-    line-height: 16px;
+  height: 16px;
+  font-size: 13px;
+  line-height: 16px;
 }
 .container .comment-area {
-    width: 600px;
+  width: 97%;
+  max-width: 600px;
 }
+
 .container .a-post .comment-area {
-    width: 586px;
+  width: 586px;
 }
 .container span.file-input-name {
-    display: block;
-    float: right;
-    height: 18px;
-    margin: 4px 0 0 4px;
-    overflow: hidden;
-    width: 300px; /* 450px */
+  display: block;
+  float: right;
+  height: 18px;
+  margin: 4px 0 0 4px;
+  overflow: hidden;
+  width: 300px; /* 450px */
 }
 
 .profile a {
-    color: #000;
+  color: #000;
 }
 .profile .author {
-    font-weight: bold
+  font-weight: bold
 }
 
 .post .author {
-    margin-bottom: 0;
-    font-size: 14px;
+  margin-bottom: 0;
+  font-size: 14px;
 }
 .post .author a {
-    color: #000088;
+  color: #000088;
 }
 .post .tagline a, .post .text a, .post .comments .author a,
   .post .comments .more-comments a, .comments .body a, .post .new-comment-link a,
   .post .likes a, .post .comments .links a {
-    color: #555599;
+  color: #555599;
 }
 .post .text a {
-    color: #000088;
+  color: #000088;
 }
 .post .body .text {
-    color: #000
+  color: #000
 }
 .post .text .read-more a, .comments .body .read-more a {
-    font-style: italic;
+  font-style: italic;
 }
 .post .body .image {
-    margin: 3px 0;
+  margin: 3px 0;
 }
 .post .tagline .datetime {
-    color: #666;
+  color: #666;
 }
 .post .tagline div {
-    display: inline;
+  display: inline;
 }
 .post .tagline, .post .comments, .post .comments .author {
-    font-size: 13px;
+  font-size: 13px;
 }
 .post .comments {
-    color: #666;
+  color: #666;
 }
 .post .comments li {
-    line-height: 16px;
+  line-height: 16px;
 }
 .post-container {
-    margin: 0;
+  margin: 0;
 }
 .post .comments .media {
-    margin: 5px 0 7px 0;
+  margin: 5px 0 7px 0;
 }
 .post .comments .more-comments {
-    font-style: italic;
-    margin: 3px 0 7px 20px;
+  font-style: italic;
+  margin: 3px 0 7px 20px;
 }
 .post .comments .pull-left, .post .comment-form .pull-left,
   .post .new-comment-link .pull-left, .post .likes .pull-left {
-    margin-right: 4px;
+  margin-right: 4px;
 }
 .post .likes {
-    font-size: 13px;
-    margin: 2px 0 0 0;
+  font-size: 13px;
+  margin: 2px 0 0 0;
 }
 .post .likes ul {
-    margin: 0;
+  margin: 0;
 }
 .post .likes .media-object {
-    color: #fc4;
+  color: #fc4;
 }
 .post .likes li {
-    padding: 0;
+  padding: 0;
 }
 .post .likes li span.and {
-    display: none;
+  display: none;
 }
 /*.post .likes li.last span.and {
-    display: inline;
+  display: inline;
 }*/
 .post .likes li.last span.comma {
-    display: none;
+  display: none;
 }
 .post .likes li.first span.comma {
-    display: none;
+  display: none;
 }
 .post .likes ul .pull-left {
-    margin: 0;
+  margin: 0;
 }
 
 .post .new-comment-link {
-    margin: 0;
-    font-size: 13px;
-    color: #666;
-    font-style: italic;
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+  font-style: italic;
 }
 
 .post .comment-form {
-    font-size: 13px;
-    margin: 4px 0 0 0;
-    color: #666;
+  font-size: 13px;
+  margin: 4px 0 0 0;
+  color: #666;
 }
 .post .comment-form a {
-    color: #000088;
+  color: #000088;
 }
 
 .container .profile-extra-info {
-    text-align: right;
+  text-align: right;
 }
 .container .profile-actions {
-    margin: 10px 0 0 0;
+  margin: 10px 0 0 0;
 }
 .container .submitForm {
-    margin: 0 0 8px 0;
+  margin: 0 0 8px 0;
 }
 .container .submitForm textarea {
-    color: #000;
+  color: #000;
 }
 
 .a-post .post .body .text, .a-post .post .author {
-    font-size: 21px;
-    line-height: normal;
+  font-size: 21px;
+  line-height: normal;
 }
 .a-post .post .author {
-    margin: 0 0 3px 0;
+  margin: 0 0 3px 0;
 }
 .a-post .comments .author {
-    font-size: 13px;
+  font-size: 13px;
 }
 
 .spinner {
-    display: none;
+  display: none;
 }
 .loading .posts {
-    display: none;
+  display: none;
 }
 .loading .spinner {
-    display: block;
+  display: block;
 }
 .searchFieldView {
-    margin-top: 17px;
+  margin-top: 17px;
 }
 
 .search {
-    color: #000000;
-    font-style: normal;
-    font-weight: bold;
+  color: #000000;
+  font-style: normal;
+  font-weight: bold;
 }
 
 .liked {
-    color: #666666;
+  color: #666666;
 }
 
 .postCreationField {
-    margin-top: 10px;
+  margin-top: 10px;
 }
+
+/* bootstrap modifications */
+
+@media (max-width: 767px) {
+  .container .comment-area {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+@media (max-width: 480px) {
+  img.media-object {
+    max-width: 32px;
+    max-height: 32px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .searchFieldView input.span3,
+  .searchFieldView textarea.span3,
+  .searchFieldView .uneditable-input.span3 {
+    width: 275px;
+  }
+}
+@media (min-width: 768px) and (max-width: 979px) {
+  .searchFieldView input.span3,
+  .searchFieldView textarea.span3,
+  .searchFieldView .uneditable-input.span3 {
+    width: 133px;
+  }
+}
+@media (max-width: 767px) {
+  .searchFieldView .btn {
+    width: 13%;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .searchFieldView input[class*="span"] {
+    width: 85.5%;
+    float: left;
+  }
+}
+@media (max-width: 480px) {
+  .searchFieldView .btn {
+    width: 18%;
+  }
+  .searchFieldView input[class*="span"] {
+    width: 79.7%;
+  }
+}
+@media (max-width: 320px) {
+  .searchFieldView {
+    min-width: 225px;
+  }
+  .searchFieldView .btn {
+    width: 24%;
+    min-width: 55px;
+  }
+  .searchFieldView input[class*="span"] {
+    width: 72.5%;
+    min-width: 146px;
+  }
+}
+
+.alert {
+  padding: 8px 30px 8px 14px;
+}
+
+.posts .media .pull-left {
+  float: left;
+}
+
