@@ -1195,8 +1195,7 @@ App.CommentController.reopenClass({
 })
 
 App.Timeline = Ember.Object.extend({
-  // FIXME: why is it create not extend?
-  posts: Ember.ArrayProxy.createWithMixins(Ember.SortableMixin, {
+  posts: Ember.ArrayProxy.extend(Ember.SortableMixin, {
     // TODO: figure out why we have to add itemController="post"
     // option to each iterator in the view
     itemController: 'post',
@@ -1222,7 +1221,22 @@ App.Timeline.reopenClass({
       dataType: 'jsonp',
       context: this
     }).then(function(response) {
-      if (response.posts)
+      if (response.posts) {
+        // TODO: why we have to define this here even we have defined
+        // posts property in Timeline object?
+        timeline.set('posts', Ember.ArrayProxy.createWithMixins(Ember.SortableMixin, {
+          // TODO: figure out why we have to add itemController="post"
+          // option to each iterator in the view
+          itemController: 'post',
+
+          content: [],
+
+          sortProperties: ['updatedAt'],
+          sortAscending: false
+        }))
+
+        var _posts = []
+
         response.posts.forEach(function(attrs) {
           var comments = attrs.comments
           delete attrs.comments
@@ -1243,10 +1257,13 @@ App.Timeline.reopenClass({
             })
           }
 
-          timeline.posts.addObject(post)
+          _posts.push(post)
         })
 
-      delete response.posts
+        timeline.posts.addObjects(_posts)
+        delete response.posts
+      }
+
       timeline.setProperties(response)
     })
     return timeline
@@ -1777,7 +1794,7 @@ App.HomeRoute = Ember.Route.extend({
     this.controllerFor('tags').set('content', App.Tag.findAll())
     this.controllerFor('timeline').set('content', model)
 
-    this.controllerFor('comet').set('channel', model)
+    // this.controllerFor('comet').set('channel', model)
   },
 
   renderTemplate: function() {

@@ -184,7 +184,7 @@
 
   <div class="posts">
     <ul class="media-list">
-      {{each controller.posts itemViewClass="App.PartialPostView" itemController="post"}}
+      {{each controller.posts.content itemViewClass="App.PartialPostView" itemController="post"}}
     </ul>
 
     {{view App.Pagination}}
@@ -445,7 +445,7 @@
 
   <div class="posts">
     <ul class="media-list">
-      {{each controller.posts itemViewClass="App.PartialPostView" itemController="post"}}
+      {{each controller.posts.content itemViewClass="App.PartialPostView" itemController="post"}}
     </ul>
 
     {{view App.Pagination}}
