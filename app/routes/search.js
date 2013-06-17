@@ -19,7 +19,7 @@ var postSerializer = {
 exports.addRoutes = function(app) {
   app.get('/v1/search/:searchQuery', function(req, res) {
     var pageSize = 25;
-    var pageStart = req.query && req.query.start || 0;
+    var pageStart = req.query && req.query.offset || 0;
     var searchQuery = req.params.searchQuery.replace(/%23/g, '#')
     searchQuery = searchQuery.replace(/#/g, configLocal.getWordWhichEqualHashTag())
     var parsedQuery = parseQuery(searchQuery);

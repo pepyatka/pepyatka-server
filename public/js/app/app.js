@@ -58,16 +58,18 @@ App.PaginationHelper = Ember.Mixin.create({
   }.property('nextPageDisabled'),
 
   nextPageDisabled: function() {
-    var len = this.get('content.content.length')
+    var len = this.get('content.posts.length') ||
+      this.get('content.content.length')
     return len === 0 || len < this.get('pageSize') ? 'disabled' : ''
-  }.property('content.content.length', 'pageSize'),
+  }.property('content.posts.length', 'content.content.length', 'pageSize'),
 
   resetPage: function() {
     this.set('pageStart', 0)
   },
 
   pageDidChange: function() {
-    this.didRequestRange(this.get('pageStart'));
+    this.didRequestRange({ offset: this.get('pageStart'),
+                           limit: this.get('pageSize') });
   }.observes('pageStart')
 });
 
@@ -1214,10 +1216,12 @@ App.Timeline.reopenClass({
     if (timelineId === undefined) timelineId = ''
 
     var timeline = App.Timeline.create()
+    var pageStart = options && options.offset || 0
+    var pageSize  = options && options.limit || 25
 
     $.ajax({
       url: this.resourceUrl + '/' + timelineId || '',
-//      data: { start: pageStart },
+      data: { offset: pageStart, limit: pageSize },
       dataType: 'jsonp',
       context: this
     }).then(function(response) {
@@ -1266,6 +1270,11 @@ App.Timeline.reopenClass({
 
       timeline.setProperties(response)
     })
+
+    // FIXME: I do believe this is a temp solution until I fix
+    // pagination to play nicely with the rest of the app
+    timeline.set('timelineId', timelineId)
+
     return timeline
   },
 
@@ -1360,6 +1369,11 @@ App.TimelineController = Ember.ObjectController.extend(App.PaginationHelper, {
     }
 
     App.Post.submit(data, callbacks)
+  },
+
+  didRequestRange: function(options) {
+    this.set('content', App.Timeline.find(this.get('content.timelineId'),
+                                          { offset: options.offset || 0 }))
   }
 })
 
@@ -1564,7 +1578,7 @@ App.SearchController = Ember.ObjectController.extend(App.PaginationHelper, {
 
   isLoaded: true,
 
-  search: function(query) {
+  search: function(query, options) {
     var posts = Ember.ArrayProxy.createWithMixins(Ember.SortableMixin, {
       // TODO: figure out why we have to add itemController="post"
       // option to each iterator in the view
@@ -1576,9 +1590,13 @@ App.SearchController = Ember.ObjectController.extend(App.PaginationHelper, {
       sortAscending: false
     })
 
+    var pageStart = options && options.offset || 0
+    var pageSize  = options && options.limit || 25
+
     $.ajax({
       url: this.resourceUrl + '/' + query,
       type: 'get',
+      data: { offset: pageStart, limit: pageSize },
       context: this,
     }).then(function(response) {
       if (response.posts)
@@ -1609,8 +1627,17 @@ App.SearchController = Ember.ObjectController.extend(App.PaginationHelper, {
       posts.addObjects(_posts)
     })
 
+    this.query = query
+
     return posts
+  },
+
+  didRequestRange: function(options) {
+    var posts = this.search(this.get('query'), { offset: options.offset || 0 })
+
+    this.set('content', posts)
   }
+
 })
 
 App.SubscriptionsView = Ember.View.extend({
@@ -1990,6 +2017,9 @@ App.SearchRoute = Ember.Route.extend({
     var posts = this.controllerFor('search').search(model)
 
     this.controllerFor('search').set('content', posts);
+    this.controllerFor('groups').set('content', App.Group.findAll())
+    this.controllerFor('tags').set('content', App.Tag.findAll())
+
     this.controllerFor('comet').set('channel', posts)
   },
 
