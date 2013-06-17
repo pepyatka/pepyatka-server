@@ -1596,7 +1596,7 @@ App.SearchController = Ember.ObjectController.extend(App.PaginationHelper, {
     var pageSize  = options && options.limit || 25
 
     $.ajax({
-      url: this.resourceUrl + '/' + query,
+      url: this.resourceUrl + '/' + encodeURIComponent(query),
       type: 'get',
       data: { offset: pageStart, limit: pageSize },
       context: this,
