@@ -751,9 +751,9 @@ App.PartialCommentView = Ember.View.extend({
   commentOwner: function() {
     // FIXME: why is it binded to content.content.createdBy not just
     // content.createdBy?
-    return this.content.content.createdBy.id == currentUser &&
-      this.content.content.createdBy.username != 'anonymous'
-  }.property()
+    return this.get('content.content.createdBy.id') == currentUser &&
+      this.get('content.content.createdBy.username') != 'anonymous'
+  }.property('content.content.createdBy.id')
 })
 
 App.LikeView = Ember.View.extend({
@@ -1374,7 +1374,7 @@ App.Post = Ember.Object.extend({
     if (this.showAllComments)
       return false
     else
-      return this.comments && this.get('comments').length > 3
+      return this.get('comments') && this.get('comments.content').length > 3
   }.property('showAllComments', 'comments'),
 
   postOwner: function() {
@@ -1409,6 +1409,7 @@ App.Post = Ember.Object.extend({
     return likes.length > 0
   }.property('likes', 'likes.@each'),
 
+  // TODO: this is a bound helper
   createdAgo: function() {
     if (this.get('createdAt')) {
       return moment(this.get('createdAt')).fromNow();
@@ -1416,17 +1417,17 @@ App.Post = Ember.Object.extend({
   }.property('createdAt'),
 
   firstComment: function() {
-    return this.get('comments')[0]
-  }.property('comments'),
+    return this.get('comments.content')[0]
+  }.property('comments.content'),
 
   lastComment: function() {
-    var comments = this.get('comments')
+    var comments = this.get('comments.content')
     return comments[comments.length-1]
-  }.property('comments', 'comments.@each'),
+  }.property('comments.content', 'comments.@each'),
 
   skippedCommentsLength: function() {
-    return this.get('comments').length-2 // display first and last comments only
-  }.property('comments', 'comments.@each'),
+    return this.get('comments.content').length-2 // display first and last comments only
+  }.property('comments.content', 'comments.content.@each'),
 
   firstThumbnailSrc: function() {
     if (this.get('attachments') && this.get('attachments')[0]) {

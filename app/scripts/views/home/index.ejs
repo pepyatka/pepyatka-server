@@ -331,11 +331,11 @@
 
       <ul class="unstyled comments">
         {{#if partial}}
-          {{view App.PartialCommentView contentBinding="firstComment"}}
+          {{view App.PartialCommentView contextBinding="firstComment" itemController="comment"}}
           <li class="media more-comments">
             <a {{action showAllComments target="view"}}>{{skippedCommentsLength}} {{t label.moreComments}}</a>
           </li>
-          {{view App.PartialCommentView contentBinding="lastComment"}}
+          {{view App.PartialCommentView contextBinding="lastComment" itemController="comment"}}
         {{else}}
           {{each controller.comments itemViewClass="App.PartialCommentView" itemController="comment"}}
 
