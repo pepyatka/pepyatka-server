@@ -60,7 +60,8 @@ App.PaginationHelper = Ember.Mixin.create({
   nextPageDisabled: function() {
     var len = this.get('content.posts.length') ||
       this.get('content.content.length')
-    return len === 0 || len < this.get('pageSize') ? 'disabled' : ''
+    return len === 0 || len === undefined ||
+      len < this.get('pageSize') ? 'disabled' : ''
   }.property('content.posts.length', 'content.content.length', 'pageSize'),
 
   resetPage: function() {
@@ -1388,7 +1389,7 @@ App.Post = Ember.Object.extend({
     if (this.showAllComments)
       return false
     else
-      return this.get('comments') && this.get('comments.content').length > 3
+      return this.get('comments.content.length') > 3
   }.property('showAllComments', 'comments'),
 
   postOwner: function() {
@@ -1440,7 +1441,8 @@ App.Post = Ember.Object.extend({
   }.property('comments.content', 'comments.@each'),
 
   skippedCommentsLength: function() {
-    return this.get('comments.content').length-2 // display first and last comments only
+    // display first and last comments only
+    return this.get('comments.content').length-2
   }.property('comments.content', 'comments.content.@each'),
 
   firstThumbnailSrc: function() {
@@ -1871,6 +1873,11 @@ App.PublicRoute = Ember.Route.extend({
 })
 
 App.GroupsRoute = Ember.Route.extend({
+  setupController: function(controller, model) {
+    this.controllerFor('groups').set('content', App.Group.findAll())
+    this.controllerFor('tags').set('content', App.Tag.findAll())
+  },
+
   renderTemplate: function() {
     this.render('create-group', {
       controller: 'groups'

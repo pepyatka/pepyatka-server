@@ -124,12 +124,12 @@ exports.addRoutes = function(app) {
 
       requireAuthorization(req.user, feedOwner, function(err, isAuthorized) {
         if(!isAuthorized)
-          return res.jsonp({err: err, status: 'fail'})
+          return res.jsonp({err: err, status: 'fail'}, 422)
 
         if (feedOwner.type == 'group') {
           feedOwner.getAdministratorsIds(function(err, administratorsIds) {
             if (administratorsIds.indexOf(req.params.userId) != -1)
-              return res.jsonp({err: err, status: 'fail'})
+              return res.jsonp({err: err, status: 'fail'}, 422)
 
             unsubscribe()
           })

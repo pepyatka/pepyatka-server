@@ -22,11 +22,11 @@ exports.addRoutes = function(app) {
 
       requireAuthorization(req.user, mainFeed, function(err, isAuthorized) {
         if (!isAuthorized)
-          return res.jsonp({ err: err, status: 'fail'})
+          return res.jsonp({ err: err, status: 'fail'}, 422)
 
         models.FeedFactory.destroy(req.params.userId, function(err) {
           if(err)
-            res.jsonp({ err: err, status: 'fail'})
+            res.jsonp({ err: err, status: 'fail'}, 422)
 
           res.jsonp({ err: err, status: 'success'})
         })
@@ -44,8 +44,8 @@ exports.addRoutes = function(app) {
     })
 
     newGroup.create(req.user.id, function(err, group) {
-      if (err) return res.jsonp({ err: err, status: 'fail'})
-      
+      if (err) return res.jsonp({ err: err, status: 'fail'}, 422)
+
       res.jsonp({ err: null, status: 'success'})
     })
   })
@@ -54,12 +54,12 @@ exports.addRoutes = function(app) {
   // app.patch('/v1/users/:userId', function(req, res) {
   //   models.Group.findById(req.params.userId, function(err, group) {
   //     if (err)
-  //       return res.jsonp({ err: err, status: 'fail'})
+  //       return res.jsonp({ err: err, status: 'fail'}, 422)
 
   //     group.username = req.body.username
   //     group.update(function(err, group) {
   //       if (err)
-  //         return res.jsonp({ err: err, status: 'fail'})
+  //         return res.jsonp({ err: err, status: 'fail'}, 422)
 
   //       res.jsonp({ err: null, status: 'success'})
   //     })
@@ -70,10 +70,10 @@ exports.addRoutes = function(app) {
     models.FeedFactory.findByName(req.params.username, function(err, mainFeed) {
       requireAuthorization(req.user, mainFeed, function(err, isAuthorized) {
         if (!isAuthorized)
-          return res.jsonp({ err: err, status: 'fail'})
+          return res.jsonp({ err: err, status: 'fail'}, 422)
 
         mainFeed.addAdministrator(req.params.userId, function(err, result) {
-          if (err) return res.jsonp({ err: err, status: 'fail'})
+          if (err) return res.jsonp({ err: err, status: 'fail'}, 422)
 
           res.jsonp({ err: null, status: 'success'})
         })
@@ -85,10 +85,10 @@ exports.addRoutes = function(app) {
     models.FeedFactory.findByName(req.params.username, function(err, mainFeed) {
       requireAuthorization(req.user, mainFeed, function(err, isAuthorized) {
         if (!isAuthorized)
-          return res.jsonp({ err: err, status: 'fail'})
+          return res.jsonp({ err: err, status: 'fail'}, 422)
 
         mainFeed.removeAdministrator(req.params.userId, function(err, result) {
-          if (err) return res.jsonp({ err: err, status: 'fail'})
+          if (err) return res.jsonp({ err: err, status: 'fail'}, 422)
 
           res.jsonp({ err: null, status: 'success'})
         })

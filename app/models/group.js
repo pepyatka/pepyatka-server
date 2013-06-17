@@ -397,6 +397,8 @@ exports.addModel = function(db) {
       var subscribersJSON = []
       that.getTimelines( {start: 0}, function(err, timelines) {
         async.forEach(timelines, function(timeline, done) {
+          // TODO: review this case (e.g. create group action)
+          if (timeline)
             timeline.getSubscribers(function(err, subscribers) {
               async.forEach(subscribers, function(subscriber, done) {
                   if (subscribersIds.indexOf(subscriber.id) != -1)
