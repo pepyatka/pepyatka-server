@@ -13,7 +13,7 @@
         el.nodeValue = el.nodeValue.substring(0, el.nodeValue.indexOf(m[0]));
         tail.nodeValue = tail.nodeValue.substring(tail.nodeValue.indexOf(m[0]) + m[0].length);
         // Rebuild the DOM inserting the new hashtag link between the split text nodes
-        var href = '/search/' + m[0].replace("#","%23");
+        var href = '/search/' + encodeURIComponent(m[0])
         $(el).after(tail).after($("<a href=\'" + href + "\'></a>").html(m[0]));
 
         // Recurse on the new tail node to check for more hashtags

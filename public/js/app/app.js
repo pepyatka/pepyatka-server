@@ -2017,11 +2017,11 @@ App.SearchRoute = Ember.Route.extend({
   },
 
   model: function(params) {
-    return decodeURIComponent(params.query)
+    return params.query
   },
 
   setupController: function(controller, model) {
-    var posts = this.controllerFor('search').search(model)
+    var posts = this.controllerFor('search').search(decodeURIComponent(model))
 
     this.controllerFor('search').set('content', posts);
     this.controllerFor('groups').set('content', App.Group.findAll())
