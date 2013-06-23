@@ -206,12 +206,33 @@ footer {
   margin-top: 10px;
 }
 
+.pager {
+  text-align: left;
+  border-top: 1px solid #eee;
+  padding-top: 14px;·
+  margin: 10px 0 4px;·
+}
+.pager li > a,·
+.pager li > span {
+  background: none;
+  border: none;
+  padding: 0 15px 0 0;
+}
+.pager li > a:hover {
+  background: none;
+  text-decoration: underline;
+}
+
+
 /* bootstrap modifications */
 
 @media (max-width: 767px) {
   .container .comment-area {
     width: 100%;
     max-width: 100%;
+  }
+  .pager {
+    margin-bottom: 15px;
   }
 }
 @media (max-width: 480px) {
@@ -242,6 +263,10 @@ footer {
 @media (max-width: 480px) {
   .searchFieldView .btn {
     width: 18%;
+  }
+  .media .pull-left,
+  .media .pull-right {
+    margin-bottom: 0;
   }
   .searchFieldView input[class*="span"] {
     width: 79.7%;
