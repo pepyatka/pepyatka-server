@@ -30,35 +30,39 @@
 
       </header>
       <section>
-        <h1>Pepyatka</h1>
+        <h1>
+<a name="pepyatka" class="anchor" href="#pepyatka"><span class="octicon octicon-link"></span></a>Pepyatka</h1>
 
 <p>Pepyatka is another attempt to open source FriendFeed social
 network/aggregator. At this stage it's a semi-anonymous imageboard.</p>
 
 <p><img src="http://epicmonkey.org/pepyatka/2013-03-10_Pepyatka.png" alt="Pepyatka screenshot"></p>
 
-<h2>Configuration</h2>
+<h2>
+<a name="configuration" class="anchor" href="#configuration"><span class="octicon octicon-link"></span></a>Configuration</h2>
 
 <ul>
 <li>Install redis</li>
 <li>Install graphicsmagick (ensure jpeg and png flags are set)</li>
 <li>Install nodejs</li>
 <li>Install elasticsearch (and java as a dependency ;-)</li>
-<li>Install forever: npm install -g forever</li>
 <li>Make sure to update secret token: cp ./conf/envDefault.js to
 ./conf/envLocal.js.</li>
 <li>Install dependencies: npm install</li>
 <li>Update translation file: cp ./public/config/envDefault.js
 ./public/config/envLocal.js</li>
+<li>Install mocha globally in the system: npm install -g mocha </li>
 <li>Check there are no broken tests: jake test</li>
 <li>Run elasticsearch</li>
 <li>Run server: node ./server.js</li>
 <li>Run search daemon: node ./bin/search-daemon.js</li>
-</ul><h2>Roadmap</h2>
+</ul><h2>
+<a name="roadmap" class="anchor" href="#roadmap"><span class="octicon octicon-link"></span></a>Roadmap</h2>
 
 <p>Tasks: <a href="https://trello.com/b/uvRkkOTH">https://trello.com/b/uvRkkOTH</a></p>
 
-<h2>Database</h2>
+<h2>
+<a name="database" class="anchor" href="#database"><span class="octicon octicon-link"></span></a>Database</h2>
 
 <pre><code>username:&lt;username&gt;:uid
 
@@ -103,9 +107,11 @@ tags:&lt;userId&gt; { &lt;tag&gt;:&lt;score&gt; } # implemented only for everyon
 as special case there are tags: tags:everyone
 </code></pre>
 
-<h2>API</h2>
+<h2>
+<a name="api" class="anchor" href="#api"><span class="octicon octicon-link"></span></a>API</h2>
 
-<h3>Timeline</h3>
+<h3>
+<a name="timeline" class="anchor" href="#timeline"><span class="octicon octicon-link"></span></a>Timeline</h3>
 
 <ul>
 <li>GET /v1/timeline/:username - returns all posts from user </li>
@@ -114,7 +120,8 @@ as special case there are tags: tags:everyone
 <li>POST /v1/timeline/:timelineId/subscribe</li>
 <li>POST /v1/timeline/:timelineId/unsubscribe</li>
 <li>GET /v1/timeline/:timelineId/subcribers</li>
-</ul><h3>Posts</h3>
+</ul><h3>
+<a name="posts" class="anchor" href="#posts"><span class="octicon octicon-link"></span></a>Posts</h3>
 
 <ul>
 <li>GET /v1/posts/:postId</li>
@@ -125,13 +132,15 @@ as special case there are tags: tags:everyone
 <li>POST /v1/posts</li>
 <li>POST /v1/posts/:postId/like</li>
 <li>POST /v1/posts/:postId/unlike</li>
-</ul><h3>Comments</h3>
+</ul><h3>
+<a name="comments" class="anchor" href="#comments"><span class="octicon octicon-link"></span></a>Comments</h3>
 
 <ul>
 <li>POST /v1/comments</li>
 <li>DELETE /v1/comments/:commentId</li>
 <li>PATCH /v1/comments/:commentId</li>
-</ul><h3>Users and groups</h3>
+</ul><h3>
+<a name="users-and-groups" class="anchor" href="#users-and-groups"><span class="octicon octicon-link"></span></a>Users and groups</h3>
 
 <ul>
 <li>GET /v1/users/:userId</li>
@@ -145,16 +154,18 @@ as special case there are tags: tags:everyone
 <li>GET /v1/users/:userId/feedinfo</li>
 <li>not implemented yet</li>
 <li>PATCH /v1/users/:userId</li>
-</ul><h3>Statistics</h3>
+</ul><h3>
+<a name="statistics" class="anchor" href="#statistics"><span class="octicon octicon-link"></span></a>Statistics</h3>
 
 <ul>
 <li>GET /v1/top/:category - returns an array of users with the highest
 statistics in a category. Category could be one of { "posts",
 "likes", "discussions", "subscriptions", "subscribers" }</li>
-</ul><h2>SEARCH API</h2>
+</ul><h2>
+<a name="search-api" class="anchor" href="#search-api"><span class="octicon octicon-link"></span></a>SEARCH API</h2>
 
 <ul>
-<li>GET /v1/search/:searchQuery - returns all posts which equals searchQuery.</li>
+<li>GET /v1/search/:query - returns all posts which equals query.</li>
 </ul><p>Search query is a string of keywords.
 Keywords:</p>
 
@@ -172,6 +183,49 @@ search engine will search it in post's and comment's bodies.</p>
 engine will return posts that contain 'that' in post's body and 'this'
 in post's or comment's body, also it will return posts that contain
 'comment' in comment's body and written by user 'user'.</p>
+
+<h2>
+<a name="ntlm-support" class="anchor" href="#ntlm-support"><span class="octicon octicon-link"></span></a>NTLM support</h2>
+
+<ol>
+<li>Update /etc/nsswitch:</li>
+<li>Add realm to /etc/krb.conf</li>
+<li>Update samba config</li>
+<li>Join domain: net ads join -U </li>
+<li>Ensure wbinfo -t returns: "checking the trust secret for domain  via RPC calls succeeded."</li>
+<li>Add NTLM module to httpd (or nginx) and use it as a reverse proxy.</li>
+<li>Change Pepyatka "removeUser" config option from "false" to "true".</li>
+</ol><p>Example configuration for httpd below:</p>
+
+<pre><code>LoadModule auth_ntlm_winbind_module modules/mod_auth_ntlm_winbind.so
+LoadModule rewrite_module modules/mod_rewrite.so
+LoadModule proxy_module modules/mod_proxy.so
+
+&lt;VirtualHost *:80&gt;
+  ProxyRequests off
+  &lt;Proxy *&gt;
+    Order deny,allow
+    Allow from all
+  &lt;/Proxy&gt;
+
+  &lt;Location /&gt;
+    ProxyPass http://localhost:3000/
+    ProxyPassReverse http://localhost:3000/
+
+    AuthType NTLM
+    NTLMAuth on
+    NTLMAuthHelper "/usr/bin/ntlm_auth --helper-protocol=squid-2.5-ntlmssp"
+    NTLMBasicAuthoritative on
+    AuthType NTLM
+    require valid-user
+
+    RewriteEngine On
+    RewriteCond %{LA-U:REMOTE_USER} (.+)
+    RewriteRule . - [E=RU:%1]
+    RequestHeader set X-Remote-User "%{RU}e" env=RU
+  &lt;/Location&gt;
+&lt;/VirtualHost&gt;
+</code></pre>
       </section>
       <footer>
         <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
