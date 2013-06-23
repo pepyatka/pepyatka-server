@@ -180,6 +180,13 @@ exports.addModel = function(db) {
                              })
                   },
                   function(done) {
+                    db.hmset('user:' + that.id + ':info',
+                             { 'screenName': that.username.toString().trim()
+                             }, function(err, res) {
+                               done(err, res)
+                             })
+                  },
+                  function(done) {
                     db.set('username:' + that.username + ':uid', that.id, function(err, res) {
                       done(err, res)
                     })
