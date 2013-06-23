@@ -146,17 +146,12 @@ NTLM support
 ------------
 
 1. Update /etc/nsswitch:
-
 2. Add realm to /etc/krb.conf
-
-3. update samba config
-
-4. join domain: net ads join -U <admin>
-
-5. Ensure wbinfo -t returns: "checking the trust secret for domain
-<domain> via RPC calls succeeded."
-
+3. Update samba config
+4. Join domain: net ads join -U <admin>
+5. Ensure wbinfo -t returns: "checking the trust secret for domain <domain> via RPC calls succeeded."
 6. Add NTLM module to httpd (or nginx) and use it as a reverse proxy.
+7. Change Pepyatka "removeUser" config option from "false" to "true".
 
 Example configuration for httpd below:
 
@@ -190,6 +185,4 @@ LoadModule proxy_module modules/mod_proxy.so
   </Location>
 </VirtualHost>
 ```
-
-7. Change Pepyatka "removeUser" config option from "false" to "true".
 
