@@ -18,7 +18,7 @@ Configuration
 - Install dependencies: npm install
 - Update translation file: cp ./public/config/envDefault.js
   ./public/config/envLocal.js
-- Install mocha globally in the system: npm install -g mocha 
+- Install mocha globally in the system: npm install -g mocha
 - Check there are no broken tests: jake test
 - Run elasticsearch
 - Run server: node ./server.js
