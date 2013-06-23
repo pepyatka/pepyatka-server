@@ -69,10 +69,9 @@
                 {{#linkTo user App.properties.username}}{{App.properties.screenName}}{{/linkTo}}
               </div>
               <div>
-
-                <% if (req.user && req.user.username != 'anonymous') { %>
+                {{#unless view.isAnonymous}}
                   {{#linkTo settings}}{{t label.settings}}{{/linkTo}} -
-                <% } %>
+                {{/unless}}
                 <% if (!conf.remoteUser) { %>
                   <a href="/logout">{{t label.signout}}</a>
                 <% } %>
