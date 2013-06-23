@@ -1,7 +1,8 @@
 var models = require('../models');
 
 exports.addRoutes = function(app) {
-  var userSerializer = { select: ['id', 'username'] }
+  var userSerializer = { select: ['id', 'username', 'info'],
+                         info: {select: ['screenName'] } }
 
   if (!conf.remoteUser) {
     app.post('/v1/signup', function(req, res) {
