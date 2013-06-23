@@ -32,10 +32,11 @@ exports.listen = function() {
 
             models.User.findById(timeline.userId, function(err, user) {
               if (!user || user.type === 'group' ||
-                  !user.info || user.info.receiveEmails !== 'all' ||
-                  !user.info.email) return
+                  !user.info || user.info.receiveEmails !== 'In real time' ||
+                  !user.info.email || user.id === post.userId) return
 
               html = ejs.render(htmlTemplate, {
+                screenName: user.info.screenName,
                 username: user.info.screenName,
                 post: post.body,
                 likes: [],
@@ -67,7 +68,7 @@ exports.listen = function() {
             models.User.findById(timeline.userId, function(err, user) {
               if (!user || user.id === post.userId ||
                   user.type === 'group' ||
-                  user.info === null || user.info.receiveEmails !== 'all' ||
+                  user.info === null || user.info.receiveEmails !== 'In real time' ||
                   !user.info.email) return
 
               html = ejs.render(htmlTemplate, {
@@ -103,7 +104,7 @@ exports.listen = function() {
 
             models.User.findById(timeline.userId, function(err, user) {
               if (!user || user.id === post.userId || user.type === 'group' ||
-                  !user.info || user.info.receiveEmails !== 'all') return
+                  !user.info || user.info.receiveEmails !== 'In real time') return
 
               html = ejs.render(htmlTemplate, {
                 username: user.info.screenName,
