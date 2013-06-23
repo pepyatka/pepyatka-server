@@ -773,6 +773,9 @@
   function preloadFunc() {
     Config.loadScripts()
   }
+
+  var csrf_token = '<%= csrf_token %>'
+
   window.onpaint = preloadFunc();
 </script>
 

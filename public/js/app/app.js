@@ -156,8 +156,7 @@ App.Group.reopenClass({
         + options.id,
       dataType: 'jsonp',
       type: 'post',
-      data: {'_method': 'delete'},
-      context: this,
+      data: { '_method': 'delete', '_csrf': csrf_token },
       success: options.success ? options.success : null
     });
   },
@@ -173,7 +172,7 @@ App.Group.reopenClass({
         + "/admin",
       dataType: 'jsonp',
       type: 'post',
-      context: this,
+      data: { '_csrf': csrf_token },
       success: options.success ? options.success : null
     });
   },
@@ -189,7 +188,7 @@ App.Group.reopenClass({
         + "/unadmin",
       dataType: 'jsonp',
       type: 'post',
-      context: this,
+      data: { '_csrf': csrf_token },
       success: options.success ? options.success : null
     });
   },
@@ -281,6 +280,7 @@ App.Group.reopenClass({
   },
 
   submit: function(attrs, options) {
+    attrs._csrf = csrf_token
     $.ajax({
       url: this.resourceUrl,
       type: 'post',
@@ -1089,7 +1089,7 @@ App.Comment.reopenClass({
     $.ajax({
       url: this.resourceUrl,
       type: 'post',
-      data: { body: attrs.body, postId: attrs.postId },
+      data: { body: attrs.body, postId: attrs.postId, '_csrf': csrf_token },
       success: function(response) {
         console.log(response)
       }
@@ -1100,7 +1100,7 @@ App.Comment.reopenClass({
     $.ajax({
       url: this.resourceUrl + '/' + commentId,
       type: 'post',
-      data: { body: attrs.body, '_method': 'patch' },
+      data: { body: attrs.body, '_method': 'patch', '_csrf': csrf_token },
       success: function(response) {
         console.log(response)
       }
@@ -1111,7 +1111,7 @@ App.Comment.reopenClass({
     $.ajax({
       url: this.resourceUrl + '/' + commentId,
       type: 'post',
-      data: {'_method': 'delete'},
+      data: { '_method': 'delete', '_csrf': csrf_token },
       success: function(response) {
         console.log(response)
       }
@@ -1191,7 +1191,7 @@ App.User.reopenClass({
     $.ajax({
       url: this.resourceUrl,
       type: 'post',
-      data: { params: params, '_method': 'patch' },
+      data: { params: params, '_method': 'patch', '_csrf': csrf_token },
       context: this,
       success: function(response) {
         options && options.success(response)
@@ -1316,6 +1316,7 @@ App.Timeline.reopenClass({
       url: this.resourceUrl + '/' + timelineId + '/subscribe',
       context: this,
       type: 'post',
+      data: { '_csrf': csrf_token },
       success: options && options.success ? options.success : null
     });
   },
@@ -1325,6 +1326,7 @@ App.Timeline.reopenClass({
       url: this.resourceUrl + '/' + timelineId + '/unsubscribe',
       context: this,
       type: 'post',
+      data: { '_csrf': csrf_token },
       success: options && options.success ? options.success : null
     });
   }
@@ -1503,7 +1505,7 @@ App.Post.reopenClass({
     $.ajax({
       url: this.resourceUrl + '/' + postId,
       type: 'post',
-      data: { body: attrs.body, '_method': 'patch' },
+      data: { body: attrs.body, '_method': 'patch', '_csrf': csrf_token },
       success: function(response) {
         console.log(response)
       }
@@ -1514,6 +1516,7 @@ App.Post.reopenClass({
     $.ajax({
       url: this.resourceUrl + '/' + postId + '/like',
       type: 'post',
+      data: { '_csrf': csrf_token },
       success: function(response) {
         console.log(response)
       }
@@ -1524,6 +1527,7 @@ App.Post.reopenClass({
     $.ajax({
       url: this.resourceUrl + '/' + postId + '/unlike',
       type: 'post',
+      data: { '_csrf': csrf_token },
       success: function(response) {
         console.log(response)
       }
@@ -1568,7 +1572,7 @@ App.Post.reopenClass({
     $.ajax({
       url: this.resourceUrl + '/' + postId,
       type: 'post',
-      data: {'_method': 'delete'},
+      data: { '_method': 'delete', '_csrf': csrf_token },
       success: function(response) {
         console.log(response)
       }
@@ -1772,7 +1776,9 @@ App.SignupController = Ember.ObjectController.extend({
   signup: function() {
     $.ajax({
       url: this.resourceUrl,
-      data: { username: this.get('username'), password: this.get('password') },
+      data: { username: this.get('username'),
+              password: this.get('password'),
+              '_csrf': csrf_token },
       dataType: 'jsonp',
       type: 'post',
       context: this,
@@ -1815,7 +1821,9 @@ App.SigninController = Ember.ObjectController.extend({
   signin: function() {
     $.ajax({
       url: this.resourceUrl,
-      data: { username: this.get('username'), password: this.get('password') },
+      data: { username: this.get('username'),
+              password: this.get('password'),
+              '_csrf': csrf_token },
       dataType: 'jsonp',
       type: 'post',
       context: this,

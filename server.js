@@ -60,6 +60,7 @@ app.configure(function() {
   app.use(logErrors);
   app.use(clientErrorHandler);
   app.use(errorHandler);
+  app.use(express.csrf());
 });
 
 function clientErrorHandler(err, req, res, next) {
