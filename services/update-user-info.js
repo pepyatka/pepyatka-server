@@ -23,7 +23,7 @@ var updateUserInfo = function() {
                       if (!user)
                         return callback(null)
 
-                      if (user.info || user.info.screenName)
+                      if (user.info || (user.info &&user.info.screenName))
                         return callback(null)
 
                       var params = {
