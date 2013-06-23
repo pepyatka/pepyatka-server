@@ -3,7 +3,7 @@ var models = require('../models')
 
 exports.addRoutes = function(app) {
   var timelineSerializer = {
-    select: ['id', 'posts', 'user', 'subscribers'],
+    select: ['name', 'id', 'posts', 'user', 'subscribers'],
     posts: {
       select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'groups'],
       createdBy: { select: ['id', 'username', 'info'],

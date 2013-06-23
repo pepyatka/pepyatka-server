@@ -1371,7 +1371,9 @@ App.TimelineController = Ember.ObjectController.extend(App.PaginationHelper, {
       data.append('file-'+i, file);
     });
 
-    data.append('timelinesIds', this.get('content.id'))
+    if (this.get('content.name') !== 'River of news')
+      data.append('timelinesIds', this.get('content.id'))
+
     data.append('body', attrs.value)
 
     callbacks = {

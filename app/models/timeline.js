@@ -69,7 +69,7 @@ exports.addModel = function(db) {
     models.Post.findById(postId, function(err, post) {
       post.getSubscribedTimelinesIds(function(err, timelinesIds) {
         // we add everyoneTimelineId to timelineIds, and newPost will
-        // be put in everyone timeline
+        // be in everyone timeline as well
         Timeline.getEveryoneTimelineId(function(err, everyoneTimelineId) {
           timelinesIds.push(everyoneTimelineId)
 
