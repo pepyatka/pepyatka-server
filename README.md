@@ -121,7 +121,7 @@ API
   "likes", "discussions", "subscriptions", "subscribers" }
 
 SEARCH API
----
+----------
 
 - GET /v1/search/:query - returns all posts which equals query.
 
@@ -141,3 +141,55 @@ Example: this AND intitle:that OR incomment:comment from:user. Search
 engine will return posts that contain 'that' in post's body and 'this'
 in post's or comment's body, also it will return posts that contain
 'comment' in comment's body and written by user 'user'.
+
+NTLM support
+------------
+
+1. Update /etc/nsswitch:
+
+2. Add realm to /etc/krb.conf
+
+3. update samba config
+
+4. join domain: net ads join -U <admin>
+
+5. Ensure wbinfo -t returns: "checking the trust secret for domain
+<domain> via RPC calls succeeded."
+
+6. Add NTLM module to httpd (or nginx) and use it as a reverse proxy.
+
+Example configuration for httpd below:
+
+```
+LoadModule auth_ntlm_winbind_module modules/mod_auth_ntlm_winbind.so
+LoadModule rewrite_module modules/mod_rewrite.so
+LoadModule proxy_module modules/mod_proxy.so
+
+<VirtualHost *:80>
+  ProxyRequests off
+  <Proxy *>
+    Order deny,allow
+    Allow from all
+  </Proxy>
+
+  <Location />
+    ProxyPass http://localhost:3000/
+    ProxyPassReverse http://localhost:3000/
+
+    AuthType NTLM
+    NTLMAuth on
+    NTLMAuthHelper "/usr/bin/ntlm_auth --helper-protocol=squid-2.5-ntlmssp"
+    NTLMBasicAuthoritative on
+    AuthType NTLM
+    require valid-user
+
+    RewriteEngine On
+    RewriteCond %{LA-U:REMOTE_USER} (.+)
+    RewriteRule . - [E=RU:%1]
+    RequestHeader set X-Remote-User "%{RU}e" env=RU
+  </Location>
+</VirtualHost>
+```
+
+7. Change Pepyatka "removeUser" config option from "false" to "true".
+
