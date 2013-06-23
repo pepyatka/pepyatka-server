@@ -30,9 +30,12 @@ exports.addRoutes = function(app) {
     select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'updatedAt', 'likes', 'groups'],
     createdBy: { select: ['id', 'username'] },
     comments: { select: ['id', 'body', 'createdBy'],
-                createdBy: { select: ['id', 'username'] }},
-    likes: { select: ['id', 'username']},
-    groups: { select: ['id', 'username'] }
+                createdBy: { select: ['id', 'username', 'info'],
+                             info: {select: ['screenName'] }}},
+    likes: { select: ['id', 'username', 'info'],
+             info: {select: ['screenName'] }},
+    groups: { select: ['id', 'username', 'info'],
+              info: {select: ['screenName'] }}
   }
 
   app.get('/v1/posts/:postId', function(req, res) {

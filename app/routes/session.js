@@ -2,7 +2,8 @@ var models = require('../models')
   , passport = require('passport')
 
 exports.addRoutes = function(app) {
-  var userSerializer = { select: ['id', 'username'] }
+  var userSerializer = { select: ['id', 'username', 'info'],
+                         info: { select: ['screenName'] } }
 
   if (!conf.remoteUser) {
     app.post('/v1/session', function(req, res, next) {

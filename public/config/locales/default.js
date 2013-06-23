@@ -36,6 +36,9 @@ Em.I18n.translations = {
   'label.manageSubscribers': 'Manage subscribers',
   'label.username': 'Username',
   'label.password': 'Password',
+  'label.sendEmails': 'Send new posts',
+  'label.screenName': 'Name',
+  'label.email': 'Email',
 
   'button.search': 'Search',
   'button.post': 'Post',
@@ -44,6 +47,7 @@ Em.I18n.translations = {
   'button.create': 'Create',
   'button.signUp': 'Sign up',
   'button.signIn': 'Sign in',
+  'button.save': 'Save',
 
   'header.createGroup': 'Create group',
   'header.groups': 'Groups',
@@ -54,5 +58,6 @@ Em.I18n.translations = {
   'header.signUp': 'Sign up',
   'header.members': 'Members',
   'header.admins': 'Admins',
-  'header.notFound': 'File not found'
+  'header.notFound': 'File not found',
+  'header.settings': 'Settings'
 };

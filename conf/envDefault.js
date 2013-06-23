@@ -4,13 +4,18 @@ exports.getAppConfig = function () {
     saltSecret: 'sectet token',
     port: 3000,
     loggerLevel: 'info',
-    remoteUser: false
+    remoteUser: false,
+
+    sendFromName: 'from_address',
+    sendFromEmail: 'email_address',
+    serviceEmail: 'email_address',
+    servicePass: 'password'
   }
 
   return configValues;
 }
 
-exports.getElasticSearchConfig = function(){
+exports.getElasticSearchConfig = function() {
   serverOptions = {
     host: 'localhost',
     port: 9200
@@ -19,13 +24,13 @@ exports.getElasticSearchConfig = function(){
   return serverOptions;
 }
 
-exports.isAnonymousPermitted = function(){
+exports.isAnonymousPermitted = function() {
   var isPermitted = true;
 
   return isPermitted;
 }
 
-exports.getWordWhichEqualHashTag = function(){
+exports.getWordWhichEqualHashTag = function() {
   var wordWhichEqualHashTag = 'hashtagsym';
 
   return wordWhichEqualHashTag;

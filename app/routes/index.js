@@ -25,7 +25,7 @@ exports.addRoutes = function(app) {
     res.render('./home')
   });
 
-  app.get('/search/:searchQuery', function(req, res) {
+  app.get('/search/:query', function(req, res) {
     res.render('./home')
   });
 
@@ -50,6 +50,10 @@ exports.addRoutes = function(app) {
   });
 
   app.get('/users/:username/comments', function(req, res) {
+    res.render('./home')
+  });
+
+  app.get('/settings', function(req, res) {
     res.render('./home')
   });
 

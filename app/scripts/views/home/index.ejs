@@ -66,12 +66,13 @@
 
             <div class="media-body">
               <div class="author">
-                {{#linkTo user App.properties.username}}{{App.properties.username}}{{/linkTo}}
+                {{#linkTo user App.properties.username}}{{App.properties.screenName}}{{/linkTo}}
               </div>
               <div>
 
-                <!--<a>{{t label.settings}}</a>
-                --->
+                <% if (req.user && req.user.username != 'anonymous') { %>
+                  {{#linkTo settings}}{{t label.settings}}{{/linkTo}} -
+                <% } %>
                 <% if (!conf.remoteUser) { %>
                   <a href="/logout">{{t label.signout}}</a>
                 <% } %>
@@ -114,7 +115,7 @@
 
 <script type="text/x-handlebars" id="groups">
   {{#each group in controllers.groups}}
-    <li>{{#linkTo user group.user.username}}{{group.user.username}}{{/linkTo}}</li>
+    <li>{{#linkTo user group.user.username}}{{group.user.info.screenName}}{{/linkTo}}</li>
   {{/each}}
 </script>
 
@@ -208,7 +209,7 @@
             {{#if view.commentOwner}}
               {{t label.you}}
             {{else}}
-              {{createdBy.username}}
+              {{createdBy.info.screenName}}
             {{/if}}
           {{/linkTo}}
         </span>
@@ -243,7 +244,7 @@
 
 <script type="text/x-handlebars" id="like-view">
   {{#with view.content}}
-    <span class="and">and&nbsp;</span>{{#linkTo user username}}{{username}}{{/linkTo}}<span class="comma">,&nbsp;</span>
+    <span class="and">and&nbsp;</span>{{#linkTo user username}}{{info.screenName}}{{/linkTo}}<span class="comma">,&nbsp;</span>
   {{/with}}
 </script>
 
@@ -257,7 +258,7 @@
 
     <div class="media-body post">
       <h5 class="media-heading author">
-        {{#linkTo user createdBy.username}}{{createdBy.username}}{{/linkTo}}
+        {{#linkTo user createdBy.username}}{{createdBy.info.screenName}}{{/linkTo}}
 
         {{#if view.groupsNames}}
           ({{#linkTo user view.groupsNames}}{{view.groupsNames}}{{/linkTo}})
@@ -378,7 +379,7 @@
       </div>
 
       <div class="media-body">
-        <h3 class="pull-left">{{content.user.username}}</h3>
+        <h3 class="pull-left">{{content.user.info.screenName}}</h3>
 
         <div class="pull-right profile-extra-info">
           {{#if content.user.subscriptionsLength}}
@@ -459,9 +460,8 @@
     </div>
 
     <div class="media-body post">
-      <!-- FIXME: showUserTimeline createdBy.username is undefined on a deserialized view -->
       <h5 class="media-heading author">
-        {{#linkTo user createdBy.username}}{{createdBy.username}}{{/linkTo}}
+        {{#linkTo user createdBy.username}}{{createdBy.info.screenName}}{{/linkTo}}
 
         {{#if view.groupsNames}}
           ({{#linkTo user view.groupsNames}}{{view.groupsNames}}{{/linkTo}})
@@ -560,11 +560,11 @@
 </script>
 
 <script type="text/x-handlebars" id="subscriptions">
-  <h3>{{t header.subscriprions}} {{App.subscriptionsController.username}}</h3>
+  <h3>{{t header.subscriprions}} {{App.subscriptionsController.info.screenName}}</h3>
 
   <ul>
     {{#each content}}
-      <li>{{#linkTo user user.username}}{{user.username}}{{/linkTo}}</li>
+      <li>{{#linkTo user user.username}}{{user.info.screenName}}{{/linkTo}}</li>
     {{/each}}
   </ul>
 </script>
@@ -575,14 +575,14 @@
 </script>
 
 <script type="text/x-handlebars" id="subscribers">
-  <h3>{{t header.subscribers}} {{#linkTo user controller.content.username}}{{controller.content.username}}{{/linkTo}}</h3>
+  <h3>{{t header.subscribers}} {{#linkTo user controller.content.username}}{{controller.content.info.screenName}}{{/linkTo}}</h3>
 
   <h3>{{t header.members}}</h3>
   <ul>
     {{#each content itemController="subscriber"}}
       {{#unless isAdmin}}
         <li>
-          {{#linkTo user username}}{{username}}{{/linkTo}}
+          {{#linkTo user username}}{{info.screenName}}{{/linkTo}}
 
           {{#if view.isOwner}}
             {{#if view.showManagement}}
@@ -608,7 +608,7 @@
       {{#each content itemController="subscriber"}}
         {{#if isAdmin}}
           <li>
-            {{#linkTo user username}}{{username}}{{/linkTo}}
+            {{#linkTo user username}}{{info.screenName}}{{/linkTo}}
               {{#if view.isOwner}}
                 {{#if view.showManagement}}
                   (
@@ -636,7 +636,7 @@
 
   <ul>
     {{#each content}}
-      <li>{{#linkTo user username}}{{username}}{{/linkTo}}</li>
+      <li>{{#linkTo user username}}{{info.screenName}}{{/linkTo}}</li>
     {{/each}}
   </ul>
 </script>
@@ -718,14 +718,56 @@
   </div>
 </script>
 
+<script type="text/x-handlebars" data-template-name="settings">
+  <div class="span9">
+    <h2>{{t header.settings}}</h2>
+
+    <form action="/settings" method="post" class="form-horizontal">
+      <div class="control-group">
+        <label class="control-label" for="screenName">{{t label.screenName}}</label>
+        <div class="controls">
+          {{view Ember.TextField valueBinding="view.screenName" type="text" id="screenName" name="screenName"}}
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label" for="email">{{t label.email}}</label>
+        <div class="controls">
+          {{view Ember.TextField valueBinding="view.email" type="text" id="email" name="email"}}
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label" for="receive">{{t label.sendEmails}}</label>
+        <div class="controls">
+          {{view Ember.Select contentBinding="view.receiveEmailsContent" valueBinding="view.receiveEmails" name="receiveEmails" id="receiveEmails"}}
+        </div>
+      </div>
+
+      <div class="control-group">
+        <div class="controls span2">
+          <button {{action save target="view"}} class="btn btn-primary">{{t button.save}}</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</script>
+
 <script type="text/javascript">
   var currentUser
   var currentUsername
+  var currentScreenName
   var isAnonymousPermitted
+
   <% if (req.user) { %>
     currentUser = '<%= req.user.id %>'
     var currentUsername = '<%= req.user.username %>'
     isAnonymousPermitted = '<%= req.isAnonymousPermitted %>'
+    <% if (req.user.info) { %>
+      var currentScreenName = '<%= req.user.info.screenName %>'
+    <% } else { %>
+      var currentScreenName = '<%= req.user.username %>'
+    <% } %>
   <% } %>
 
   function preloadFunc() {

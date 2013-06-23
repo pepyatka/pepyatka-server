@@ -330,19 +330,21 @@ exports.addModel = function(db) {
 
     var returnJSON = function(err) {
       var isReady = true
-      if(select.indexOf('admins') != -1) {
-        isReady = isReady && json.admins !== undefined
-      }
-      if(select.indexOf('statistics') != -1) {
-        isReady = isReady && json.statistics !== undefined
-      }
-      if(select.indexOf('subscribers') != -1) {
-        isReady = isReady && json.subscribers !== undefined
-      }
 
-      if(isReady) {
+      if (select.indexOf('admins') != -1)
+        isReady = isReady && json.admins !== undefined
+
+      if (select.indexOf('statistics') != -1)
+        isReady = isReady && json.statistics !== undefined
+
+      if (select.indexOf('subscribers') != -1)
+        isReady = isReady && json.subscribers !== undefined
+
+      if (select.indexOf('info') != -1)
+        isReady = isReady && json.info !== undefined
+
+      if (isReady)
         callback(err, json)
-      }
     }
 
     if (select.indexOf('id') != -1)
@@ -359,6 +361,14 @@ exports.addModel = function(db) {
 
     if (select.indexOf('type') != -1)
       json.type = that.type
+
+    if (select.indexOf('info') != -1) {
+      that.getInfo(function(err, info) {
+        if (info !== undefined)
+          json.info = info
+        returnJSON(err)
+      })
+    }
 
     if (select.indexOf('admins') != -1) {
       that.getAdministratorsIds(function(err, administratorsIds) {

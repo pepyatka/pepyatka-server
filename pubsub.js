@@ -70,11 +70,11 @@ exports.listen = function(server) {
 
   var sub = redis.createClient()
     , pub = redis.createClient();
-        
+
   sub.subscribe('newPost', 'destroyPost', 'updatePost',
                 'newComment', 'destroyComment', 'updateComment',
                 'newLike', 'removeLike' )
-  
+
   // TODO: extract to separate functions
   sub.on('message', function(channel, msg) {
     switch(channel) {
@@ -92,10 +92,13 @@ exports.listen = function(server) {
       models.Post.findById(data.postId, function(err, post) {
         if (post) {
           post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
-                        createdBy: { select: ['id', 'username'] },
-                        comments: { select: ['id', 'body', 'createdBy'],
+                        createdBy: { select: ['id', 'username', 'info'],
+                                     info: { select: ['screenNmae'] } },
+                        comments: { select: ['id', 'body', 'createdBy', 'info'],
+                                    info: { select: ['screenNmae'] },
                                     createdBy: { select: ['id', 'username'] }},
-                        likes: { select: ['id', 'username']}
+                        likes: { select: ['id', 'username', 'info'],
+                                 info: { select: ['screenNmae'] }}
                       }, function(err, json) {
             var event = { post: json }
             io.sockets.in('timeline:' + data.timelineId).emit('newPost', event)
@@ -110,10 +113,13 @@ exports.listen = function(server) {
       models.Post.findById(data.postId, function(err, post) {
         if (post) {
           post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
-                        createdBy: { select: ['id', 'username'] },
+                        createdBy: { select: ['id', 'username', 'info'],
+                                     info: { select: ['screenNmae'] } },
                         comments: { select: ['id', 'body', 'createdBy'],
-                                    createdBy: { select: ['id', 'username'] }},
-                        likes: { select: ['id', 'username']}
+                                    createdBy: { select: ['id', 'username', 'info'],
+                                                 info: { select: ['screenNmae'] } }},
+                        likes: { select: ['id', 'username', 'info'],
+                                 info: { select: ['screenNmae'] }}
                       }, function(err, json) {
             var event = { post: json }
             io.sockets.in('timeline:' + data.timelineId).emit('updatePost', event)
@@ -123,13 +129,14 @@ exports.listen = function(server) {
       })
       break
 
-    case 'newComment': 
+    case 'newComment':
       var data = JSON.parse(msg)
 
       models.Comment.findById(data.commentId, function(err, comment) {
         if (comment) {
           comment.toJSON({ select: ['id', 'body', 'createdAt', 'updatedAt', 'createdBy', 'postId'],
-                           createdBy: { select: ['id', 'username'] }
+                           createdBy: { select: ['id', 'username', 'info'],
+                                        info: { select: ['screenNmae'] } }
                          }, function(err, json) {
             var event = { comment: json }
 
@@ -148,7 +155,8 @@ exports.listen = function(server) {
       models.Comment.findById(data.commentId, function(err, comment) {
         if (comment) {
           comment.toJSON({ select: ['id', 'body', 'createdAt', 'updatedAt', 'createdBy', 'postId'],
-                           createdBy: { select: ['id', 'username'] }
+                           createdBy: { select: ['id', 'username', 'info'],
+                                        info: { select: ['screenNmae'] } }
                          }, function(err, json) {
             var event = { comment: json }
 

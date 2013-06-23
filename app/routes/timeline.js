@@ -2,16 +2,20 @@ var models = require('../models')
   , async = require('async')
 
 exports.addRoutes = function(app) {
-  var timelineSerializer = { 
+  var timelineSerializer = {
     select: ['id', 'posts', 'user', 'subscribers'],
     posts: {
       select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'groups'],
-      createdBy: { select: ['id', 'username'] },
+      createdBy: { select: ['id', 'username', 'info'],
+                   info: {select: ['screenName'] } },
       comments: { select: ['id', 'body', 'createdBy'],
-                  createdBy: { select: ['id', 'username'] }
+                  createdBy: { select: ['id', 'username', 'info'],
+                               info: {select: ['screenName'] } }
                 },
-      likes: { select: ['id', 'username'] },
-      groups: { select: ['id', 'username'] }
+      likes: { select: ['id', 'username', 'info'],
+               info: {select: ['screenName'] } },
+      groups: { select: ['id', 'username', 'info'],
+                info: {select: ['screenName'] } }
     },
     user: {
       select: ['id', 'username', 'subscribers', 'subscriptions', 'statistics', 'type', 'admins'],
@@ -24,7 +28,8 @@ exports.addRoutes = function(app) {
   }
 
   var subscriberSerializer = {
-    select: ['id', 'username']
+    select: ['id', 'username', 'info'],
+    info: {select: ['screenName'] }
   }
 
   app.get('/v1/timeline/:timelineId/subscribers', function(req, res) {

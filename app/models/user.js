@@ -15,6 +15,7 @@ exports.addModel = function(db) {
       this.password = params.password // virtual attribute
     this.hashedPassword = params.hashedPassword
     this.salt = params.salt
+    this.info = params.info
 
     if (parseInt(params.createdAt, 10))
       this.createdAt = parseInt(params.createdAt, 10)
@@ -84,7 +85,7 @@ exports.addModel = function(db) {
         else
           callback(err, null)
       })
-    })  
+    })
   }
 
   User.findById = function(userId, callback) {
@@ -92,14 +93,17 @@ exports.addModel = function(db) {
       if (attrs === null)
         return callback(1, null)
 
-      attrs.id = userId
+      db.hgetall('user:' + userId + ':info', function(err, info) {
+        attrs.id = userId
+        attrs.info = info
 
-      var newUser = new User(attrs)
+        var newUser = new User(attrs)
 
-      newUser.getTimelines({}, function(err, timelines) {
-        newUser.timelines = timelines
+        newUser.getTimelines({}, function(err, timelines) {
+          newUser.timelines = timelines
 
-        callback(err, newUser)
+          callback(err, newUser)
+        })
       })
     })
   },
@@ -150,15 +154,12 @@ exports.addModel = function(db) {
               stopList.indexOf(that.username) == -1)
     },
 
-    save: function(callback) {
+    create: function(callback) {
       var that = this
 
-      // XXX: I copy these 4 lines from model to model - define proper
-      // parent object and inherit all models from it
-      if (!this.createdAt)
-        this.createdAt = new Date().getTime()
+      this.createdAt = new Date().getTime()
       this.updatedAt = new Date().getTime()
-      if (this.id === undefined) this.id = uuid.v4()
+      this.id = uuid.v4()
 
       this.validate(function(valid) {
         if (valid) {
@@ -194,6 +195,53 @@ exports.addModel = function(db) {
                 ], function(err, res) {
                   callback(err, that)
                 })
+              })
+            } else {
+              callback(err, res)
+            }
+          })
+        } else {
+          callback(1, that)
+        }
+      })
+    },
+
+    update: function(params, callback) {
+      var that = this
+
+      this.updatedAt = new Date().getTime()
+
+      this.validate(function(valid) {
+        if (valid) {
+          db.exists('user:' + that.id, function(err, res) {
+            if (res !== 0) {
+              async.parallel([
+                function(done) {
+                  db.hmset('user:' + that.id,
+                           {
+                             'updatedAt': that.updatedAt.toString()
+                           }, function(err, res) {
+                             done(err, res)
+                           })
+                },
+                function(done) {
+                  var screenName = params.screenName ? params.screenName.toString().trim() : ''
+                  var email = params.email ? params.email.toString().trim() : ''
+                  var receiveEmails = params.receiveEmails ? params.receiveEmails.toString().trim() : ''
+                  var attrs = { 'screenName': screenName,
+                                'email': email,
+                                'receiveEmails': receiveEmails }
+
+                  for(var k in attrs)
+                    if(!attrs[k]) delete attrs[k]
+
+                  db.hmset('user:' + that.id + ':info',
+                           attrs, function(err, res) {
+                             done(err, res)
+                           })
+                }
+              ], function(err, res) {
+                callback(err, that)
               })
             } else {
               callback(err, res)
@@ -655,6 +703,13 @@ exports.addModel = function(db) {
       })
     },
 
+    getInfo: function(callback) {
+      var that = this
+      db.hgetall('user:' + that.id + ':info', function(err, items) {
+        callback(err, items)
+      })
+    },
+
     toJSON: function(params, callback) {
       var that = this
         , json = {}
@@ -663,22 +718,24 @@ exports.addModel = function(db) {
 
       var returnJSON = function(err) {
         var isReady = true
-        if(select.indexOf('subscriptions') != -1) {
-          isReady = isReady && json.subscriptions !== undefined
-        }
-        if(select.indexOf('statistics') != -1) {
-          isReady = isReady && json.statistics !== undefined
-        }
-        if(select.indexOf('subscribers') != -1) {
-          isReady = isReady && json.subscribers !== undefined
-        }
 
-        if(isReady) {
+        if (select.indexOf('subscriptions') != -1)
+          isReady = isReady && json.subscriptions !== undefined
+
+        if (select.indexOf('statistics') != -1)
+          isReady = isReady && json.statistics !== undefined
+
+        if (select.indexOf('subscribers') != -1)
+          isReady = isReady && json.subscribers !== undefined
+
+        if (select.indexOf('info') != -1)
+          isReady = isReady && json.info !== undefined
+
+        if (isReady)
           callback(err, json)
-        }
       }
 
-      if (select.indexOf('id') != -1) 
+      if (select.indexOf('id') != -1)
         json.id = that.id
 
       if (select.indexOf('username') != -1)
@@ -692,6 +749,14 @@ exports.addModel = function(db) {
 
       if (select.indexOf('type') != -1)
         json.type = that.type
+
+      if (select.indexOf('info') != -1) {
+        that.getInfo(function(err, info) {
+          if (info !== undefined)
+            json.info = info
+          returnJSON(err)
+        })
+      }
 
       if (select.indexOf('subscriptions') != -1) {
         that.getSubscriptions(function(err, subscriptions) {
@@ -752,6 +817,6 @@ exports.addModel = function(db) {
       returnJSON(null)
     }
   }
-  
+
   return User;
 }

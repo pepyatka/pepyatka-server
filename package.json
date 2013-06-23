@@ -26,6 +26,6 @@
     "winston": "0.6.2",
     "underscore": "1.4.3",
     "elasticsearchclient": "0.3.0",
-    "zombie": "2.0.0-alpha15"
+    "nodemailer": "0.4.4"
   }
 }

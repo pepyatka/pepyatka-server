@@ -6,6 +6,7 @@ App.Properties = Ember.Object.extend({
   isAuthorized: false,
   username: currentUsername,
   userId: currentUser,
+  screenName: currentScreenName,
 
   currentPath: null
 })
@@ -1169,6 +1170,37 @@ App.User = Ember.Object.extend({
   }.property()
 })
 
+App.User.reopenClass({
+  resourceUrl: '/v1/users',
+
+  find: function(userId) {
+    var user = App.User.create()
+
+    $.ajax({
+      url: this.resourceUrl + '/' + userId,
+      dataType: 'jsonp',
+      success: function(response) {
+        user.setProperties(response)
+      }
+    })
+
+    return user
+  },
+
+  save: function(params, options) {
+    $.ajax({
+      url: this.resourceUrl,
+      type: 'post',
+      data: { params: params, '_method': 'patch' },
+      context: this,
+      success: function(response) {
+        options && options.success(response)
+      }
+    })
+    return this
+  }
+})
+
 App.CommentController = Ember.ObjectController.extend({
   update: function(attrs) {
     // FIXME: the only way to fetch context after insertNewLine action
@@ -1748,6 +1780,7 @@ App.SignupController = Ember.ObjectController.extend({
           App.properties.set('isAuthorized', true)
           App.properties.set('username', response.user.username)
           App.properties.set('userId', response.user.id)
+          App.properties.set('screenName', response.user.info.screenName)
           this.transitionToRoute('home')
           break
         case 'fail':
@@ -1809,6 +1842,49 @@ App.SigninView = Ember.View.extend({
     this.triggerAction();
   }
 });
+
+App.SettingsController = Ember.ObjectController.extend({
+  save: function(params) {
+    var that = this
+
+    App.User.save(params, {
+      success: function(response) {
+        that.set('content', response);
+        that.transitionToRoute("home");
+      }
+    })
+  }
+})
+
+App.SettingsView = Ember.View.extend({
+  screenNameBinding: 'controller.content.info.screenName',
+  emailBinding: 'controller.content.info.email',
+  receiveEmailsBinding: 'controller.content.info.receiveEmails',
+  receiveEmailsContent: ["In real time", "Do not send"],
+
+  save: function() {
+    var params = {
+      screenName: this.screenName,
+      email: this.email,
+      receiveEmails: (this.receiveEmails !== undefined) ? this.receiveEmails : null
+    }
+    this.get('controller').save(params)
+  }
+})
+
+App.SettingsRoute = Ember.Route.extend({
+  model: function() {
+    return App.User.find(App.properties.get('userId'))
+  },
+
+  setupController: function(controller, model) {
+    controller.set('content', model)
+  },
+
+  renderTemplate: function() {
+    this.render('settings')
+  }
+})
 
 App.HomeRoute = Ember.Route.extend({
   deactivate: function() {
@@ -2058,6 +2134,7 @@ App.Router.map(function() {
   this.resource('public', { path: "/public" })
   // NOTE: rather weird name for a river of news route
   this.resource('home', { path: "/" })
+  this.resource('settings', { path: "/settings" })
   this.resource('post', { path: "/posts/:post_id" })
 
   this.resource('user', { path: "/users/:username" })

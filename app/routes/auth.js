@@ -14,7 +14,7 @@ exports.addRoutes = function(app) {
         if (user !== null)
           return res.jsonp({ err: 'user ' + user.username + ' exists', status: 'fail'})
 
-        newUser.save(function(err, user) {
+        newUser.create(function(err, user) {
           if (err) return res.jsonp({}, 422)
 
           req.logIn(user, function(err) {

@@ -3,9 +3,10 @@ var models = require('../models')
   , redis = require('redis')
 
 exports.addRoutes = function(app, connections) {
-  var commentSerializer = { 
+  var commentSerializer = {
     select: ['id', 'body', 'createdAt', 'updatedAt', 'createdBy', 'postId'],
-    createdBy: { select: ['id', 'username'] }
+    createdBy: { select: ['id', 'username', 'info'],
+                 info: { select: ['screenName'] } }
   }
 
   app.delete('/v1/comments/:commentId', function(req, res) {

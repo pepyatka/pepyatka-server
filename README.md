@@ -123,7 +123,7 @@ API
 SEARCH API
 ---
 
-- GET /v1/search/:searchQuery - returns all posts which equals searchQuery.
+- GET /v1/search/:query - returns all posts which equals query.
 
 Search query is a string of keywords.
 Keywords:
