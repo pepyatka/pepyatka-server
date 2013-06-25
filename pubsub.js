@@ -93,12 +93,12 @@ exports.listen = function(server) {
         if (post) {
           post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
                         createdBy: { select: ['id', 'username', 'info'],
-                                     info: { select: ['screenNmae'] } },
+                                     info: { select: ['screenName'] } },
                         comments: { select: ['id', 'body', 'createdBy', 'info'],
-                                    info: { select: ['screenNmae'] },
+                                    info: { select: ['screenName'] },
                                     createdBy: { select: ['id', 'username'] }},
                         likes: { select: ['id', 'username', 'info'],
-                                 info: { select: ['screenNmae'] }}
+                                 info: { select: ['screenName'] }}
                       }, function(err, json) {
             var event = { post: json }
             io.sockets.in('timeline:' + data.timelineId).emit('newPost', event)
@@ -114,12 +114,12 @@ exports.listen = function(server) {
         if (post) {
           post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
                         createdBy: { select: ['id', 'username', 'info'],
-                                     info: { select: ['screenNmae'] } },
+                                     info: { select: ['screenName'] } },
                         comments: { select: ['id', 'body', 'createdBy'],
                                     createdBy: { select: ['id', 'username', 'info'],
-                                                 info: { select: ['screenNmae'] } }},
+                                                 info: { select: ['screenName'] } }},
                         likes: { select: ['id', 'username', 'info'],
-                                 info: { select: ['screenNmae'] }}
+                                 info: { select: ['screenName'] }}
                       }, function(err, json) {
             var event = { post: json }
             io.sockets.in('timeline:' + data.timelineId).emit('updatePost', event)
@@ -136,7 +136,7 @@ exports.listen = function(server) {
         if (comment) {
           comment.toJSON({ select: ['id', 'body', 'createdAt', 'updatedAt', 'createdBy', 'postId'],
                            createdBy: { select: ['id', 'username', 'info'],
-                                        info: { select: ['screenNmae'] } }
+                                        info: { select: ['screenName'] } }
                          }, function(err, json) {
             var event = { comment: json }
 
@@ -156,7 +156,7 @@ exports.listen = function(server) {
         if (comment) {
           comment.toJSON({ select: ['id', 'body', 'createdAt', 'updatedAt', 'createdBy', 'postId'],
                            createdBy: { select: ['id', 'username', 'info'],
-                                        info: { select: ['screenNmae'] } }
+                                        info: { select: ['screenName'] } }
                          }, function(err, json) {
             var event = { comment: json }
 
@@ -193,7 +193,8 @@ exports.listen = function(server) {
 
       models.User.findById(data.userId, function(err, user) {
         if (user) {
-          user.toJSON({select: ['id', 'username']}, function(err, json) {
+          user.toJSON({select: ['id', 'username', 'info'],
+                       info: { select: ['screenName'] }}, function(err, json) {
             var event = { user: json, postId: data.postId }
 
             if (data.timelineId)

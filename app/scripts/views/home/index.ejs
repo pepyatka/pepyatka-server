@@ -241,7 +241,8 @@
   </li>
 </script>
 
-<script type="text/x-handlebars" id="like-view">
+<script type="text/x-handlebars" id="_like">
+  {{log view}}
   {{#with view.content}}
     <span class="and">and&nbsp;</span>{{#linkTo user username}}{{info.screenName}}{{/linkTo}}<span class="comma">,&nbsp;</span>
   {{/with}}
@@ -319,7 +320,7 @@
           <div class="media-body">
             <ul class="unstyled inline pull-left">
               {{view Ember.CollectionView contentBinding="likes"
-                     itemViewClass="App.LikeView"}}
+                     itemViewClass="App.PartialLike"}}
             </ul>
             <span class="liked">{{t label.liked}}</span>
             {{#if currentUserLiked}}
@@ -524,7 +525,7 @@
           <div class="media-body">
             <ul class="unstyled inline pull-left">
               {{view Ember.CollectionView contentBinding="likes"
-                     itemViewClass="App.LikeView"}}
+                     itemViewClass="App.PartialLike"}}
             </ul>
             <span class="liked">{{t label.liked}}</span>
             {{#if currentUserLiked}}

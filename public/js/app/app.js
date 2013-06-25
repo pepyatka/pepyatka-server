@@ -764,8 +764,8 @@ App.PartialCommentView = Ember.View.extend({
   }.property('content.content.createdBy.id')
 })
 
-App.LikeView = Ember.View.extend({
-  templateName: 'like-view',
+App.PartialLike = Ember.View.extend({
+  templateName: '_like',
   tagName: 'li',
   classNameBindings: ['isLastAndNotSingle:last', 'isFirstAndSingle:first'],
   classNames: ['pull-left'],
