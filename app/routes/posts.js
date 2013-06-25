@@ -119,10 +119,9 @@ exports.addRoutes = function(app) {
 
           req.user.newPost({
             body: req.body.body,
+            timelineId: timelineId,
             files: req.files
           }, function(err, newPost) {
-            newPost.timelineId = timelineId
-
             newPost.create(function(err, post) {
               done(err)
             })
