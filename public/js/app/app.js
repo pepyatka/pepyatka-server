@@ -1875,7 +1875,11 @@ App.SettingsView = Ember.View.extend({
   screenNameBinding: 'controller.content.info.screenName',
   emailBinding: 'controller.content.info.email',
   receiveEmailsBinding: 'controller.content.info.receiveEmails',
-  receiveEmailsContent: ["In real time", "Do not send"],
+
+  receiveEmailsContent: [
+    Ember.Object.create({name: "In real time", id: '0'}),
+    Ember.Object.create({name: "Do not send",  id: '1'})
+  ],
 
   save: function() {
     var params = {
