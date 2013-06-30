@@ -5,11 +5,11 @@ exports.addRoutes = function(app) {
   var requireAuthorization = function(requestingUser, timelineId, callback) {
     models.Timeline.findById(timelineId, { start : 0 }, function(err, timeline) {
       if (err)
-        callback(err, null)
+        return callback(err, null)
 
       models.FeedFactory.findById(timeline.userId, function(err, feed) {
-        if (err)
-          callback(err, null)
+        if (err || !feed)
+          return callback(err, null)
 
         switch (feed.type) {
           case 'group' :

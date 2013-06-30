@@ -5,7 +5,7 @@ Object.extend = function(destination, source) {
     }
   }
   return destination;
-};
+}
 
 Array.prototype.compact = function(deleteValue) {
   for (var i = 0; i < this.length; i++) {
@@ -15,14 +15,17 @@ Array.prototype.compact = function(deleteValue) {
     }
   }
   return this;
-};
+}
 
 Array.prototype.flatten = function() {
   var merged = []
   return merged.concat.apply(merged, this)
 }
 
-Array.prototype.append = function(array)
-{
+Array.prototype.append = function(array) {
   this.push.apply(this, array)
+}
+
+String.prototype.truncate = function(n) {
+  return this.substr(0,n-1) + (this.length>n ? '...' : '');
 }

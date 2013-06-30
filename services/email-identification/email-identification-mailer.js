@@ -2,14 +2,16 @@ var nodemailer = require('nodemailer');
 
 exports.sendMailToUser = function(conf, message) {
   var transport = nodemailer.createTransport("SMTP", {
+    host: conf.host,
+    secureConnection: conf.secureConnection,
+    port: conf.port,
     auth: {
       user: conf.serviceEmail,
       pass: conf.servicePass
     }
   });
 
-  console.log('SMTP Configured');
-  console.log('Sending Mail');
+  console.log('Sending Mail...');
 
   message.from = conf.sendFromName + ' <' + conf.sendFromEmail + '>',
   message.headers = {
@@ -23,7 +25,7 @@ exports.sendMailToUser = function(conf, message) {
       return
     }
 
-    console.log('Message sent successfully!');
+    console.log('Message sent successfully.');
 
     transport.close();
   });

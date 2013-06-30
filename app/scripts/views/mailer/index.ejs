@@ -5,14 +5,6 @@
   <body>
     <p><%= post %></p>
 
-    <% if (likes.length > 0) { %>
-      <p>Liked this post:
-        <% likes.forEach(function(like) { %>
-           <%= like.info.screenName %>
-        <% }) %>
-      </p>
-    <% } %>
-
     <% if (comments.length > 0) { %>
       <p>Comments: </p>
       <ul>
@@ -22,6 +14,7 @@
       </ul>
     <% } %>
 
-    <p>This comment (http://pepyatka.com/posts/<%= username %>) was posted in reply to <%= screenName %> (http://pepyatka.com/users/<%= username %>) on Pepyatka. To comment, reply above this message.</p>
+    <p>This post (<%= conf.domain %>/posts/<%= post_id %>) was posted
+    by <%= screenName %> (<%= conf.domain %>/users/<%= username %>) user.</p>
   </body>
 </html>

@@ -7,7 +7,7 @@ var models = require('./../../app/models')
   , mailer = require('./email-identification-mailer.js');
 
 exports.listen = function() {
-  var conf = configLocal.getAppConfig();
+  var conf = configLocal.getMailerConfig();
 
   fs.readFile('app/scripts/views/mailer/index.ejs', 'utf8', function (err, template) {
     if (err)
@@ -39,13 +39,15 @@ exports.listen = function() {
                 screenName: user.info.screenName,
                 username: user.info.screenName,
                 post: post.body,
+                conf: conf,
+                post_id: post.id,
                 likes: [],
                 comments: []
               })
 
               var messageToSend = {
                 to: user.info.screenName + ' <' + user.info.email + '>',
-                subject: post.body,
+                subject: post.body.truncate(50),
                 html: html
               };
               mailer.sendMailToUser(conf, messageToSend)
@@ -74,13 +76,15 @@ exports.listen = function() {
               html = ejs.render(htmlTemplate, {
                 username: user.info.screenName,
                 post: post.body,
+                conf: conf,
+                post_id: post.id,
                 likes: post.likes,
                 comments: post.comments
               })
 
               var messageToSend = {
                 to: user.info.screenName + ' <' + user.info.email + '>',
-                subject: post.body,
+                subject: post.body.truncate(50),
                 html: html
               };
               mailer.sendMailToUser(conf, messageToSend)
@@ -109,13 +113,15 @@ exports.listen = function() {
               html = ejs.render(htmlTemplate, {
                 username: user.info.screenName,
                 post: post.body,
+                conf: conf,
+                post_id: post.id,
                 likes: post.likes,
                 comments: post.comments
               })
 
               var messageToSend = {
                 to: user.info.screenName + ' <' + user.info.email + '>',
-                subject: 'Post has liked by user',
+                subject: post.body.truncate(50),
                 html: htmlTemplate
               };
               mailer.sendMailToUser(conf, messageToSend)

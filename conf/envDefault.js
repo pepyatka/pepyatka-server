@@ -1,18 +1,30 @@
 exports.getAppConfig = function () {
   configValues = {
+    domain: 'app_name',
+
     secret: 'sectet token',
     saltSecret: 'sectet token',
     port: 3000,
     loggerLevel: 'info',
-    remoteUser: false,
+    remoteUser: false
+  }
+
+  return configValues;
+}
+
+exports.getMailerConfig = function() {
+  return {
+    domain: 'domain',
+
+    host: "host",
+    secureConnection: true,
+    port: 465,
 
     sendFromName: 'from_address',
     sendFromEmail: 'email_address',
     serviceEmail: 'email_address',
     servicePass: 'password'
   }
-
-  return configValues;
 }
 
 exports.getElasticSearchConfig = function() {
