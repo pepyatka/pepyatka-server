@@ -37,7 +37,7 @@ exports.listen = function() {
 
               html = ejs.render(htmlTemplate, {
                 screenName: user.info.screenName,
-                username: user.info.screenName,
+                username: user.username,
                 post: post.body,
                 conf: conf,
                 post_id: post.id,
@@ -74,7 +74,8 @@ exports.listen = function() {
                   !user.info.email) return
 
               html = ejs.render(htmlTemplate, {
-                username: user.info.screenName,
+                screenName: user.info.screenName,
+                username: user.username,
                 post: post.body,
                 conf: conf,
                 post_id: post.id,
@@ -111,7 +112,8 @@ exports.listen = function() {
                   !user.info || user.info.receiveEmails !== '0') return
 
               html = ejs.render(htmlTemplate, {
-                username: user.info.screenName,
+                screenName: user.info.screenName,
+                username: user.username,
                 post: post.body,
                 conf: conf,
                 post_id: post.id,
