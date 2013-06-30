@@ -6,13 +6,18 @@ network/aggregator. At this stage it's a semi-anonymous imageboard.
 
 ![Pepyatka screenshot](http://epicmonkey.org/pepyatka/2013-03-10_Pepyatka.png)
 
-Configuration
+Prerequisites
 -------------
 
 - Install redis
 - Install graphicsmagick (ensure jpeg and png flags are set)
 - Install nodejs
 - Install elasticsearch (and java as a dependency ;-)
+- Install graphicsmagick library
+
+Configuration
+-------------
+
 - Make sure to update secret token: cp ./conf/envDefault.js to
   ./conf/envLocal.js.
 - Install dependencies: npm install
