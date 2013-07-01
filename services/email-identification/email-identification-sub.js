@@ -30,27 +30,29 @@ exports.listen = function() {
             if (!timeline || timeline.name !== 'River of news')
               return
 
-            models.User.findById(post.userId, function(err, user) {
-              if (!user || user.type === 'group' ||
-                  !user.info || user.info.receiveEmails !== '0' ||
-                  !user.info.email || user.id === post.userId) return
+            models.User.findById(timeline.userId, function(err, user) {
+              models.User.findById(post.userId, function(err, owner) {
+                if (!user || user.type === 'group' ||
+                    !user.info || user.info.receiveEmails !== '0' ||
+                    !user.info.email || user.id === post.userId) return
 
-              html = ejs.render(htmlTemplate, {
-                screenName: user.info.screenName,
-                username: user.username,
-                post: post.body,
-                conf: conf,
-                post_id: post.id,
-                likes: [],
-                comments: []
+                html = ejs.render(htmlTemplate, {
+                  screenName: owner.info.screenName,
+                  username: owner.username,
+                  post: post.body,
+                  conf: conf,
+                  post_id: post.id,
+                  likes: [],
+                  comments: []
+                })
+
+                var messageToSend = {
+                  to: user.info.screenName + ' <' + user.info.email + '>',
+                  subject: post.body.truncate(50),
+                  html: html
+                };
+                mailer.sendMailToUser(conf, messageToSend)
               })
-
-              var messageToSend = {
-                to: user.info.screenName + ' <' + user.info.email + '>',
-                subject: post.body.truncate(50),
-                html: html
-              };
-              mailer.sendMailToUser(conf, messageToSend)
             })
           })
         })
@@ -67,28 +69,30 @@ exports.listen = function() {
             if (!timeline || !timeline.userId ||
                 timeline.name !== 'River of news') return
 
-            models.User.findById(post.userId, function(err, user) {
-              if (!user || user.id === post.userId ||
-                  user.type === 'group' ||
-                  user.info === null || user.info.receiveEmails !== '0' ||
-                  !user.info.email) return
+            models.User.findById(timeline.userId, function(err, user) {
+              models.User.findById(post.userId, function(err, owner) {
+                if (!user || user.id === post.userId ||
+                    user.type === 'group' ||
+                    user.info === null || user.info.receiveEmails !== '0' ||
+                    !user.info.email) return
 
-              html = ejs.render(htmlTemplate, {
-                screenName: user.info.screenName,
-                username: user.username,
-                post: post.body,
-                conf: conf,
-                post_id: post.id,
-                likes: post.likes,
-                comments: post.comments
+                html = ejs.render(htmlTemplate, {
+                  screenName: owner.info.screenName,
+                  username: owner.username,
+                  post: post.body,
+                  conf: conf,
+                  post_id: post.id,
+                  likes: post.likes,
+                  comments: post.comments
+                })
+
+                var messageToSend = {
+                  to: user.info.screenName + ' <' + user.info.email + '>',
+                  subject: post.body.truncate(50),
+                  html: html
+                };
+                mailer.sendMailToUser(conf, messageToSend)
               })
-
-              var messageToSend = {
-                to: user.info.screenName + ' <' + user.info.email + '>',
-                subject: post.body.truncate(50),
-                html: html
-              };
-              mailer.sendMailToUser(conf, messageToSend)
             })
           })
         })
@@ -107,26 +111,28 @@ exports.listen = function() {
             if (!timeline || !timeline.userId || timeline.name !== 'River of news')
               return
 
-            models.User.findById(post.userId, function(err, user) {
-              if (!user || user.id === post.userId || user.type === 'group' ||
-                  !user.info || user.info.receiveEmails !== '0') return
+            models.User.findById(timeline.userId, function(err, user) {
+              models.User.findById(post.userId, function(err, owner) {
+                if (!user || user.id === post.userId || user.type === 'group' ||
+                    !user.info || user.info.receiveEmails !== '0') return
 
-              html = ejs.render(htmlTemplate, {
-                screenName: user.info.screenName,
-                username: user.username,
-                post: post.body,
-                conf: conf,
-                post_id: post.id,
-                likes: post.likes,
-                comments: post.comments
+                html = ejs.render(htmlTemplate, {
+                  screenName: owner.info.screenName,
+                  username: owner.username,
+                  post: post.body,
+                  conf: conf,
+                  post_id: post.id,
+                  likes: post.likes,
+                  comments: post.comments
+                })
+
+                var messageToSend = {
+                  to: user.info.screenName + ' <' + user.info.email + '>',
+                  subject: post.body.truncate(50),
+                  html: htmlTemplate
+                };
+                mailer.sendMailToUser(conf, messageToSend)
               })
-
-              var messageToSend = {
-                to: user.info.screenName + ' <' + user.info.email + '>',
-                subject: post.body.truncate(50),
-                html: htmlTemplate
-              };
-              mailer.sendMailToUser(conf, messageToSend)
             })
           })
         })
