@@ -2241,6 +2241,11 @@ App.Router.map(function() {
   Ember.Location.registerImplementation('historyJs', Ember.HistoryJsLocation);
 })();
 
+// jQuery 1.9.x removes msie method - temp enables this
+jQuery.browser={};(function(){jQuery.browser.msie=false;
+jQuery.browser.version=0;if(navigator.userAgent.match(/MSIE ([0-9]+)\./)){
+jQuery.browser.msie=true;jQuery.browser.version=RegExp.$1;}})();
+
 // NOTE: history.js (particularly replaceState method) replaces
 // encoded URLs like %23 to # which break search by tag functionality.
 App.Router.reopen({
