@@ -430,6 +430,11 @@
                 class="btn pull-right"}}
         </div>
       </div>
+
+      <div id="progressBar" {{bindAttr class="controller.isProgressBarHidden"}}>
+        {{view Bootstrap.ProgressBar isStriped=true isAnimated=true
+            progressBinding="controller.progress"}}
+      </div>
     </div>
   {{/if}}
 

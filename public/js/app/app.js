@@ -633,9 +633,12 @@ App.SubmitPostButton = Ember.View.extend(Ember.TargetActionSupport, {
   tagName: 'button',
 
   click: function() {
-    this.get('_parentView.textField').triggerAction()
+    var _view = this.get('_parentView.textField') ||
+      this.get('_parentView._parentView.textField')
 
-    this.get('_parentView.textField').set('body', '')
+    _view.triggerAction()
+
+    _view.set('body', '')
     this.set('_parentView._parentView._parentView.isEditFormVisible', false)
   }
 })
