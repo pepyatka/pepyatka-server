@@ -1,15 +1,19 @@
 var nodemailer = require('nodemailer');
 
 exports.sendMailToUser = function(conf, message) {
-  var transport = nodemailer.createTransport("SMTP", {
+  var options = {
     host: conf.host,
     secureConnection: conf.secureConnection,
-    port: conf.port,
-    auth: {
+    port: conf.port
+  }
+
+  if (conf.serviceEmail && conf.serviceEmail.trim().length > 0)
+    options.auth = {
       user: conf.serviceEmail,
       pass: conf.servicePass
     }
-  });
+
+  var transport = nodemailer.createTransport("SMTP", options);
 
   console.log('Sending Mail...');
 
