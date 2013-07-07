@@ -17,6 +17,7 @@
 <script src="/js/libs/ember-i18n.js"></script>
 <script src="/js/libs/ember-data-0.5.0.pre.js"></script>
 <script src="/js/libs/jquery.history.js"></script>
+<script src="/js/libs/select2.js"></script>
 <script src="/config/envLocal.js"></script>
 
 <script type="text/x-handlebars" id="application">
@@ -154,9 +155,28 @@
   </div>
 </script>
 
+<script type="text/x-handlebars" id="sendToField">
+  <div id="sendTo">
+    To:
+    <select id="sendToSelect" multiple="multiple">
+      <option {{bindAttr value=controller.content.id}}>My feed</option>
+      {{#each controller.groups}}
+        <option {{bindAttr value="id"}}>{{user.username}}</option>
+      {{/each}}
+    </select>
+
+    <div id="showHide">
+      <a {{action toggleEditability target="view"}}>{{t label.add-edit}}</a>
+    </div>
+  </div>
+</script>
+
 <script type="text/x-handlebars" id="timeline">
   <% if (req.user) { %>
     <div class="clearfix submitForm">
+      <div>
+        {{view App.SendToField viewName="sendTo"}}
+      </div>
       <div>
         {{view App.CreatePostField action="submitPost" target="controller"
               class="span9"}}

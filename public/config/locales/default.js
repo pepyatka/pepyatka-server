@@ -39,6 +39,7 @@ Em.I18n.translations = {
   'label.sendEmails': 'Send new posts',
   'label.screenName': 'Name',
   'label.email': 'Email',
+  'label.add-edit': 'Add/Edit',
 
   'button.search': 'Search',
   'button.post': 'Post',

@@ -243,9 +243,9 @@ App.Group.reopenClass({
       type: 'get',
       success: success,
       error: App.helpers.handleAjaxError
-    });
+    })
 
-    return groups;
+    return groups
   },
 
   findAll: function() {
@@ -545,9 +545,9 @@ App.ApplicationController = Ember.Controller.extend({
   }.observes('currentPath'),
 
   search: function(attrs) {
-    var query = attrs.value
+    var query = encodeURIComponent(attrs.value)
 
-    this.transitionToRoute('search', encodeURIComponent(query))
+    this.transitionToRoute('search', query)
   }
 });
 
@@ -583,8 +583,43 @@ App.SearchButton = Ember.View.extend(Ember.TargetActionSupport, {
 
 // Index view to display all posts on the page
 App.TimelineView = Ember.View.extend({
-  templateName: 'timeline',
+  templateName: 'timeline'
 });
+
+App.SendToField = Ember.View.extend({
+  templateName: 'sendToField',
+  viewName: 'sendTo',
+  enableSelect: false,
+  isVisible: false,
+
+  toggleEditability: function() {
+    var value = !this.get('enableSelect')
+    this.set('enableSelect', value)
+    this.$("#sendToSelect").select2("enable", value)
+    this.$("#showHide").toggle()
+  },
+
+  onVisible: function() {
+    this.$().hide().slideDown('fast');
+
+    var coord = this.$('.select2-search-field').offset()
+    this.$("#showHide").offset(coord)
+  }.observes('isVisible'),
+
+  // NOTE: we use observe in this case not didInsertElement as select2
+  // component depends on timeline data which might not be loaded yet
+  onContent: function() {
+    if (this.get('controller.content.id')) {
+      var that = this
+      Ember.run.next(function() {
+        that.$("#sendToSelect").select2()
+        that.$("#sendToSelect").select2("enable", that.get('enableSelect'))
+        var myFeed = that.get('controller.content.id')
+        that.$("#sendToSelect").val(myFeed).trigger('change')
+      })
+    }
+  }.observes('controller.content.id')
+})
 
 App.EditPostField = Ember.TextArea.extend(Ember.TargetActionSupport, {
   attributeBindings: ['class'],
@@ -611,6 +646,10 @@ App.CreatePostField = Ember.TextArea.extend(Ember.TargetActionSupport, {
   classNames: ['autogrow-short'],
   valueBinding: 'body',
   viewName: 'textField',
+
+  click: function() {
+    this.set('parentView.sendTo.isVisible', true)
+  },
 
   insertNewline: function() {
     this.triggerAction();
@@ -1331,8 +1370,10 @@ App.TimelineController = Ember.ObjectController.extend(App.PaginationHelper, {
       data.append('file-'+i, file);
     });
 
-    if (this.get('content.name') !== 'River of news')
-      data.append('timelinesIds', this.get('content.id'))
+    var timelinesIds = attrs.get('_parentView.sendTo').$("#sendToSelect").select2("val")
+    for(var i = 0; i < timelinesIds.length; i++) {
+      data.append('timelinesIds', timelinesIds[i])
+    }
 
     data.append('body', attrs.value)
 
@@ -1869,9 +1910,11 @@ App.HomeRoute = Ember.Route.extend({
   },
 
   setupController: function(controller, model) {
-    this.controllerFor('groups').set('content', App.Group.findAll())
+    var groups = App.Group.findAll()
+    this.controllerFor('groups').set('content', groups)
     this.controllerFor('tags').set('content', App.Tag.findAll())
     this.controllerFor('timeline').set('content', model)
+    this.controllerFor('timeline').set('groups', groups)
 
     this.controllerFor('comet').set('channel', model)
   },

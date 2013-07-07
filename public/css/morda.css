@@ -209,10 +209,10 @@ footer {
 .pager {
   text-align: left;
   border-top: 1px solid #eee;
-  padding-top: 14px;·
-  margin: 10px 0 4px;·
+  padding-top: 14px;
+  margin: 10px 0 4px;
 }
-.pager li > a,·
+.pager li > a,
 .pager li > span {
   background: none;
   border: none;
@@ -223,6 +223,35 @@ footer {
   text-decoration: underline;
 }
 
+#sendTo {
+  height: 38px;
+}
+#s2id_sendToSelect {
+  width: -moz-calc(100% - 25px);
+  width: -webkit-calc(100% - 25px);
+  width: calc(100% - 25px);
+}
+#s2id_sendToSelect ul {
+  border-radius: 4px;
+  border-color: #ccc;
+}
+#s2id_sentToSelect ul .select2-search-field {
+  width: 75px;
+}
+#showHide {
+  padding: 4px 0 0 8px;
+  position: relative;
+}
+
+#s2id_sendToSelect.select2-container-disabled,
+  #s2id_sendToSelect.select2-container-disabled ul {
+  background-color: #fff;
+  border: 0;
+}
+#select2-drop {
+  margin-top: -3px;
+  border-color: #ccc;
+}
 
 /* bootstrap modifications */
 
