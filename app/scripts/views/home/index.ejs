@@ -200,7 +200,7 @@
     {{#unless view.isEditFormVisible}}
       <div class="media-body">
         <span class="body">
-          {{body}}
+          {{prettifyText body}}
         </span>
         -
         <span class="author">
@@ -282,7 +282,7 @@
         {{/view}}
       {{else}}
         <div class="body">
-          <div class="text">{{body}}</div>
+          <div class="text">{{prettifyText body}}</div>
 
           {{#if firstThumbnailSrc}}
             <div class="image"><a {{bindAttr href="firstImageSrc"}}><img {{bindAttr src="firstThumbnailSrc"}} class="img-polaroid" /></a></div>
@@ -490,7 +490,7 @@
         {{/view}}
       {{else}}
         <div class="body">
-          <div class="text">{{body}}</div>
+          <div class="text">{{prettifyText body}}</div>
 
           {{#if firstThumbnailSrc}}
             <div class="image"><a {{bindAttr href="firstImageSrc"}}><img {{bindAttr src="firstThumbnailSrc"}} class="img-polaroid" /></a></div>

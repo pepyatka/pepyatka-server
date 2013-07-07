@@ -685,24 +685,6 @@ App.PartialPostView = Ember.View.extend({
   },
 
   didInsertElement: function() {
-    // wrap anchor tags around links in post text
-    this.$().find('.text').anchorTextUrls();
-    // wrap hashtags around text in post text
-    this.$().find('.text').hashTagsUrls();
-    // wrap search query around text in post text
-    //this.$().find('.text').highlightSearchResults(App.searchController.query);
-    // please read https://github.com/kswedberg/jquery-expander/issues/24
-    this.$().find('.text').expander({
-      slicePoint: 350,
-      expandPrefix: '&hellip; ',
-      preserveWords: true,
-      expandText: 'more&hellip;',
-      userCollapseText: '',
-      collapseTimer: 0,
-      expandEffect: 'fadeIn',
-      collapseEffect: 'fadeOut'
-    })
-
     this.$().hide().slideDown('slow');
   },
 
@@ -729,23 +711,6 @@ App.PartialCommentView = Ember.View.extend({
   },
 
   didInsertElement: function() {
-    // wrap anchor tags around links in comments
-    this.$().find('.body').anchorTextUrls();
-    // wrap hashtags around text in post text
-    this.$().find('.body').hashTagsUrls();
-    // wrap search query around text in post text
-    //this.$().find('.body').highlightSearchResults(App.searchController.query);
-    this.$().find('.body').expander({
-      slicePoint: 512,
-      expandPrefix: '&hellip; ',
-      preserveWords: true,
-      expandText: 'more&hellip;',
-      userCollapseText: '',
-      collapseTimer: 0,
-      expandEffect: 'fadeIn',
-      collapseEffect: 'fadeOut'
-    })
-
     this.$().hide().slideDown('fast');
   },
 
@@ -1027,26 +992,6 @@ App.PostView = Ember.View.extend({
 
     return this.get("controller.content.groups.username");
   }.property('controller.content.groups.username', 'controller.content.createdBy.username'),
-
-  didInsertElement: function() {
-    if (this.$()) {
-      // TODO: replace to boundhelpers
-      // wrap anchor tags around links in comments
-      this.$().find('.body').anchorTextUrls();
-      // wrap hashtags around text in post text
-      this.$().find('.body').hashTagsUrls();
-    }
-  },
-
-  postLoaded: function() {
-    // TODO: WTF! Replace to boundHelpers
-    Ember.run.next(this, function() {
-      if (this.$()) {
-        this.$().find('.body').anchorTextUrls()
-        this.$().find('.body').hashTagsUrls()
-      }
-    })
-  }.observes('controller.content'),
 
   postOwner: function() {
     return this.get("controller.content.createdBy") &&
@@ -2263,4 +2208,28 @@ App.Router.reopen({
 
 Ember.Handlebars.registerBoundHelper('decodeURIComponent', function(content) {
   return decodeURIComponent(content)
+})
+
+Ember.Handlebars.registerBoundHelper('prettifyText', function(content) {
+  var text = $('<span/>').html(content)
+
+  // wrap anchor tags around links in post text
+  text.anchorTextUrls()
+  // wrap hashtags around text in post text
+  text.hashTagsUrls();
+  // wrap search query around text in post text
+  //text.highlightSearchResults(App.searchController.query);
+  // please read https://github.com/kswedberg/jquery-expander/issues/24
+  text.find('.text').expander({
+    slicePoint: 350,
+    expandPrefix: '&hellip; ',
+    preserveWords: true,
+    expandText: 'more&hellip;',
+    userCollapseText: '',
+    collapseTimer: 0,
+    expandEffect: 'fadeIn',
+    collapseEffect: 'fadeOut'
+  })
+
+  return new Handlebars.SafeString(text.html())
 })
