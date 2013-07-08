@@ -648,7 +648,9 @@ App.CreatePostField = Ember.TextArea.extend(Ember.TargetActionSupport, {
   viewName: 'textField',
 
   click: function() {
-    this.set('parentView.sendTo.isVisible', true)
+    var view = this.get('parentView.sendTo')
+    if (view)
+      view.set('isVisible', true)
   },
 
   insertNewline: function() {
@@ -1370,9 +1372,14 @@ App.TimelineController = Ember.ObjectController.extend(App.PaginationHelper, {
       data.append('file-'+i, file);
     });
 
-    var timelinesIds = attrs.get('_parentView.sendTo').$("#sendToSelect").select2("val")
-    for(var i = 0; i < timelinesIds.length; i++) {
-      data.append('timelinesIds', timelinesIds[i])
+    var view = attrs.get('_parentView.sendTo')
+    if (view) {
+      var timelinesIds = view.$("#sendToSelect").select2("val")
+      for(var i = 0; i < timelinesIds.length; i++) {
+        data.append('timelinesIds', timelinesIds[i])
+      }
+    } else if (this.get('content.name') !== 'River of news') {
+      data.append('timelinesIds', this.get('content.id'))
     }
 
     data.append('body', attrs.value)

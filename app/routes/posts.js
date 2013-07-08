@@ -122,8 +122,6 @@ exports.addRoutes = function(app) {
             timelineId: timelineId,
             files: req.files
           }, function(err, newPost) {
-            // TODO: review next line
-            newPost.timelineId = timelineId
             newPost.create(function(err, post) {
               done(err)
             })

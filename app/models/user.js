@@ -488,11 +488,14 @@ exports.addModel = function(db) {
     newPost: function(attrs, callback) {
       attrs.userId = this.id
 
-      this.getPostsTimelineId(function(err, timelineId) {
-        attrs.timelineId = timelineId
+      if (!attrs.timelineId)
+        this.getPostsTimelineId(function(err, timelineId) {
+          attrs.timelineId = timelineId
 
-        callback(err, new models.Post(attrs))
-      })
+          callback(err, new models.Post(attrs))
+        })
+      else
+        callback(null, new models.Post(attrs))
     },
 
     // XXX: do not like the design of this method. I'd say better to
