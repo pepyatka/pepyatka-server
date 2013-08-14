@@ -14,7 +14,7 @@ describe('Post API', function() {
       username: 'username',
       password: 'password'
     })
-    newUser.save(function(err, user) {
+    newUser.create(function(err, user) {
       userAgent = agent.agent();
       userAgent
         .post('localhost:' + server.get('port') + '/v1/session')
