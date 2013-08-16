@@ -240,6 +240,13 @@ exports.addModel = function(db) {
             })
           },
           function(done) {
+            db.hmset('user:' + that.id + ':info',
+                     { 'screenName': that.username.toString().trim()
+                     }, function(err, res) {
+                       done(err, res)
+                     })
+          },
+          function(done) {
             var stats = new models.Stats({
               userId: that.id
             })
