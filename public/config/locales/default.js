@@ -3,7 +3,8 @@ Em.I18n.translations = {
 
   'message.notFound': 'The file you requested is no longer on Pepyatka\'s servers. You may have followed an out-dated link, or there may be an error in our service. We apologize for the inconvenience. <a href="/">Return to the Pepyatka homepage</a>',
   'message.welcome': "Seems like you've just started using Pepyatka? You can check out <a href='/public'>all posts</a>.",
-  'message.footer': 'Questions or comments? <a href="http://friendfeed.com/epicmonkey">@epicmonkey</a> | <a href="https://github.com/epicmonkey/pepyatka"><i class="icon-github"></i> github</a>.',
+  'message.footer': '<a href="/about">About</a> | Questions or comments? <a href="http://friendfeed.com/epicmonkey">@epicmonkey</a> | <a href="https://github.com/epicmonkey/pepyatka"><i class="icon-github"></i> github</a>.',
+  'message.about': '<h2>What is Pepyatka</h2><p>Pepyatka is an open source FriendFeed clone. Basically, this is a social real-time feed aggregator that allows you to share cute kitty photos, coordinate upcoming events, dicuss any other cool stuff on the Intenet or setup a private Pepyatka instance in your company.</p><img src="/img/2013-08-18_Pepyatka.png" /><h2>License</h2><p>Pepyatka itself is licensed under the MIT License.</p>',
 
   'label.signin': 'Sign in',
   'label.signup': 'Join Pepyatka',

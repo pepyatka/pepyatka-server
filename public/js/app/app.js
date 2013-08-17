@@ -2175,6 +2175,7 @@ App.Router.map(function() {
   this.resource('stats', { path: "/top/:category" })
 
   this.resource('error', { path: "/error" })
+  this.resource('about', { path: "/about" })
 });
 
 (function() {
