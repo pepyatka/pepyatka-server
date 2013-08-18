@@ -125,6 +125,9 @@ API
   statistics in a category. Category could be one of { "posts",
   "likes", "discussions", "subscriptions", "subscribers" }
 
+### Tags
+- GET /v1/tags - returns list of tags sorted by frequency
+
 SEARCH API
 ----------
 
