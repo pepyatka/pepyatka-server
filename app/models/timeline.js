@@ -63,7 +63,7 @@ exports.addModel = function(db) {
     })
   }
 
-  Timeline.newPost = function(postId, callback) {
+  Timeline.newPost = function(postId, additionalTimelines, callback) {
     var currentTime = new Date().getTime()
 
     models.Post.findById(postId, function(err, post) {
@@ -75,12 +75,12 @@ exports.addModel = function(db) {
 
           var pub = redis.createClient();
 
-          async.forEach(timelinesIds, function(timelineId, callback) {
+          async.forEach(_.union(timelinesIds, additionalTimelines), function(timelineId, callback) {
             db.zadd('timeline:' + timelineId + ':posts', currentTime, postId, function(err, res) {
               db.hset('post:' + postId, 'updatedAt', currentTime, function(err, res) {
                 db.sadd('post:' + postId + ':timelines', timelineId, function(err, res) {
                   pub.publish('newPost', JSON.stringify({ postId: postId,
-                    timelineId: timelineId }))
+                                                          timelineId: timelineId }))
 
                   callback(err)
                 })
@@ -251,7 +251,7 @@ exports.addModel = function(db) {
       }
     }
   }
-  
+
   return Timeline;
 
 }

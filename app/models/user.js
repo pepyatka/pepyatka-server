@@ -488,9 +488,9 @@ exports.addModel = function(db) {
     newPost: function(attrs, callback) {
       attrs.userId = this.id
 
-      if (!attrs.timelineId)
+      if (!attrs.timelineIds || !attrs.timelineIds[0])
         this.getPostsTimelineId(function(err, timelineId) {
-          attrs.timelineId = timelineId
+          attrs.timelineIds = [timelineId];
 
           callback(err, new models.Post(attrs))
         })

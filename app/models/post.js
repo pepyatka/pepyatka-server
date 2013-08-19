@@ -12,7 +12,7 @@ exports.addModel = function(db) {
     this.id = params.id
     this.body = params.body || ""
     this.userId = params.userId
-    this.timelineId = params.timelineId
+    this.timelineIds = params.timelineIds;
     this.files = params.files
 
     if (parseInt(params.createdAt, 10))
@@ -530,14 +530,20 @@ exports.addModel = function(db) {
 
     validate: function(callback) {
       var that = this
+      var timelineValid = true;
 
       db.exists('user:' + that.userId, function(err, userExists) {
-        db.exists('timeline:' + that.timelineId, function(err, timelineExists) {
+        async.forEach(that.timelineIds || [], function(timelineId, done) {
+          db.exists('timeline:' + timelineId, function(err, timelineExists) {
+            timelineValid = timelineExists == 1;
+            done();
+          });
+        }, function() {
           callback(userExists == 1 &&
-                   timelineExists == 1 &&
-                   that.body.trim().length > 0)
-        })
-      })
+                   timelineValid &&
+                   that.body.trim().length > 0);
+        });
+      });
     },
 
     create: function(callback) {
@@ -558,13 +564,14 @@ exports.addModel = function(db) {
           var postBody = (that.body.slice(0, 8192) || "").toString().trim()
           db.hmset('post:' + that.id,
                    { 'body': postBody,
-                     'timelineId': that.timelineId.toString(),
+                     'timelineId': that.timelineIds[0] ? that.timelineIds[0].toString() : null,
                      'userId': that.userId.toString(),
                      'createdAt': that.createdAt.toString(),
                      'updatedAt': that.updatedAt.toString()
                    }, function(err, res) {
                      that.saveAttachments(function(err, res) {
-                       models.Timeline.newPost(that.id, function() {
+                       models.Timeline.newPost(that.id,
+                                               that.timelineIds, function() {
                          models.Tag.extract(postBody, function(err, result) {
                            models.Tag.update(result, function(err) {
                              models.Stats.findByUserId(that.userId, function(err, stats) {

@@ -106,46 +106,37 @@ exports.addRoutes = function(app) {
   })
 
   app.post('/v1/posts', function(req, res) {
-    if(!req.user)
-      return res.jsonp({})
+    var timelineIds = [];
+    var notAuthorized = false;
 
-    if(req.body.timelinesIds && req.body.timelinesIds.length > 0) {
-      var timelinesIds = Array.isArray(req.body.timelinesIds) ? req.body.timelinesIds : [req.body.timelinesIds]
+    if (!req.user) return res.jsonp({});
 
-      async.forEach(timelinesIds, function(timelineId, done) {
-        requireAuthorization(req.user, timelineId, function(err, valid) {
-          if (err || !valid)
-            done(err)
-
-          req.user.newPost({
-            body: req.body.body,
-            timelineId: timelineId,
-            files: req.files
-          }, function(err, newPost) {
-            newPost.create(function(err, post) {
-              done(err)
-            })
-          })
-        })
-      }, function(err) {
-        if (err) return res.jsonp({}, 422)
-
-        res.jsonp({})
-      })
-    } else {
-      req.user.getPostsTimelineId(function(err, timelineId) {
-        req.user.newPost({
-          body: req.body.body,
-          timelineId: timelineId,
-          files: req.files
-        }, function(err, newPost) {
-          newPost.create(function(err, post) {
-            if (err) return res.jsonp({}, 422)
-
-            post.toJSON(postSerializer, function(err, json) { res.jsonp(json) })
-          })
-        })
-      })
+    if (Array.isArray(req.body.timelinesIds)) {
+      timelineIds = req.body.timelinesIds;
+    } else if (req.body.timelinesIds) {
+      timelineIds = [req.body.timelinesIds];
     }
-  })
-}
+
+    async.forEach(timelineIds, function(timelineId, done) {
+      requireAuthorization(req.user, timelineId, function(err, valid) {
+        if (err || !valid) notAuthorized = true;
+        done(false);
+      });
+    }, function(err) {
+      if (notAuthorized) return res.jsonp({}, 403);
+
+      req.user.newPost({
+        body: req.body.body,
+        timelineIds: timelineIds,
+        files: req.files
+      }, function(err, newPost) {
+        newPost.create(function(err, post) {
+          if (err) return res.jsonp({}, 422);
+          post.toJSON(postSerializer, function(err, json) {
+            res.jsonp(json);
+          });
+        });
+      });
+    });
+  });
+};
