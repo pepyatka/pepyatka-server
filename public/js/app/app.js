@@ -1040,6 +1040,37 @@ App.PostView = Ember.View.extend({
   isEditFormVisible: false,
   currentUser: currentUser,
 
+  firstTwoGroups: function() {
+    var groups = this.get("controller.content.groups");
+    var post   = this.get("controller.content");
+
+    if (groups) {
+      if (groups.length === 1) {
+        return groups.filter(function(e) {
+          return e.username != post.get("createdBy.username");
+        });
+      }
+    }
+
+    return groups;
+  }.property("controller.content.groups"),
+
+  myFeedOnly: function() {
+    var groups = this.get("controller.content.groups");
+    var post   = this.get("controller.content");
+
+    return groups.length === 1 &&
+      groups[0].username == post.get("createdBy.username");
+  }.property("controller.content.groups"),
+
+  toOrColon: function() {
+    return this.get("controller.content.groups").length === 1;
+  }.property("controller.content.groups"),
+
+  colonOrBlank: function() {
+    return this.get("controller.content.groups").length > 1;
+  }.property("controller.content.groups"),
+
   toggleVisibility: function() {
     this.toggleProperty('isFormVisible');
   },
