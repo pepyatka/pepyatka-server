@@ -742,7 +742,11 @@ exports.addModel = function(db) {
         models.Timeline.findById(timelineId, {}, function(err, timeline) {
           if (timeline) {
             models.FeedFactory.findById(timeline.userId, function(err, feed) {
-              done(false, feed);
+              if (feed.type == 'group') {
+                done(false, feed);
+              } else {
+                done(false, null);
+              }
             });
           } else {
             done(true, null);
@@ -858,9 +862,9 @@ exports.addModel = function(db) {
 
       if (select.indexOf('groups') != -1) {
         that.getGroups(function(err, groups) {
-          if (!groups) {
+          if (!groups || groups.length == 0) {
             json.groups = []
-            returnJSON(1)
+            returnJSON(err)
           } else {
             async.map(groups, function(group, done) {
               group.toJSON(params.groups, function(err, json) {
@@ -870,7 +874,7 @@ exports.addModel = function(db) {
             }, function(err, res) {
               if (err) {
                 json.groups = [];
-                returnJSON(1);
+                returnJSON(err);
               } else {
                 json.groups = res;
               }
