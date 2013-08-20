@@ -714,12 +714,10 @@ App.PartialPostView = Ember.View.extend({
     var groups = this.get("controller.content.groups");
     var post   = this.get("controller.content");
 
-    if (groups) {
-      if (groups.length === 1) {
-        return groups.filter(function(e) {
-          return e.username != post.get("createdBy.username");
-        });
-      }
+    if (groups && groups.length === 1) {
+      return groups.filter(function(e) {
+        return e.username != post.get("createdBy.username");
+      });
     }
 
     return groups;

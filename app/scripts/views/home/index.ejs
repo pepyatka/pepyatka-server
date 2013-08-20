@@ -284,7 +284,7 @@
         {{#linkTo user createdBy.username}}{{createdBy.info.screenName}}{{/linkTo}}{{#unless
           view.myFeedOnly}}{{#if
           view.toOrColon}}:{{else}}{{#if
-          view.colorOrBlank}} to {{/if}}{{/if}}
+          view.colonOrBlank}} to {{/if}}{{/if}}
         {{/unless}}
 
         {{#each group in view.firstTwoGroups}}
@@ -500,7 +500,7 @@
         {{#linkTo user createdBy.username}}{{createdBy.info.screenName}}{{/linkTo}}{{#unless
           view.myFeedOnly}}{{#if
           view.toOrColon}}:{{else}}{{#if
-          view.colorOrBlank}} to {{/if}}{{/if}}
+          view.colonOrBlank}} to {{/if}}{{/if}}
         {{/unless}}
 
         {{#each group in view.firstTwoGroups}}
