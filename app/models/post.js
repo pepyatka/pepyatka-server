@@ -742,7 +742,7 @@ exports.addModel = function(db) {
         models.Timeline.findById(timelineId, {}, function(err, timeline) {
           if (timeline) {
             models.FeedFactory.findById(timeline.userId, function(err, feed) {
-              if (feed.type == 'group') {
+              if (feed.type === 'group' || timeline.name === 'Posts') {
                 done(false, feed);
               } else {
                 done(false, null);

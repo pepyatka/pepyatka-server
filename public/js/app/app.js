@@ -614,7 +614,8 @@ App.SendToField = Ember.View.extend({
       Ember.run.next(function() {
         that.$("#sendToSelect").select2()
         that.$("#sendToSelect").select2("enable", that.get('enableSelect'))
-        var myFeed = that.get('controller.content.id')
+        var myFeed = that.get('controller.content.postsTimelineId') ||
+          that.get('controller.content.id')
         that.$("#sendToSelect").val(myFeed).trigger('change')
       })
     }

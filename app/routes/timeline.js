@@ -167,8 +167,14 @@ exports.addRoutes = function(app) {
         if (!timeline)
           return res.jsonp({});
 
-        timeline.toJSON(timelineSerializer, function(err, json) {
-          res.jsonp(json);
+        user.getPostsTimelineId(function(err, postsTimelineId) {
+          if (err)
+            return res.jsonp({})
+
+          timeline.toJSON(timelineSerializer, function(err, json) {
+            json.postsTimelineId = postsTimelineId
+            res.jsonp(json);
+          })
         })
       })
     })
