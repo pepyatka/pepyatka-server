@@ -1059,6 +1059,9 @@ App.PostView = Ember.View.extend({
     var groups = this.get("controller.content.groups");
     var post   = this.get("controller.content");
 
+    if (!groups)
+      return true
+
     return groups.length === 1 &&
       groups[0].username == post.get("createdBy.username");
   }.property("controller.content.groups"),
@@ -1078,16 +1081,6 @@ App.PostView = Ember.View.extend({
   editFormVisibility: function() {
     this.toggleProperty('isEditFormVisible');
   },
-
-  groupsNames: function() {
-    if (!this.get("controller.content.groups") ||
-        this.get("controller.content.createdBy.username") ==
-        this.get("controller.content.groups.username")) {
-      return null;
-    }
-
-    return this.get("controller.content.groups.username");
-  }.property('controller.content.groups.username', 'controller.content.createdBy.username'),
 
   postOwner: function() {
     return this.get("controller.content.createdBy") &&
