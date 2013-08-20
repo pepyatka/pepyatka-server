@@ -7,21 +7,14 @@ exports.addRoutes = function(app) {
       if (err)
         return callback(err, null)
 
-      models.FeedFactory.findById(timeline.userId, function(err, feed) {
-        if (err || !feed)
+      if (timeline.userId == requestingUser.id)
+        return callback(null, true)
+
+      timeline.getSubscribersIds(function(err, userIds) {
+        if (err)
           return callback(err, null)
 
-        switch (feed.type) {
-          case 'group' :
-            feed.getAdministratorsIds(function(err, administratorsIds) {
-              callback(err, administratorsIds.indexOf(requestingUser.id) != -1)
-            })
-            break
-
-          default :
-            callback(null, feed.id == requestingUser.id)
-            break
-        }
+        callback(err, userIds.indexOf(requestingUser.id) != -1)
       })
     })
   }
