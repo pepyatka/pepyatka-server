@@ -714,14 +714,14 @@ App.PartialPostView = Ember.View.extend({
     var post   = this.get("controller.content");
 
     if (groups) {
-      if (groups.length > 2) {
-        return groups.slice(0,2);
-      } else {
+      if (groups.length <= 2) {
         return groups.filter(function(e) {
           return e.username != post.get("createdBy.username");
         });
       }
     }
+
+    return groups;
   }.property("controller.content.groups"),
 
   myFeedOnly: function() {
