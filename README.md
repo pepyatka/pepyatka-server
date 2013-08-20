@@ -4,7 +4,7 @@ Pepyatka
 Pepyatka is another attempt to open source FriendFeed social
 network/aggregator. At this stage it's a semi-anonymous imageboard.
 
-![Pepyatka screenshot](http://epicmonkey.org/pepyatka/2013-03-10_Pepyatka.png)
+![Pepyatka screenshot](http://pepyatka.com/img/2013-08-18_Pepyatka.png)
 
 Prerequisites
 -------------
