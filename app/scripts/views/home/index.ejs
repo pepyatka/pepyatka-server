@@ -283,7 +283,8 @@
       <h5 class="media-heading author">
         {{#linkTo user createdBy.username}}{{createdBy.info.screenName}}{{/linkTo}}{{#unless
           view.myFeedOnly}}{{#if
-          view.toOrColon}}:{{else}} to {{/if}}
+          view.toOrColon}}:{{else}}{{#if
+          view.colorOrBlank}} to {{/if}}{{/if}}
         {{/unless}}
 
         {{#each group in view.firstTwoGroups}}
