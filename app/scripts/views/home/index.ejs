@@ -277,20 +277,17 @@
 
     <div class="media-body post">
       <h5 class="media-heading author">
-        {{#linkTo user createdBy.username}}
-          {{createdBy.info.screenName}}
-        {{/linkTo}}
-
-        {{#unless view.myFeedOnly}}
-          {{#if view.toOrColon}}:{{else}} to {{/if}}
+        {{#linkTo user createdBy.username}}{{createdBy.info.screenName}}{{/linkTo}}{{#unless
+          view.myFeedOnly}}{{#if
+          view.toOrColon}}:{{else}} to {{/if}}
         {{/unless}}
 
         {{#each group in view.firstTwoGroups}}
           {{#linkTo user group.username}}
             {{formatGroupName
             group.username
-            postBinding="controller.content"}}
-          {{/linkTo}}{{maybeSep group listBinding="view.firstTwoGroups" sep=","}}
+            postBinding="controller.content"}}{{/linkTo}}{{maybeSep
+            group listBinding="view.firstTwoGroups" sep=","}}
         {{/each}}
       </h5>
 
