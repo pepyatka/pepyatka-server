@@ -28,11 +28,24 @@ exports.addModel = function(db) {
 
   Post.findById = function(postId, callback) {
     db.hgetall('post:' + postId, function(err, attrs) {
-      if (!attrs || err)
-        return callback(1, null)
+      if (err || !attrs) {
+        return callback(1, null);
+      }
 
-      attrs.id = postId
-      callback(err, new Post(attrs))
+      attrs.id = postId;
+
+      db.smembers("post:" + postId + ":timelines", function(err, timelines) {
+        if (err || !timelines) {
+          return callback(1, null);
+        }
+
+        // FIXME: Ignore "everyone" and stuff like that
+        attrs.timelineIds = timelines.filter(function(e) {
+          return e != "everyone" && e != "undefined";
+        });
+
+        callback(err, new Post(attrs));
+      });
     })
   }
 
@@ -725,14 +738,23 @@ exports.addModel = function(db) {
     },
 
     getGroups: function(callback) {
-      models.Timeline.findById(this.timelineId, {}, function(err, timeline) {
-        if (!timeline)
-          return callback(1, null)
-
-        models.FeedFactory.findById(timeline.userId, function(err, feed) {
-          callback(err, feed)
-        })
-      })
+      async.map(this.timelineIds, function(timelineId, done) {
+        models.Timeline.findById(timelineId, {}, function(err, timeline) {
+          if (timeline) {
+            models.FeedFactory.findById(timeline.userId, function(err, feed) {
+              done(false, feed);
+            });
+          } else {
+            done(true, null);
+          }
+        });
+      }, function(err, res) {
+        if (err) {
+          callback(1, null);
+        } else {
+          callback(err, _.compact(res));
+        }
+      });
     },
 
     toJSON: function(params, callback) {
@@ -835,16 +857,24 @@ exports.addModel = function(db) {
       }
 
       if (select.indexOf('groups') != -1) {
-        that.getGroups(function(err, feed) {
-          if (!feed) {
+        that.getGroups(function(err, groups) {
+          if (!groups) {
             json.groups = []
             returnJSON(1)
           } else {
-            feed.toJSON(params.groups, function(err, groupsJSON) {
-              json.groups = groupsJSON
-
-              returnJSON(err)
-            })
+            async.map(groups, function(group, done) {
+              group.toJSON(params.groups, function(err, json) {
+                done(false, json);
+                returnJSON(err);
+              });
+            }, function(err, res) {
+              if (err) {
+                json.groups = [];
+                returnJSON(1);
+              } else {
+                json.groups = res;
+              }
+            });
           }
         })
       }

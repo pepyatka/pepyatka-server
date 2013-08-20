@@ -277,11 +277,21 @@
 
     <div class="media-body post">
       <h5 class="media-heading author">
-        {{#linkTo user createdBy.username}}{{createdBy.info.screenName}}{{/linkTo}}
+        {{#linkTo user createdBy.username}}
+          {{createdBy.info.screenName}}
+        {{/linkTo}}
 
-        {{#if view.groupsNames}}
-          ({{#linkTo user view.groupsNames}}{{view.groupsNames}}{{/linkTo}})
-        {{/if}}
+        {{#unless view.myFeedOnly}}
+          {{#if view.toOrColon}}:{{else}} to {{/if}}
+        {{/unless}}
+
+        {{#each group in view.firstTwoGroups}}
+          {{#linkTo user group.username}}
+            {{formatGroupName
+            group.username
+            postBinding="controller.content"}}
+          {{/linkTo}}{{maybeSep group listBinding="view.firstTwoGroups" sep=","}}
+        {{/each}}
       </h5>
 
       {{#if view.isEditFormVisible}}
@@ -809,4 +819,3 @@
 
   window.onpaint = preloadFunc();
 </script>
-

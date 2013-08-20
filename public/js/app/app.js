@@ -709,13 +709,28 @@ App.PartialPostView = Ember.View.extend({
   isEditFormVisible: false,
   currentUser: currentUser,
 
-  groupsNames: function() {
-    if (!this.get('controller.content.groups') ||
-        this.get('controller.content.createdBy.username') === this.get('controller.content.groups.username'))
-      return null
+  firstTwoGroups: function() {
+    var groups = this.get("controller.content.groups");
+    var post   = this.get("controller.content");
 
-    return this.get('controller.content.groups.username')
-  }.property('controller.content.createdBy.username'),
+    if (groups) {
+      if (groups.length > 2) {
+        return groups.slice(0,2);
+      } else {
+        return groups.filter(function(e) {
+          return e.username != post.get("createdBy.username");
+        });
+      }
+    }
+  }.property("controller.content.groups"),
+
+  myFeedOnly: function() {
+    return this.get("controller.content.groups").length == 1;
+  }.property("controller.content.groups"),
+
+  toOrColon: function() {
+    return this.get("controller.content.groups").length <= 2;
+  }.property("controller.content.groups"),
 
   toggleVisibility: function() {
     this.toggleProperty('isFormVisible');
@@ -2260,6 +2275,25 @@ App.Router.reopen({
 Ember.Handlebars.registerBoundHelper('decodeURIComponent', function(content) {
   return decodeURIComponent(content)
 })
+
+Ember.Handlebars.registerBoundHelper("maybeSep", function(content, options) {
+  var list = options.hash.list;
+  var sep  = options.hash.sep;
+
+  if (list.indexOf(content) == list.length - 1) return "";
+
+  return sep;
+});
+
+Ember.Handlebars.registerBoundHelper("formatGroupName", function(content, options) {
+  var post = options.hash.post;
+
+  if (content == post.get("createdBy.username")){
+    return post.get("createdBy.info.screenName").split(" ")[0] + "'s feed";
+  }
+
+  return content;
+});
 
 Ember.Handlebars.registerBoundHelper('prettifyText', function(content) {
   var text = $('<span/>').html(content)

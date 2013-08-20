@@ -91,14 +91,18 @@ exports.listen = function(server) {
 
       models.Post.findById(data.postId, function(err, post) {
         if (post) {
-          post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
+          post.toJSON({ select: ['id', 'body', 'createdBy',
+                                 'attachments', 'comments',
+                                 'createdAt', 'updatedAt', 'likes', "groups"],
                         createdBy: { select: ['id', 'username', 'info'],
                                      info: { select: ['screenName'] } },
                         comments: { select: ['id', 'body', 'createdBy', 'info'],
                                     info: { select: ['screenName'] },
                                     createdBy: { select: ['id', 'username'] }},
                         likes: { select: ['id', 'username', 'info'],
-                                 info: { select: ['screenName'] }}
+                                 info: { select: ['screenName'] }},
+                        groups: { select: ['id', 'username', 'info'],
+                                  info: {select: ['screenName'] } }
                       }, function(err, json) {
             var event = { post: json }
             io.sockets.in('timeline:' + data.timelineId).emit('newPost', event)
