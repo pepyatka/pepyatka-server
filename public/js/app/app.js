@@ -2197,6 +2197,13 @@ App.StatsRoute = Ember.Route.extend({
   }
 })
 
+App.AboutRoute = Ember.Route.extend({
+  setupController: function(controller, model) {
+    this.controllerFor('groups').set('content', App.Group.findAll())
+    this.controllerFor('tags').set('content', App.Tag.findAll())
+  },
+})
+
 App.Router.map(function() {
   this.resource('search', { path: "/search/:query" })
 
