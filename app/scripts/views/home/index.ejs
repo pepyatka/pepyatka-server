@@ -3,7 +3,7 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/libs/holder.js"></script>
 <script src="/js/libs/moment.min.js"></script>
-<script src="/js/libs/handlebars-1.0.0-rc.3.js"></script>
+<script src="/js/libs/handlebars-1.0.0.js"></script>
 <script src="/js/libs/jquery.anchorlinks.js"></script>
 <script src="/js/libs/jquery.hashtags.js"></script>
 <script src="/js/libs/jquery.highlight-search-results.js"></script>
@@ -12,10 +12,9 @@
 <script src="/js/libs/core_ext.js"></script>
 <script src="/js/libs/bootstrap.min.js"></script>
 <script src="/js/libs/bootstrap.file-input.js"></script>
-<script src="/js/libs/ember-1.0.0-rc.3.js"></script>
+<script src="/js/libs/ember-1.0.0-rc.7.js"></script>
 <script src="/js/libs/ember-bootstrap.prod.js"></script>
 <script src="/js/libs/ember-i18n.js"></script>
-<script src="/js/libs/ember-data-0.5.0.pre.js"></script>
 <script src="/js/libs/jquery.history.js"></script>
 <script src="/js/libs/select2.js"></script>
 <script src="/config/envLocal.js"></script>
@@ -67,11 +66,11 @@
 
             <div class="media-body">
               <div class="author">
-                {{#linkTo user App.properties.username}}{{App.properties.screenName}}{{/linkTo}}
+                {{#linkTo 'user' App.properties.username}}{{App.properties.screenName}}{{/linkTo}}
               </div>
               <div>
                 {{#unless view.isAnonymous}}
-                  {{#linkTo settings}}{{t label.settings}}{{/linkTo}} -
+                  {{#linkTo 'settings'}}{{t label.settings}}{{/linkTo}} -
                 {{/unless}}
                 <% if (!conf.remoteUser) { %>
                   <a href="/logout">{{t label.signout}}</a>
@@ -109,13 +108,13 @@
 
 <script type="text/x-handlebars" id="tags">
   {{#each tag in controllers.tags}}
-    <li>{{#linkTo search tag.name}}{{decodeURIComponent tag.name}}{{/linkTo}}</li>
+    <li>{{#linkTo 'search' tag.name}}{{decodeURIComponent tag.name}}{{/linkTo}}</li>
   {{/each}}
 </script>
 
 <script type="text/x-handlebars" id="groups">
   {{#each group in controllers.groups}}
-    <li>{{#linkTo user group.user.username}}{{group.user.info.screenName}}{{/linkTo}}</li>
+    <li>{{#linkTo 'user' group.user.username}}{{group.user.info.screenName}}{{/linkTo}}</li>
   {{/each}}
 </script>
 
@@ -228,7 +227,7 @@
         </span>
         -
         <span class="author">
-          {{#linkTo user createdBy.username}}
+          {{#linkTo 'user' createdBy.username}}
             {{#if view.commentOwner}}
               {{t label.you}}
             {{else}}
@@ -267,7 +266,7 @@
 
 <script type="text/x-handlebars" id="_like">
   {{#with view.content}}
-    <span class="and">and&nbsp;</span>{{#linkTo user username}}{{info.screenName}}{{/linkTo}}<span class="comma">,&nbsp;</span>
+    <span class="and">and&nbsp;</span>{{#linkTo 'user' username}}{{info.screenName}}{{/linkTo}}<span class="comma">,&nbsp;</span>
   {{/with}}
 </script>
 
@@ -281,14 +280,14 @@
 
     <div class="media-body post">
       <h5 class="media-heading author">
-        {{#linkTo user createdBy.username}}{{createdBy.info.screenName}}{{/linkTo}}{{#unless
+        {{#linkTo 'user' createdBy.username}}{{createdBy.info.screenName}}{{/linkTo}}{{#unless
           view.myFeedOnly}}{{#if
           view.toOrColon}}:{{else}}{{#if
           view.colonOrBlank}} to {{/if}}{{/if}}
         {{/unless}}
 
         {{#each group in view.firstTwoGroups}}
-          {{#linkTo user group.username}}
+          {{#linkTo 'user' group.username}}
             {{formatGroupName
             group.username
             postBinding="controller.content"}}{{/linkTo}}{{maybeSep
@@ -414,23 +413,23 @@
 
         <div class="pull-right profile-extra-info">
           {{#if content.user.subscriptionsLength}}
-            <div>{{#linkTo feedSubscriptions App.postsController.timeline}}{{content.user.subscriptionsLength}} {{t label.subscriptions}}{{/linkTo}}</div>
+            <div>{{#linkTo 'feedSubscriptions' App.postsController.timeline}}{{content.user.subscriptionsLength}} {{t label.subscriptions}}{{/linkTo}}</div>
           {{/if}}
 
           {{#if content.user.subscribersLength}}
-            <div>{{#linkTo feedSubscribers App.postsController.timeline}}{{content.user.subscribersLength}} {{t label.subscribers}}{{/linkTo}}</div>
+            <div>{{#linkTo 'feedSubscribers' App.postsController.timeline}}{{content.user.subscribersLength}} {{t label.subscribers}}{{/linkTo}}</div>
           {{/if}}
 
           {{#if content.user.postsLength}}
-            <div>{{#linkTo user App.postsController.timeline}}{{content.user.postsLength}} {{t label.posts}}{{/linkTo}}</div>
+            <div>{{#linkTo 'user' App.postsController.timeline}}{{content.user.postsLength}} {{t label.posts}}{{/linkTo}}</div>
           {{/if}}
 
           {{#if content.user.likesLength}}
-            <div>{{#linkTo likes App.postsController.timeline}}{{content.user.likesLength}} {{t label.likes}}{{/linkTo}}</div>
+            <div>{{#linkTo 'likes' App.postsController.timeline}}{{content.user.likesLength}} {{t label.likes}}{{/linkTo}}</div>
           {{/if}}
 
           {{#if content.user.commentsLength}}
-            <div>{{#linkTo comments App.postsController.timeline}}{{content.user.commentsLength}} {{t label.comments}}{{/linkTo}}</div>
+            <div>{{#linkTo 'comments' App.postsController.timeline}}{{content.user.commentsLength}} {{t label.comments}}{{/linkTo}}</div>
           {{/if}}
 
           {{#unless view.ownProfile}}
@@ -497,14 +496,14 @@
 
     <div class="media-body post">
       <h5 class="media-heading author">
-        {{#linkTo user createdBy.username}}{{createdBy.info.screenName}}{{/linkTo}}{{#unless
+        {{#linkTo 'user' createdBy.username}}{{createdBy.info.screenName}}{{/linkTo}}{{#unless
           view.myFeedOnly}}{{#if
           view.toOrColon}}:{{else}}{{#if
           view.colonOrBlank}} to {{/if}}{{/if}}
         {{/unless}}
 
         {{#each group in view.firstTwoGroups}}
-          {{#linkTo user group.username}}
+          {{#linkTo 'user' group.username}}
             {{formatGroupName
             group.username
             postBinding="controller.content"}}{{/linkTo}}{{maybeSep
@@ -608,7 +607,7 @@
 
   <ul>
     {{#each content}}
-      <li>{{#linkTo user user.username}}{{user.info.screenName}}{{/linkTo}}</li>
+      <li>{{#linkTo 'user' user.username}}{{user.info.screenName}}{{/linkTo}}</li>
     {{/each}}
   </ul>
 </script>
@@ -619,14 +618,14 @@
 </script>
 
 <script type="text/x-handlebars" id="subscribers">
-  <h3>{{t header.subscribers}} {{#linkTo user controller.content.username}}{{controller.content.info.screenName}}{{/linkTo}}</h3>
+  <h3>{{t header.subscribers}} {{#linkTo 'user' controller.content.username}}{{controller.content.info.screenName}}{{/linkTo}}</h3>
 
   <h3>{{t header.members}}</h3>
   <ul>
     {{#each content itemController="subscriber"}}
       {{#unless isAdmin}}
         <li>
-          {{#linkTo user username}}{{info.screenName}}{{/linkTo}}
+          {{#linkTo 'user' username}}{{info.screenName}}{{/linkTo}}
 
           {{#if view.isOwner}}
             {{#if view.showManagement}}
@@ -652,7 +651,7 @@
       {{#each content itemController="subscriber"}}
         {{#if isAdmin}}
           <li>
-            {{#linkTo user username}}{{info.screenName}}{{/linkTo}}
+            {{#linkTo 'user' username}}{{info.screenName}}{{/linkTo}}
               {{#if view.isOwner}}
                 {{#if view.showManagement}}
                   (
@@ -668,9 +667,9 @@
 
   {{#if view.isOwner}}
     {{#if view.showManagement}}
-      {{#linkTo feedSubscribers controller.content.username}}{{t label.browseSubscribers}}{{/linkTo}}
+      {{#linkTo 'feedSubscribers' controller.content.username}}{{t label.browseSubscribers}}{{/linkTo}}
     {{else}}
-      {{#linkTo manageSubscribers controller.content.username}}{{t label.manageSubscribers}}{{/linkTo}}
+      {{#linkTo 'manageSubscribers' controller.content.username}}{{t label.manageSubscribers}}{{/linkTo}}
     {{/if}}
   {{/if}}
 </script>
@@ -680,7 +679,7 @@
 
   <ul>
     {{#each content}}
-      <li>{{#linkTo user username}}{{info.screenName}}{{/linkTo}}</li>
+      <li>{{#linkTo 'user' username}}{{info.screenName}}{{/linkTo}}</li>
     {{/each}}
   </ul>
 </script>
