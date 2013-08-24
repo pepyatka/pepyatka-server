@@ -1,27 +1,3 @@
 <% layout('../../layouts/ember.ejs') -%>
 
 <script data-main="/js/main" src="/js/libs/requirejs/2.1.8/require.js"></script>
-
-<!--
-
-<script type="text/javascript">
-  var currentUser
-  var currentUsername
-  var currentScreenName
-  var isAnonymousPermitted
-
-  <% if (req.user) { %>
-    currentUser = '<%= req.user.id %>'
-    var currentUsername = '<%= req.user.username %>'
-    isAnonymousPermitted = '<%= req.isAnonymousPermitted %>'
-    <% if (req.user.info) { %>
-      var currentScreenName = '<%= req.user.info.screenName %>'
-    <% } else { %>
-      var currentScreenName = '<%= req.user.username %>'
-    <% } %>
-  <% } %>
-
-  var csrf_token = '<%= csrf_token %>'
-</script>
-
--->
