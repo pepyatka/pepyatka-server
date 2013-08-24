@@ -1,0 +1,11 @@
+<div class="offset4 spinner">
+  <img src="/img/spinner.gif" width="32" height="32" />
+</div>
+
+<div class="posts">
+  <ul class="media-list">
+    {{each controller.content itemViewClass="App.PartialPostView" itemController="post"}}
+  </ul>
+
+  {{view App.Pagination}}
+</div>

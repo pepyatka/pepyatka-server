@@ -1,0 +1,84 @@
+<div class="row">
+  <div class="span9 media">
+    <div class="pull-left">
+      <img class="media-object" src="/img/64x64.png">
+    </div>
+
+    <div class="media-body">
+      <h3 class="pull-left">{{content.user.info.screenName}}</h3>
+
+      <div class="pull-right profile-extra-info">
+        {{#if content.user.subscriptionsLength}}
+          <div>{{#linkTo 'feedSubscriptions' App.postsController.timeline}}{{content.user.subscriptionsLength}} {{t label.subscriptions}}{{/linkTo}}</div>
+        {{/if}}
+
+        {{#if content.user.subscribersLength}}
+          <div>{{#linkTo 'feedSubscribers' App.postsController.timeline}}{{content.user.subscribersLength}} {{t label.subscribers}}{{/linkTo}}</div>
+        {{/if}}
+
+        {{#if content.user.postsLength}}
+          <div>{{#linkTo 'user' App.postsController.timeline}}{{content.user.postsLength}} {{t label.posts}}{{/linkTo}}</div>
+        {{/if}}
+
+        {{#if content.user.likesLength}}
+          <div>{{#linkTo 'likes' App.postsController.timeline}}{{content.user.likesLength}} {{t label.likes}}{{/linkTo}}</div>
+        {{/if}}
+
+        {{#if content.user.commentsLength}}
+          <div>{{#linkTo 'comments' App.postsController.timeline}}{{content.user.commentsLength}} {{t label.comments}}{{/linkTo}}</div>
+        {{/if}}
+
+        {{#unless view.ownProfile}}
+          {{#if view.currentUser}}
+            <div class="row profile-actions">
+              {{#if view.subscribedTo}}
+                <a {{action unsubscribeTo}}>{{t label.unsubscribe}}</a>
+              {{/if}}
+            </div>
+          {{/if}}
+        {{/unless}}
+      </div>
+    </div>
+  </div>
+</div>
+
+{{#if view.showPostCreationForm}}
+  <div class="postCreationField">
+    <div class="clearfix submitForm">
+      <div>
+        {{view App.CreatePostField action="submitPost" target="controller"
+              class="span9"}}
+      </div>
+      <div class="pull-left">
+        {{t label.add.image}}{{view App.UploadFileView name="image"}}
+      </div>
+      <div class="pull-right">
+        {{view App.SubmitPostButton action="submitPost" target="controller"
+              class="btn pull-right"}}
+      </div>
+    </div>
+
+    <div id="progressBar" {{bindAttr class="controller.isProgressBarHidden"}}>
+      {{view Bootstrap.ProgressBar isStriped=true isAnimated=true
+          progressBinding="controller.progress"}}
+    </div>
+  </div>
+{{/if}}
+
+{{#unless view.ownProfile}}
+  {{#if view.currentUser}}
+    <div class="row profile-actions">
+      {{#unless view.subscribedTo}}
+        <a {{action subscribeTo}}>{{t label.subscribe}}</a>
+      {{/unless}}
+    </div>
+  {{/if}}
+{{/unless}}
+
+<div class="posts">
+  <ul class="media-list">
+    {{each controller.posts.arrangedContent itemViewClass="App.PartialPostView" itemController="post"}}
+  </ul>
+
+  {{view App.Pagination}}
+</div>

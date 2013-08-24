@@ -1,0 +1,18 @@
+<div class="span3">
+  <h2>{{t header.createGroup}}</h2>
+
+  <form action="/signup" method="post" class="form-horizontal">
+    <div class="control-group">
+      <label class="control-label" for="username">Group name</label>
+      <div class="controls">
+        {{view Ember.TextField valueBinding="name" type="text" id="name" name="name"}}
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="controls span2">
+        <button {{action submit}} class="btn btn-primary">{{t button.create}}</button>
+      </div>
+    </div>
+  </form>
+</div>

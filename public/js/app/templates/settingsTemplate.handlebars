@@ -1,0 +1,35 @@
+<div class="span9">
+  <h2>{{t header.settings}}</h2>
+
+  <form action="/settings" method="post" class="form-horizontal">
+    <div class="control-group">
+      <label class="control-label" for="screenName">{{t label.screenName}}</label>
+      <div class="controls">
+        {{view Ember.TextField valueBinding="view.screenName" type="text" id="screenName" name="screenName"}}
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label" for="email">{{t label.email}}</label>
+      <div class="controls">
+        {{view Ember.TextField valueBinding="view.email" type="text" id="email" name="email"}}
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label" for="receive">{{t label.sendEmails}}</label>
+      <div class="controls">
+        {{view Ember.Select contentBinding="view.receiveEmailsContent"
+              valueBinding="view.receiveEmails" name="receiveEmails"
+              id="receiveEmails"
+              optionValuePath="content.id" optionLabelPath="content.name"}}
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="controls span2">
+        <button {{action save target="view"}} class="btn btn-primary">{{t button.save}}</button>
+      </div>
+    </div>
+  </form>
+</div>

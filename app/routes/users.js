@@ -172,4 +172,13 @@ exports.addRoutes = function(app) {
       })
     })
   })
+
+  app.get('/v1/whoami', function(req, res) {
+    if (!req.user)
+      return res.jsonp({}, 422)
+
+    req.user.toJSON(userSerializer, function(err, json) {
+      res.jsonp(json)
+    })
+  })
 }

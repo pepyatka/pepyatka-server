@@ -1,0 +1,17 @@
+<div id="sendTo">
+  To:
+  <select id="sendToSelect" multiple="multiple">
+    {{#if controller.content.postsTimelineId}}
+      <option {{bindAttr value=controller.content.postsTimelineId}}>My feed</option>
+      {{else}}
+      <option {{bindAttr value=controller.content.id}}>This feed</option>
+    {{/if}}
+    {{#each controller.groups}}
+      <option {{bindAttr value="id"}}>{{user.username}}</option>
+    {{/each}}
+  </select>
+
+  <div id="showHide">
+    <a {{action toggleEditability target="view"}}>{{t label.add-edit}}</a>
+  </div>
+</div>

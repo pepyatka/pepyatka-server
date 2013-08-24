@@ -1,0 +1,3 @@
+{{#each tag in controllers.tags}}
+  <li>{{#linkTo 'search' tag.name}}{{decodeURIComponent tag.name}}{{/linkTo}}</li>
+{{/each}}

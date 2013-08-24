@@ -1,0 +1,111 @@
+<div class="media a-post">
+  <div class="pull-left">
+    <img class="media-object" src="/img/64x64.png">
+  </div>
+
+  <div class="media-body post">
+    <h5 class="media-heading author">
+      {{#linkTo 'user' createdBy.username}}{{createdBy.info.screenName}}{{/linkTo}}{{#unless
+        view.myFeedOnly}}{{#if
+        view.toOrColon}}:{{else}}{{#if
+        view.colonOrBlank}} to {{/if}}{{/if}}
+      {{/unless}}
+
+      {{#each group in view.firstTwoGroups}}
+        {{#linkTo 'user' group.username}}
+          {{formatGroupName
+          group.username
+          postBinding="controller.content"}}{{/linkTo}}{{maybeSep
+          group listBinding="view.firstTwoGroups" sep=","}}
+      {{/each}}
+    </h5>
+
+    {{#if view.isEditFormVisible}}
+      {{#view App.EditPostForm}}
+        <div class="edit-post-form media">
+          <div class="media-body">
+            <div>
+              {{view App.EditPostField action="update" target="controller"
+                    class="span8 input-tiny comment-area"}}
+            </div>
+            <div>
+              {{view App.SubmitPostButton action="update" target="controller"
+                    class="btn btn-small"}}
+              <a {{action toggleVisibility target="view"}}>{{t label.cancel}}</a>
+            </div>
+          </div>
+        </div>
+      {{/view}}
+    {{else}}
+      <div class="body">
+        <div class="text">{{prettifyText body}}</div>
+
+        {{#if firstThumbnailSrc}}
+          <div class="image"><a {{bindAttr href="firstImageSrc"}}><img {{bindAttr src="firstThumbnailSrc"}} class="img-polaroid" /></a></div>
+        {{/if}}
+      </div>
+    {{/if}}
+
+    <div class="tagline">
+      {{#linkTo 'post' this class="datetime"}}<time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>{{/linkTo}}
+
+      {{#if currentUser}}
+        -
+        <a {{action toggleVisibility target="view"}}>{{t label.comment}}</a>
+
+        {{#unless currentUserLiked}}
+          -
+          <a {{action like target="controller"}}>{{t label.like}}</a>
+        {{/unless}}
+
+        {{#if view.postOwner}}
+          <span class="links">
+            (<a {{action editFormVisibility target="view"}}>{{t label.edit}}</a>
+            |
+            <a {{action kill target="controller"}}>{{t label.delete}}</a>)
+          </span>
+        {{/if}}
+      {{/if}}
+    </div>
+
+    {{#if anyLikes}}
+      <div class="media likes">
+        <div class="pull-left">
+          <i class="icon-heart media-object"></i>
+        </div>
+
+        <div class="media-body">
+          <ul class="unstyled inline pull-left">
+            {{view Ember.CollectionView contentBinding="likes"
+                   itemViewClass="App.PartialLike"}}
+          </ul>
+          <span class="liked">{{t label.liked}}</span>
+          {{#if currentUserLiked}}
+            <span>(<a {{action unlike target="controller"}}>{{t label.unlike}}</a>)</span>
+          {{/if}}
+        </div>
+      </div>
+    {{/if}}
+
+    <ul class="unstyled comments">
+      {{each content.comments.content itemViewClass="App.PartialCommentView" itemController="comment"}}
+    </ul>
+
+    {{#view App.CommentForm}}
+      <div class="comment-form media">
+        <i class="icon-comment-alt media-object pull-left"></i>
+        <div class="media-body">
+          <div>
+            {{view App.CreateCommentField action="submit" target="App.CommentController"
+                  class="span7 input-tiny comment-area"}}
+          </div>
+          <div>
+            {{view App.SubmitCommentButton action="submit" target="App.CommentController"
+                  class="btn btn-small"}}
+            <a {{action cancelComment target="view"}}>{{t label.cancel}}</a>
+          </div>
+        </div>
+      </div>
+    {{/view}}
+  </div>
+</div>

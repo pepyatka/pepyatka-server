@@ -1,0 +1,54 @@
+<h3>{{t header.subscribers}} {{#linkTo 'user' controller.content.username}}{{controller.content.info.screenName}}{{/linkTo}}</h3>
+
+<h3>{{t header.members}}</h3>
+<ul>
+  {{#each content itemController="subscriber"}}
+    {{#unless isAdmin}}
+      <li>
+        {{#linkTo 'user' username}}{{info.screenName}}{{/linkTo}}
+
+        {{#if view.isOwner}}
+          {{#if view.showManagement}}
+            (
+            <a {{action removeSubscriber href="true"}}>{{t label.remove}}</a>
+            {{#if view.hasAdmins}}
+              |
+              {{#unless isAdmin}}
+                <a {{action addAdmin href="true"}}>{{t label.makeAdmin}}</a>
+              {{/unless}}
+            {{/if}}
+            )
+          {{/if}}
+        {{/if}}
+      </li>
+    {{/unless}}
+  {{/each}}
+</ul>
+
+{{#if view.hasAdmins}}
+  <h3>{{t header.admins}}</h3>
+  <ul>
+    {{#each content itemController="subscriber"}}
+      {{#if isAdmin}}
+        <li>
+          {{#linkTo 'user' username}}{{info.screenName}}{{/linkTo}}
+            {{#if view.isOwner}}
+              {{#if view.showManagement}}
+                (
+                <a {{action removeAdmin href="true"}}>{{t label.removeAdminRights}}</a>
+                )
+              {{/if}}
+            {{/if}}
+        </li>
+      {{/if}}
+    {{/each}}
+  </ul>
+{{/if}}
+
+{{#if view.isOwner}}
+  {{#if view.showManagement}}
+    {{#linkTo 'feedSubscribers' controller.content.username}}{{t label.browseSubscribers}}{{/linkTo}}
+  {{else}}
+    {{#linkTo 'manageSubscribers' controller.content.username}}{{t label.manageSubscribers}}{{/linkTo}}
+  {{/if}}
+{{/if}}

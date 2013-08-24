@@ -738,6 +738,9 @@ exports.addModel = function(db) {
     },
 
     getGroups: function(callback) {
+      if (!this.timelineIds)
+        return callback(1, null)
+
       async.map(this.timelineIds, function(timelineId, done) {
         models.Timeline.findById(timelineId, {}, function(err, timeline) {
           if (timeline) {

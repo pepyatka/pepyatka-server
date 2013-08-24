@@ -1,0 +1,3 @@
+{{#each group in controllers.groups}}
+  <li>{{#linkTo 'user' group.user.username}}{{group.user.info.screenName}}{{/linkTo}}</li>
+{{/each}}

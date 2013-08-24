@@ -1,0 +1,7 @@
+<h3>{{t header.subscriprions}} {{App.subscriptionsController.info.screenName}}</h3>
+
+<ul>
+  {{#each content}}
+    <li>{{#linkTo 'user' user.username}}{{user.info.screenName}}{{/linkTo}}</li>
+  {{/each}}
+</ul>

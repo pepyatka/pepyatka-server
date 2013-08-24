@@ -5,7 +5,7 @@
   <body>
     <p><%= post %></p>
 
-    <% if (comments.length > 0) { %>
+    <% if (comments && comments.length > 0) { %>
       <p>Comments: </p>
       <ul>
         <% comments.forEach(function(comment) { %>
