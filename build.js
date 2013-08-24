@@ -42,14 +42,14 @@
     /* libs */
     'jquery': 'libs/jquery/1.9.1/jquery.min',
     'bootstrap': 'libs/bootstrap/2.3.2/bootstrap.min',
-    'handlebars': 'libs/handlebars/1.0.0/handlebars.min',
+    'handlebars': 'libs/handlebars/1.0.0/handlebars',
     'ember': 'libs/ember/1.0.0-rc.7/ember.min',
     'ember-bootstrap': 'libs/ember-bootstrap/0.0.2/ember-bootstrap.min',
     'ember-i18n': 'libs/ember-i18n/1.3.2/ember-i18n',
     'moment': 'libs/moment/1.7.2/moment.min',
     'select2': 'libs/select2/3.4.1/select2.min',
     'underscore': 'libs/underscore/1.4.4/underscore.min',
-    'socketio': '../../node_modules/socket.io/node_modules/socket.io-client/dist/socket.io.min',
+    'socketio': '../../node_modules/socket.io/node_modules/socket.io-client/dist/socket.io',
     'json2': 'libs/json2/1.0.2/json2.min',
 
     /* requirejs-plugins */
@@ -134,7 +134,7 @@
   //- "closure.keepLines": Same as closure option, but keeps line returns
   //in the minified files.
   //- "none": no minification will be done.
-  optimize: "uglify2",
+  optimize: "none",
 
   //Introduced in 2.1.2: If using "dir" for an output directory, normally the
   //optimize setting is used to optimize the build bundles (the "modules"
