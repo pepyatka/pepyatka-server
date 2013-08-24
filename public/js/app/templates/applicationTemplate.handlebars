@@ -17,7 +17,7 @@
     </div>
 
     <% if (!conf.remoteUser) { %>
-      <% if (!req.user || req.user.username == 'anonymous') { %>
+      {{#unless isAnonymous}}
         {{#unless App.properties.isAuthorized}}
           <div class="span3 signin-toolbar">
             {{#linkTo 'signin'}}{{t label.signin}}{{/linkTo}}
@@ -25,7 +25,7 @@
             {{#linkTo 'signup'}}{{t label.signup}}{{/linkTo}}
           </div>
         {{/unless}}
-      <% } %>
+      {{/unless}}
     <% } %>
   </div>
 
@@ -36,7 +36,7 @@
     </div>
 
     <div class="span3">
-      <% if (req.user) { %>
+      {{#if App.properties.userId}}
         <div class="media profile">
           <div class="pull-left">
             <img class="media-object" src="/img/48x48.png">
@@ -56,7 +56,7 @@
             </div>
           </div>
         </div>
-      <% } %>
+      {{/if}}
     </div>
 
     <div class="span3">

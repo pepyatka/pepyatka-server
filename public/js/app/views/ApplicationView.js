@@ -5,7 +5,8 @@ define(["app/app",
     template: Ember.Handlebars.compile(tpl),
 
     isAnonymous: function() {
-      return App.properties.get('username') === 'anonymous'
+      return App.properties.get('username') === null ||
+        App.properties.get('username') === 'anonymous'
     }.property('App.properties.username')
   });
 });

@@ -1,4 +1,4 @@
-<% if (req.user) { %>
+{{#if App.properties.userId}}
   <div class="clearfix submitForm">
     <div>
       {{view App.SendToField viewName="sendTo"}}
@@ -20,7 +20,7 @@
     {{view Bootstrap.ProgressBar isStriped=true isAnimated=true
         progressBinding="controller.progress"}}
   </div>
-<% } %>
+{{/if}}
 
 {{view App.JustStarted}}
 
