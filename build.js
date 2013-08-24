@@ -49,7 +49,7 @@
     'moment': 'libs/moment/1.7.2/moment.min',
     'select2': 'libs/select2/3.4.1/select2',
     'underscore': 'libs/underscore/1.4.4/underscore-min',
-    'socketio': '../../node_modules/socket.io/node_modules/socket.io-client/dist/socket.io',
+    'socketio': '../../node_modules/socket.io/node_modules/socket.io-client/dist/socket.io.min',
     'json2': 'libs/json2/1.0.2/json2',
 
     /* requirejs-plugins */
@@ -209,16 +209,16 @@
     //with the default options, no need to specify
     //any of these properties.
     output: {
-      beautify: true
+      beautify: false
     },
     compress: {
-      sequences: false,
+      sequences: true,
       global_defs: {
         // DEBUG: false
       }
     },
     warnings: true,
-    mangle: false
+    mangle: true
   },
 
   //If using Closure Compiler for script optimization, these config options
@@ -372,7 +372,7 @@
 
   //If set to true, any files that were combined into a build bundle will be
   //removed from the output folder.
-  removeCombined: true,
+  removeCombined: false,
 
   //List the modules that will be optimized. All their immediate and deep
   //dependencies will be included in the module's file when the build is
