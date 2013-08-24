@@ -16,17 +16,15 @@
       </div>
     </div>
 
-    <% if (!conf.remoteUser) { %>
-      {{#unless isAnonymous}}
-        {{#unless App.properties.isAuthorized}}
-          <div class="span3 signin-toolbar">
-            {{#linkTo 'signin'}}{{t label.signin}}{{/linkTo}}
-            or
-            {{#linkTo 'signup'}}{{t label.signup}}{{/linkTo}}
-          </div>
-        {{/unless}}
+    {{#unless isAnonymous}}
+      {{#unless App.properties.isAuthorized}}
+        <div class="span3 signin-toolbar">
+          {{#linkTo 'signin'}}{{t label.signin}}{{/linkTo}}
+          or
+          {{#linkTo 'signup'}}{{t label.signup}}{{/linkTo}}
+        </div>
       {{/unless}}
-    <% } %>
+    {{/unless}}
   </div>
 
 
@@ -50,9 +48,7 @@
               {{#unless view.isAnonymous}}
                 {{#linkTo 'settings'}}{{t label.settings}}{{/linkTo}} -
               {{/unless}}
-              <% if (!conf.remoteUser) { %>
                 <a href="/logout">{{t label.signout}}</a>
-              <% } %>
             </div>
           </div>
         </div>
