@@ -43,7 +43,7 @@ define({
     'ember-i18n': 'libs/ember-i18n/1.3.2/ember-i18n',
     'moment': 'libs/moment/1.7.2/moment.min',
     'select2': 'libs/select2/3.4.1/select2',
-    'underscore': 'libs/underscore/1.4.4/underscore-min',
+    'underscore': 'libs/underscore/1.4.4/underscore.min',
     'socketio': '/socket.io/socket.io',
     'json2': 'libs/json2/1.0.2/json2',
 
