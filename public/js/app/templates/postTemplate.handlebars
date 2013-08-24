@@ -49,7 +49,7 @@
     <div class="tagline">
       {{#linkTo 'post' this class="datetime"}}<time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>{{/linkTo}}
 
-      {{#if currentUser}}
+      {{#if App.properties.userId}}
         -
         <a {{action toggleVisibility target="view"}}>{{t label.comment}}</a>
 

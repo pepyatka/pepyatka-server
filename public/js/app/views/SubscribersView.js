@@ -6,7 +6,7 @@ define(["app/app",
 
     isOwner: function() {
       return this.get("controller.content.username") == App.properties.username ||
-        this.get("controller.content.admins") && this.get("controller.content.admins").indexOf(currentUser) !== -1;
+        this.get("controller.content.admins") && this.get("controller.content.admins").indexOf(App.properties.userId) !== -1;
     }.property('controller.content.username', 'App.properties.username', 'controller.content.admins'),
 
     hasAdmins: function() {

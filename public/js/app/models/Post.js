@@ -1,7 +1,6 @@
 define(["app/app"], function(App) {
   App.Post = Ember.Object.extend({
     showAllComments: false,
-    currentUser: currentUser,
 
     // TODO: this is overwritten in Timeline find method
     comments: Ember.ArrayProxy.extend({content: []}),
@@ -14,7 +13,7 @@ define(["app/app"], function(App) {
     }.property('showAllComments', 'comments'),
 
     postOwner: function() {
-      return this.get('createdBy').id == currentUser &&
+      return this.get('createdBy').id == App.properties.userId &&
         this.get('createdBy').username != 'anonymous'
     }.property('createdBy'),
 
@@ -27,7 +26,7 @@ define(["app/app"], function(App) {
 
       var found = false
       likes.forEach(function(like) {
-        if (like.id == currentUser) {
+        if (like.id == App.properties.userId) {
           found = true
           return found;
         }

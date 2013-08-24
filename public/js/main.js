@@ -7,8 +7,14 @@
         var app_name = config.app_name;
         root[app_name] = App
 
-        // Not we are good to intialize Ember application
-        App.advanceReadiness()
+        jQuery.getJSON("/v1/whoami", function(data) {
+          App.properties.userId = data.id
+          App.properties.username = data.username
+          App.properties.screenName = data.info.screenName
+
+          // Not we are good to intialize Ember application
+          App.advanceReadiness()
+        })
       });
     });
   })

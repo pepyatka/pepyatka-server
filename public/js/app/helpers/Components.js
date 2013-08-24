@@ -18,16 +18,11 @@ define(["app/app",
     }
   })
 
-  // FIXME: !!! should be loaded from server-side !!!
-  currentUsername = "anonymous"
-  currentUser = "1"
-  currentScreenName = "anonymous"
-
   App.Properties = Ember.Object.extend({
     isAuthorized: false,
-    username: currentUsername,
-    userId: currentUser,
-    screenName: currentScreenName,
+    username: null,
+    userId: null,
+    screenName: null,
 
     currentPath: null
   })

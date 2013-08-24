@@ -6,7 +6,6 @@ define(["app/app",
 
     isFormVisible: false,
     isEditFormVisible: false,
-    currentUser: currentUser,
 
     firstTwoGroups: function() {
       var groups = this.get("controller.content.groups");

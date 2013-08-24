@@ -26,7 +26,7 @@ define(["app/app",
     commentOwner: function() {
       // FIXME: why is it binded to content.content.createdBy not just
       // content.createdBy?
-      return this.get('content.content.createdBy.id') == currentUser &&
+      return this.get('content.content.createdBy.id') == App.properties.userId &&
         this.get('content.content.createdBy.username') != 'anonymous'
     }.property('content.content.createdBy.id')
   })

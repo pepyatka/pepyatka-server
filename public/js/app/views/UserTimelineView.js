@@ -4,14 +4,12 @@ define(["app/app",
     templateName: 'user-timeline',
     template: Ember.Handlebars.compile(tpl),
 
-    currentUser: currentUser,
-
     showPostCreationForm: function() {
       return this.get("controller.user") &&
         (((this.get("controller.user.type") == 'user' || !this.get("controller.user.type")) &&
-          this.get("controller.user.id") == currentUser) ||
+          this.get("controller.user.id") == App.properties.userId) ||
          (this.get("controller.user.type") === 'group' && this.get("controller.subscribers").filter(function(subscriber) {
-           return subscriber.id == currentUser;
+           return subscriber.id == App.properties.userId;
          })));
     }.property('controller.user'),
 
@@ -26,17 +24,17 @@ define(["app/app",
       if (!subscribers) return res;
 
       for (var i = 0; i < subscribers.length; i++) {
-        if (subscribers[i].id == currentUser) {
+        if (subscribers[i].id == App.properties.userId) {
           res = true;
           break;
         }
       }
 
       return res;
-    }.property("controller.subscribers.@each.id", "currentUser"),
+    }.property("controller.subscribers.@each.id", "App.properties.userId"),
 
     ownProfile: function() {
-      return this.get("controller.user.id") == currentUser;
-    }.property("currentUser", "controller.user.id")
+      return this.get("controller.user.id") == App.properties.userId;
+    }.property("App.properties.userId", "controller.user.id")
   })
 });

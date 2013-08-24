@@ -25,10 +25,10 @@ define(["app/app"], function(App) {
       // it differently -- just checks number of comments.
 
       // // return false if comments do not include current user
-      // // var exist = post.createdBy.id == currentUser
+      // // var exist = post.createdBy.id == App.properties.userId
       // var exist = false
       // comments.forEach(function(comment) {
-      //   exist = exist || comment.createdBy.id == currentUser
+      //   exist = exist || comment.createdBy.id == App.properties.userId
       // })
 
       // // If user have not commented this post there is no need to
