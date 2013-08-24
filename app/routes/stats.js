@@ -2,7 +2,8 @@ var models = require('../models'),
   async = require('async')
 
 var userSerializer = {
-  select: ['id', 'username']
+  select: ['id', 'username', 'info'],
+  info: { select: ['screenName'] }
 }
 
 exports.addRoutes = function(app) {
