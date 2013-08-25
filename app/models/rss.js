@@ -110,7 +110,7 @@ exports.addModel = function(db) {
 
   RSS.find = function(id, f) {
     db.hgetall(mkKey([rssK, id]), function(err, rss) {
-      if (err) {
+      if (err && !rss) {
         f(true, null);
       } else {
         rss.id = id;
