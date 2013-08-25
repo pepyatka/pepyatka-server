@@ -10,7 +10,7 @@
         jQuery.getJSON("/v1/whoami", function(data) {
           App.properties.userId = data.id
           App.properties.username = data.username
-          App.properties.screenName = data.info.screenName
+          App.properties.screenName = data.info ? data.info.screenName : data.username;
 
           // Not we are good to intialize Ember application
           App.advanceReadiness()
