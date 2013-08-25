@@ -14,10 +14,14 @@ var rssIds = "rss_ids";
 var urlK = "url";
 var usersK = "users";
 
+var normalizeUrl = function(url) {
+  return _.without(url, " ").join("");
+};
+
 exports.addModel = function(db) {
   var RSS = function(params) {
     this.id = params.id;
-    this.url = params.url;
+    this.url = normalizeUrl(params.url);
     this.userId = params.userId;
     this.createdAt = params.createdAt;
     this.updatedAt = params.updatedAt;
@@ -93,7 +97,7 @@ exports.addModel = function(db) {
   };
 
   RSS.findByUrl = function(url, f) {
-    db.hget(mkKey([rssK, url]), rssIdK, function(err, id) {
+    db.hget(mkKey([rssK, normalizeUrl(url)]), rssIdK, function(err, id) {
       if (!err && id) {
         RSS.find(id, f);
       } else {
