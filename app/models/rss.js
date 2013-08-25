@@ -91,6 +91,10 @@ exports.addModel = function(db) {
       db.smembers(mkKey([rssK, this.id, usersK]), function(err, users) {
         f(users);
       });
+    },
+
+    removeUser: function(id, f) {
+      db.srem(mkKey([rssK, this.id, usersK]), id, f);
     }
   };
 

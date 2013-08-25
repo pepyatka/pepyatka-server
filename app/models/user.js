@@ -223,6 +223,32 @@ exports.addModel = function(db) {
       })
     },
 
+    removeRSS: function(f) {
+      var user = this;
+
+      this.getRSS(function(err, rss) {
+        if (err) {
+          f(err);
+        } else {
+          async.forEach(rss, function(url, done) {
+            models.RSS.findByUrl(url, function(err, rss) {
+              if (err) {
+                done(err);
+              } else {
+               rss.removeUser(user.id, function(err, res) {
+                  done(err);
+                });
+              }
+            });
+          }, function(err) {
+            db.del(mkKey([userK, user.id, rssK]), function(err, res) {
+              f(err);
+            });
+          });
+        }
+      });
+    },
+
     update: function(params, callback) {
       var that = this
 
@@ -234,16 +260,18 @@ exports.addModel = function(db) {
             if (res !== 0) {
               async.parallel([
                 function(done) {
-                  async.map(params.rss, function(url, done) {
-                    models.RSS.addUserOrCreate({
-                      url: url,
-                      userId: that.id
-                    }, function(err, rss) {
-                      done(err, rss.url);
-                    });
-                  }, function(err, res) {
-                    db.sadd(mkKey([userK, that.id, rssK]), res, function(err, res) {
-                      done(err, res);
+                  that.removeRSS(function() {
+                    async.map(params.rss, function(url, done) {
+                      models.RSS.addUserOrCreate({
+                        url: url,
+                        userId: that.id
+                      }, function(err, rss) {
+                        done(err, rss.url);
+                      });
+                    }, function(err, res) {
+                      db.sadd(mkKey([userK, that.id, rssK]), res, function(err, res) {
+                        done(err, res);
+                      });
                     });
                   });
                 },

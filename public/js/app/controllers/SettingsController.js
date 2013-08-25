@@ -1,10 +1,18 @@
 define(["app/app"], function(App) {
   App.SettingsController = Ember.ObjectController.extend({
+    needs: "rss",
+
+    addUrl: function() {
+      console.log("okl");
+      this.get("rss").addObject({url: ""});
+    },
+
     save: function() {
       var that = this;
       var params = {
         screenName: this.get("info.screenName"),
         email: this.get("info.email"),
+        rss: this.get("deobjectizedRSS"),
         receiveEmails: this.get("info.receiveEmails")
       };
 

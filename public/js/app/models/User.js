@@ -8,6 +8,31 @@ define(["app/app"], function(App) {
     admins: [],
     type: null,
 
+    deobjectizedRSS: function() {
+      return this.get("rss").map(function(e) {
+        return e.url;
+      });
+    }.property("rss"),
+
+    transformRSS: function() {
+      var transformed = [];
+      var isAlreadyTransformed = true;
+
+      this.get("rss").forEach(function(url) {
+        if (url.url) {
+          isAlreadyTransformed = isAlreadyTransformed && true;
+          transformed.push(url);
+        } else {
+          isAlreadyTransformed = false;
+          transformed.push({url: url});
+        }
+      });
+
+      if (!isAlreadyTransformed) {
+        this.set("rss", transformed);
+      }
+    }.observes("rss"),
+
     subscriptionsLength: function() {
       if (!this.statistics || !this.statistics.subscriptions || this.statistics.subscriptions <= 0)
         return null

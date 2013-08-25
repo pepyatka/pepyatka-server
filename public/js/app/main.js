@@ -54,6 +54,7 @@ define([
   "controllers/SubscribersController",
   "controllers/TagsController",
   "controllers/TimelineController",
+  "controllers/RssController",
   "app/router"
 ], function(globals, App) {
   return App;
