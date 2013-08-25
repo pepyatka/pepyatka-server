@@ -3,9 +3,9 @@
 var async = require('async');
 var uuid = require("node-uuid");
 var models = require("../models");
+var mkKey = require("../support/models").mkKey;
 var _ = require("underscore");
 
-var sep = ":";
 var rssK = "rss";
 var rssIdK = "id";
 var rssUsersK = "users";
@@ -13,12 +13,6 @@ var guidsK = "guids";
 var rssIds = "rss_ids";
 var urlK = "url";
 var usersK = "users";
-
-var mkKey = function(elms) {
-  return _.reduce(elms, function(acc, x) {
-    return acc + sep + x;
-  });
-};
 
 exports.addModel = function(db) {
   var RSS = function(params) {

@@ -2,16 +2,11 @@ var uuid = require('node-uuid')
   , models = require('../models')
   , async = require('async')
   , crypto = require('crypto')
+  , mkKey = require("../support/models").mkKey
   , _ = require("underscore");
 
-var sep = ":";
 var userK = "user";
 var rssK = "rss";
-var mkKey = function(keys) {
-  return _.reduce(keys, function(acc, x) {
-    return acc + sep + x;
-  });
-};
 
 exports.addModel = function(db) {
   var statisticsSerializer = {
