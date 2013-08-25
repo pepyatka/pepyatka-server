@@ -3,7 +3,6 @@ define(["app/app"], function(App) {
     needs: "rss",
 
     addUrl: function() {
-      console.log("okl");
       this.get("rss").addObject({url: ""});
     },
 

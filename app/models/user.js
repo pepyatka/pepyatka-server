@@ -230,7 +230,7 @@ exports.addModel = function(db) {
               if (err) {
                 done(err);
               } else {
-               rss.removeUser(user.id, function(err, res) {
+                rss.removeUser(user.id, function(err, res) {
                   done(err);
                 });
               }
@@ -255,19 +255,23 @@ exports.addModel = function(db) {
             if (res !== 0) {
               async.parallel([
                 function(done) {
-                  that.removeRSS(function() {
-                    async.map(params.rss, function(url, done) {
-                      models.RSS.addUserOrCreate({
-                        url: url,
-                        userId: that.id
-                      }, function(err, rss) {
-                        done(err, rss.url);
+                  that.removeRSS(function(err, res) {
+                    if (params.rss && params.rss.length != 0) {
+                      async.map(params.rss, function(url, done) {
+                        models.RSS.addUserOrCreate({
+                          url: url,
+                          userId: that.id
+                        }, function(err, rss) {
+                          done(err, rss.url);
+                        });
+                      }, function(err, res) {
+                        db.sadd(mkKey([userK, that.id, rssK]), res, function(err, res) {
+                          done(err, res);
+                        });
                       });
-                    }, function(err, res) {
-                      db.sadd(mkKey([userK, that.id, rssK]), res, function(err, res) {
-                        done(err, res);
-                      });
-                    });
+                    } else {
+                      done(err, res);
+                    }
                   });
                 },
                 function(done) {

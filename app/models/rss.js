@@ -32,44 +32,54 @@ exports.addModel = function(db) {
       db.sadd(mkKey([rssK, this.id, rssUsersK]), user, f);
     },
 
+    saveBaseAttrs: function(f) {
+      db.hmset(mkKey([rssK, this.id]), {
+        "url": this.url,
+        "createdAt": this.createdAt.toString(),
+        "updatedAt": this.updatedAt.toString()
+      }, f);
+    },
+
+    addLookupId: function(f) {
+      db.sadd(rssIds, this.id, f);
+    },
+
+    addLookupUrl: function(f) {
+      db.hset(mkKey([rssK, this.url]), rssIdK, this.id, f);
+    },
+
     create: function(f) {
-      var that = this;
-      that.createdAt = new Date().getTime();
-      that.updatedAt = new Date().getTime();
-      that.id = uuid.v4();
+      var rss = this;
+      var callback = function(done) {
+        return function(err, res) {
+          done(err, res);
+        };
+      };
+
+      rss.createdAt = new Date().getTime();
+      rss.updatedAt = new Date().getTime();
+      rss.id = uuid.v4();
 
       var setBaseAttrs = function(done) {
-        db.hmset(mkKey([rssK, that.id]), {
-          "url": that.url,
-          "createdAt": that.createdAt.toString(),
-          "updatedAt": that.updatedAt.toString()
-        }, function(err, res) {
-          done(err, res);
-        });
+        rss.saveBaseAttrs(callback(done));
       };
 
       var addToRssIds = function(done) {
-        db.sadd(rssIds, that.id, function(err, res) {
-          done(err, res);
-        });
+        rss.addLookupId(callback(done));
       };
 
       var addUrlLookup = function(done) {
-        db.hset(mkKey([rssK, that.url]), rssIdK, that.id, function(err, res) {
-          done(err, res);
-        });
+        rss.addLookupUrl(callback(done));
       };
 
       var setUser = function(done) {
-        that.addUser(that.userId, function(err, res) {
-          done(err, res);
-        });
+        rss.addUser(rss.userId, callback(done));
       };
 
       var jobs = [setBaseAttrs, setUser, addToRssIds, addUrlLookup];
 
       async.parallel(jobs, function(err, res) {
-        f(err, that);
+        f(err, rss);
       });
     },
 
@@ -91,8 +101,78 @@ exports.addModel = function(db) {
       });
     },
 
+    delAllGUIDs: function(f) {
+      db.del(mkKey([rssK, this.id, guidsK]), f);
+    },
+
+    delAllUsers: function(f) {
+      db.del(mkKey([rssK, this.id, usersK]), f);
+    },
+
+    delSelf: function(f) {
+      db.del(mkKey([rssK, this.id]), f);
+    },
+
+    delLookupId: function(f) {
+      db.srem(rssIds, this.id, f);
+    },
+
+    delLookupUrl: function(f) {
+      db.del(mkKey([rssK, this.url]), f);
+    },
+
+    destroy: function(f) {
+      var rss = this;
+      var callback = function(done) {
+        return function(err, res) {
+          done(err, res);
+        };
+      };
+
+      var delGUIDs = function(done) {
+        rss.delAllGUIDs(callback(done));
+      };
+
+      var delUsers = function(done) {
+        rss.delAllUsers(callback(done));
+      };
+
+      var delSelf = function(done) {
+        rss.delSelf(callback(done));
+      };
+
+      var delLookupId = function(done) {
+        rss.delLookupId(callback(done));
+      };
+
+      var delLookupUrl = function(done) {
+        rss.delLookupUrl(callback(done));
+      };
+
+      var jobs = [delGUIDs, delUsers, delSelf, delLookupId, delLookupUrl];
+
+      async.parallel(jobs, function(err, res) {
+        f(err, res);
+      });
+    },
+
     removeUser: function(id, f) {
-      db.srem(mkKey([rssK, this.id, usersK]), id, f);
+      var key = mkKey([rssK, this.id, usersK]);
+      var rss = this;
+
+      db.srem(key, id, function() {
+        db.smembers(key, function(err, res) {
+          if (err) {
+            f(err, res);
+          } else if (res.length == 0) {
+            rss.destroy(function() {
+              f(err, res);
+            });
+          } else {
+            f(err, res);
+          }
+        });
+      });
     }
   };
 
