@@ -9,4 +9,5 @@ exports.Timeline    = require('./models/timeline').addModel(db);
 exports.Attachment  = require('./models/attachment').addModel(db);
 exports.Tag         = require('./models/tag').addModel(db);
 exports.Stats       = require('./models/stats').addModel(db);
+exports.RSS         = require('./models/rss').addModel(db);
 exports.FeedFactory = require('./models/feed-factory').addModel(db);

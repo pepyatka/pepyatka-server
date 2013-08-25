@@ -20,7 +20,7 @@ app.configure('test', function(){
 
 var selectDb = function(callback) {
   db.select(app.get('redisdb'), function(err, res) {
-    callback(err, res)
+    callback(err, res, db)
   })
 }
 

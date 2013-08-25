@@ -29,7 +29,7 @@ exports.addRoutes = function(app) {
   }
 
   var userSerializer = {
-    select: ['id', 'username', 'admins', 'type', 'info'],
+    select: ['id', 'username', 'admins', 'type', 'info', "rss"],
     info: { select: ['screenName'] }
   }
 
@@ -163,7 +163,9 @@ exports.addRoutes = function(app) {
       var params = req.param('params')
       var attrs = { screenName: params.screenName,
                     receiveEmails: params.receiveEmails,
-                    email: params.email }
+                    email: params.email,
+                    rss: params.rss
+                  }
       user.update(attrs, function(err, user) {
         if (err)
           return res.jsonp({}, 422)

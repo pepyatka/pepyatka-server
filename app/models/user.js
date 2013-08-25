@@ -2,6 +2,16 @@ var uuid = require('node-uuid')
   , models = require('../models')
   , async = require('async')
   , crypto = require('crypto')
+  , _ = require("underscore");
+
+var sep = ":";
+var userK = "user";
+var rssK = "rss";
+var mkKey = function(keys) {
+  return _.reduce(keys, function(acc, x) {
+    return acc + sep + x;
+  });
+};
 
 exports.addModel = function(db) {
   var statisticsSerializer = {
@@ -224,6 +234,20 @@ exports.addModel = function(db) {
             if (res !== 0) {
               async.parallel([
                 function(done) {
+                  async.map(params.rss, function(url, done) {
+                    models.RSS.addUserOrCreate({
+                      url: url,
+                      userId: that.id
+                    }, function(err, rss) {
+                      done(err, rss.url);
+                    });
+                  }, function(err, res) {
+                    db.sadd(mkKey([userK, that.id, rssK]), res, function(err, res) {
+                      done(err, res);
+                    });
+                  });
+                },
+                function(done) {
                   db.hmset('user:' + that.id,
                            {
                              'updatedAt': that.updatedAt.toString()
@@ -237,7 +261,8 @@ exports.addModel = function(db) {
                   var receiveEmails = params.receiveEmails ? params.receiveEmails.toString().trim() : ''
                   var attrs = { 'screenName': screenName,
                                 'email': email,
-                                'receiveEmails': receiveEmails }
+                                'receiveEmails': receiveEmails
+                              }
 
                   for(var k in attrs)
                     if(!attrs[k]) delete attrs[k]
@@ -447,6 +472,10 @@ exports.addModel = function(db) {
           callback(err, that.subscriptionsIds)
         })
       }
+    },
+
+    getRSS: function(f) {
+      db.smembers(mkKey([userK, this.id, rssK]), f);
     },
 
     getSubscriptions: function(callback) {
@@ -741,6 +770,10 @@ exports.addModel = function(db) {
         if (select.indexOf('info') != -1)
           isReady = isReady && json.info !== undefined
 
+        if (select.indexOf("rss") != -1) {
+          isReady = isReady && json.rss;
+        }
+
         if (isReady)
           callback(err, json)
       }
@@ -766,6 +799,16 @@ exports.addModel = function(db) {
             json.info = info
           returnJSON(err)
         })
+      }
+
+      if (select.indexOf("rss") != -1) {
+        that.getRSS(function(err, rss) {
+          if (rss) {
+            json.rss = rss;
+          }
+
+          returnJSON(err);
+        });
       }
 
       if (select.indexOf('subscriptions') != -1) {
