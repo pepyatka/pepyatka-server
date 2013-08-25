@@ -3,6 +3,7 @@ define([
   "app/app",
   "app/helpers/Components",
   "app/helpers/Handlebars",
+  "app/helpers/Profile",
   "app/models/Comment",
   "app/models/Group",
   "app/models/Post",
