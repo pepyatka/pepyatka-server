@@ -323,3 +323,6 @@ footer {
   float: left;
 }
 
+.form-horizontal .control-group.rss input, .form-horizontal .control-group.rss button {
+  margin-bottom: 5px;
+}

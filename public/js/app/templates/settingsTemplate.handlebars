@@ -17,6 +17,16 @@
     </div>
 
     <div class="control-group">
+      <label class="control-label" for="receive">{{t label.sendEmails}}</label>
+      <div class="controls">
+        {{view Ember.Select contentBinding="view.receiveEmailsContent"
+              valueBinding="info.receiveEmails" name="receiveEmails"
+              id="receiveEmails"
+              optionValuePath="content.id" optionLabelPath="content.name"}}
+      </div>
+    </div>
+
+    <div class="control-group rss">
       <label class="control-label" for="rss">RSS</label>
       <div class="controls">
         {{#each rss itemController="rss"}}
@@ -25,17 +35,6 @@
         <br />
         {{/each}}
         <button {{action addUrl}} class="btn">Add url</button>
-      </div>
-    </div>
-
-
-    <div class="control-group">
-      <label class="control-label" for="receive">{{t label.sendEmails}}</label>
-      <div class="controls">
-        {{view Ember.Select contentBinding="view.receiveEmailsContent"
-              valueBinding="info.receiveEmails" name="receiveEmails"
-              id="receiveEmails"
-              optionValuePath="content.id" optionLabelPath="content.name"}}
       </div>
     </div>
 
