@@ -6,5 +6,7 @@
     baseUrl: "/js"
   });
 
-  require(['common', 'main'], function () {});
+  require(['common'], function () {
+    require(['main'])
+  });
 </script>
