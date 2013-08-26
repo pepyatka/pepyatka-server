@@ -40,7 +40,10 @@ define(["app/app"], function(App) {
         data.append('file-'+i, file);
       });
 
-      var view = attrs.get('_parentView.sendTo')
+      var view = attrs.get('_parentView._childViews').find(function(e) {
+        if (e.viewName === 'sendTo')
+          return e
+      })
       if (view) {
         var timelinesIds = view.$("#sendToSelect").select2("val")
         for(var i = 0; i < timelinesIds.length; i++) {
