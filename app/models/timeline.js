@@ -67,6 +67,8 @@ exports.addModel = function(db) {
     var currentTime = new Date().getTime()
 
     models.Post.findById(postId, function(err, post) {
+      // TODO: review this hack
+      post.timelineIds = _.union(post.timelineIds, additionalTimelines)
       post.getSubscribedTimelinesIds(function(err, timelinesIds) {
         // we add everyoneTimelineId to timelineIds, and newPost will
         // be in everyone timeline as well
@@ -75,7 +77,7 @@ exports.addModel = function(db) {
 
           var pub = redis.createClient();
 
-          async.forEach(_.union(timelinesIds, additionalTimelines), function(timelineId, callback) {
+          async.forEach(timelinesIds, function(timelineId, callback) {
             db.zadd('timeline:' + timelineId + ':posts', currentTime, postId, function(err, res) {
               db.hset('post:' + postId, 'updatedAt', currentTime, function(err, res) {
                 db.sadd('post:' + postId + ':timelines', timelineId, function(err, res) {

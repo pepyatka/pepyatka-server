@@ -411,7 +411,7 @@ exports.addModel = function(db) {
 
       // TODO: double check if we need function here method
       this.getTimelinesIds(function(err, timelinesIds) {
-        timelinesIds.push(that.timelineId)
+        timelinesIds = timelinesIds.concat(that.timelineIds)
         models.User.findById(that.userId, function(err, user) {
           user.getRiverOfNewsId(function(err, timelineId) {
             timelinesIds.push(timelineId)
@@ -577,6 +577,7 @@ exports.addModel = function(db) {
           var postBody = (that.body.slice(0, 8192) || "").toString().trim()
           db.hmset('post:' + that.id,
                    { 'body': postBody,
+                     // TODO: this is a legacy param
                      'timelineId': that.timelineIds[0] ? that.timelineIds[0].toString() : null,
                      'userId': that.userId.toString(),
                      'createdAt': that.createdAt.toString(),
