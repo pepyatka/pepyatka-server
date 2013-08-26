@@ -53,7 +53,9 @@ exports.addModel = function(db) {
       if (res == 1) {
         db.hsetnx('user:' + userId, 'username', 'anonymous', function(err, res) {
           db.hsetnx('user:' + userId, 'type', 'user', function(err, res) {
-            returnAnon()
+            db.hsetnx('user:' + userId + ':info', 'screenName', 'anonymous', function(err, res) {
+              returnAnon()
+            })
           })
         })
       } else {
