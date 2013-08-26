@@ -31,42 +31,7 @@ define(["app/app"], function(App) {
       if (!isAlreadyTransformed) {
         this.set("rss", transformed);
       }
-    }.observes("rss"),
-
-    subscriptionsLength: function() {
-      if (!this.statistics || !this.statistics.subscriptions || this.statistics.subscriptions <= 0)
-        return null
-
-      return this.statistics.subscriptions
-    }.property(),
-
-    subscribersLength: function() {
-      if (!this.statistics || !this.statistics.subscribers || this.statistics.subscribers <= 0)
-        return null
-
-      return this.statistics.subscribers
-    }.property(),
-
-    postsLength: function() {
-      if (!this.statistics || !this.statistics.posts || this.statistics.posts <= 0)
-        return null
-
-      return this.statistics.posts
-    }.property(),
-
-    commentsLength: function() {
-      if (!this.statistics || !this.statistics.discussions || this.statistics.discussions <= 0)
-        return null
-
-      return this.statistics.discussions
-    }.property(),
-
-    likesLength: function() {
-      if (!this.statistics || !this.statistics.likes || this.statistics.likes <= 0)
-        return null
-
-      return this.statistics.likes
-    }.property()
+    }.observes("rss")
   })
 
   App.User.reopenClass({

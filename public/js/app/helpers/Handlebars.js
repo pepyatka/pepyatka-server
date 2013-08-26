@@ -45,4 +45,12 @@ define(["app/app", "ember"], function(App, Ember) {
 
     return new Handlebars.SafeString(text.html())
   })
+
+  Ember.Handlebars.registerBoundHelper('ifpositive', function(property, options) {
+    var context = (options.contexts && options.contexts[0]) || this;
+    var val = Ember.get(context, property)
+    if (val > 0)
+      return options.fn(this);
+    return options.inverse(this);
+  })
 });

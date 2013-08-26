@@ -35,6 +35,59 @@ define(["app/app",
 
     ownProfile: function() {
       return this.get("controller.user.id") == App.properties.userId;
-    }.property("App.properties.userId", "controller.user.id")
+    }.property("App.properties.userId", "controller.user.id"),
+
+    // these Length method are workaround until Ember get support of
+    // bound helpers with block so we can use something like this:
+    // {{#ifpositive content.user.statistics.subscriptions}}
+    subscriptionsLength: function() {
+      var controller = this.get('controller')
+      var val = controller.get('content.user.statistics.subscriptions')
+
+      if (val && val > 0)
+        return val
+
+      return null
+    }.property('controller.user.statistics.subscriptions'),
+
+    subscribersLength: function() {
+      var controller = this.get('controller')
+      var val = controller.get('content.user.statistics.subscribers')
+
+      if (val && val > 0)
+        return val
+
+      return null
+    }.property('controller.user.statistics.subscribers'),
+
+    postsLength: function() {
+      var controller = this.get('controller')
+      var val = controller.get('content.user.statistics.posts')
+
+      if (val && val > 0)
+        return val
+
+      return null
+    }.property('controller.user.statistics.posts'),
+
+    commentsLength: function() {
+      var controller = this.get('controller')
+      var val = controller.get('content.user.statistics.comments')
+
+      if (val && val > 0)
+        return val
+
+      return null
+    }.property('controller.user.statistics.comments'),
+
+    likesLength: function() {
+      var controller = this.get('controller')
+      var val = controller.get('content.user.statistics.likes')
+
+      if (val && val > 0)
+        return val
+
+      return null
+    }.property('controller.user.statistics.likes')
   })
 });
