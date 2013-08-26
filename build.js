@@ -384,8 +384,13 @@
     //of its dependencies includes i18n bundles, they may not be included in the
     //built file unless the locale: section is set above.
     {
+      name: 'common',
+      include: ["socketio", "app/app"]
+    },
+    {
       name: 'main',
-      include: ["app/app", "app/main"]
+      include: ["app/main"],
+      exclude: ["common"]
     }
 
     // {

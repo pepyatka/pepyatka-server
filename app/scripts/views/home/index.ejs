@@ -1,3 +1,10 @@
 <% layout('../../layouts/ember.ejs') -%>
 
-<script data-main="/js/main" src="/js/libs/requirejs/2.1.8/require.js"></script>
+<script src="/js/libs/requirejs/2.1.8/require.js"></script>
+<script type="text/javascript">
+  require.config({
+    baseUrl: "/js"
+  });
+
+  require(['common', 'main'], function () {});
+</script>

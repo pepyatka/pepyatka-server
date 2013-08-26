@@ -150,6 +150,19 @@ engine will return posts that contain 'that' in post's body and 'this'
 in post's or comment's body, also it will return posts that contain
 'comment' in comment's body and written by user 'user'.
 
+Assets
+------
+
+This application uses AMD/RequireJS to separate files to controllers,
+routers, models and templates. To bundle all of them into a single
+bundle you need to install RequireJS in your system and then run: r.js
+-o build.js.
+
+For any additional options feel free to look into build.js file. By
+default it generates two files: common.js which includes all libraries
+like emberjs, handlebars, etc and main.js which is custom pepyatka
+application.
+
 NTLM support
 ------------
 
