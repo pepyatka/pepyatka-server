@@ -220,28 +220,33 @@ exports.addModel = function(db) {
       })
     },
 
-    removeRSS: function(f) {
+    cleanRSS: function(nrss, f) {
       var user = this;
 
       this.getRSS(function(err, rss) {
         if (err) {
           f(err);
         } else {
-          async.forEach(rss, function(url, done) {
-            models.RSS.findByUrl(url, function(err, rss) {
-              if (err) {
-                done(err);
-              } else {
-                rss.removeUser(user.id, function(err, res) {
+          var diff = _.difference(rss, nrss);
+          if (diff.length != 0) {
+            async.forEach(diff, function(url, done) {
+              models.RSS.findByUrl(url, function(err, rss) {
+                if (err) {
                   done(err);
-                });
-              }
+                } else {
+                  rss.removeUser(user.id, function(err, res) {
+                    done(err);
+                  });
+                }
+              });
+            }, function(err) {
+              db.del(mkKey([userK, user.id, rssK]), function(err, res) {
+                f(err);
+              });
             });
-          }, function(err) {
-            db.del(mkKey([userK, user.id, rssK]), function(err, res) {
-              f(err);
-            });
-          });
+          } else {
+            f(false, null);
+          }
         }
       });
     },
@@ -257,19 +262,27 @@ exports.addModel = function(db) {
             if (res !== 0) {
               async.parallel([
                 function(done) {
-                  that.removeRSS(function(err, res) {
-                    if (params.rss && params.rss.length != 0) {
+                  that.cleanRSS(params.rss, function(err, res) {
+                    if (params.rss) {
                       async.map(params.rss, function(url, done) {
                         models.RSS.addUserOrCreate({
                           url: url,
                           userId: that.id
                         }, function(err, rss) {
-                          done(err, rss.url);
+                          if (!err && rss) {
+                            done(err, rss.url);
+                          } else {
+                            done(err, null);
+                          }
                         });
                       }, function(err, res) {
-                        db.sadd(mkKey([userK, that.id, rssK]), res, function(err, res) {
-                          done(err, res);
-                        });
+                        if (!err && res) {
+                          db.sadd(mkKey([userK, that.id, rssK]), res, function(err, res) {
+                            done(err, res);
+                          });
+                        } else {
+                          done(err, null);
+                        }
                       });
                     } else {
                       done(err, res);

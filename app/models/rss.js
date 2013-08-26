@@ -5,6 +5,7 @@ var uuid = require("node-uuid");
 var models = require("../models");
 var mkKey = require("../support/models").mkKey;
 var _ = require("underscore");
+var check = require('validator').check;
 
 var rssK = "rss";
 var rssIdK = "id";
@@ -16,6 +17,14 @@ var usersK = "users";
 
 var normalizeUrl = function(url) {
   return _.without(url, " ").join("");
+};
+
+var isValid = function(rss) {
+  try {
+    return check(rss.url).isUrl();
+  } catch (e) {
+    return false;
+  }
 };
 
 exports.addModel = function(db) {
@@ -49,6 +58,11 @@ exports.addModel = function(db) {
     },
 
     create: function(f) {
+      if (!isValid(this)) {
+        f(true, null);
+        return;
+      }
+
       var rss = this;
       var callback = function(done) {
         return function(err, res) {
