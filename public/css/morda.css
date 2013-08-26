@@ -1,4 +1,4 @@
-a, a:hover {
+a, a:hover, a:focus {
   cursor: pointer;
   color: #000088;
 }
