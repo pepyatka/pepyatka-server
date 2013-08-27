@@ -13,8 +13,8 @@ define(["app/app"], function(App) {
     }.property('showAllComments', 'comments'),
 
     postOwner: function() {
-      return this.get('createdBy').id == App.properties.userId &&
-        this.get('createdBy').username != 'anonymous'
+      return this.get('createdBy.id') === App.properties.userId &&
+        this.get('createdBy.username') !== 'anonymous'
     }.property('createdBy'),
 
     currentUserLiked: function() {
@@ -24,14 +24,12 @@ define(["app/app"], function(App) {
       // anything from the server yet. Ideally we have to wait for this
       if (!likes) return;
 
-      var found = false
       likes.forEach(function(like) {
-        if (like.id == App.properties.userId) {
-          found = true
-          return found;
+        if (like.id === App.properties.userId) {
+          return true;
         }
       })
-      return found
+      return false
     }.property('likes', 'likes.@each'),
 
     anyLikes: function() {
@@ -62,8 +60,8 @@ define(["app/app"], function(App) {
 
     skippedCommentsLength: function() {
       // display first and last comments only
-      return this.get('comments.content').length-2
-    }.property('comments.content', 'comments.content.@each'),
+      return this.get('comments.content').length - 2
+    }.property('comments.content.@each'),
 
     firstThumbnailSrc: function() {
       if (this.get('attachments') && this.get('attachments')[0]) {

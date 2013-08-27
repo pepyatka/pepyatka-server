@@ -13,10 +13,11 @@ define(["app/app",
     firstTwoGroups: function() {
       var groups = this.get("controller.content.groups");
       var post   = this.get("controller.content");
+      var author = post.get("createdBy.username");
 
       if (groups && groups.length === 1) {
         return groups.filter(function(e) {
-          return e.username != post.get("createdBy.username");
+          return e.username !== author;
         });
       }
 
@@ -26,9 +27,10 @@ define(["app/app",
     myFeedOnly: function() {
       var groups = this.get("controller.content.groups");
       var post   = this.get("controller.content");
+      var author = post.get("createdBy.username");
 
       return groups.length === 1 &&
-        groups[0].username == post.get("createdBy.username");
+        groups[0].username === author;
     }.property("controller.content.groups"),
 
     toOrColon: function() {
@@ -51,7 +53,6 @@ define(["app/app",
       this.$().hide().slideDown('slow');
     },
 
-    // FIXME: this leads to an emberjs error: "action is undefined"
     willDestroyElement: function() {
       if (this.$()) {
         var clone = this.$().clone();
