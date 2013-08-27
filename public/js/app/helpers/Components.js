@@ -19,7 +19,13 @@ define(["app/app",
   })
 
   App.Properties = Ember.Object.extend({
-    isAuthorized: false,
+    isAuthorized: function() {
+      if (!this.username || this.username === 'anonymous')
+        return false
+
+      return true
+    }.property(),
+
     username: null,
     userId: null,
     screenName: null,
