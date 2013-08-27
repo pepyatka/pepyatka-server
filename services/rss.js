@@ -6,15 +6,18 @@ var fastFeed = require("fast-feed");
 var models = require("../app/models");
 var RSS = models.RSS;
 
-var source = "http://news.yahoo.com/rss/world";
-
 var parseUrl = function(url, f) {
   request(url, function(err, resp, feed) {
     try {
-      f(fastFeed.parse(feed));
+      f(false, fastFeed.parse(feed));
     } catch(e) {
-      console.log("ERROR");
-      console.log(feed);
+      f(true, null);
+      console.log("REQUEST ERROR:");
+      console.log(err);
+      console.log("FASTFEED ERROR:");
+      console.log(e);
+      console.log("RESPONSE:");
+      console.log(resp);
     }
   });
 };
@@ -40,7 +43,12 @@ var postUpdates = function(rss, updates, formatter, f) {
 
 var _fetchUpdates = function(rss, formatter, f) {
   rss.getGUIDs(function(guids) {
-    parseUrl(rss.url, function(feed) {
+    parseUrl(rss.url, function(error, feed) {
+      if (error) {
+        f();
+        return;
+      }
+
       var items = feed.items;
       var feedGUIDs = _.map(items, function(e) {
         return e.id;
