@@ -12,7 +12,7 @@ define(["app/app"], function(App) {
       return this.get("rss").map(function(e) {
         return e.url;
       });
-    }.property("rss"),
+    }.property("rss.length"),
 
     transformRSS: function() {
       var transformed = [];
