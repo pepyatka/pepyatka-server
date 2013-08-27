@@ -22,17 +22,13 @@ var parseUrl = function(url, f) {
   });
 };
 
-var postUpdates = function(rss, updates, formatter, f) {
+var postUpdates = function(rss, updates, poster, f) {
   rss.getUsers(function(users) {
     users.forEach(function(user) {
       models.User.findById(user, function(err, user) {
 
         updates.forEach(function(article) {
-          user.newPost({
-            body: formatter(article.description)
-          }, function(err, post) {
-            post.create(function() {});
-          });
+          poster(user, article);
         });
 
       });
@@ -41,7 +37,7 @@ var postUpdates = function(rss, updates, formatter, f) {
   });
 };
 
-var _fetchUpdates = function(rss, formatter, f) {
+var _fetchUpdates = function(rss, poster, f) {
   rss.getGUIDs(function(guids) {
     parseUrl(rss.url, function(error, feed) {
       if (error) {
@@ -71,7 +67,7 @@ var _fetchUpdates = function(rss, formatter, f) {
             f();
             return;
           }
-          postUpdates(rss, newItems, formatter, f);
+          postUpdates(rss, newItems, poster, f);
         });
       }
     });
@@ -79,13 +75,17 @@ var _fetchUpdates = function(rss, formatter, f) {
 };
 
 var fetchUpdates = function(options, f) {
-  var formatter = options.formatter || function(text) {
-    return text.replace(/(<([^>]+)>)|(&.+;)/ig, "");
+  var poster = options.poster || function(user, article) {
+    user.newPost({
+      body: article.description.replace(/(<([^>]+)>)|(&.+;)/ig, "")
+    }, function(err, post) {
+      post.create(function() {});
+    });
   };
 
   var callback = function(err, rss) {
     if (!err && rss.url) {
-      _fetchUpdates(rss, formatter, f);
+      _fetchUpdates(rss, poster, f);
     }
   };
 
