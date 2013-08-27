@@ -67,6 +67,10 @@ var _fetchUpdates = function(rss, formatter, f) {
         f();
       } else {
         rss.addGUIDs(newGUIDs, function() {
+          if (guids.length == 0) {
+            f();
+            return;
+          }
           postUpdates(rss, newItems, formatter, f);
         });
       }
