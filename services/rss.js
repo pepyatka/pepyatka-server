@@ -22,13 +22,13 @@ var parseUrl = function(url, f) {
   });
 };
 
-var postUpdates = function(rss, updates, poster, f) {
+var postUpdates = function(rss, updates, poster, formatter, f) {
   rss.getUsers(function(users) {
     users.forEach(function(user) {
       models.User.findById(user, function(err, user) {
 
         updates.forEach(function(article) {
-          poster(user, rss, article);
+          poster(user, rss, article, formatter);
         });
 
       });
@@ -37,7 +37,7 @@ var postUpdates = function(rss, updates, poster, f) {
   });
 };
 
-var _fetchUpdates = function(rss, poster, f) {
+var _fetchUpdates = function(rss, poster, formatter, f) {
   rss.getGUIDs(function(guids) {
     parseUrl(rss.url, function(error, feed) {
       if (error) {
@@ -67,29 +67,53 @@ var _fetchUpdates = function(rss, poster, f) {
             f();
             return;
           }
-          postUpdates(rss, newItems, poster, f);
+          postUpdates(rss, newItems, poster, formatter, f);
         });
       }
     });
   });
 };
 
-var fetchUpdates = function(options, f) {
-  var poster = options.poster || function(user, rss, article) {
-    user.newPost({
-      body: article.description.replace(/(<([^>]+)>)|(&.+;)/ig, ""),
-      source: {
-        type: "rss",
-        id: rss.id
-      }
-    }, function(err, post) {
-      post.create(function() {});
-    });
+var doTo = function(obj, fns) {
+  return _.reduce(fns, function(acc, f) {
+    return f(acc);
+  }, obj);
+};
+
+var defaultFormatter = function(article) {
+  var removeHTML = function(article) {
+    article.description = article.description.replace(/(<([^>]+)>)|(&.+;)/ig, "");
+    return article;
   };
+
+  var addURL = function(article) {
+    article.description = article.description + " - " + article.link;
+
+    return article;
+  };
+
+  return doTo(article, [removeHTML, addURL]).description;
+};
+
+var defaultPoster = function(user, rss, article, formatter) {
+  user.newPost({
+    body: formatter(article),
+    source: {
+      type: "rss",
+      id: rss.id
+    }
+  }, function(err, post) {
+    post.create(function() {});
+  });
+};
+
+var fetchUpdates = function(options, f) {
+  var formatter = options.formatter || defaultFormatter;
+  var poster = options.poster || defaultPoster;
 
   var callback = function(err, rss) {
     if (!err && rss.url) {
-      _fetchUpdates(rss, poster, f);
+      _fetchUpdates(rss, poster, formatter, f);
     }
   };
 
