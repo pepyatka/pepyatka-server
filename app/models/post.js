@@ -5,7 +5,11 @@ var uuid = require('node-uuid')
   , models = require('../models')
   , async = require('async')
   , redis = require('redis')
+  , mkKey = require("../support/models").mkKey
   , _ = require('underscore')
+
+var postK = "post";
+var sourceK = "source";
 
 exports.addModel = function(db) {
   function Post(params) {
@@ -14,6 +18,7 @@ exports.addModel = function(db) {
     this.userId = params.userId
     this.timelineIds = params.timelineIds;
     this.files = params.files
+    this.source = params.source;
 
     if (parseInt(params.createdAt, 10))
       this.createdAt = parseInt(params.createdAt, 10)
@@ -559,6 +564,19 @@ exports.addModel = function(db) {
       });
     },
 
+    saveSource: function(f) {
+      var post = this;
+
+      if (post.source) {
+        db.hmset(mkKey([postK, post.id, sourceK]), {
+          type: post.source.type,
+          sourceId: post.source.id
+        }, f);
+      } else {
+        f();
+      }
+    },
+
     create: function(callback) {
       var that = this
 
@@ -575,44 +593,55 @@ exports.addModel = function(db) {
             return callback(err, res)
 
           var postBody = (that.body.slice(0, 8192) || "").toString().trim()
-          db.hmset('post:' + that.id,
-                   { 'body': postBody,
-                     // TODO: this is a legacy param
-                     'timelineId': that.timelineIds[0] ? that.timelineIds[0].toString() : null,
-                     'userId': that.userId.toString(),
-                     'createdAt': that.createdAt.toString(),
-                     'updatedAt': that.updatedAt.toString()
-                   }, function(err, res) {
-                     that.saveAttachments(function(err, res) {
-                       models.Timeline.newPost(that.id,
-                                               that.timelineIds, function() {
-                         models.Tag.extract(postBody, function(err, result) {
-                           models.Tag.update(result, function(err) {
-                             models.Stats.findByUserId(that.userId, function(err, stats) {
-                               if (!stats) {
-                                 stats = new models.Stats({
-                                   userId: that.userId
-                                 })
-                                 stats.create(function(err, stats) {
-                                   stats.addPost(function(err, stats) {
-                                     // BUG: updatedAt is different now than we set few lines above
-                                     // XXX: we don't care (yet) if attachment wasn't saved
-                                     callback(null, that)
-                                   })
-                                 })
-                               } else {
-                                 stats.addPost(function(err, stats) {
-                                   // BUG: updatedAt is different now than we set few lines above
-                                   // XXX: we don't care (yet) if attachment wasn't saved
-                                   callback(null, that)
-                                 })
-                               }
-                             })
-                           })
-                         })
-                       })
-                     })
-                   })
+          async.parallel([
+            function(done) {
+              that.saveSource(function(err, res) {
+                done(err);
+              });
+            },
+            function(done) {
+              db.hmset('post:' + that.id,
+                       { 'body': postBody,
+                         // TODO: this is a legacy param
+                         'timelineId': that.timelineIds[0] ? that.timelineIds[0].toString() : null,
+                         'userId': that.userId.toString(),
+                         'createdAt': that.createdAt.toString(),
+                         'updatedAt': that.updatedAt.toString()
+                       }, function(err, res) {
+                         that.saveAttachments(function(err, res) {
+                           models.Timeline.newPost(that.id, that.timelineIds, function() {
+                             models.Tag.extract(postBody, function(err, result) {
+                               models.Tag.update(result, function(err) {
+                                 models.Stats.findByUserId(that.userId, function(err, stats) {
+                                   if (!stats) {
+                                     stats = new models.Stats({
+                                       userId: that.userId
+                                     });
+                                     stats.create(function(err, stats) {
+                                       stats.addPost(function(err, stats) {
+                                         // BUG: updatedAt is different now than we set few lines above
+                                         // XXX: we don't care (yet) if attachment wasn't saved
+                                         callback(null);
+                                       });
+                                     });
+                                   } else {
+                                     stats.addPost(function(err, stats) {
+                                       // BUG: updatedAt is different now than we set few lines above
+                                       // XXX: we don't care (yet) if attachment wasn't saved
+                                       done(null);
+                                     });
+                                   }
+                                 });
+                               });
+                             });
+                           });
+                         });
+                       });
+
+            }
+          ], function(err) {
+            callback(err, that);
+          });
         })
       })
   },

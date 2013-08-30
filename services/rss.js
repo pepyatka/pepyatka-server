@@ -28,7 +28,7 @@ var postUpdates = function(rss, updates, poster, f) {
       models.User.findById(user, function(err, user) {
 
         updates.forEach(function(article) {
-          poster(user, article);
+          poster(user, rss, article);
         });
 
       });
@@ -75,9 +75,13 @@ var _fetchUpdates = function(rss, poster, f) {
 };
 
 var fetchUpdates = function(options, f) {
-  var poster = options.poster || function(user, article) {
+  var poster = options.poster || function(user, rss, article) {
     user.newPost({
-      body: article.description.replace(/(<([^>]+)>)|(&.+;)/ig, "")
+      body: article.description.replace(/(<([^>]+)>)|(&.+;)/ig, ""),
+      source: {
+        type: "rss",
+        id: rss.id
+      }
     }, function(err, post) {
       post.create(function() {});
     });
