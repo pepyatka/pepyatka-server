@@ -28,6 +28,7 @@ Configuration
 - Run elasticsearch
 - Run server: node ./server.js
 - Run search daemon: node ./bin/search-daemon.js
+- Run rss daemon: node ./bin/search-daemon.js
 
 Roadmap
 -------
@@ -79,6 +80,13 @@ stats:subscripions { <userId>:<subscriptions> }
 tags:<userId> { <tag>:<score> } # implemented only for everyone, see below
 
 as special case there are tags: tags:everyone
+
+rss:<id>:users ( <userId> )
+rss:<id> { url, createdAt, updatedAt }
+rss_ids ( <rssId> ) # to be refactored to sorted set
+user:<userId>:rss ( <url> )
+rss:<url> { id } # to be refactored to string value
+
 ```
 
 API
