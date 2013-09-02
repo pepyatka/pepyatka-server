@@ -7,6 +7,16 @@ define(["app/app",
     isFormVisible: false,
     isEditFormVisible: false,
 
+    actions: {
+      editFormVisibility: function() {
+        this.toggleProperty('isEditFormVisible');
+      },
+
+      toggleVisibility: function() {
+        this.toggleProperty('isFormVisible');
+      }
+    },
+
     firstTwoGroups: function() {
       var groups = this.get("controller.content.groups");
       var post   = this.get("controller.content");
@@ -40,14 +50,6 @@ define(["app/app",
     colonOrBlank: function() {
       return this.get("controller.content.groups").length > 1;
     }.property("controller.content.groups"),
-
-    toggleVisibility: function() {
-      this.toggleProperty('isFormVisible');
-    },
-
-    editFormVisibility: function() {
-      this.toggleProperty('isEditFormVisible');
-    },
 
     postOwner: function() {
       return this.get("controller.content.createdBy") &&

@@ -6,14 +6,16 @@ define(["app/app",
 
     isLoaded: true,
 
+    actions: {
+      search: function(attrs) {
+        var query = encodeURIComponent(attrs.value)
+
+        this.transitionToRoute('search', query)
+      }
+    },
+
     currentPathDidChange: function() {
       App.properties.set('currentPath', this.get('currentPath'));
-    }.observes('currentPath'),
-
-    search: function(attrs) {
-      var query = encodeURIComponent(attrs.value)
-
-      this.transitionToRoute('search', query)
-    }
+    }.observes('currentPath')
   });
 });

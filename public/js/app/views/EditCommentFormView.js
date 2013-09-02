@@ -2,6 +2,14 @@ define(["app/app"], function(App) {
   App.EditCommentForm = Ember.View.extend({
     body: '',
 
+    actions: {
+      // XXX: this is a dup of App.PartialPostView.toggleVisibility()
+      // function. I just do not know how to access it from UI bindings
+      editFormVisibility: function() {
+        this.toggleProperty('parentView.isEditFormVisible');
+      }
+    },
+
     autoFocus: function () {
       if (this.get('parentView.isEditFormVisible') === true) {
         this.$().hide().show();
@@ -14,12 +22,6 @@ define(["app/app"], function(App) {
     // FIXME: autoFocus doesn't observe isEditFormVisible?
     didInsertElement: function() {
       this.autoFocus()
-    },
-
-    // XXX: this is a dup of App.PartialPostView.toggleVisibility()
-    // function. I just do not know how to access it from UI bindings
-    editFormVisibility: function() {
-      this.toggleProperty('parentView.isEditFormVisible');
     }
   });
 });

@@ -2,14 +2,16 @@ define(["app/app"], function(App) {
   App.CommentPostViewSubst = Ember.View.extend(Ember.TargetActionSupport, {
     classNameBindings: 'isVisible visible:invisible',
 
-    click: function() {
-      this.triggerAction();
+    actions: {
+      // XXX: this is a dup of App.PartialPostView.toggleVisibility()
+      // function. I just do not know how to access it from UI bindings
+      toggleVisibility: function() {
+        this.toggleProperty('parentView.isFormVisible');
+      }
     },
 
-    // XXX: this is a dup of App.PartialPostView.toggleVisibility()
-    // function. I just do not know how to access it from UI bindings
-    toggleVisibility: function() {
-      this.toggleProperty('parentView.isFormVisible');
+    click: function() {
+      this.triggerAction();
     },
 
     // this method does not observe post comments as a result it won't

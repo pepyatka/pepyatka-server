@@ -8,11 +8,13 @@ define(["app/app",
     enableSelect: false,
     isVisible: false,
 
-    toggleEditability: function() {
-      var value = !this.get('enableSelect')
-      this.set('enableSelect', value)
-      this.$("#sendToSelect").select2("enable", value)
-      this.$("#showHide").toggle()
+    actions: {
+      toggleEditability: function() {
+        var value = !this.get('enableSelect')
+        this.set('enableSelect', value)
+        this.$("#sendToSelect").select2("enable", value)
+        this.$("#showHide").toggle()
+      }
     },
 
     onVisible: function() {

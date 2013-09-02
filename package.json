@@ -31,6 +31,8 @@
     "fast-feed": "0.0.5",
     "coffee-resque": "0.1.9",
     "requirejs": "2.1.8",
-    "validator": "1.5.0"
+    "validator": "1.5.0",
+    "jsdom": "0.8.4",
+    "htmlparser": "1.7.6"
   }
 }

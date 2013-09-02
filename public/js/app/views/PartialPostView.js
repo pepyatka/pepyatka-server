@@ -10,6 +10,20 @@ define(["app/app",
     isFormVisible: false,
     isEditFormVisible: false,
 
+    actions: {
+      editFormVisibility: function() {
+        this.toggleProperty('isEditFormVisible');
+      },
+
+      toggleVisibility: function() {
+        this.toggleProperty('isFormVisible');
+      },
+
+      showAllComments: function() {
+        this.content.set('showAllComments', true)
+      }
+    },
+
     firstTwoGroups: function() {
       var groups = this.get("controller.content.groups");
       var post   = this.get("controller.content");
@@ -41,14 +55,6 @@ define(["app/app",
       return this.get("controller.content.groups").length > 1;
     }.property("controller.content.groups"),
 
-    toggleVisibility: function() {
-      this.toggleProperty('isFormVisible');
-    },
-
-    editFormVisibility: function() {
-      this.toggleProperty('isEditFormVisible');
-    },
-
     didInsertElement: function() {
       this.$().hide().slideDown('slow');
     },
@@ -59,10 +65,6 @@ define(["app/app",
         this.$().replaceWith(clone);
         clone.slideUp()
       }
-    },
-
-    showAllComments: function() {
-      this.content.set('showAllComments', true)
     }
   });
 });

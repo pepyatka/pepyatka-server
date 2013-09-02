@@ -18,19 +18,22 @@ define(["app/app"], function(App) {
     }.property('createdBy'),
 
     currentUserLiked: function() {
+      var like = false;
       var likes = this.get('likes')
 
       // XXX: we have just tried to render a view but have not recevied
       // anything from the server yet. Ideally we have to wait for this
       if (!likes) return;
 
+      // TODO: refactor to mapProperty
       likes.forEach(function(like) {
         if (like.id === App.properties.userId) {
+          like = true;
           return true;
         }
       })
-      return false
-    }.property('likes', 'likes.@each'),
+      return like;
+    }.property('likes', 'likes.@each.id', 'App.properties.userId'),
 
     anyLikes: function() {
       var likes = this.get('likes')

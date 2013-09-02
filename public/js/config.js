@@ -38,7 +38,7 @@ define({
     'jquery': 'libs/jquery/1.9.1/jquery',
     'bootstrap': 'libs/bootstrap/2.3.2/bootstrap.min',
     'handlebars': 'libs/handlebars/1.0.0/handlebars',
-    'ember': 'libs/ember/1.0.0-rc.7/ember',
+    'ember': 'libs/ember/1.0.0/ember',
     'ember-bootstrap': 'libs/ember-bootstrap/0.0.2/ember-bootstrap.min',
     'ember-i18n': 'libs/ember-i18n/1.3.2/ember-i18n',
     'moment': 'libs/moment/1.7.2/moment.min',

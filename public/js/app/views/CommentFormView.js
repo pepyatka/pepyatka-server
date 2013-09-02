@@ -5,6 +5,19 @@ define(["app/app"], function(App) {
     classNameBindings: 'isVisible visible:invisible',
     body: '',
 
+    actions: {
+      cancelComment: function() {
+        this.set('parentView.isFormVisible', false)
+        this.set('textField.body', '')
+      },
+
+      // XXX: this is a dup of App.PartialPostView.toggleVisibility()
+      // function. I just do not know how to access it from UI bindings
+      toggleVisibility: function() {
+        this.toggleProperty('parentView.isFormVisible');
+      }
+    },
+
     isVisible: function() {
       return this.get('parentView.isFormVisible') === true;
     }.property('parentView.isFormVisible'),
@@ -15,17 +28,6 @@ define(["app/app"], function(App) {
         this.$('textarea').focus();
         this.$('textarea').trigger('keyup') // to apply autogrow
       }
-    }.observes('parentView.isFormVisible'),
-
-    // XXX: this is a dup of App.PartialPostView.toggleVisibility()
-    // function. I just do not know how to access it from UI bindings
-    toggleVisibility: function() {
-      this.toggleProperty('parentView.isFormVisible');
-    },
-
-    cancelComment: function() {
-      this.set('parentView.isFormVisible', false)
-      this.set('textField.body', '')
-    }
+    }.observes('parentView.isFormVisible')
   });
 });

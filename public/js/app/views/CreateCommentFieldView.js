@@ -7,7 +7,7 @@ define(["app/app"], function(App) {
     viewName: 'textField',
 
     insertNewline: function() {
-      this.triggerAction();
+      App.CommentController.actions.submit(this, this.get('_parentView._context.content.id'))
 
       this.set('_parentView._parentView.isFormVisible', false)
       this.set('body', '')

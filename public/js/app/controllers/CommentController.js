@@ -1,29 +1,32 @@
 define(["app/app"], function(App) {
   App.CommentController = Ember.ObjectController.extend({
-    update: function(attrs) {
-      // FIXME: the only way to fetch context after insertNewLine action
-      if (attrs.constructor === App.EditCommentField)
-        attrs = { body: attrs.value }
+    actions: {
+      update: function(attrs) {
+        // FIXME: the only way to fetch context after insertNewLine action
+        if (attrs.constructor === App.EditCommentField)
+          attrs = { body: attrs.value }
 
-      var commentId = this.get('id')
+        var commentId = this.get('id')
 
-      App.Comment.update(commentId, attrs)
-    },
+        App.Comment.update(commentId, attrs)
+      },
 
-    kill: function(attrs) {
-      var commentId = this.get('id')
+      kill: function(attrs) {
+        var commentId = this.get('id')
 
-      App.Comment.kill(commentId)
+        App.Comment.kill(commentId)
+      }
     }
   })
 
   App.CommentController.reopenClass({
-    submit: function(attrs) {
-      // FIXME: the only way to fetch context after insertNewLine action
-      if (attrs.constructor === App.CreateCommentField)
-        attrs = { body: attrs.value, postId: attrs._context.content.get('id') }
+    actions: {
+      submit: function(attrs, postId) {
+        if (attrs.constructor === App.CreateCommentField)
+          attrs = { body: attrs.value, postId: postId }
 
-      App.Comment.submit(attrs)
+        App.Comment.submit(attrs)
+      }
     }
   })
 });

@@ -6,8 +6,10 @@ define(["app/app",
 
     isEditFormVisible: false,
 
-    editFormVisibility: function() {
-      this.toggleProperty('isEditFormVisible');
+    actions: {
+      editFormVisibility: function() {
+        this.toggleProperty('isEditFormVisible');
+      }
     },
 
     didInsertElement: function() {

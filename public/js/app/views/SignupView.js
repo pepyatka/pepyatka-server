@@ -4,12 +4,14 @@ define(["app/app",
     templateName: 'signup',
     template: Ember.Handlebars.compile(tpl),
 
-    insertNewline: function() {
-      this.triggerAction();
+    actions: {
+      signup: function() {
+        this.get('controller').signup()
+      }
     },
 
-    signup: function() {
-      this.get('controller').signup()
+    insertNewline: function() {
+      this.triggerAction();
     }
   });
 });
