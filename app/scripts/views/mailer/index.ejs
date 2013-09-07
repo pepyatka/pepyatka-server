@@ -9,7 +9,7 @@
       <p>Comments: </p>
       <ul>
         <% comments.forEach(function(comment) { %>
-           <li><%= comment.body %> - <%= comment.createdBy.info.screenName %></li>
+           <li><%= comment.body %> - <%= comment.user.info.screenName %></li>
         <% }) %>
       </ul>
     <% } %>

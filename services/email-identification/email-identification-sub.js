@@ -60,38 +60,43 @@ exports.listen = function() {
 
       case 'newComment':
         var data = JSON.parse(msg);
-        if (data.inRiverOfNews !== 0 || !data.timelineId) return
+        if (data.inRiverOfNews !== 1 || !data.timelineId) return
 
-        models.Post.findById(data.postId, function(err, post) {
-          if (!post) return
+        models.Comment.findById(data.commentId, function(err, comment) {
+          if (!comment) return
 
-          models.Timeline.findById(data.timelineId, {}, function(err, timeline) {
-            if (!timeline || !timeline.userId ||
-                timeline.name !== 'River of news') return
+          models.Post.findById(comment.postId, function(err, post) {
+            if (!post) return
 
-            models.User.findById(timeline.userId, function(err, user) {
-              models.User.findById(post.userId, function(err, owner) {
-                if (!user || user.id === post.userId ||
-                    user.type === 'group' ||
-                    user.info === null || user.info.receiveEmails !== '0' ||
-                    !user.info.email) return
+            models.Timeline.findById(data.timelineId, {}, function(err, timeline) {
+              if (!timeline || !timeline.userId ||
+                  timeline.name !== 'River of news') return
 
-                html = ejs.render(htmlTemplate, {
-                  screenName: owner.info.screenName,
-                  username: owner.username,
-                  post: post.body,
-                  conf: conf,
-                  post_id: post.id,
-                  likes: post.likes,
-                  comments: post.comments
+              models.User.findById(timeline.userId, function(err, user) {
+                models.User.findById(post.userId, function(err, owner) {
+                  if (!user || user.id === post.userId ||
+                      user.type === 'group' ||
+                      user.info === null || user.info.receiveEmails !== '0' ||
+                      !user.info.email) return
+
+                  post.getComments(function(err, comments) {
+                    html = ejs.render(htmlTemplate, {
+                      screenName: owner.info.screenName,
+                      username: owner.username,
+                      post: post.body,
+                      conf: conf,
+                      post_id: post.id,
+                      comments: comments
+                    })
+
+                    var messageToSend = {
+                      to: user.info.screenName + ' <' + user.info.email + '>',
+                      subject: post.body.truncate(50),
+                      html: html
+                    };
+                    mailer.sendMailToUser(conf, messageToSend)
+                  })
                 })
-
-                var messageToSend = {
-                  to: user.info.screenName + ' <' + user.info.email + '>',
-                  subject: post.body.truncate(50),
-                  html: html
-                };
-                mailer.sendMailToUser(conf, messageToSend)
               })
             })
           })
@@ -101,7 +106,7 @@ exports.listen = function() {
 
       case 'newLike':
         var data = JSON.parse(msg);
-        if (data.inRiverOfNews !== 0 || !data.timelineId)
+        if (data.inRiverOfNews !== 1 || !data.timelineId)
           return
 
         models.Post.findById(data.postId, function(err, post) {
@@ -116,22 +121,23 @@ exports.listen = function() {
                 if (!user || user.id === post.userId || user.type === 'group' ||
                     !user.info || user.info.receiveEmails !== '0') return
 
-                html = ejs.render(htmlTemplate, {
-                  screenName: owner.info.screenName,
-                  username: owner.username,
-                  post: post.body,
-                  conf: conf,
-                  post_id: post.id,
-                  likes: post.likes,
-                  comments: post.comments
-                })
+                post.getComments(function(err, comments) {
+                  html = ejs.render(htmlTemplate, {
+                    screenName: owner.info.screenName,
+                    username: owner.username,
+                    post: post.body,
+                    conf: conf,
+                    post_id: post.id,
+                    comments: post.comments
+                  })
 
-                var messageToSend = {
-                  to: user.info.screenName + ' <' + user.info.email + '>',
-                  subject: post.body.truncate(50),
-                  html: htmlTemplate
-                };
-                mailer.sendMailToUser(conf, messageToSend)
+                  var messageToSend = {
+                    to: user.info.screenName + ' <' + user.info.email + '>',
+                    subject: post.body.truncate(50),
+                    html: htmlTemplate
+                  };
+                  mailer.sendMailToUser(conf, messageToSend)
+                })
               })
             })
           })
