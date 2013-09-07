@@ -67,7 +67,7 @@ define(["app/app", "socketio"], function(App) {
         post.comments.pushObject(comment)
       } else {
         post = App.Post.find(data.comment.postId)
-        this.currentController().addObject(post)
+        this.currentController().get('posts').addObject(post)
       }
     },
 
@@ -114,7 +114,7 @@ define(["app/app", "socketio"], function(App) {
           post.likes.pushObject(user)
       } else {
         post = App.Post.find(data.postId)
-        this.currentController().addObject(post)
+        this.currentController().get('posts').addObject(post)
       }
     },
 
