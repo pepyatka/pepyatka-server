@@ -90,17 +90,19 @@ var defaultFormatter = function(article) {
   };
 
   var addURL = function(article) {
-    article.description = article.description + " - " + article.link;
+    article.title = article.title + " - " + article.link;
 
     return article;
   };
 
-  return doTo(article, [removeHTML, addURL]).description;
+  return doTo(article, [removeHTML, addURL]);
 };
 
 var defaultPoster = function(user, rss, article, formatter) {
-  var params = {
-    body: formatter(article),
+  var formattedArticle = formatter(article);
+
+  var postParams = {
+    body: formattedArticle.title,
     source: {
       type: "rss",
       id: rss.id
@@ -108,10 +110,17 @@ var defaultPoster = function(user, rss, article, formatter) {
   };
 
   var callback = function(err, post) {
-    post.create(function() {});
+    post.create(function(err, post) {
+      if (!err) {
+        user.newComment({
+          body: formattedArticle.description,
+          postId: post.id
+        }).create(function() {});
+      }
+    });
   };
 
-  user.newPost(params, callback);
+  user.newPost(postParams, callback);
 };
 
 var fetchUpdates = function(options, f) {
