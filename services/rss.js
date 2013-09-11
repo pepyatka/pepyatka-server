@@ -5,6 +5,8 @@ var _ = require("underscore");
 var fastFeed = require("fast-feed");
 var models = require("../app/models");
 var RSS = models.RSS;
+var Group = models.Group;
+var FeedFactory = models.FeedFactory;
 
 var parseUrl = function(url, f) {
   request(url, function(err, resp, feed) {
@@ -23,9 +25,10 @@ var parseUrl = function(url, f) {
 };
 
 var postUpdates = function(rss, updates, poster, formatter, f) {
+  console.log("postUpdates");
   rss.getUsers(function(users) {
-    users.forEach(function(user) {
-      models.User.findById(user, function(err, user) {
+    users.forEach(function(userId) {
+      FeedFactory.findById(userId, function(err, user) {
 
         updates.forEach(function(article) {
           poster(user, rss, article, formatter);
@@ -96,15 +99,19 @@ var defaultFormatter = function(article) {
 };
 
 var defaultPoster = function(user, rss, article, formatter) {
-  user.newPost({
+  var params = {
     body: formatter(article),
     source: {
       type: "rss",
       id: rss.id
     }
-  }, function(err, post) {
+  };
+
+  var callback = function(err, post) {
     post.create(function() {});
-  });
+  };
+
+  user.newPost(params, callback);
 };
 
 var fetchUpdates = function(options, f) {
@@ -114,6 +121,8 @@ var fetchUpdates = function(options, f) {
   var callback = function(err, rss) {
     if (!err && rss.url) {
       _fetchUpdates(rss, poster, formatter, f);
+    } else {
+      f();
     }
   };
 

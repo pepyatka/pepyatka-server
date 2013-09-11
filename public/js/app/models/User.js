@@ -9,9 +9,11 @@ define(["app/app"], function(App) {
     type: null,
 
     deobjectizedRSS: function() {
-      return this.get("rss").map(function(e) {
-        return e.url;
-      });
+      if (this.get("rss")) {
+        return this.get("rss").map(function(e) {
+          return e.url;
+        });
+      }
     }.property("rss.length"),
 
     transformRSS: function() {

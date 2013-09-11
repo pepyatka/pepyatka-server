@@ -13,13 +13,21 @@ define(["app/app"], function(App) {
           screenName: this.get("info.screenName"),
           email: this.get("info.email"),
           rss: this.get("deobjectizedRSS"),
-          receiveEmails: this.get("info.receiveEmails")
+          receiveEmails: this.get("info.receiveEmails"),
+          userId: this.get("id")
         };
+
 
         App.User.save(params, {
           success: function(response) {
             that.set('content', response);
-            that.transitionToRoute("home");
+            if (response.type == "user") {
+              App.properties.set("screenName", response.info.screenName);
+              that.transitionToRoute("home");
+            } else {
+              that.transitionToRoute("user", that.get("username"));
+
+            }
           }
         });
       }

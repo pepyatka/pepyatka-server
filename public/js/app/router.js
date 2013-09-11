@@ -1,8 +1,8 @@
 define(["app/app",
         "controllers/CometController"], function(App) {
   App.SettingsRoute = Ember.Route.extend({
-    model: function() {
-      return App.User.find(App.properties.get('userId'))
+    model: function(params) {
+      return App.User.find(params.userId);
     },
 
     setupController: function(controller, model) {
@@ -287,7 +287,6 @@ define(["app/app",
     this.resource('public', { path: "/public" })
     // NOTE: rather weird name for a river of news route
     this.resource('home', { path: "/" })
-    this.resource('settings', { path: "/settings" })
     this.resource('post', { path: "/posts/:post_id" })
 
     this.resource('user', { path: "/users/:username" })
@@ -295,6 +294,7 @@ define(["app/app",
     this.resource('manageSubscribers', { path: "/users/:username/subscribers/manage" }) // TODO
     this.resource('feedSubscriptions', { path: "/users/:username/subscriptions" })
     this.resource('likes', { path: "/users/:username/likes" })
+    this.resource('settings', { path: "/users/:userId/settings" });
     this.resource('comments', { path: "/users/:username/comments" })
 
     this.resource('groups', { path: "/groups" })

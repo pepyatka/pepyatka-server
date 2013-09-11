@@ -8,24 +8,24 @@
         {{view Ember.TextField valueBinding="info.screenName" type="text" id="screenName" name="screenName"}}
       </div>
     </div>
-
-    <div class="control-group">
-      <label class="control-label" for="email">{{t label.email}}</label>
-      <div class="controls">
-        {{view Ember.TextField valueBinding="info.email" type="text" id="email" name="email"}}
+    {{#unless view.isGroup}}
+      <div class="control-group">
+        <label class="control-label" for="email">{{t label.email}}</label>
+        <div class="controls">
+          {{view Ember.TextField valueBinding="info.email" type="text" id="email" name="email"}}
+        </div>
       </div>
-    </div>
 
-    <div class="control-group">
-      <label class="control-label" for="receive">{{t label.sendEmails}}</label>
-      <div class="controls">
-        {{view Ember.Select contentBinding="view.receiveEmailsContent"
-              valueBinding="info.receiveEmails" name="receiveEmails"
-              id="receiveEmails"
-              optionValuePath="content.id" optionLabelPath="content.name"}}
+      <div class="control-group">
+        <label class="control-label" for="receive">{{t label.sendEmails}}</label>
+        <div class="controls">
+          {{view Ember.Select contentBinding="view.receiveEmailsContent"
+          valueBinding="info.receiveEmails" name="receiveEmails"
+          id="receiveEmails"
+          optionValuePath="content.id" optionLabelPath="content.name"}}
+        </div>
       </div>
-    </div>
-
+    {{/unless}}
     <div class="control-group rss">
       <label class="control-label" for="rss">RSS</label>
       <div class="controls">

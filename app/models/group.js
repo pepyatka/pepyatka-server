@@ -2,7 +2,14 @@ var uuid = require('node-uuid')
   , models = require('../models')
   , async = require('async')
   , util = require('util')
+  , _ = require("underscore")
+  , mkKey = require("../support/models").mkKey
   , crypto = require('crypto')
+
+var groupK = "user";
+var infoK = "info";
+var rssK = "rss";
+var timelinesK = "timelines";
 
 exports.addModel = function(db) {
   var statisticsSerializer = {
@@ -268,31 +275,130 @@ exports.addModel = function(db) {
     })
   }
 
-  Group.prototype.update = function(callback) {
-    var that = this
+  Group.prototype.setBaseAttrs = function(attrs, f) {
+    db.hmset(mkKey([groupK, this.id]), {
+      "updatedAt": attrs.updatedAt.toString()
+    }, f);
+  };
 
-    this.updatedAt = new Date().getTime()
+  Group.prototype.setInfo = function(attrs, f) {
+    db.hmset(mkKey([groupK, this.id, infoK]), {
+      "screenName": attrs.screenName ? attrs.screenName.trim() : ""
+    }, f);
+  };
 
-    this.validate(function(valid) {
-      if (!valid)
-        return callback(1, that)
+  Group.prototype.cleanRSS = function(nrss, f) {
+    var group = this;
 
-      db.exists('user:' + that.id, function(err, res) {
-        if (res !== 1)
-          return callback(err, res)
+    group.getRSS(function(err, rss) {
+      if (err) {
+        f(err);
+      } else {
+        var diff = _.difference(rss, nrss);
+        if (diff.length != 0) {
+          models.RSS.removeUser(diff, group, function(err) {
+            db.del(mkKey([groupK, group.id, rssK]), function(err, res) {
+              f(err);
+            });
+          });
+        } else {
+          f(false, null);
+        }
+      }
+    });
+  };
 
-        db.hmset('user:' + that.id,
-          { 'username': that.username,
-            'updatedAt': that.updatedAt.toString()
-          }, function(err, res) {
-            if (err)
-              return callback(err, that)
+  Group.prototype.addRSS = function(rss, f) {
+    var group = this;
 
-            callback(null, that)
-          })
-      })
-    })
-  }
+    async.map(rss, function(url, done) {
+      models.RSS.addUserOrCreate({
+        url: url,
+        userId: group.id
+      }, function(err, rss) {
+        if (!err && rss) {
+          done(err, rss.url);
+        } else {
+          done(err, null);
+        }
+      });
+    }, function(err, res) {
+      if (!err && res) {
+        db.sadd(mkKey([groupK, group.id, rssK]), res, function(err, res) {
+          f(err, res);
+        });
+      } else {
+        f(err, null);
+      }
+    });
+  };
+
+  Group.prototype.newPost = function(attrs, f) {
+    var group = this;
+
+    group._getPostsTimelineId(function(err, id) {
+      attrs.userId = group.id;
+      attrs.timelineIds = [id];
+      f(err, new models.Post(attrs));
+    });
+  };
+
+  Group.prototype.getRiverOfNewsId = function(f) {
+    f(null,null);
+  };
+
+  Group.prototype._getPostsTimelineId = function(f) {
+    this._getTimelinesIds(function(err, timelines) {
+      f(err, timelines.Posts);
+    });
+  };
+
+  Group.prototype._getTimelinesIds = function(f) {
+    db.hgetall(mkKey([groupK, this.id, timelinesK]), function(err, timelines) {
+      f(err, timelines || []);
+    });
+  };
+
+  Group.prototype.update = function(attrs, f) {
+    var group = this;
+    var callback = function(done) {
+      return function(err, res) {
+        done(err, res);
+      };
+    };
+
+    group.updatedAt = new Date().getTime();
+
+    var setBaseAttrs = function(done) {
+      group.setBaseAttrs(group, callback(done));
+    };
+
+    var setRSS = function(done) {
+      group.cleanRSS(attrs.rss, function(err, res) {
+        if (attrs.rss) {
+          group.addRSS(attrs.rss, done);
+        } else {
+          done(err, res);
+        }
+      });
+    };
+
+    var setInfo = function(done) {
+      group.setInfo(attrs, callback(done));
+    };
+
+    var jobs = [setBaseAttrs, setInfo, setRSS];
+
+    group.validate(function(err) {
+      if (!err) {
+        async.parallel(jobs, function(err, res) {
+          f(err, group);
+        });
+      } else {
+        f(err, null);
+      }
+    });
+  };
 
   Group.prototype.getAdministratorsIds = function(callback) {
     var that = this
@@ -344,6 +450,10 @@ exports.addModel = function(db) {
       if (select.indexOf('statistics') != -1)
         isReady = isReady && json.statistics !== undefined
 
+      if (select.indexOf("rss") != -1) {
+        isReady = isReady && json.rss;
+      }
+
       if (select.indexOf('subscribers') != -1)
         isReady = isReady && json.subscribers !== undefined
 
@@ -375,6 +485,16 @@ exports.addModel = function(db) {
           json.info = info
         returnJSON(err)
       })
+    }
+
+    if (select.indexOf("rss") != -1) {
+      that.getRSS(function(err, rss) {
+        if (rss) {
+          json.rss = rss;
+        }
+
+        returnJSON(err);
+      });
     }
 
     if (select.indexOf('admins') != -1) {

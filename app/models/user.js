@@ -229,6 +229,7 @@ exports.addModel = function(db) {
         } else {
           var diff = _.difference(rss, nrss);
           if (diff.length != 0) {
+            // TODO: Use RSS.removeUser.
             async.forEach(diff, function(url, done) {
               models.RSS.findByUrl(url, function(err, rss) {
                 if (err) {

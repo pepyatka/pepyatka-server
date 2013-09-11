@@ -190,6 +190,20 @@ exports.addModel = function(db) {
     }
   };
 
+  RSS.removeUser = function(urls, user, f) {
+    async.forEach(urls, function(url, done) {
+      models.RSS.findByUrl(url, function(err, rss) {
+        if (err) {
+          done(err);
+        } else {
+          rss.removeUser(user.id, function(err, res) {
+            done(err);
+          });
+        }
+      });
+    }, f);
+  };
+
   RSS.findByUrl = function(url, f) {
     db.hget(mkKey([rssK, normalizeUrl(url)]), rssIdK, function(err, id) {
       if (!err && id) {
@@ -202,7 +216,7 @@ exports.addModel = function(db) {
 
   RSS.find = function(id, f) {
     db.hgetall(mkKey([rssK, id]), function(err, rss) {
-      if (err && !rss) {
+      if (err || !rss) {
         f(true, null);
       } else {
         rss.id = id;

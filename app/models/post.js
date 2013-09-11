@@ -417,7 +417,7 @@ exports.addModel = function(db) {
       // TODO: double check if we need function here method
       this.getTimelinesIds(function(err, timelinesIds) {
         timelinesIds = timelinesIds.concat(that.timelineIds)
-        models.User.findById(that.userId, function(err, user) {
+        models.FeedFactory.findById(that.userId, function(err, user) {
           user.getRiverOfNewsId(function(err, timelineId) {
             timelinesIds.push(timelineId)
             async.map(timelinesIds, function(timelineId, callback) {

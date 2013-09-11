@@ -36,7 +36,7 @@ exports.addRoutes = function(app) {
   var subscriptionSerializer = {
     select: ['id', 'user', 'name'],
     user: { select: ['id', 'username', 'type', 'info'],
-            info: { select: ['screenName'] } },
+            info: { select: ['screenName'] } }
   }
 
   var subscriberSerializer = {
@@ -159,21 +159,33 @@ exports.addRoutes = function(app) {
     if (!req.user)
       return res.jsonp({}, 422)
 
-    models.FeedFactory.findById(req.user.id, function(err, user) {
-      var params = req.param('params')
-      var attrs = { screenName: params.screenName,
-                    receiveEmails: params.receiveEmails,
-                    email: params.email,
-                    rss: params.rss
-                  }
-      user.update(attrs, function(err, user) {
-        if (err)
-          return res.jsonp({}, 422)
+    var params = req.param('params');
 
-        user.toJSON(userSerializer, function(err, json) { res.jsonp(json) })
-      })
-    })
-  })
+    models.FeedFactory.findById(params.userId, function(err, user) {
+      requireAuthorization(req.user, user, function(error, authorized) {
+        if (!error && authorized) {
+          var attrs = {
+            screenName: params.screenName,
+            receiveEmails: params.receiveEmails,
+            email: params.email,
+            rss: params.rss
+          };
+
+          user.update(attrs, function(err, user) {
+            if (err) return res.jsonp({}, 422);
+
+            user.toJSON(userSerializer, function(err, json) {
+              res.jsonp(json);
+            });
+          });
+
+        } else {
+          // TODO: Add 403 case.
+          return res.jsonp({}, 422);
+        }
+      });
+    });
+  });
 
   app.get('/v1/whoami', function(req, res) {
     if (!req.user)

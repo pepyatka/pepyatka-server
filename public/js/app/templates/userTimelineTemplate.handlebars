@@ -4,6 +4,10 @@
       <img class="media-object" src="/img/64x64.png">
     </div>
 
+    {{#if view.isGroup}}
+      {{#linkTo 'settings' user.id}}{{t label.settings}}{{/linkTo}}
+    {{/if}}
+
     <div class="media-body">
       <h3 class="pull-left">{{content.user.info.screenName}}</h3>
 
