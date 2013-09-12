@@ -23,13 +23,15 @@ define(["app/app",
         var pageSize  = options && options.limit || 25
 
         $.ajax({
-          url: this.resourceUrl + '/' + encodeURIComponent(query),
+          // TODO: temporary hardcode resource url into query
+          url: '/v1/search' + '/' + encodeURIComponent(query),
           type: 'get',
           data: { offset: pageStart, limit: pageSize },
           context: this,
         }).then(function(response) {
           if (response.posts)
             var _posts = []
+
           response.posts.forEach(function(attrs) {
             var comments = attrs.comments
             delete attrs.comments
