@@ -17,6 +17,12 @@ define(["app/app",
       return this.get("controller.user") && this.get("controller.user.type") == 'group';
     }.property('controller.user'),
 
+    isGroupAdmin: function() {
+      return this.get("isGroup") && _.find(this.get("controller.user.admins"), function(x) {
+        return x.id == App.properties.userId;
+      });
+    }.property('controller.user'),
+
     subscribedTo: function() {
       var res = false;
       var subscribers = this.get("controller.subscribers");
