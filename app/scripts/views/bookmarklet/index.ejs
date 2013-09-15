@@ -1,0 +1,49 @@
+<style type="text/css">
+input, textarea {
+  padding: 4px;
+  border: solid 1px #E5E5E5;
+  outline: 0;
+  font: normal 13px/100% Verdana, Tahoma, sans-serif;
+  width: 270px;
+  background: #FFFFFF;
+}
+
+textarea {
+  width: 270px;
+  max-width: 270px;
+  height: 80px;
+  line-height: 150%;
+}
+</style>
+
+<form method="post" action="/bookmarklet">
+  <input type="text" id="p_title" name="title" value="<%= req.query.title %>" />
+  <textarea type="text" id="p_comment" name="comment"><%= req.query.comment %></textarea>
+  <div id="p_image"></div>
+  <input type="hidden" id="p_image_src" name="image" value="" />
+  <input type="hidden" name="csrf_token" value="<%= csrf_token %>" />
+
+  <input type="submit" value="Share" />
+</form>
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+if ("onhashchange" in window) { // event supported?
+  window.onhashchange = function () {
+    hashChanged(window.location.hash.slice(1));
+  }
+} else { // event not supported:
+  var storedHash = window.location.hash;
+  window.setInterval(function () {
+    if (window.location.hash != storedHash) {
+      storedHash = window.location.hash.slice(1);
+      hashChanged(storedHash);
+    }
+  }, 100);
+}
+
+function hashChanged(url) { // user has selected an image on parent frame
+  $('#p_image').html('<div><img src="' + url + '" /></div>')
+  $('#p_image_src').attr('value', url)
+}
+</script>
