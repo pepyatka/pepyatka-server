@@ -1,4 +1,4 @@
-define(["app/app", "socketio"], function(App) {
+define(["app/app", "socket.io"], function(App) {
   App.CometController = Ember.Controller.extend({
     needs: ['timeline', 'search', 'post'],
 
