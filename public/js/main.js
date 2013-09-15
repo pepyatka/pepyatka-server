@@ -12,7 +12,7 @@
           App.properties.username = data.username
           App.properties.screenName = data.info ? data.info.screenName : data.username;
 
-          // Not we are good to intialize Ember application
+          // Now we are good to initialize Ember application
           App.advanceReadiness()
         })
       });
