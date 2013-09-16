@@ -11,6 +11,7 @@ var session  = require('./routes/session')
   , search   = require('./routes/search')
   , tags     = require('./routes/tags')
   , stats    = require('./routes/stats')
+  , rss      = require('./routes/rss');
 
 var models = require('./models');
 
@@ -101,4 +102,5 @@ module.exports = function(app) {
   search.addRoutes(app);
   tags.addRoutes(app);
   stats.addRoutes(app);
+  rss.addRoutes(app);
 };

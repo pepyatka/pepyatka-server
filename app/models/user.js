@@ -3,6 +3,7 @@ var uuid = require('node-uuid')
   , async = require('async')
   , crypto = require('crypto')
   , mkKey = require("../support/models").mkKey
+  , RSS = require('rss')
   , _ = require("underscore");
 
 var userK = "user";
@@ -790,6 +791,74 @@ exports.addModel = function(db) {
       db.hgetall('user:' + that.id + ':info', function(err, items) {
         callback(err, items)
       })
+    },
+
+    genericPostsFromTimeline: function(options, f) {
+      this["get" + options.name + "Timeline"]({}, function(err, timeline) {
+        if (err) {
+          f(err, null);
+        } else {
+          //TODO: Add support for start/end in options.
+          timeline.getPosts(0,25, function(err, posts) {
+            f(err, posts);
+          });
+        }
+      });
+    },
+
+    getPostsTimelinePosts: function(f) {
+      this.genericPostsFromTimeline({name: "Posts"}, f);
+    },
+
+    getCommentsTimelineComments: function(f) {
+      this.genericPostsFromTimeline({name: "Comments"}, f);
+    },
+
+    getLikesTimelineLikes: function(f) {
+      this.genericPostsFromTimeline({name: "Likes"}, f);
+    },
+
+    toRss: function(params, f) {
+      var attrs = {};
+      var user = this;
+      var select = params.select || models.User.getAttributes();
+      var jobs = [];
+      var callback = function(type, getter) {
+        return function(done) {
+          user[getter](function(err, res) {
+            attrs[type] = res;
+            done();
+          });
+        };
+      };
+
+      if (select.indexOf("info") != -1)     jobs.push(callback("info", "getInfo"));
+      if (select.indexOf("posts") != -1)    jobs.push(callback("posts", "getPostsTimelinePosts"));
+      if (select.indexOf("comments") != -1) jobs.push(callback("posts", "getCommentsTimelineComments"));
+      if (select.indexOf("likes") != -1)    jobs.push(callback("posts", "getLikesTimelineLikes"));
+
+      async.parallel(jobs, function(err, res) {
+        if (err) {
+          f(true, null);
+        } else {
+          var title = attrs["info"] ? attrs["info"].screenName : user.username;
+          var feed = new RSS({
+            title: title,
+            description: title + " feed",
+            site_url: params.siteUrl
+          });
+
+          attrs["posts"].forEach(function(post) {
+            feed.item({
+              description: post.body,
+              guid: post.id,
+              date: new Date(post.createdAt)
+            });
+          });
+
+          f(null, feed);
+        }
+      });
     },
 
     toJSON: function(params, callback) {

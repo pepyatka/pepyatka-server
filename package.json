@@ -33,6 +33,7 @@
     "requirejs": "2.1.8",
     "validator": "1.5.0",
     "jsdom": "0.8.4",
-    "htmlparser": "1.7.6"
+    "htmlparser": "1.7.6",
+    "rss": "0.2.1"
   }
 }
