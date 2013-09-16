@@ -30,7 +30,7 @@ function p_getSelectionText() {
 
 function p_highlight() {
   var p_e;
-  var host = 'http://pepyatka.com';
+  var host = 'http://localhost:3000';
 
   p_unload();
 
