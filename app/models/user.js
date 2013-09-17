@@ -793,29 +793,38 @@ exports.addModel = function(db) {
       })
     },
 
-    genericPostsFromTimeline: function(options, f) {
+    genericPostsWComments: function(options, f) {
       this["get" + options.name + "Timeline"]({}, function(err, timeline) {
         if (err) {
           f(err, null);
         } else {
           //TODO: Add support for start/end in options.
           timeline.getPosts(0,25, function(err, posts) {
-            f(err, posts);
+            async.map(posts, function(post, done) {
+              // NOTE: Function getComments is impure and mutates
+              // object therefore i don't need second argument of following
+              // callback
+              post.getComments(function(err, _) {
+                done(err);
+              });
+            }, function(err, _) {
+              f(err, posts);
+            });
           });
         }
       });
     },
 
     getPostsTimelinePosts: function(f) {
-      this.genericPostsFromTimeline({name: "Posts"}, f);
+      this.genericPostsWComments({name: "Posts"}, f);
     },
 
     getCommentsTimelineComments: function(f) {
-      this.genericPostsFromTimeline({name: "Comments"}, f);
+      this.genericPostsWComments({name: "Comments"}, f);
     },
 
     getLikesTimelineLikes: function(f) {
-      this.genericPostsFromTimeline({name: "Likes"}, f);
+      this.genericPostsWComments({name: "Likes"}, f);
     },
 
     toRss: function(params, f) {
@@ -850,7 +859,8 @@ exports.addModel = function(db) {
 
           attrs["posts"].forEach(function(post) {
             feed.item({
-              description: post.body,
+              title: post.body,
+              description: post.comments[0] ? post.comments[0].body : null,
               guid: post.id,
               date: new Date(post.createdAt)
             });

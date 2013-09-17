@@ -1,9 +1,10 @@
 var models = require("../models");
+var mailerConf = require('./../../conf/envLocal.js').getMailerConfig();
 var FeedFactory = models.FeedFactory;
 
 var respondWithRss = function(req, res, select) {
-  // Can't use named params for some reason, e.g:
-  // app.param('range', /^(\w+)\.\.(\w+)?$/);
+  // FIXME: Can't use named params for some reason, e.g:
+  // app.param('range', /^(\w+)\.\.(\w+)?$/); causes an error
   var userName = req.params[0];
 
   FeedFactory.findByName(userName, function(err, user) {
@@ -13,7 +14,7 @@ var respondWithRss = function(req, res, select) {
     }
 
     user.toRss({
-      siteUrl: req.headers.host, // FIXME: XXX
+      siteUrl: mailerConf.domain,
       select: select
     }, function(err, feed) {
       if (err) {
