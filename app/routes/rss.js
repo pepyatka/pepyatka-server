@@ -27,7 +27,7 @@ var respondWithRss = function(req, res, select) {
 };
 
 exports.addRoutes = function(app) {
-  app.get(/\/users\/(\w+)\/posts.rss$/, function(req, res) {
+  app.get(/\/users\/(\w+).rss$/, function(req, res) {
     respondWithRss(req, res, ["info", "posts"]);
   });
 
