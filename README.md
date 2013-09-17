@@ -136,6 +136,9 @@ API
 ### Tags
 - GET /v1/tags - returns list of tags sorted by frequency
 
+### Others
+- GET /v1/whoami - returns current user info
+
 SEARCH API
 ----------
 
