@@ -105,10 +105,6 @@ exports.addModel = function(db) {
         rss.saveBaseAttrs(callback(done));
       };
 
-      // var addToRssIds = function(done) {
-      //   rss.addLookupId(callback(done));
-      // };
-
       var addUrlLookup = function(done) {
         rss.addLookupUrl(callback(done));
       };
