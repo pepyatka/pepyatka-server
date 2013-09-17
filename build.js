@@ -385,7 +385,7 @@
     //built file unless the locale: section is set above.
     {
       name: 'common',
-      include: ["socketio", "app/app"]
+      include: ["socket.io", "app/app"]
     },
     {
       name: 'main',
