@@ -14,7 +14,7 @@ define(["app/app"], function(App) {
           return e.url;
         });
       }
-    }.property("rss.length"),
+    }.property("rss.@each.url"),
 
     transformRSS: function() {
       var transformed = [];
@@ -61,7 +61,8 @@ define(["app/app"], function(App) {
         context: this,
         success: function(response) {
           options && options.success(response)
-        }
+        },
+        error: options && options.error ? options.error : null
       })
       return this
     }

@@ -28,6 +28,10 @@ define(["app/app"], function(App) {
               that.transitionToRoute("user", that.get("username"));
 
             }
+          },
+          error: function(response) {
+            that.set("content.errors", JSON.parse(response.responseText).errors);
+            console.log(that.get("content.errors"));
           }
         });
       }

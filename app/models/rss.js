@@ -19,11 +19,12 @@ var normalizeUrl = function(url) {
   return _.without(url, " ").join("");
 };
 
-var isValid = function(rss) {
+var errors = function(rss) {
   try {
-    return check(rss.url).isUrl();
-  } catch (e) {
+    check(rss.url).isUrl();
     return false;
+  } catch (e) {
+    return {errors: {rss: e.message}};
   }
 };
 
@@ -58,8 +59,9 @@ exports.addModel = function(db) {
     },
 
     create: function(f) {
-      if (!isValid(this)) {
-        f(true, null);
+      var err = errors(this);
+      if (err) {
+        f(err, null);
         return;
       }
 

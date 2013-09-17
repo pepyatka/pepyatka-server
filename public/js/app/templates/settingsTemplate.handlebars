@@ -27,6 +27,9 @@
       </div>
     {{/unless}}
     <div class="control-group rss">
+      {{#if errors}}
+        <div class="alert alert-error settings-error">{{errors.rss}}</div>
+      {{/if}}
       <label class="control-label" for="rss">RSS</label>
       <div class="controls">
         {{#each rss itemController="rss"}}

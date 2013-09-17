@@ -3,6 +3,16 @@ a, a:hover, a:focus {
   color: #000088;
 }
 
+@media (min-width: 767px) {
+    .settings-error {
+        margin-left: 179px;
+    }
+}
+
+.settings-error {
+    max-width: 177px;
+}
+
 hr {
   margin: 10px 0;
 }

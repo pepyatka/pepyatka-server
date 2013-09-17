@@ -172,7 +172,7 @@ exports.addRoutes = function(app) {
           };
 
           user.update(attrs, function(err, user) {
-            if (err) return res.jsonp({}, 422);
+            if (err) return res.json(err, 422);
 
             user.toJSON(userSerializer, function(err, json) {
               res.jsonp(json);
