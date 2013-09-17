@@ -42,7 +42,18 @@ exports.addModel = function(db) {
       db.sadd(mkKey([rssK, this.id, rssUsersK]), user, f);
     },
 
-    saveBaseAttrs: function(f) {
+    updateBaseAttrs: function(attrs, f) {
+      var rss = this;
+      var baseAttrs = ["createdAt", "updatedAt", "url"];
+
+      baseAttrs.forEach(function(attr) {
+        rss[attr] = attrs[attr] ? attrs[attr] : rss[attr];
+      });
+
+      rss.saveBaseAttrs(f);
+    },
+
+    _saveBaseAttrs: function(f) {
       db.hmset(mkKey([rssK, this.id]), {
         "url": this.url,
         "createdAt": this.createdAt.toString(),
@@ -50,8 +61,22 @@ exports.addModel = function(db) {
       }, f);
     },
 
+    saveBaseAttrs: function(f) {
+      var rss = this;
+
+      var callback = function(m) {
+        return function(done) {
+          rss[m](done);
+        };
+      };
+
+      var jobs = [callback("_saveBaseAttrs"), callback("addLookupId")];
+
+      async.parallel(jobs, f);
+    },
+
     addLookupId: function(f) {
-      db.sadd(rssIds, this.id, f);
+      db.zadd(rssIds, this.updatedAt, this.id, f);
     },
 
     addLookupUrl: function(f) {
@@ -80,9 +105,9 @@ exports.addModel = function(db) {
         rss.saveBaseAttrs(callback(done));
       };
 
-      var addToRssIds = function(done) {
-        rss.addLookupId(callback(done));
-      };
+      // var addToRssIds = function(done) {
+      //   rss.addLookupId(callback(done));
+      // };
 
       var addUrlLookup = function(done) {
         rss.addLookupUrl(callback(done));
@@ -92,7 +117,7 @@ exports.addModel = function(db) {
         rss.addUser(rss.userId, callback(done));
       };
 
-      var jobs = [setBaseAttrs, setUser, addToRssIds, addUrlLookup];
+      var jobs = [setBaseAttrs, setUser, addUrlLookup];
 
       async.parallel(jobs, function(err, res) {
         f(err, rss);
@@ -130,7 +155,7 @@ exports.addModel = function(db) {
     },
 
     delLookupId: function(f) {
-      db.srem(rssIds, this.id, f);
+      db.zrem(rssIds, this.id, f);
     },
 
     delLookupUrl: function(f) {

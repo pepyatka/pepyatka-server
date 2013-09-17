@@ -48,6 +48,9 @@ var _fetchUpdates = function(rss, poster, formatter, f) {
         return;
       }
 
+      // Just don't care.
+      rss.updateBaseAttrs({updatedAt: +new Date()}, function() {});
+
       var items = feed.items;
       var feedGUIDs = _.map(items, function(e) {
         return e.id;

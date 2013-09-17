@@ -14,7 +14,7 @@ env.init(function(_,__,db) {
   setInterval(function() {
     db.llen("resque:queue:" + queue, function(err, len) {
       if (len == 0) {
-        db.smembers("rss_ids", function(err, ids) {
+        db.zrangebyscore(["rss_ids", "-inf", "+inf"], function(err, ids) {
           ids.forEach(function(id) {
             resque.enqueue(queue, "fetch", [id]);
           });
