@@ -3,14 +3,18 @@ a, a:hover, a:focus {
   color: #000088;
 }
 
-@media (min-width: 767px) {
-    .settings-error {
-        margin-left: 179px;
-    }
+.settings-error {
+    margin-left: 180px;
 }
 
 .settings-error {
-    max-width: 177px;
+    max-width: 174px;
+}
+
+@media (max-width: 480px) {
+    .settings-error {
+        margin-left: 0px;
+    }
 }
 
 hr {
