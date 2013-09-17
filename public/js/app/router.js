@@ -229,7 +229,8 @@ define(["app/app",
     },
 
     setupController: function(controller, model) {
-      var posts = this.controllerFor('search').search(decodeURIComponent(model))
+      // TODO: move search action to model
+      var posts = this.controllerFor('search')._actions.search(decodeURIComponent(model))
 
       this.controllerFor('search').set('content', posts);
       this.controllerFor('groups').set('content', App.Group.findAll())

@@ -871,11 +871,15 @@ exports.addModel = function(db) {
 
       if (select.indexOf('createdBy') != -1) {
         models.User.findById(that.userId, function(err, user) {
-          user.toJSON(params.createdBy || {}, function(err, userJSON) {
-            json.createdBy = userJSON
-
+          if (err || !user) {
+            json.createdBy = {}
             returnJSON(err)
-          })
+          } else {
+            user.toJSON(params.createdBy || {}, function(err, userJSON) {
+              json.createdBy = userJSON
+              returnJSON(err)
+            })
+          }
         })
       }
 

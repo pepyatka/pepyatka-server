@@ -49,7 +49,7 @@
     'moment': 'libs/moment/1.7.2/moment.min',
     'select2': 'libs/select2/3.4.1/select2.min',
     'underscore': 'libs/underscore/1.4.4/underscore.min',
-    'socketio': '../../node_modules/socket.io/node_modules/socket.io-client/dist/socket.io',
+    'socket.io': '../../node_modules/socket.io/node_modules/socket.io-client/dist/socket.io',
     'json2': 'libs/json2/1.0.2/json2.min',
 
     /* requirejs-plugins */

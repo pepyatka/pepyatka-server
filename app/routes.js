@@ -12,6 +12,7 @@ var session  = require('./routes/session')
   , tags     = require('./routes/tags')
   , stats    = require('./routes/stats')
   , rss      = require('./routes/rss');
+  , bookmarklet = require('./routes/bookmarklet')
 
 var models = require('./models');
 
@@ -102,5 +103,9 @@ module.exports = function(app) {
   search.addRoutes(app);
   tags.addRoutes(app);
   stats.addRoutes(app);
+<<<<<<< HEAD
   rss.addRoutes(app);
+=======
+  bookmarklet.addRoutes(app);
+>>>>>>> 6efe67ff60abf1d31d679fbcc64d8ac1c311bab1
 };
