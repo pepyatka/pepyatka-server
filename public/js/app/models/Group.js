@@ -98,7 +98,7 @@ define(["app/app"], function(App) {
       };
 
       $.ajax({
-        url: this.resourceUrl + '/' + App.properties.get('username') + this.suffix,
+        url: this.resourceUrl + '/' + username + this.suffix,
         context: this,
         type: 'get',
         success: success,

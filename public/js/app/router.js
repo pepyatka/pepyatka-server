@@ -211,7 +211,7 @@ define(["app/app",
     setupController: function(controller, model) {
       if (typeof model !== 'string') model = model.username
 
-      controller.set('content', App.Group.findAllWithUsers());
+      controller.set('content', App.Group.findAllWithUsers(model));
     },
 
     renderTemplate: function() {
