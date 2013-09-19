@@ -261,6 +261,23 @@ define(["app/app",
     }
   })
 
+  App.LeaderboardRoute = Ember.Route.extend({
+    setupController: function(controller, model) {
+      var stats = {}
+      stats.posts = App.Top.findAll('posts')
+      stats.discussions = App.Top.findAll('discussions')
+      stats.likes = App.Top.findAll('likes')
+
+      controller.set('content', stats);
+      this.controllerFor('groups').set('content', App.Group.findAll())
+      this.controllerFor('tags').set('content', App.Tag.findAll())
+    },
+
+    renderTemplate: function() {
+      this.render('leaderboard');
+    }
+  })
+
   App.AboutRoute = Ember.Route.extend({
     setupController: function(controller, model) {
       this.controllerFor('groups').set('content', App.Group.findAll())
@@ -304,6 +321,7 @@ define(["app/app",
     this.resource('signin', { path: "/signin" })
 
     this.resource('stats', { path: "/top/:category" })
+    this.resource('leaderboard', { path: "/leaderboard" })
 
     this.resource('error', { path: "/error" })
     this.resource('about', { path: "/about" })

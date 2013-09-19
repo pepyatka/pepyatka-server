@@ -8,9 +8,16 @@ var userSerializer = {
 
 exports.addRoutes = function(app) {
   app.get('/v1/top/:category', function(req, res) {
-    models.Stats.getTopUserIds(req.params.category, function(err, userIds) {
-      if (!userIds)
+    models.Stats.getTopUserIdsWithScores(req.params.category, function(err, userIdsWithScores) {
+      if (err || !userIdsWithScores)
         return res.jsonp(err, 422)
+
+      var userIdsScores = {}
+      var userIds = []
+      for(var i=0; i<userIdsWithScores.length; i+=2) {
+        userIdsScores[userIdsWithScores[i]] = userIdsWithScores[i+1]
+        userIds.push(userIdsWithScores[i])
+      }
 
       // FIXME: refactor to map function
       var users = []
@@ -23,6 +30,7 @@ exports.addRoutes = function(app) {
             if (!json)
               return callback(err)
 
+            json.score = userIdsScores[userId]
             users.push(json)
             callback(null)
           })

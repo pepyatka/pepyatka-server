@@ -24,6 +24,7 @@ define([
   "views/ErrorView",
   "views/GroupsView",
   "views/JustStartedView",
+  "views/LeaderboardView",
   "views/PaginationView",
   "views/PartialCommentView",
   "views/PartialLikeView",

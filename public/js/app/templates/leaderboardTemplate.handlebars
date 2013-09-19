@@ -1,0 +1,35 @@
+<h3>{{t header.topPosts}}</h3>
+<table class="table table-striped">
+  <tbody>
+    {{#each content.posts}}
+    <tr>
+      <td>{{#linkTo 'user' username}}{{info.screenName}}{{/linkTo}}</td>
+      <td>{{score}}</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+<h3>{{t header.topLikes}}</h3>
+<table class="table table-striped">
+  <tbody>
+    {{#each content.likes}}
+    <tr>
+      <td>{{#linkTo 'user' username}}{{info.screenName}}{{/linkTo}}</td>
+      <td>{{score}}</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+<h3>{{t header.topComments}}</h3>
+<table class="table table-striped">
+  <tbody>
+    {{#each content.discussions}}
+    <tr>
+      <td>{{#linkTo 'user' username}}{{info.screenName}}{{/linkTo}}</td>
+      <td>{{score}}</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>

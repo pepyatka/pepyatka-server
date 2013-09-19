@@ -41,6 +41,12 @@ exports.addModel = function(db) {
     })
   }
 
+  Stats.getTopUserIdsWithScores = function(category, callback) {
+    db.zrevrange('stats:' + category, 0, configLocal.getStatisticsTopCount(), 'WITHSCORES', function(err, userIds) {
+      callback(err, userIds)
+    })
+  }
+
   Stats.prototype = {
     validate: function(callback) {
       var that = this
