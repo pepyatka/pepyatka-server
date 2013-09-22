@@ -18,7 +18,7 @@ define(["app/app"], function(App) {
     }.property('createdBy'),
 
     currentUserLiked: function() {
-      var like = false;
+      var liked = false;
       var likes = this.get('likes')
 
       // XXX: we have just tried to render a view but have not recevied
@@ -28,11 +28,11 @@ define(["app/app"], function(App) {
       // TODO: refactor to mapProperty
       likes.forEach(function(like) {
         if (like.id === App.properties.userId) {
-          like = true;
+          liked = true;
           return true;
         }
       })
-      return like;
+      return liked;
     }.property('likes', 'likes.@each.id', 'App.properties.userId'),
 
     anyLikes: function() {
