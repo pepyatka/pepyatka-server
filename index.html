@@ -36,26 +36,32 @@
 <p>Pepyatka is another attempt to open source FriendFeed social
 network/aggregator. At this stage it's a semi-anonymous imageboard.</p>
 
-<p><img src="http://epicmonkey.org/pepyatka/2013-03-10_Pepyatka.png" alt="Pepyatka screenshot"></p>
+<p><img src="http://pepyatka.com/img/2013-08-18_Pepyatka.png" alt="Pepyatka screenshot"></p>
 
 <h2>
-<a name="configuration" class="anchor" href="#configuration"><span class="octicon octicon-link"></span></a>Configuration</h2>
+<a name="prerequisites" class="anchor" href="#prerequisites"><span class="octicon octicon-link"></span></a>Prerequisites</h2>
 
 <ul>
 <li>Install redis</li>
 <li>Install graphicsmagick (ensure jpeg and png flags are set)</li>
 <li>Install nodejs</li>
 <li>Install elasticsearch (and java as a dependency ;-)</li>
+<li>Install graphicsmagick library</li>
+</ul><h2>
+<a name="configuration" class="anchor" href="#configuration"><span class="octicon octicon-link"></span></a>Configuration</h2>
+
+<ul>
 <li>Make sure to update secret token: cp ./conf/envDefault.js to
 ./conf/envLocal.js.</li>
 <li>Install dependencies: npm install</li>
 <li>Update translation file: cp ./public/config/envDefault.js
 ./public/config/envLocal.js</li>
-<li>Install mocha globally in the system: npm install -g mocha </li>
+<li>Install mocha globally in the system: npm install -g mocha</li>
 <li>Check there are no broken tests: jake test</li>
 <li>Run elasticsearch</li>
 <li>Run server: node ./server.js</li>
 <li>Run search daemon: node ./bin/search-daemon.js</li>
+<li>Run rss daemon: node ./bin/search-daemon.js</li>
 </ul><h2>
 <a name="roadmap" class="anchor" href="#roadmap"><span class="octicon octicon-link"></span></a>Roadmap</h2>
 
@@ -105,6 +111,13 @@ stats:subscripions { &lt;userId&gt;:&lt;subscriptions&gt; }
 tags:&lt;userId&gt; { &lt;tag&gt;:&lt;score&gt; } # implemented only for everyone, see below
 
 as special case there are tags: tags:everyone
+
+rss:&lt;id&gt;:users ( &lt;userId&gt; )
+rss:&lt;id&gt; { url, createdAt, updatedAt }
+rss_ids ( &lt;rssId&gt; ) # to be refactored to sorted set
+user:&lt;userId&gt;:rss ( &lt;url&gt; )
+rss:&lt;url&gt; { id } # to be refactored to string value
+
 </code></pre>
 
 <h2>
@@ -161,6 +174,16 @@ as special case there are tags: tags:everyone
 <li>GET /v1/top/:category - returns an array of users with the highest
 statistics in a category. Category could be one of { "posts",
 "likes", "discussions", "subscriptions", "subscribers" }</li>
+</ul><h3>
+<a name="tags" class="anchor" href="#tags"><span class="octicon octicon-link"></span></a>Tags</h3>
+
+<ul>
+<li>GET /v1/tags - returns list of tags sorted by frequency</li>
+</ul><h3>
+<a name="others" class="anchor" href="#others"><span class="octicon octicon-link"></span></a>Others</h3>
+
+<ul>
+<li>GET /v1/whoami - returns current user info</li>
 </ul><h2>
 <a name="search-api" class="anchor" href="#search-api"><span class="octicon octicon-link"></span></a>SEARCH API</h2>
 
@@ -183,6 +206,19 @@ search engine will search it in post's and comment's bodies.</p>
 engine will return posts that contain 'that' in post's body and 'this'
 in post's or comment's body, also it will return posts that contain
 'comment' in comment's body and written by user 'user'.</p>
+
+<h2>
+<a name="assets" class="anchor" href="#assets"><span class="octicon octicon-link"></span></a>Assets</h2>
+
+<p>This application uses AMD/RequireJS to separate files to controllers,
+routers, models and templates. To bundle all of them into a single
+bundle you need to install RequireJS in your system and then run: r.js
+-o build.js.</p>
+
+<p>For any additional options feel free to look into build.js file. By
+default it generates two files: common.js which includes all libraries
+like emberjs, handlebars, etc and main.js which is custom pepyatka
+application.</p>
 
 <h2>
 <a name="ntlm-support" class="anchor" href="#ntlm-support"><span class="octicon octicon-link"></span></a>NTLM support</h2>
