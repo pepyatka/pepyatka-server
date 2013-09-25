@@ -134,7 +134,7 @@ exports.listen = function() {
                   var messageToSend = {
                     to: user.info.screenName + ' <' + user.info.email + '>',
                     subject: post.body.truncate(50),
-                    html: htmlTemplate
+                    html: html
                   };
                   mailer.sendMailToUser(conf, messageToSend)
                 })
