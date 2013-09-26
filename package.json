@@ -5,6 +5,10 @@
   "scripts": {
     "start": "node server"
   },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/epicmonkey/pepyatka.git"
+  },
   "dependencies": {
     "express": "3.0.5",
     "ejs": "0.8.3",
