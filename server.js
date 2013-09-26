@@ -27,7 +27,7 @@ app.configure(function() {
   app.set('view engine', 'ejs');
 
   app.set('port', conf.port);
-  app.set('views', __dirname + '/app/scripts/views');
+  app.set('views', path.normalize(__dirname + '/app/scripts/views'));
 
   app.enable("jsonp callback");
 
@@ -36,7 +36,7 @@ app.configure(function() {
   app.use(express.logger('dev'));
 
   app.use(express.bodyParser({
-    uploadDir: __dirname + '/tmp',
+    uploadDir: path.normalize(__dirname + '/tmp'),
     keepExtensions: true
   }))
   app.use(express.limit('50mb'));

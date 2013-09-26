@@ -710,7 +710,7 @@ exports.addModel = function(db) {
       ext = ext[ext.length - 1];
 
       var thumbnailId = uuid.v4()
-      var thumbnailPath = __dirname + '/../../public/files/' + thumbnailId + '.' + ext
+      var thumbnailPath = path.normalize(__dirname + '/../../public/files/' + thumbnailId + '.' + ext)
       var thumbnailHttpPath = '/files/' + thumbnailId + '.' + ext
 
       // TODO: currently it works only with images, must work with any
@@ -735,7 +735,7 @@ exports.addModel = function(db) {
 
             newThumbnail.save(function(err, thumbnail) {
               var attachmentId = uuid.v4()
-              var attachmentPath = __dirname + '/../../public/files/' + attachmentId + '.' + ext
+              var attachmentPath = path.normalize(__dirname + '/../../public/files/' + attachmentId + '.' + ext)
               var attachmentHttpPath = '/files/' + attachmentId + '.' + ext
 
               var newAttachment = that.newAttachment({
