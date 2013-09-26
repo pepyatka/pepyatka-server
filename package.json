@@ -9,6 +9,9 @@
     "type": "git",
     "url": "git://github.com/epicmonkey/pepyatka.git"
   },
+  "scripts": {
+    "test": "jake test"
+  },
   "dependencies": {
     "express": "3.0.5",
     "ejs": "0.8.3",
@@ -38,6 +41,7 @@
     "validator": "1.5.0",
     "jsdom": "0.8.4",
     "htmlparser": "1.7.6",
-    "rss": "0.2.1"
+    "rss": "0.2.1",
+    "jake": "0.7.2"
   }
 }
