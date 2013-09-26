@@ -135,7 +135,7 @@ describe('Post API', function() {
   })
 
   it('POST /v1/posts with zip attachment should create post and return json object without attachment', function(done) {
-    var params = { 
+    var params = {
       body: 'postBody'
     }
     request(server)
@@ -145,7 +145,7 @@ describe('Post API', function() {
       .expect(200)
       .end(function(err, res) {
         assert.equal(err, null)
-        
+
         var jsonPost = res.body
         assert(!!jsonPost.id)
         assert(!!jsonPost.createdAt)

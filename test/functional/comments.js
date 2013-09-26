@@ -39,7 +39,7 @@ describe('Comment API', function() {
   })
 
   it('POST /v1/comments should return json comment', function(done) {
-    var params = { 
+    var params = {
       body: 'commentBody',
       postId: post.id
     }
@@ -50,7 +50,7 @@ describe('Comment API', function() {
       .expect('Content-Type', /json/)
       .end(function(err, res) {
         assert.equal(err, null)
-        
+
         var jsonComment = res.body
         assert(!!jsonComment.id)
         assert(!!jsonComment.createdAt)
@@ -60,7 +60,7 @@ describe('Comment API', function() {
         // assert.equal(jsonComment.createdAt, jsonComment.updatedAt)
         assert.equal(params.body, jsonComment.body)
         assert.equal(params.postId, jsonComment.postId)
-        
+
         done()
       })
   })
@@ -76,7 +76,7 @@ describe('Comment API', function() {
   })
 
   it('POST /v1/comments with missing postId should return 422', function(done) {
-    var params = { 
+    var params = {
       body: 'commentBody'
     }
     request(server)
