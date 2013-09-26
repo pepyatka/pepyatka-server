@@ -621,7 +621,7 @@ exports.addModel = function(db) {
                                        stats.addPost(function(err, stats) {
                                          // BUG: updatedAt is different now than we set few lines above
                                          // XXX: we don't care (yet) if attachment wasn't saved
-                                         callback(null);
+                                         done(null);
                                        });
                                      });
                                    } else {
