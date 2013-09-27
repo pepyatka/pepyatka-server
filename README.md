@@ -1,6 +1,8 @@
 Pepyatka
 ========
 
+[![Build Status](https://api.travis-ci.org/epicmonkey/pepyatka.png)](https://api.travis-ci.org/epicmonkey/pepyatka.png)
+
 Pepyatka is another attempt to open source FriendFeed social
 network/aggregator. At this stage it's a semi-anonymous imageboard.
 
