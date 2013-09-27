@@ -2,4 +2,5 @@ language: "node_js"
 node_js:
   - "0.10"
 before_script:
+  - sudo apt-get install -qq graphicsmagick
   - cp ./conf/envDefault.js ./conf/envLocal.js
