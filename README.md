@@ -1,6 +1,8 @@
 Pepyatka
 ========
 
+[![Build Status](https://api.travis-ci.org/epicmonkey/pepyatka.png)](https://api.travis-ci.org/epicmonkey/pepyatka.png)
+
 Pepyatka is an open source FriendFeed clone. Basically, this is a
 social real-time feed aggregator that allows you to share cute kitty
 photos, coordinate upcoming events, dicuss any other cool stuff on the
