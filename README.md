@@ -10,215 +10,27 @@ Internet or setup a private Pepyatka instance in your company.
 
 ![Pepyatka screenshot](http://pepyatka.com/img/2013-08-18_Pepyatka.png)
 
-Prerequisites
+Find out more
 -------------
 
-- Install redis
-- Install graphicsmagick (ensure jpeg and png flags are set)
-- Install nodejs
-- Install elasticsearch (and java as a dependency ;-)
-- Install graphicsmagick library
-
-Configuration
--------------
-
-- Make sure to update secret token: cp ./conf/envDefault.js to
-  ./conf/envLocal.js.
-- Install dependencies: npm install
-- Update translation file: cp ./public/config/envDefault.js
-  ./public/config/envLocal.js
-- Install mocha globally in the system: npm install -g mocha
-- Check there are no broken tests: jake test
-- Run elasticsearch
-- Run server: node ./server.js
-- Run search daemon: node ./bin/search-daemon.js
-- Run rss daemon: node ./bin/search-daemon.js
+1. [Setting up Pepyatka](https://github.com/epicmonkey/pepyatka/wiki/Setting-up-Pepyatka)
+1. [Database](https://github.com/epicmonkey/pepyatka/wiki/Database)
+1. [API](https://github.com/epicmonkey/pepyatka/wiki/API)
+1. [NTLM support](https://github.com/epicmonkey/pepyatka/wiki/NTLM-support)
 
 Roadmap
 -------
 
 Tasks: https://trello.com/b/uvRkkOTH
 
-Database
---------
+Questions or need help?
+-----------------------
 
-```
-username:<username>:uid
+You can drop a question [here](http://pepyatka.com/pepyatka) or [there](http://friendfeed.com/pepyatka).
 
-type is a enum of set of { "user", "group" } # not implemented yet
+Copyright and license
+---------------------
 
-user:<userId> { username, hashedPassword, salt, createdAt, updatedAt, type }
-user:<userId>:timelines { RiverOfNews, Posts, Likes, Comments, DirectMessages, [name*] }
-user:<userId>:administrators { <userId>:<timestamp> } # not implemented yet
-* DirectMessages not implemented yet
-* Custom lists not implemented yet
-user:<userId>:subscriptions ( <timelineId>:<timestamp> )
+Pepyatka itself is licensed under the MIT License.
 
-reserved usernames:
-- anonymous
-- everyone
-
-timeline:<timelineId> { name, userId }
-timeline:<timelineId>:posts ( <postId>:<timestamp> )
-timeline:<timelineId>:subscribers ( <userId>:<timestamp> )
-
-as special case there is timeline: timeline:everyone
-
-post:<postId> { body, createdAt, updatedAt, userId, timelineId }
-post:<postId>:comments [ <commentId> ]
-post:<postId>:attachments [ <attachmentId> ]
-post:<postId>:timelines ( <timelineId> )
-post:<postId>:likes ( <userId> )
-
-comment:<commentId> { body, createdAt, updatedAt, createdBy, postId }
-
-attachment:<attachmentId> { mimeType, filename, extension, path, createdAt, updatedAt, postId, thumbnailId? }
-
-stats:<userId> { posts, likes, discussions, subscribers, subscriptions }
-stats:posts { <userId>:<posts> }
-stats:likes { <userId>:<likes> }
-stats:discussions { <userId>:<discussions> }
-stats:subscribers { <userId>:<subscribers> }
-stats:subscripions { <userId>:<subscriptions> }
-
-tags:<userId> { <tag>:<score> } # implemented only for everyone, see below
-
-as special case there are tags: tags:everyone
-
-rss:<id>:users ( <userId> )
-rss:<id> { url, createdAt, updatedAt }
-rss_ids ( <rssId> ) # to be refactored to sorted set
-user:<userId>:rss ( <url> )
-rss:<url> { id } # to be refactored to string value
-
-```
-
-API
----
-
-### Timeline
-- GET /v1/timeline/:username - returns all posts from user <username>
-- GET /v1/timeline/everyone - returns all posts from everyone
-- GET /v1/timeline - returns river of news for auth user
-- POST /v1/timeline/:timelineId/subscribe
-- POST /v1/timeline/:timelineId/unsubscribe
-- GET /v1/timeline/:timelineId/subcribers
-
-### Posts
-- GET /v1/posts/:postId
-- DELETE /v1/posts/:postId
-- PATCH /v1/posts/:postId
-- GET /v1/posts/:postId/comments # not implemented yet
-- GET /v1/posts/:postId/likes # not implemented yet
-- POST /v1/posts
-- POST /v1/posts/:postId/like
-- POST /v1/posts/:postId/unlike
-
-### Comments
-- POST /v1/comments
-- DELETE /v1/comments/:commentId
-- PATCH /v1/comments/:commentId
-
-### Users and groups
-- GET /v1/users/:userId
-- GET /v1/users/:username/subscriptions
-- GET /v1/users/:username/subscribers - returns Posts timeline subscribers
-- DELETE /v1/users/:username/subscribers/:userId - unsubscribe :userId from :username
-- POST /v1/users/:username/subscribers/:userId/admin - add admin rights for :userId to administrate :username
-- POST /v1/users/:username/subscribers/:userId/unadmin - remove admin rights from :userId to administrate :username
-- POST /v1/users # it's a dup of sign up
-- DELETE /v1/users/:userId
-- GET /v1/users/:userId/feedinfo
-- not implemented yet
-- PATCH /v1/users/:userId
-
-### Statistics
-- GET /v1/top/:category - returns an array of users with the highest
-  statistics in a category. Category could be one of { "posts",
-  "likes", "discussions", "subscriptions", "subscribers" }
-
-### Tags
-- GET /v1/tags - returns list of tags sorted by frequency
-
-### Others
-- GET /v1/whoami - returns current user info
-
-SEARCH API
-----------
-
-- GET /v1/search/:query - returns all posts which equals query.
-
-Search query is a string of keywords.
-Keywords:
-- intitle:query (search query in post's body)
-- incomment:query (search query in comment's body)
-- from:username (search by username)
-- AND
-- OR
-- ' ' (whitespace)
-
-If you enter a search phrase that does not match keywords above,
-search engine will search it in post's and comment's bodies.
-
-Example: this AND intitle:that OR incomment:comment from:user. Search
-engine will return posts that contain 'that' in post's body and 'this'
-in post's or comment's body, also it will return posts that contain
-'comment' in comment's body and written by user 'user'.
-
-Assets
-------
-
-This application uses AMD/RequireJS to separate files to controllers,
-routers, models and templates. To bundle all of them into a single
-bundle you need to install RequireJS in your system and then run: r.js
--o build.js.
-
-For any additional options feel free to look into build.js file. By
-default it generates two files: common.js which includes all libraries
-like emberjs, handlebars, etc and main.js which is custom pepyatka
-application.
-
-NTLM support
-------------
-
-1. Update /etc/nsswitch:
-2. Add realm to /etc/krb.conf
-3. Update samba config
-4. Join domain: net ads join -U <admin>
-5. Ensure wbinfo -t returns: "checking the trust secret for domain <domain> via RPC calls succeeded."
-6. Add NTLM module to httpd (or nginx) and use it as a reverse proxy.
-7. Change Pepyatka "removeUser" config option from "false" to "true".
-
-Example configuration for httpd below:
-
-```
-LoadModule auth_ntlm_winbind_module modules/mod_auth_ntlm_winbind.so
-LoadModule rewrite_module modules/mod_rewrite.so
-LoadModule proxy_module modules/mod_proxy.so
-
-<VirtualHost *:80>
-  ProxyRequests off
-  <Proxy *>
-    Order deny,allow
-    Allow from all
-  </Proxy>
-
-  <Location />
-    ProxyPass http://localhost:3000/
-    ProxyPassReverse http://localhost:3000/
-
-    AuthType NTLM
-    NTLMAuth on
-    NTLMAuthHelper "/usr/bin/ntlm_auth --helper-protocol=squid-2.5-ntlmssp"
-    NTLMBasicAuthoritative on
-    AuthType NTLM
-    require valid-user
-
-    RewriteEngine On
-    RewriteCond %{LA-U:REMOTE_USER} (.+)
-    RewriteRule . - [E=RU:%1]
-    RequestHeader set X-Remote-User "%{RU}e" env=RU
-  </Location>
-</VirtualHost>
-```
-
+https://github.com/epicmonkey/pepyatka/blob/master/LICENSE
