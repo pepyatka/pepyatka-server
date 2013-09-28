@@ -16,6 +16,7 @@ Find out more
 1. [Setting up Pepyatka](https://github.com/epicmonkey/pepyatka/wiki/Setting-up-Pepyatka)
 1. [Database](https://github.com/epicmonkey/pepyatka/wiki/Database)
 1. [API](https://github.com/epicmonkey/pepyatka/wiki/API)
+1. [REST API by examples](https://github.com/epicmonkey/pepyatka/wiki/REST-API-example)
 1. [NTLM support](https://github.com/epicmonkey/pepyatka/wiki/NTLM-support)
 
 Roadmap
