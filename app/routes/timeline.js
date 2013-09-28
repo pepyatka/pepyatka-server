@@ -35,6 +35,8 @@ exports.addRoutes = function(app) {
 
   app.get('/v1/timeline/:timelineId/subscribers', function(req, res) {
     models.Timeline.findById(req.params.timelineId, {}, function(err, timeline) {
+      if (!timeline) return res.jsonp({}, 422)
+
       timeline.getSubscribers(function(err, subscribers) {
         async.map(subscribers, function(subscriber, callback) {
           subscriber.toJSON(subscriberSerializer, function(err, json) {
