@@ -4,8 +4,6 @@ define(["app/app",
   App.SearchController = Ember.ObjectController.extend(App.PaginationHelper, {
     resourceUrl: '/v1/search',
 
-    isLoaded: true,
-
     actions: {
       search: function(query, options) {
         var posts = Ember.ArrayProxy.createWithMixins(Ember.SortableMixin, {
