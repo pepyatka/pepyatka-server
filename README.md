@@ -26,7 +26,7 @@ Tasks: https://trello.com/b/uvRkkOTH
 Questions or need help?
 -----------------------
 
-You can drop a question [here](http://pepyatka.com/pepyatka) or [there](http://friendfeed.com/pepyatka).
+You can drop a question [here](http://pepyatka.com/users/pepyatka) or [there](http://friendfeed.com/pepyatka).
 
 Copyright and license
 ---------------------
