@@ -43,14 +43,14 @@ function p_highlight() {
   jQuery('#p_block')
     .css({position:'absolute', width:'auto', 'z-index':100000, top:0, right:0,
          'border-left':'6px solid #aaa', 'border-bottom':'6px solid #aaa',
-         'border-top':0, 'border-right':0, height:'200px', width:'300px',
+         'border-top':0, 'border-right':0, height:'250px', width:'350px',
          'background-color':'#fff'});
 
   var comment = encodeURIComponent(p_getSelectionText())
   var title = encodeURIComponent(document.title) + " - " + document.URL
   jQuery('<iframe name="p_frame" id="p_frame" src="' + host + '/bookmarklet?comment=' + comment + '&title=' + title + '" />').appendTo('#p_block');
   jQuery('#p_frame')
-    .css({height:'160px', position:'absolute', right:0, top:'6px', width:'300px',
+    .css({height:'230px', position:'absolute', right:0, top:'6px', width:'350px',
           border:0});
 
   jQuery('<div style="position:absolute;right:6px;top:6px" id="p_close"><a href="javascript:void(0)"><img src="' + host + '/img/close-white.png" /></a></div>')

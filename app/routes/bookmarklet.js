@@ -73,6 +73,9 @@ exports.addRoutes = function(app) {
         newPost.create(function(err, post) {
           if (err) return res.jsonp({}, 422);
 
+          var conf = require('./../../conf/envLocal.js').getMailerConfig();
+          res.conf = conf
+
           if (req.body.comment) {
             var newComment = req.user.newComment({
               body: req.body.comment,
