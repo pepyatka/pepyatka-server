@@ -23,8 +23,10 @@ exports.addRoutes = function(app) {
       var users = []
       async.forEach(userIds, function(userId, callback) {
         models.User.findById(userId, function(err, user) {
+          // NOTE: this user does not exist anymore, e.g. was deleted or
+          // database is broken
           if (!user)
-            return callback(err)
+            return callback(null)
 
           user.toJSON(userSerializer, function(err, json) {
             if (!json)

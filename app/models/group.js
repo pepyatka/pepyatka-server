@@ -45,6 +45,7 @@ exports.addModel = function(db) {
   }
 
   Group.destroy = function(groupId, callback) {
+    // FIXME: this function does not clean stats for a group
     var destroyAllPosts = function(group, callback) {
       group.getPostsTimeline({start: 0}, function(err, timeline) {
         if (err)
