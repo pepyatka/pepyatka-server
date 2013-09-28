@@ -28,6 +28,7 @@
     "supertest": "0.5.1",
     "superagent": "0.12.1",
     "mocha": "1.8.1",
+    "istanbul": "0.1.44",
     "passport": "0.1.15",
     "passport-twitter": "0.1.4",
     "passport-local": "0.1.6",
