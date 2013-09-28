@@ -60,7 +60,7 @@ exports.listen = function() {
 
       case 'newComment':
         var data = JSON.parse(msg);
-        if (data.inRiverOfNews !== 1 || !data.timelineId) return
+        if (data.inRiverOfNews >= 1 || !data.timelineId) return
 
         models.Comment.findById(data.commentId, function(err, comment) {
           if (!comment) return
@@ -106,7 +106,7 @@ exports.listen = function() {
 
       case 'newLike':
         var data = JSON.parse(msg);
-        if (data.inRiverOfNews !== 1 || !data.timelineId)
+        if (data.inRiverOfNews >= 1 || !data.timelineId)
           return
 
         models.Post.findById(data.postId, function(err, post) {
