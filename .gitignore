@@ -18,6 +18,7 @@ public/files/*
 !public/files/.gitkeep
 tmp/*
 /conf/envLocal.js
+coverage
 
 /.idea
 /public/config/envLocal.js
