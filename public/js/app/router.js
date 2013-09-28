@@ -221,6 +221,7 @@ define(["app/app",
 
   App.SearchRoute = Ember.Route.extend({
     deactivate: function() {
+      App.properties.set('searchQuery', null)
       this.controllerFor('comet').unsubscribe()
     },
 
@@ -230,7 +231,9 @@ define(["app/app",
 
     setupController: function(controller, model) {
       // TODO: move search action to model
-      var posts = this.controllerFor('search')._actions.search(decodeURIComponent(model))
+      var query = decodeURIComponent(model)
+      App.properties.set('searchQuery', query)
+      var posts = this.controllerFor('search')._actions.search(query)
 
       this.controllerFor('search').set('content', posts);
       this.controllerFor('groups').set('content', App.Group.findAll())

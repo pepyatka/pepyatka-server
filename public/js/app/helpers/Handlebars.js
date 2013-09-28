@@ -30,18 +30,19 @@ define(["app/app", "ember"], function(App, Ember) {
     // wrap hashtags around text in post text
     text.hashTagsUrls();
     // wrap search query around text in post text
-    //text.highlightSearchResults(App.searchController.query);
+    if (App.properties.get('searchQuery'))
+      text.highlightSearchResults(App.properties.get('searchQuery'));
     // please read https://github.com/kswedberg/jquery-expander/issues/24
-    text.find('.text').expander({
-      slicePoint: 350,
-      expandPrefix: '&hellip; ',
-      preserveWords: true,
-      expandText: 'more&hellip;',
-      userCollapseText: '',
-      collapseTimer: 0,
-      expandEffect: 'fadeIn',
-      collapseEffect: 'fadeOut'
-    })
+    // text.expander({
+    //   slicePoint: 350,
+    //   expandPrefix: '&hellip; ',
+    //   preserveWords: true,
+    //   expandText: 'more&hellip;',
+    //   userCollapseText: '',
+    //   collapseTimer: 0,
+    //   expandEffect: 'fadeIn',
+    //   collapseEffect: 'fadeOut'
+    // })
 
     return new Handlebars.SafeString(text.html())
   })
