@@ -88,7 +88,7 @@ exports.addRoutes = function(app) {
               res.render('./bookmarklet/done', {post: post});
             })
           } else {
-            res.render('./bookmarklet/done')
+            res.render('./bookmarklet/done', {post: post});
           }
         })
       })
