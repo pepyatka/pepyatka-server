@@ -85,10 +85,10 @@ exports.addRoutes = function(app) {
             newComment.create(function(err, comment) {
               if (err) return res.jsonp({}, 422)
 
-              res.render('./bookmarklet/done')
+              res.render('./bookmarklet/done', {post: post});
             })
           } else {
-            res.render('./bookmarklet/done')
+            res.render('./bookmarklet/done', {post: post});
           }
         })
       })
