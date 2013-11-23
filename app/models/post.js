@@ -1,6 +1,5 @@
 var uuid = require('node-uuid')
   , fs = require('fs')
-  , gm = require('gm')
   , path = require('path')
   , models = require('../models')
   , async = require('async')
@@ -704,60 +703,33 @@ exports.addModel = function(db) {
       if (!attachment)
         return callback(null, null)
 
-      var tmpPath = attachment.path
-      var filename = attachment.name
+      // handle pathes
+      var tmpPath = attachment.path;
+      var filename = attachment.name;
       var ext = path.extname(filename || '').split('.');
       ext = ext[ext.length - 1];
 
-      var thumbnailId = uuid.v4()
-      var thumbnailPath = path.normalize(__dirname + '/../../public/files/' + thumbnailId + '.' + ext)
-      var thumbnailHttpPath = '/files/' + thumbnailId + '.' + ext
+      var attachmentId = uuid.v4();
+      var attachmentPath = path.normalize(__dirname + '/../../public/files/' + attachmentId + '.' + ext);
+      var attachmentHttpPath = '/files/' + attachmentId + '.' + ext;
 
-      // TODO: currently it works only with images, must work with any
-      // type of uploaded files.
-      // TODO: encapsulate most if this method into attachments model
-      gm(tmpPath).format(function(err, value) {
-        if (err)
-          return callback(err, value)
+      var newAttachment = that.newAttachment({
+        'id': attachmentId,
+        'ext': ext,
+        'filename': filename,
+        'path': attachmentHttpPath,
+        'fsPath': attachmentPath
+      });
 
-        gm(tmpPath)
-          .resize('200', '200')
-          .write(thumbnailPath, function(err) {
-            if (err)
-              return callback(err)
-
-            var newThumbnail = new models.Attachment({
-              'ext': ext,
-              'filename': filename,
-              'path': thumbnailHttpPath,
-              'fsPath': thumbnailPath
-            })
-
-            newThumbnail.save(function(err, thumbnail) {
-              var attachmentId = uuid.v4()
-              var attachmentPath = path.normalize(__dirname + '/../../public/files/' + attachmentId + '.' + ext)
-              var attachmentHttpPath = '/files/' + attachmentId + '.' + ext
-
-              var newAttachment = that.newAttachment({
-                'ext': ext,
-                'filename': filename,
-                'path': attachmentHttpPath,
-                'thumbnailId': thumbnail.id,
-                'fsPath': attachmentPath
-              })
-
-              newAttachment.save(function(err, attachment) {
-                if (!that.attachments)
-                  that.attachments = []
-
-                that.attachments.push(attachment)
-                // move tmp file to a storage
-                fs.rename(tmpPath, attachmentPath, function(err) {
-                  callback(err, that)
-                })
-              })
-            })
-          })
+      newAttachment.save(tmpPath, function(err, attachment) {
+        if (!that.attachments)
+          that.attachments = []
+        
+        that.attachments.push(attachment)
+        // move tmp file to a storage
+        fs.rename(tmpPath, attachmentPath, function(err) {
+          callback(err, that)
+        })         
       })
     },
 

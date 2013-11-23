@@ -1,4 +1,7 @@
 var uuid = require('node-uuid')
+  , gm = require('gm')
+  , mime = require('mime')
+  , path = require('path')
   // XXX: do not like the idea of requiring all the models than we
   // need just one or may be two of them, however it's a oneliner.
   , models = require('../models')
@@ -8,11 +11,13 @@ exports.addModel = function(db) {
   function Attachment(params) {
     this.id = params.id
     this.mimeType = params.mimeType // TODO: mmmagic lib
+    this.mediaType = params.mediaType || "general"  // general kind of media: general, image, audio, video, etc
     this.ext = params.ext
     this.filename = params.filename || ""
     this.path = params.path || ""
     this.fsPath = params.fsPath || ""
     this.postId = params.postId
+    this.tmpPath = params.tmpPath || ""
 
     if (parseInt(params.createdAt, 10))
       this.createdAt = parseInt(params.createdAt, 10)
@@ -63,37 +68,118 @@ exports.addModel = function(db) {
       })
     },
 
-    save: function(callback) {
+    handleMedia: function(tmpPath, callback) {
+      var that = this
+
+      var _handleImage = function() {          
+        // try to create thumbnail
+        gm(tmpPath).format(function(err, value) {
+          if (err) {
+            // throw new Error(err)
+            return _handleGeneral();
+          }
+          
+          var thumbnailId = uuid.v4()
+          var thumbnailPath = path.normalize(__dirname + '/../../public/files/' + thumbnailId + '.' + that.ext)
+          var thumbnailHttpPath = '/files/' + thumbnailId + '.' + that.ext
+
+          that.mediaType = "image"
+
+          gm(tmpPath).size(function(err, size) {
+            // check if we need to resize thumbnail
+            if (size !== undefined && (size.width > 200)) {
+              gm(tmpPath)
+                .resize('200', '200')
+                .write(thumbnailPath, function(err) {
+                  if (err) {
+                    // throw new Error(err)
+                    return _handleGeneral()
+                  }
+                  
+                  var newThumbnail = new models.Attachment({
+                    'id': thumbnailId,
+                    'ext': that.ext,
+                    'filename': that.filename,
+                    'path': thumbnailHttpPath,
+                    'fsPath': thumbnailPath
+                  })
+                  
+                  newThumbnail.save(thumbnailPath, function(err, thumbnail) {
+                    // thumbnail stored and we're happy with it
+                    that.thumbnailId = thumbnail.id
+                    callback(err, that)
+                  })
+                })    
+            } else {
+              // just set self as thumbnail
+              that.thumbnailId = that.id
+              callback(err, that)
+            }            
+          });      
+        })
+
+      }; // end image handling
+
+      var _handleAudio = function() {
+        that.mediaType = "audio"
+        callback(null, that)
+      }; // end audio handling
+      
+      var _handleGeneral = function() {
+          // default attachment
+        that.mediaType = "general"
+        callback(null, that)
+      };
+
+      var mimetype = mime.lookup(this.filename)
+      if (mimetype === "image/jpeg" || 
+          mimetype === "image/gif" || 
+          mimetype === "image/png" ||
+          mimetype === "image/bmp") {
+        _handleImage()
+      } else if (mimetype === "audio/mpeg" || 
+                 mimetype === "audio/ogg" || 
+                 mimetype === "audio/x-wav") {
+        _handleAudio()
+      } else {
+        _handleGeneral()
+      };
+    },
+
+    save: function(tmpPath, callback) {
       var that = this
 
       if (this.id === undefined) this.id = uuid.v4()
 
-      var params = { 'ext': this.ext.toString(),
-                     'filename': this.filename.toString(),
-                     'path': this.path.toString(),
-                     'fsPath': this.fsPath.toString()
-                   }
+      this.handleMedia(tmpPath, function(err) {
+        var params = { 'ext': that.ext.toString(),
+                       'filename': that.filename.toString(),
+                       'path': that.path.toString(),
+                       'fsPath': that.fsPath.toString(),
+                       'mediaType': that.mediaType.toString()
+                     }
+        
+        if (that.thumbnailId) {
+          that.thumbnailId = that.thumbnailId.toString()
+          params.thumbnailId = that.thumbnailId
+        }
+        
+        if (that.postId) {
+          that.postId = that.postId.toString()
+          params.postId = that.postId.toString()
+        }
 
-      if (this.thumbnailId) {
-        this.thumbnailId = this.thumbnailId.toString()
-        params.thumbnailId = this.thumbnailId
-      }
-
-      if (this.postId) {
-        this.postId = this.postId.toString()
-        params.postId = this.postId.toString()
-      }
-
-      this.validate(function(valid) {
-        if (!valid)
-          return callback(1, that)
-
-        db.hmset('attachment:' + that.id, params, function(err, res) {
-          if (!that.postId)
-            return callback(null, that)
-
-          models.Post.addAttachment(that.postId, that.id, function(err, count) {
-            callback(err, that)
+        that.validate(function(valid) {
+          if (!valid)
+            return callback(1, that)
+          
+          db.hmset('attachment:' + that.id, params, function(err, res) {
+            if (!that.postId)
+              return callback(null, that)
+            
+            models.Post.addAttachment(that.postId, that.id, function(err, count) {
+              callback(err, that)
+            })
           })
         })
       })
@@ -102,6 +188,8 @@ exports.addModel = function(db) {
     toJSON: function(callback) {
       var attrs = {
         id: this.id,
+        media: this.mediaType,
+        filename: this.filename,
         // ext: this.ext,
         // filename: this.filename,
         path: this.path

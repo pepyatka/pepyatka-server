@@ -1,4 +1,5 @@
 define(["app/app"], function(App) {
+
   App.Post = Ember.Object.extend({
     showAllComments: false,
 
@@ -65,26 +66,43 @@ define(["app/app"], function(App) {
       // display first and last comments only
       return this.get('comments.content').length - 2
     }.property('comments.content.@each'),
-
-    firstThumbnailSrc: function() {
-      if (this.get('attachments') && this.get('attachments')[0]) {
-        return this.get('attachments')[0].thumbnail.path;
-      } else {
-        return false
-      }
-    }.property('attachments'),
-
-    firstImageSrc: function() {
-      if (this.get('attachments') && this.get('attachments')[0]) {
-        return this.get('attachments')[0].path;
-      } else {
-        return false
-      }
-    }.property('attachments')
   });
 
   App.Post.reopenClass({
     resourceUrl: '/v1/posts',
+    
+    createFromProto: function(attrs) {
+      var comments = attrs.comments
+      delete attrs.comments
+
+      var attachments = attrs.attachments
+      delete attrs.attachments
+
+      var post = App.Post.create(attrs)
+      post.comments = Ember.ArrayProxy.createWithMixins(Ember.SortableMixin, {
+        // TODO: figure out why we have to add itemController="comment"
+        // option to each iterator in the view
+        itemController: 'comment',      
+        content: []
+      })
+      
+      if (comments) {
+        comments.forEach(function(attrs) {
+          var comment = App.Comment.create(attrs)
+          post.comments.addObject(comment)
+        })
+      }
+      
+      post.attachments = Ember.ArrayProxy.create({content: []});
+      if (attachments) {
+        attachments.forEach(function(attrs) {
+          var attachment = App.Attachment.create(attrs)
+          post.attachments.addObject(attachment)
+        })
+      }
+      
+      return post
+    },
 
     update: function(postId, attrs) {
       $.ajax({
@@ -122,6 +140,7 @@ define(["app/app"], function(App) {
     find: function(postId) {
       var post = App.Post.create();
 
+      // XXX: use `createFromProto' maybe?
       $.ajax({
         url: this.resourceUrl + '/' + postId,
         dataType: 'jsonp',
@@ -142,6 +161,15 @@ define(["app/app"], function(App) {
           }
 
           delete response.comments
+
+          post.set("attachments", Ember.ArrayProxy.create({content: []}))
+          if (response.attachments) {
+            response.attachments.forEach(function(attrs) {
+              var attachment = App.Attachment.create(attrs)
+              post.attachments.addObject(attachment)
+            })
+          }
+          delete response.attachments
 
           post.setProperties(response);
         },

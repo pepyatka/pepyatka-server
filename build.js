@@ -50,7 +50,8 @@
     'select2': 'libs/select2/3.4.1/select2.min',
     'underscore': 'libs/underscore/1.4.4/underscore.min',
     'socket.io': '../../node_modules/socket.io/node_modules/socket.io-client/dist/socket.io',
-    'json2': 'libs/json2/1.0.2/json2.min',
+    'json2': 'libs/json2/1.0.2/json2.min',    
+    'mediaelement': 'libs/mediaelement/2.3.11/mediaelement-and-player.min',
 
     /* requirejs-plugins */
     'text': 'libs/requirejs-plugins/text',

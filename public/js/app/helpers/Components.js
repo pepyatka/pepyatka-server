@@ -161,6 +161,7 @@ define(["app/app",
 
   App.UploadFileView = Ember.TextField.extend({
     type: 'file',
+    classNames: ["add-file-button"],
 
     didInsertElement: function() {
       this.$().prettyInput()
