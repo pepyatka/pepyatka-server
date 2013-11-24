@@ -10,6 +10,7 @@
         jQuery.getJSON("/v1/whoami", function(data) {
           App.properties.userId = data.id
           App.properties.username = data.username
+          App.properties.emailMd5 = data.info.emailMd5
           App.properties.screenName = data.info ? data.info.screenName : data.username;
 
           // Now we are good to initialize Ember application
