@@ -354,3 +354,7 @@ footer {
     position: absolute;
     top: 14px;
 }
+
+.youtube-iframe {
+    padding-top: 0.6em;
+}

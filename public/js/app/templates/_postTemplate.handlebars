@@ -40,7 +40,12 @@
       {{/view}}
     {{else}}
       <div class="body">
-        <div class="text">{{prettifyText body}}</div>
+        <div class="text post-text">{{prettifyText body}}</div>
+        {{#if view.getYoutubeLink}}
+        <div class="youtube-iframe">
+          <iframe {{bindAttr src="view.getYoutubeLink"}} width="400" frameborder="0" height="224" allowfullscreen></iframe>
+        </div>
+        {{/if}}
 
         {{#each attachment in attachments}}
           {{#if attachment.isAttachmentImage}}
