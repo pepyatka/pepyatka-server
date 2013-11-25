@@ -340,3 +340,7 @@ footer {
 .form-horizontal .control-group.rss input, .form-horizontal .control-group.rss button {
   margin-bottom: 5px;
 }
+
+.youtube-iframe {
+    padding-top: 0.6em;
+}
