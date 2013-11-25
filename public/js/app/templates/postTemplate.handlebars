@@ -40,9 +40,21 @@
       <div class="body">
         <div class="text">{{prettifyText body}}</div>
 
-        {{#if firstThumbnailSrc}}
-          <div class="image"><a {{bindAttr href="firstImageSrc"}}><img {{bindAttr src="firstThumbnailSrc"}} class="img-polaroid" /></a></div>
-        {{/if}}
+        {{#each attachment in attachments}}
+          {{#if attachment.isAttachmentImage}}
+            <div class="image"><a target="_blank" {{bindAttr href="attachment.path"}}><img {{bindAttr alt="attachment.filename"}} {{bindAttr title="attachment.filename"}} {{bindAttr src="attachment.thumbnail.path"}} class="img-polaroid" /></a></div>
+          {{/if}}
+          {{#if attachment.isAttachmentAudio}}
+            <div class="audio-wrapper">
+               <a target="_blank" {{bindAttr href="attachment.path"}}>{{attachment.filename}}</a><br/>
+               <audio {{bindAttr id="attachment.id"}} {{bindAttr src="attachment.path"}}></audio>
+               {{view App.AudioPlayerView playerIdBinding="attachment.id"}}
+            </div>
+          {{/if}}
+          {{#if attachment.isAttachmentGeneral}}
+            <div><a target="_blank" {{bindAttr href="attachment.path"}}>{{attachment.filename}}</a></div>
+          {{/if}}
+        {{/each}}
       </div>
     {{/if}}
 

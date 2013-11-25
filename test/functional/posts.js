@@ -119,6 +119,7 @@ describe('Post API', function() {
         // XXX
         // assert(!!jsonAttachment.fsPath)
         assert(!!jsonAttachment.path)
+        assert.equal(jsonAttachment.media, "image")
 
         assert(!!jsonAttachment.thumbnail)
         var jsonThumbnail = jsonAttachment.thumbnail
@@ -129,12 +130,12 @@ describe('Post API', function() {
         assert(!!jsonThumbnail.path)
         // XXX
         // assert(!!jsonThumbnail.fsPath)
-
+        
         done()
       })
   })
 
-  it('POST /v1/posts with zip attachment should create post and return json object without attachment', function(done) {
+  it('POST /v1/posts with zip attachment should create post and return json object with general attachment', function(done) {
     var params = {
       body: 'postBody'
     }
@@ -155,8 +156,43 @@ describe('Post API', function() {
         assert(Array.isArray(jsonPost.comments))
         assert.equal(jsonPost.comments.length, 0)
         assert(Array.isArray(jsonPost.attachments))
-        assert.equal(jsonPost.attachments.length, 0)
+        assert.equal(jsonPost.attachments.length, 1)
 
+        var jsonAttachment = jsonPost.attachments[0]
+        assert(!!jsonAttachment.id)
+        assert(!!jsonAttachment.path)
+        assert.equal(jsonAttachment.media, "general")
+        done()
+      })
+  })
+
+  it('POST /v1/posts with mp3 attachment should create post and return json object with audio attachment', function(done) {
+    var params = {
+      body: 'postBody'
+    }
+    request(server)
+      .post('/v1/posts')
+      .attach('file-0', 'test/fixtures/blank.mp3')
+      .field('body', params.body)
+      .expect(200)
+      .end(function(err, res) {
+        assert.equal(err, null)
+
+        var jsonPost = res.body
+        assert(!!jsonPost.id)
+        assert(!!jsonPost.createdAt)
+        assert(!!jsonPost.updatedAt)
+        assert.equal(params.body, jsonPost.body)
+        // XXX: test userId
+        assert(Array.isArray(jsonPost.comments))
+        assert.equal(jsonPost.comments.length, 0)
+        assert(Array.isArray(jsonPost.attachments))
+        assert.equal(jsonPost.attachments.length, 1)
+
+        var jsonAttachment = jsonPost.attachments[0]
+        assert(!!jsonAttachment.id)
+        assert(!!jsonAttachment.path)
+        assert.equal(jsonAttachment.media, "audio")
         done()
       })
   })

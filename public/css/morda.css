@@ -340,3 +340,17 @@ footer {
 .form-horizontal .control-group.rss input, .form-horizontal .control-group.rss button {
   margin-bottom: 5px;
 }
+
+.audio-wrapper {
+    padding-top:0.6em;
+    position: relative;
+}
+
+.download-audio {
+    width: 16px;
+    height: 16px;
+    background: url("/img/download.gif") no-repeat;
+    left: 405px;
+    position: absolute;
+    top: 14px;
+}

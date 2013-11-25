@@ -40,7 +40,7 @@ define(["app/app", "socket.io"], function(App) {
       if (!this.isFirstPage())
         return
 
-      var post = App.Post.create(data.post)
+      var post = App.Post.createFromProto(data.post)     
       this.currentController().get('posts').addObject(post)
     },
 

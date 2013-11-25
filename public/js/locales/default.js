@@ -11,7 +11,7 @@ Em.I18n.translations = {
   'label.settings': 'settings',
   'label.signout': 'sign out',
   'label.version': '0.0.10',
-  'label.add.image': 'Add image: ',
+  'label.add.file': 'Add file: ',
   'label.cancel': 'Cancel',
   'label.comment': 'Comment',
   'label.like': 'Like',

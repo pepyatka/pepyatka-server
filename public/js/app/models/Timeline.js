@@ -45,25 +45,7 @@ define(["app/app"], function(App) {
           var _posts = []
 
           response.posts.forEach(function(attrs) {
-            var comments = attrs.comments
-            delete attrs.comments
-
-            var post = App.Post.create(attrs)
-            post.comments = Ember.ArrayProxy.createWithMixins(Ember.SortableMixin, {
-              // TODO: figure out why we have to add itemController="comment"
-              // option to each iterator in the view
-              itemController: 'comment',
-
-              content: []
-            })
-
-            if (comments) {
-              comments.forEach(function(attrs) {
-                var comment = App.Comment.create(attrs)
-                post.comments.addObject(comment)
-              })
-            }
-
+            var post = App.Post.createFromProto(attrs)
             _posts.push(post)
           })
 
