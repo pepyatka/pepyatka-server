@@ -6,11 +6,15 @@ define(["app/app"], function(App) {
     valueBinding: Ember.Binding.oneWay('controller.content.body'),
     viewName: 'textField',
 
-    insertNewline: function() {
-      this.triggerAction();
+    keyPress: function(event) {
+      if (event.keyCode === 13) {
+        this.triggerAction();
 
-      this.set('body', '')
-      this.set('_parentView._parentView.isFormVisible', false)
+        this.set('_parentView._parentView.isFormVisible', false)
+        this.set('body', '')
+
+        return false;
+      }
     },
 
     didInsertElement: function() {
