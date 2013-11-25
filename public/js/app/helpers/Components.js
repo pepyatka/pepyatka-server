@@ -103,13 +103,16 @@ define(["app/app",
     valueBinding: Ember.Binding.oneWay('controller.body'),
     viewName: 'textField',
 
-    insertNewline: function() {
-      this.triggerAction();
+    keyPress: function(event) {
+      if (event.keyCode === 13) {
+        this.triggerAction();
 
-      // dirty way to restore original height of post textarea
-      this.$().find('textarea').height('56px')
-
-      this.set('_parentView._parentView._parentView.isEditFormVisible', false)
+        this.set('_parentView._parentView._parentView.isEditFormVisible', false)
+        // dirty way to restore original height of post textarea
+        this.$().find('textarea').height('56px')
+        
+        return false;
+      }
     },
 
     didInsertElement: function() {
@@ -129,13 +132,17 @@ define(["app/app",
         view.set('isVisible', true)
     },
 
-    insertNewline: function() {
-      this.triggerAction();
+    keyPress: function(event) {
+      if (event.keyCode === 13) {
+        this.triggerAction()
 
-      this.set('body', '')
+        this.set('body', '')
 
-      // dirty way to restore original height of post textarea
-      this.$().find('textarea').height('56px')
+        // dirty way to restore original height of post textarea
+        this.$().find('textarea').height('56px')
+        
+        return false
+      }
     },
 
     didInsertElement: function() {

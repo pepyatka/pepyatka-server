@@ -6,11 +6,15 @@ define(["app/app"], function(App) {
     valueBinding: 'body',
     viewName: 'textField',
 
-    insertNewline: function() {
-      App.CommentController.actions.submit(this, this.get('_parentView._context.content.id'))
+    keyPress: function(event) {
+      if (event.keyCode === 13) {
+        App.CommentController.actions.submit(this, this.get('_parentView._context.content.id'))
 
-      this.set('_parentView._parentView.isFormVisible', false)
-      this.set('body', '')
+        this.set('_parentView._parentView.isFormVisible', false)
+        this.set('body', '')
+
+        return false;
+      }
     },
 
     didInsertElement: function() {
