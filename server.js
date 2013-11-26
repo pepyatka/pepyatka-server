@@ -31,7 +31,7 @@ app.configure(function() {
 
   app.enable("jsonp callback");
 
-  app.use(express.favicon());
+  app.use(express.favicon(path.normalize(__dirname + '/public/img/favicon.png')));
 
   app.use(express.logger('dev'));
 
