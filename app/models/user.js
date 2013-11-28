@@ -224,7 +224,7 @@ exports.addModel = function(db) {
     cleanRSS: function(nrss, f) {
       var user = this;
 
-      this.getRSS(function(err, rss) {
+      this.getRss(function(err, rss) {
         if (err) {
           f(err);
         } else {
@@ -518,7 +518,7 @@ exports.addModel = function(db) {
       }
     },
 
-    getRSS: function(f) {
+    getRss: function(f) {
       db.smembers(mkKey([userK, this.id, rssK]), f);
     },
 
@@ -924,7 +924,7 @@ exports.addModel = function(db) {
       }
 
       if (select.indexOf("rss") != -1) {
-        that.getRSS(function(err, rss) {
+        that.getRss(function(err, rss) {
           if (rss) {
             json.rss = rss;
           }

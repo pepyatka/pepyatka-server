@@ -291,7 +291,7 @@ exports.addModel = function(db) {
   Group.prototype.cleanRSS = function(nrss, f) {
     var group = this;
 
-    group.getRSS(function(err, rss) {
+    group.getRss(function(err, rss) {
       if (err) {
         f(err);
       } else {
@@ -489,7 +489,7 @@ exports.addModel = function(db) {
     }
 
     if (select.indexOf("rss") != -1) {
-      that.getRSS(function(err, rss) {
+      that.getRss(function(err, rss) {
         if (rss) {
           json.rss = rss;
         }

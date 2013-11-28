@@ -724,12 +724,12 @@ exports.addModel = function(db) {
       newAttachment.save(tmpPath, function(err, attachment) {
         if (!that.attachments)
           that.attachments = []
-        
+
         that.attachments.push(attachment)
         // move tmp file to a storage
         fs.rename(tmpPath, attachmentPath, function(err) {
           callback(err, that)
-        })         
+        })
       })
     },
 
@@ -764,6 +764,12 @@ exports.addModel = function(db) {
           callback(err, _.compact(res));
         }
       });
+    },
+
+    getCreatedBy: function(callback) {
+      models.User.findById(this.userId, function(err, user) {
+        callback(err, user)
+      })
     },
 
     toJSON: function(params, callback) {

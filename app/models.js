@@ -11,3 +11,7 @@ exports.Tag         = require('./models/tag').addModel(db);
 exports.Stats       = require('./models/stats').addModel(db);
 exports.RSS         = require('./models/rss').addModel(db);
 exports.FeedFactory = require('./models/feed-factory').addModel(db);
+
+exports.AbstractSerializer = require('./serializers/abstract_serializer').addSerializer();
+exports.UserSerializer = require('./serializers/user_serializer').addSerializer(exports.User);
+exports.PostSerializer = require('./serializers/post_serializer').addSerializer(exports.Post);
