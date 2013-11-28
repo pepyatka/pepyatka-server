@@ -51,13 +51,21 @@
           {{/if}}
           {{#if attachment.isAttachmentAudio}}
             <div class="audio-wrapper">
-               <a target="_blank" {{bindAttr href="attachment.path"}}>{{attachment.filename}}</a><br/>
-               <audio {{bindAttr id="attachment.id"}} {{bindAttr src="attachment.path"}}></audio>
-               {{view App.AudioPlayerView playerIdBinding="attachment.id"}}
+              <div class="inner">
+                <audio {{bindAttr id="attachment.id"}} {{bindAttr src="attachment.path"}}></audio>
+                {{view App.AudioPlayerView playerIdBinding="attachment.id"}}
+              </div>
+              <div>
+                <i class="icon-music"></i>&nbsp;<a target="_blank" {{bindAttr href="attachment.path"}}>{{attachment.filename}}</a>&nbsp;
+                <span class="padding-left-small text-small muted">{{attachment.size}}</span>
+              </div>
             </div>
           {{/if}}
           {{#if attachment.isAttachmentGeneral}}
-            <div><a target="_blank" {{bindAttr href="attachment.path"}}>{{attachment.filename}}</a></div>
+            <div>
+              <i class="icon-file"></i>&nbsp;<a target="_blank" {{bindAttr href="attachment.path"}}>{{attachment.filename}}</a>&nbsp;
+              <span class="padding-left-small text-small muted">{{attachment.size}}</span>
+            </div>
           {{/if}}
         {{/each}}
       </div>

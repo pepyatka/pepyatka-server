@@ -1,7 +1,9 @@
 var uuid = require('node-uuid')
   , gm = require('gm')
   , mime = require('mime')
+  , async = require('async')
   , path = require('path')
+  , filesize = require('filesize')
   // XXX: do not like the idea of requiring all the models than we
   // need just one or may be two of them, however it's a oneliner.
   , models = require('../models')
@@ -16,6 +18,7 @@ exports.addModel = function(db) {
     this.filename = params.filename || ""
     this.path = params.path || ""
     this.fsPath = params.fsPath || ""
+    this.size = params.size
     this.postId = params.postId
     this.tmpPath = params.tmpPath || ""
 
@@ -151,37 +154,59 @@ exports.addModel = function(db) {
 
       if (this.id === undefined) this.id = uuid.v4()
 
-      this.handleMedia(tmpPath, function(err) {
-        var params = { 'ext': that.ext.toString(),
-                       'filename': that.filename.toString(),
-                       'path': that.path.toString(),
-                       'fsPath': that.fsPath.toString(),
-                       'mediaType': that.mediaType.toString()
-                     }
-        
-        if (that.thumbnailId) {
-          that.thumbnailId = that.thumbnailId.toString()
-          params.thumbnailId = that.thumbnailId
-        }
-        
-        if (that.postId) {
-          that.postId = that.postId.toString()
-          params.postId = that.postId.toString()
-        }
+      // we use async series to eliminate extra fs.stat call in case of size already known
+      var order = []
 
-        that.validate(function(valid) {
-          if (!valid)
-            return callback(1, that)
+      if (that.size === undefined)
+        // add size-getter
+        order.push(function(_callback) {
+          fs.stat(tmpPath, function(err, stats) {
+            that.size = filesize(stats.size, {round: 1})
+            _callback()
+          })
+        })
+      
+      order.push(function(_callback) {
+        // add main function
+        that.handleMedia(tmpPath, function(err) {
+          var params = { 'ext': that.ext.toString(),
+                         'filename': that.filename.toString(),
+                         'path': that.path.toString(),
+                         'fsPath': that.fsPath.toString(),
+                         'mediaType': that.mediaType.toString(),
+                         'size': that.size.toString()
+                       }
           
-          db.hmset('attachment:' + that.id, params, function(err, res) {
-            if (!that.postId)
-              return callback(null, that)
+          if (that.thumbnailId) {
+            that.thumbnailId = that.thumbnailId.toString()
+            params.thumbnailId = that.thumbnailId
+          }
+          
+          if (that.postId) {
+            that.postId = that.postId.toString()
+            params.postId = that.postId.toString()
+          }
+          
+          that.validate(function(valid) {
+            if (!valid)
+              return callback(1, that)
             
-            models.Post.addAttachment(that.postId, that.id, function(err, count) {
-              callback(err, that)
+            db.hmset('attachment:' + that.id, params, function(err, res) {
+              if (!that.postId)
+                return callback(null, that)
+              
+              models.Post.addAttachment(that.postId, that.id, function(err, count) {
+                callback(err, that)
+              })
             })
           })
         })
+        _callback()
+      })
+
+      async.series(order, function(err) {
+        if (err)
+          callback(err, null)
       })
     },
     
@@ -190,8 +215,7 @@ exports.addModel = function(db) {
         id: this.id,
         media: this.mediaType,
         filename: this.filename,
-        // ext: this.ext,
-        // filename: this.filename,
+        size: this.size,
         path: this.path
       }
 
@@ -201,8 +225,6 @@ exports.addModel = function(db) {
       models.Attachment.findById(this.thumbnailId, function(err, thumbnail) {
         attrs.thumbnail = {
           id: thumbnail.id,
-          // ext: thumbnail.ext,
-          // filename: thumbnail.filename,
           path: thumbnail.path
         }
         callback(err, attrs)
