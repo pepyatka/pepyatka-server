@@ -14,7 +14,7 @@
 
           // Now we are good to initialize Ember application
           App.advanceReadiness()
-        })
+        });	
       });
     });
   })
