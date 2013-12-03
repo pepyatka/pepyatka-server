@@ -1,117 +1,117 @@
-var async = require('async')
+var async = require('async');
 
-// NOTE: the code below is excessively confusing I'd rather introduce
-// new abstract object or something rather than doing recursion after
-// recursion in a dynamic language. You have been warned.
 exports.addSerializer = function() {
-  function AbstractSerializer(object, strategy) {
-    this.object = object
-    this.strategy = strategy
-  }
+  var AbstractSerializer = function(object, strategy) {
+    this.object   = object;
+    this.strategy = strategy;
+  };
 
   AbstractSerializer.prototype = {
-    toJSON: function(callback) {
-      var that = this
-        , strategy = this.strategy
-        , json = {}
+    END_POINT: 1,
+    NESTED_STRATEGY: 2,
+    THROUGH_POINT: 3,
 
-      // that function selects inner complex properties, we'll use it
-      // a bit later
-      // complex property is a property that we need to select by
-      // defined strategy and has custom structure, e.g. info is a
-      // complex property in a example
-      // var strategy = {
-      //   select: ['id', 'username', 'type', 'info', 'rss'],
-      //   info: { select: ['screenName'] }
-      // }
-      var selectComplexProperties = function(strategy, subfield, object, callback) {
-          async.map(strategy, function(field, callback) {
-            if (object[field]) { // object has that property, moving on
-              json[subfield] = json[subfield] || {}
-              json[subfield][field] = object[field]
-              callback(object[field])
-            } else { // property is missing and as we don't know db
-              // structure we'll use model methods that probably
-              // and we hope exist
-              // we are assuming that there is a function get<Something> where
-              // <Something> is a name of a property or an object that
-              // we are going to select
-              // TODO: not sure we really need this block here... it
-              // might happen we'll need to get fields by "'get' +
-              // subfield.capitalize()" function
-              var name = 'get' + field.capitalize()
-              object[name](function(err, res) {
-                callback(err, res)
-              })
-            }
-          }, function(err, json) {
-            // we have fetched all inner properties
-            callback(err)
-          })
+    getField: function(field, f) {
+      if (!this.object[field]) {
+        this.object["get" + field.capitalize()](f);
+      } else {
+        f(null, this.object[field]);
       }
+    },
 
-      var selectPropertiesViaSerializator = function(field, object, serializer, callback) {
-        var fn = function(object) {
-          var objectSerializer = new serializer(object)
-          objectSerializer.toJSON(function(objectJson) {
-            json[field] = objectJson
-            callback(null)
-          })
-        }
-
-        if (object) {
-          fn(object)
+    decideNode: function(field) {
+      if (!this.strategy[field]) {
+        return this.END_POINT;
+      } else {
+        if (this.strategy[field].through) {
+          return this.THROUGH_POINT;
         } else {
-          // TODO: code below duplicates code from
-          // selectComplexProperties function
-          var name = 'get' + field.capitalize()
-          that.object[name](function(err, object) {
-            fn(object)
-          })
+          return this.NESTED_STRATEGY;
         }
       }
+    },
 
-      async.forEach(strategy.select, function(field, callback) {
-        // TODO: some of strategy might be already exist in the object
-        // if (that.object[field]) { // this field is already present
-        // in the object
+    processMultiObjects: function(objects, strategy, f, serializer) {
+      var result = [];
+      var jsonAdder = function(done) {
+        return function(err, json) {
+          result.push(json);
+          done(err);
+        };
+      };
 
-        // this is a complex property
-        if (strategy[field] && (strategy[field].select || strategy[field].through)) {
-          // now we need to either ensure all properties are there
-          // or fetch missing from the db
-
-          // Liberté, égalité, fraternité. Object and array of objects
-          // must be living together.
-          var objects = that.object
-          if (!Array.isArray(objects))
-            objects = [objects]
-
-          async.forEach(objects, function(object, callback) {
-            var guineaPig = object[field]
-
-            if (strategy[field].select) // this is a plain structure
-              selectComplexProperties(strategy[field].select,
-                                      field,
-                                      guineaPig, callback)
-            else if (strategy[field].through) // we have been told to select that
-              // property through existing serializator
-              selectPropertiesViaSerializator(field,
-                                              guineaPig,
-                                              strategy[field].through,
-                                              callback)
-          }, function(err) {
-            callback(err)
-          })
+      async.forEach(objects, function(object, done) {
+        if (serializer) {
+          new serializer(object).toJSON(jsonAdder(done));
         } else {
-          json[field] = that.object[field]
-          callback(null)
+          new AbstractSerializer(object, strategy).toJSON(jsonAdder(done));
         }
       }, function(err) {
-        callback(json)
-      })
-    }
-  }
+        f(err, result);
+      });
+    },
 
-  return AbstractSerializer
-}
+    getMaybeObjects: function(field, one, many) {
+      this.getField(field, function(err, object) {
+        Array.isArray(object) ? many(object) : one(object);
+      });
+    },
+
+    processNestedStrategy: function(field, f) {
+      var serializer = this;
+
+      serializer.getMaybeObjects(field, function(object) {
+        new AbstractSerializer(object, serializer.strategy[field]).toJSON(f);
+      }, function(objects) {
+        serializer.processMultiObjects(objects, serializer.strategy[field], f);
+      });
+    },
+
+    processThroughPoint: function(field, f) {
+      var serializer = this;
+
+      serializer.getMaybeObjects(field, function(object) {
+        new serializer.strategy[field].through(object).toJSON(f);
+      }, function(objects) {
+        serializer.processMultiObjects(objects, null, f, serializer.strategy[field].through);
+      });
+    },
+
+    processNode: function(jsonAdder) {
+      var serializer = this;
+
+      return function(field, done) {
+        switch (serializer.decideNode(field)) {
+
+        case serializer.END_POINT:
+          serializer.getField(field, jsonAdder(field, done));
+          break;
+
+        case serializer.NESTED_STRATEGY:
+          serializer.processNestedStrategy(field, jsonAdder(field, done));
+          break;
+
+        case serializer.THROUGH_POINT:
+          serializer.processThroughPoint(field, jsonAdder(field, done));
+          break;
+        }
+      };
+    },
+
+    toJSON: function(f) {
+      var json = {};
+      var jsonAdder = function(field, done) {
+        return function(err, res) {
+          json[field] = res;
+          done(err);
+        };
+      };
+
+      async.forEach(this.strategy.select, this.processNode(jsonAdder) , function(err) {
+        f(err, json);
+      });
+    }
+  };
+
+  return AbstractSerializer;
+};
