@@ -149,6 +149,10 @@ exports.addModel = function(db) {
       })
     },
 
+    getCreatedBy: function(f) {
+      this.user ? f(null, this.user) : models.User.findById(this.userId, f);
+    },
+
     create: function(callback) {
       var that = this
 
@@ -240,6 +244,6 @@ exports.addModel = function(db) {
     }
 
   }
-  
+
   return Comment;
 }
