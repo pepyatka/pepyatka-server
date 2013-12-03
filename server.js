@@ -48,7 +48,7 @@ app.configure(function() {
   app.use(express.session({
     secret: conf.secret,
     store: new RedisStore,
-    cookie: { secure: false, maxAge:86400000 }
+    cookie: { secure: false, maxAge:86400000000 }
   }));
   app.use(flash());
 
