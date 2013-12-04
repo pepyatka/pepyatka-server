@@ -173,6 +173,5 @@ define(["app/app",
     didInsertElement: function() {
       this.$().prettyInput()
     }
-  });
-
+  })
 });

@@ -378,3 +378,23 @@ footer {
 .youtube-iframe {
     padding-top: 0.6em;
 }
+
+.youtube-thumbnail {
+    margin-top: .4em;
+    width: 120px;
+    height: 90px;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.youtube-thumbnail-inner {
+    width:32px;
+    height:32px;
+    margin:32px 44px;
+    background: url(/img/playstop.png) no-repeat top left;
+    background-position: 0 0;
+}
+
+.youtube-thumbnail.stop .youtube-thumbnail-inner {
+    background-position: 0 -65px;
+}

@@ -1,0 +1,10 @@
+{{#if view.getYoutubeThumbnail}}
+  <div {{bind-attr class=":youtube-thumbnail view.isPlayerVisible:stop"}} {{action toggleVisibility target="view"}} {{bindAttr style="view.getYoutubeThumbnail"}}>
+    <div class="youtube-thumbnail-inner"></div>
+  </div>
+  {{#if view.isPlayerVisible}}
+    <div class="youtube-iframe">
+      <iframe {{bindAttr src="view.getYoutubeLink"}} width="400" frameborder="0" height="224" allowfullscreen></iframe>
+    </div>
+  {{/if}}
+{{/if}}
