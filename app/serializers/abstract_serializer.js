@@ -12,7 +12,9 @@ exports.addSerializer = function() {
     THROUGH_POINT: 3,
 
     getField: function(field, f) {
-      if (!this.object[field]) {
+      if (!this.object) {
+        f(null, null);
+      } else if (!this.object[field]) {
         this.object["get" + field.capitalize()](f);
       } else {
         f(null, this.object[field]);
