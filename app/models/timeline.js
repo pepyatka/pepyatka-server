@@ -136,6 +136,10 @@ exports.addModel = function(db) {
       })
     },
 
+    getUser: function(f) {
+      models.FeedFactory.findById(this.userId, f);
+    },
+
     getPosts: function(start, num, callback) {
       if (this.posts)
         return callback(null, this.posts)

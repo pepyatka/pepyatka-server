@@ -149,6 +149,33 @@ exports.addModel = function(db) {
       })
     },
 
+    getSubscribers: function(f) {
+      var subscribersIds = [];
+      var subscribersJSON = [];
+
+      this.getTimelines( {start: 0}, function(err, timelines) {
+        async.forEach(timelines, function(timeline, done) {
+          timeline.getSubscribers(function(err, subscribers) {
+            async.forEach(subscribers, function(subscriber, done) {
+              if (subscribersIds.indexOf(subscriber.id) != -1) {
+                return done(null);
+              }
+
+              subscribersIds.push(subscriber.id);
+              subscriber.toJSON({}, function(err, subscriberJSON) {
+                subscribersJSON.push(subscriberJSON);
+                done(err);
+              });
+            }, function(err) {
+              done(err);
+            });
+          });
+        }, function(err) {
+          f(err, subscribersJSON);
+        });
+      });
+    },
+
     validPassword: function(clearPassword) {
       var hashedPassword = User.hashPassword(this.salt + User.hashPassword(clearPassword))
       return hashedPassword == this.hashedPassword

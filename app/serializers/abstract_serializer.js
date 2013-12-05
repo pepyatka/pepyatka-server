@@ -15,7 +15,9 @@ exports.addSerializer = function() {
       if (!this.object) {
         f(null, null);
       } else if (!this.object[field]) {
-        this.object["get" + field.capitalize()](f);
+        // No, you can't assign "this.object["get" +
+        // field.capitalize()]" to variable and save same method call semantics.
+        this.object["get" + field.capitalize()] ? this.object["get" + field.capitalize()](f) : f(null, null);
       } else {
         f(null, this.object[field]);
       }

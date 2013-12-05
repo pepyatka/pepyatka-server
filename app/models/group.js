@@ -417,6 +417,22 @@ exports.addModel = function(db) {
     })
   }
 
+  Group.prototype.getAdmins = function(f) {
+    this.getAdministratorsIds(function(err, administratorsIds) {
+      async.map(administratorsIds, function(administratorId, callback) {
+        models.FeedFactory.findById(administratorId, function(err, user) {
+          if (!user) return callback(1, null);
+
+          user.toJSON({ select: ['id', 'username'] }, function(err, json) {
+            callback(err, json);
+          });
+        });
+      }, function(err, administratorsJSON) {
+        f(err, administratorsJSON);
+      });
+    });
+  },
+
   Group.prototype.removeAdministrator = function(feedId, callback) {
     var that = this
 
