@@ -19,6 +19,12 @@ Find out more
 1. [REST API by examples](https://github.com/epicmonkey/pepyatka/wiki/REST-API-example)
 1. [NTLM support](https://github.com/epicmonkey/pepyatka/wiki/NTLM-support)
 
+Contribute
+----------
+
+1. [How to contribute](https://github.com/epicmonkey/pepyatka/wiki/How-to-contribute)
+1. [Code style](https://github.com/epicmonkey/pepyatka/wiki/Code-style)
+
 Roadmap
 -------
 
