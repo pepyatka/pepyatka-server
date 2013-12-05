@@ -1,6 +1,8 @@
 var models = require('../models')
   , async = require('async')
 
+var PostSerializer = models.PostSerializer;
+
 exports.addRoutes = function(app) {
   var requireAuthorization = function(requestingUser, timelineId, callback) {
     models.Timeline.findById(timelineId, { start : 0 }, function(err, timeline) {
@@ -19,27 +21,14 @@ exports.addRoutes = function(app) {
     })
   }
 
-  var postSerializer = {
-    select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'updatedAt', 'likes', 'groups'],
-    createdBy: { select: ['id', 'username', "info"],
-                 info: {select: ["screenName"]}},
-    comments: { select: ['id', 'body', 'createdBy'],
-                createdBy: { select: ['id', 'username', 'info'],
-                             info: {select: ['screenName'] }}},
-    likes: { select: ['id', 'username', 'info'],
-             info: {select: ['screenName'] }},
-    groups: { select: ['id', 'username', 'info'],
-              info: {select: ['screenName'] }}
-  }
-
   app.get('/v1/posts/:postId', function(req, res) {
     models.Post.findById(req.params.postId, function(err, post) {
       if (!post)
         return res.jsonp({'error': 'Not found'}, 404);
 
-      post.toJSON(postSerializer, function(err, json) {
+      new PostSerializer(post).toJSON(function(err, json) {
         res.jsonp(json);
-      })
+      });
     })
   })
 
@@ -126,7 +115,7 @@ exports.addRoutes = function(app) {
       }, function(err, newPost) {
         newPost.create(function(err, post) {
           if (err) return res.jsonp({}, 422);
-          post.toJSON(postSerializer, function(err, json) {
+          new PostSerializer(post).toJSON(function(err, json) {
             res.jsonp(json);
           });
         });
