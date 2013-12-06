@@ -1,9 +1,7 @@
-var models = require('../models');
+var models = require('../models')
+  , UserSerializer = models.UserSerializer;
 
 exports.addRoutes = function(app) {
-  var userSerializer = { select: ['id', 'username', 'info'],
-                         info: {select: ['screenName'] } }
-
   if (!conf.remoteUser) {
     app.post('/v1/signup', function(req, res) {
       var newUser = new models.User( {
@@ -19,9 +17,9 @@ exports.addRoutes = function(app) {
           if (err) return res.jsonp({}, 422)
 
           req.logIn(user, function(err) {
-            user.toJSON(userSerializer, function(err, userJSON) {
-              res.jsonp({ err: null, status: 'success', user: userJSON })
-            })
+            new UserSerializer(user).toJSON(function(err, userJSON) {
+              res.jsonp({ err: null, status: 'success', user: userJSON });
+            });
           })
         })
       })
