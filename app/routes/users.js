@@ -80,7 +80,7 @@ exports.addRoutes = function(app) {
     models.FeedFactory.findById(req.params.userId, function(err, feed) {
       if (err) return res.jsonp({}, 404)
 
-      new UserSerializer(req.user).toJSON(function(err, json) {
+      new UserSerializer(feed).toJSON(function(err, json) {
         res.jsonp(json);
       });
     })
