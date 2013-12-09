@@ -14,6 +14,10 @@ exports.FeedFactory = require('./models/feed-factory').addModel(db);
 
 exports.AbstractSerializer = require('./serializers/abstract_serializer').addSerializer();
 exports.Serializer = require("./serializers/serializer").addSerializer();
+exports.PubSubNewPostSerializer = require("./serializers/pubsub_new_post_serializer").addSerializer();
+exports.PubSubUpdatePostSerializer = require("./serializers/pubsub_update_post_serializer").addSerializer();
+exports.PubSubCommentSerializer = require("./serializers/pubsub_comment_serializer").addSerializer();
+exports.PubSubLikeSerializer = require("./serializers/pubsub_like_serializer").addSerializer();
 exports.FeedInfoSerializer = require("./serializers/feedinfo_serializer").addSerializer();
 exports.CommentSerializer = require("./serializers/comment_serializer").addSerializer();
 exports.TimelineSerializer = require("./serializers/timeline_serializer").addSerializer();
