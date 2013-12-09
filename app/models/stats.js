@@ -198,33 +198,6 @@ exports.addModel = function(db) {
           callback(err, stats)
         })
       })
-    },
-
-    toJSON: function(params, callback) {
-      var that = this
-        , json = {}
-        , select = params.select ||
-          models.Stats.getAttributes()
-
-      if (select.indexOf('userId') != -1)
-        json.userId = that.userId
-
-      if (select.indexOf('posts') != -1)
-        json.posts = that.posts
-
-      if (select.indexOf('likes') != -1)
-        json.likes = that.likes
-
-      if (select.indexOf('discussions') != -1)
-        json.discussions = that.discussions
-
-      if (select.indexOf('subscribers') != -1)
-        json.subscribers = that.subscribers
-
-      if (select.indexOf('subscriptions') != -1)
-        json.subscriptions = that.subscriptions
-
-      callback(null, json)
     }
   }
 

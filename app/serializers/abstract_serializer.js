@@ -1,5 +1,20 @@
 var async = require('async');
 
+var replicate = function(n, x) {
+  if (n == 0) {
+    return [];
+  } else {
+    return [x].concat(replicate(n - 1, x));
+  }
+};
+
+// Sometimes getters are having more then one argument, filling those
+// arguments with nulls here, assuming last argument is a callback for
+// return value.
+var funcall = function(context, f, callback) {
+  f.apply(context, replicate(f.length - 1, null).concat([callback]));
+};
+
 exports.addSerializer = function() {
   var AbstractSerializer = function(object, strategy) {
     this.object   = object;
@@ -15,9 +30,9 @@ exports.addSerializer = function() {
       if (!this.object) {
         f(null, null);
       } else if (!this.object[field]) {
-        // No, you can't assign "this.object["get" +
-        // field.capitalize()]" to variable and save same method call semantics.
-        this.object["get" + field.capitalize()] ? this.object["get" + field.capitalize()](f) : f(null, null);
+        var method = this.object["get" + field.capitalize()];
+
+        method ? funcall(this.object, method, f) : f(null, null);
       } else {
         f(null, this.object[field]);
       }

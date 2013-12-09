@@ -1,5 +1,7 @@
 var models = require('../models')
   , async = require('async')
+  , TimelineSerializer = models.TimelineSerializer
+  , SubscriberSerializer = models.SubscriberSerializer;
 
 exports.addRoutes = function(app) {
   var timelineSerializer = {
@@ -39,9 +41,10 @@ exports.addRoutes = function(app) {
 
       timeline.getSubscribers(function(err, subscribers) {
         async.map(subscribers, function(subscriber, callback) {
-          subscriber.toJSON(subscriberSerializer, function(err, json) {
-            callback(err, json)
-          })
+
+          new SubscriberSerializer(subscriber).toJSON(function(err, json) {
+            callback(err, json);
+          });
         }, function(err, json) {
           res.jsonp(json)
         })
@@ -92,13 +95,13 @@ exports.addRoutes = function(app) {
       if (!timeline)
         return res.jsonp({});
 
-      timeline.toJSON(timelineSerializer, function(err, json) {
+      new TimelineSerializer(timeline).toJSON(function(err, json) {
         res.jsonp(json);
-      })
+      });
     })
   }),
 
-  app.get('/v1/timeline/:username', function(req, res){
+  app.get('/v1/timeline/:username', function(req, res) {
     // XXX: calling model's function affects overall performance, e.g.
     // in this case we need just one user paramers: id, however
     // findByUsername function will return entire structure. Not a top
@@ -115,9 +118,9 @@ exports.addRoutes = function(app) {
         if (!timeline)
           return res.jsonp({});
 
-        timeline.toJSON(timelineSerializer, function(err, json) {
+        new TimelineSerializer(timeline).toJSON(function(err, json) {
           res.jsonp(json);
-        })
+        });
       })
     })
   }),
@@ -133,9 +136,9 @@ exports.addRoutes = function(app) {
         if (!timeline)
           return res.jsonp({});
 
-        timeline.toJSON(timelineSerializer, function(err, json) {
+        new TimelineSerializer(timeline).toJSON(function(err, json) {
           res.jsonp(json);
-        })
+        });
       })
     })
   }),
@@ -151,9 +154,9 @@ exports.addRoutes = function(app) {
         if (!timeline)
           return res.jsonp({});
 
-        timeline.toJSON(timelineSerializer, function(err, json) {
+        new TimelineSerializer(timeline).toJSON(function(err, json) {
           res.jsonp(json);
-        })
+        });
       })
     })
   }),
@@ -173,10 +176,10 @@ exports.addRoutes = function(app) {
           if (err)
             return res.jsonp({})
 
-          timeline.toJSON(timelineSerializer, function(err, json) {
-            json.postsTimelineId = postsTimelineId
+          new TimelineSerializer(timeline).toJSON(function(err, json) {
+            json.postsTimelineId = postsTimelineId;
             res.jsonp(json);
-          })
+          });
         })
       })
     })

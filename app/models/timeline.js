@@ -141,6 +141,11 @@ exports.addModel = function(db) {
     },
 
     getPosts: function(start, num, callback) {
+      if (!(start && num)) {
+        var start = this.start;
+        var num = this.num;
+      }
+
       if (this.posts)
         return callback(null, this.posts)
 

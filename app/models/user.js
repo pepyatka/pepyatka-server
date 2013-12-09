@@ -150,30 +150,35 @@ exports.addModel = function(db) {
     },
 
     getSubscribers: function(f) {
-      var subscribersIds = [];
-      var subscribersJSON = [];
+      var subscriberIds = [];
+      var result = [];
 
-      this.getTimelines( {start: 0}, function(err, timelines) {
-        async.forEach(timelines, function(timeline, done) {
+      this.getTimelines({start: 0}, function(err, timelines) {
+        async.forEach(timelines, function(timeline, done1) {
+
           timeline.getSubscribers(function(err, subscribers) {
-            async.forEach(subscribers, function(subscriber, done) {
-              if (subscribersIds.indexOf(subscriber.id) != -1) {
-                return done(null);
-              }
 
-              subscribersIds.push(subscriber.id);
-              subscriber.toJSON({}, function(err, subscriberJSON) {
-                subscribersJSON.push(subscriberJSON);
-                done(err);
-              });
+            async.forEach(subscribers, function(subscriber, done2) {
+              if (subscriberIds.indexOf(subscriber.id) != -1) {
+                done2(null);
+              } else {
+                subscriberIds.push(subscriber.id);
+                result.push(subscriber);
+                done2(err);
+              }
             }, function(err) {
-              done(err);
+              done1(err);
             });
           });
+
         }, function(err) {
-          f(err, subscribersJSON);
+          f(err, result);
         });
       });
+    },
+
+    getStatistics: function(f) {
+      models.Stats.findByUserId(this.id, f);
     },
 
     validPassword: function(clearPassword) {
