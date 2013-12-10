@@ -5,11 +5,14 @@ var uuid = require('node-uuid')
   , _ = require("underscore")
   , mkKey = require("../support/models").mkKey
   , crypto = require('crypto')
+  , Serializer = models.Serializer;
 
 var groupK = "user";
 var infoK = "info";
 var rssK = "rss";
 var timelinesK = "timelines";
+
+var AdminSerializer = new Serializer({ select: ['id', 'username'] });
 
 exports.addModel = function(db) {
   var statisticsSerializer = {
@@ -423,7 +426,7 @@ exports.addModel = function(db) {
         models.FeedFactory.findById(administratorId, function(err, user) {
           if (!user) return callback(1, null);
 
-          user.toJSON({ select: ['id', 'username'] }, function(err, json) {
+          new AdminSerializer(user).toJSON(function(err, json) {
             callback(err, json);
           });
         });
