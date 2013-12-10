@@ -202,32 +202,7 @@ exports.addModel = function(db) {
 
     getMedia: function(f) {
       f(null, this.mediaType);
-    },
-
-    toJSON: function(callback) {
-      var attrs = {
-        id: this.id,
-        media: this.mediaType,
-        filename: this.filename,
-        // ext: this.ext,
-        // filename: this.filename,
-        path: this.path
-      }
-
-      if (!this.thumbnailId)
-        return callback(null, attrs)
-
-      models.Attachment.findById(this.thumbnailId, function(err, thumbnail) {
-        attrs.thumbnail = {
-          id: thumbnail.id,
-          // ext: thumbnail.ext,
-          // filename: thumbnail.filename,
-          path: thumbnail.path
-        }
-        callback(err, attrs)
-      })
     }
-
   }
 
   return Attachment;

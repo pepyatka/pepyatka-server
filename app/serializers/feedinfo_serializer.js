@@ -1,16 +1,15 @@
-var Serializer = require("../models").Serializer;
+var models = require("../models")
+  , Serializer = models.Serializer
+  , SubscriptionSerializer = models.SubscriptionSerializer
+  , SubscriberSerializer = models.SubscriberSerializer;
 
 exports.addSerializer = function() {
   return new Serializer({
     select: ['id', 'username', 'type', 'subscriptions', 'subscribers', 'admins'],
     subscriptions: {
       select: ['id', 'user'],
-      user: { select: ['id', 'username', 'type', 'admins', 'info'],
-              info: { select: ['screenName'] } }
+      user: { through: SubscriptionSerializer}
     },
-    subscribers: {
-      select: ['id', 'username', 'type', 'admins', 'info'],
-      info: { select: ['screenName'] }
-    }
+    subscribers: { through: SubscriberSerializer }
   });
 };

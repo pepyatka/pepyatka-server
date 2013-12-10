@@ -5,11 +5,14 @@ var uuid = require('node-uuid')
   , _ = require("underscore")
   , mkKey = require("../support/models").mkKey
   , crypto = require('crypto')
+  , Serializer = models.Serializer;
 
 var groupK = "user";
 var infoK = "info";
 var rssK = "rss";
 var timelinesK = "timelines";
+
+var AdminSerializer = new Serializer({ select: ['id', 'username'] });
 
 exports.addModel = function(db) {
   var statisticsSerializer = {
@@ -423,7 +426,7 @@ exports.addModel = function(db) {
         models.FeedFactory.findById(administratorId, function(err, user) {
           if (!user) return callback(1, null);
 
-          user.toJSON({ select: ['id', 'username'] }, function(err, json) {
+          new AdminSerializer(user).toJSON(function(err, json) {
             callback(err, json);
           });
         });
@@ -450,133 +453,6 @@ exports.addModel = function(db) {
         callback(err, res)
       })
     })
-  }
-
-  Group.prototype.toJSON = function(params, callback) {
-    var that = this
-      , json = {}
-      , select = params.select ||
-        models.Group.getAttributes()
-
-    var returnJSON = function(err) {
-      var isReady = true
-
-      if (select.indexOf('admins') != -1)
-        isReady = isReady && json.admins !== undefined
-
-      if (select.indexOf('statistics') != -1)
-        isReady = isReady && json.statistics !== undefined
-
-      if (select.indexOf("rss") != -1) {
-        isReady = isReady && json.rss;
-      }
-
-      if (select.indexOf('subscribers') != -1)
-        isReady = isReady && json.subscribers !== undefined
-
-      if (select.indexOf('info') != -1)
-        isReady = isReady && json.info !== undefined
-
-      if (isReady)
-        callback(err, json)
-    }
-
-    if (select.indexOf('id') != -1)
-      json.id = that.id
-
-    if (select.indexOf('username') != -1)
-      json.username = that.username
-
-    if (select.indexOf('createdAt') != -1)
-      json.createdAt = that.createdAt
-
-    if (select.indexOf('updatedAt') != -1)
-      json.updatedAt = that.updatedAt
-
-    if (select.indexOf('type') != -1)
-      json.type = that.type
-
-    if (select.indexOf('info') != -1) {
-      that.getInfo(function(err, info) {
-        if (info !== undefined)
-          json.info = info
-        returnJSON(err)
-      })
-    }
-
-    if (select.indexOf("rss") != -1) {
-      that.getRss(function(err, rss) {
-        if (rss) {
-          json.rss = rss;
-        }
-
-        returnJSON(err);
-      });
-    }
-
-    if (select.indexOf('admins') != -1) {
-      that.getAdministratorsIds(function(err, administratorsIds) {
-        async.map(administratorsIds, function(administratorId, callback) {
-          models.FeedFactory.findById(administratorId, function(err, user) {
-            if (!user) return callback(1, null)
-
-            user.toJSON({ select: ['id', 'username'] }, function(err, json) {
-              callback(err, json)
-            })
-          })
-        }, function(err, administratorsJSON) {
-          json.admins = administratorsJSON
-
-          returnJSON(err)
-        })
-      })
-    }
-
-    if (select.indexOf('statistics') != -1) {
-      models.Stats.findByUserId(that.id, function(err, stats) {
-        if (stats) {
-          stats.toJSON(statisticsSerializer, function(err, statistics) {
-            json.statistics = statistics
-            returnJSON(err)
-          })
-        } else {
-          json.statistics = null
-          returnJSON(null)
-        }
-      })
-    }
-
-    if (select.indexOf('subscribers') != -1) {
-      var subscribersIds = []
-      var subscribersJSON = []
-      that.getTimelines( {start: 0}, function(err, timelines) {
-        async.forEach(timelines, function(timeline, done) {
-          // TODO: review this case (e.g. create group action)
-          if (timeline)
-            timeline.getSubscribers(function(err, subscribers) {
-              async.forEach(subscribers, function(subscriber, done) {
-                  if (subscribersIds.indexOf(subscriber.id) != -1)
-                    return done(null)
-
-                  subscribersIds.push(subscriber.id)
-                  subscriber.toJSON(params.subscribers || {},function(err, subscriberJSON) {
-                    subscribersJSON.push(subscriberJSON)
-                    done(err)
-                  })
-                },
-                function(err) {
-                  done(err)
-                })
-            })
-          },
-          function(err) {
-            json.subscribers = subscribersJSON
-            returnJSON(err)
-          })
-      })
-    }
-
-    returnJSON(null)
   }
 
   return Group;

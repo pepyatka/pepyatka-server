@@ -207,42 +207,7 @@ exports.addModel = function(db) {
                    })
         })
       })
-    },
-
-    toJSON: function(params, callback) {
-      var that = this
-        , json = {}
-        , select = params.select ||
-            models.Comment.getAttributes()
-
-      if (select.indexOf('id') != -1)
-        json.id = that.id
-
-      if (select.indexOf('body') != -1)
-        json.body = that.body
-
-      if (select.indexOf('postId') != -1)
-        json.postId = that.postId
-
-      if (select.indexOf('createdAt') != -1)
-        json.createdAt = that.createdAt
-
-      if (select.indexOf('updatedAt') != -1)
-        json.updatedAt = that.createdAt
-
-      if (select.indexOf('createdBy') != -1) {
-        models.User.findById(this.userId, function(err, user) {
-          user.toJSON(params.createdBy || {}, function(err, userJSON) {
-            json.createdBy = userJSON
-
-            callback(err, json)
-          })
-        })
-      } else {
-        callback(null, json)
-      }
     }
-
   }
 
   return Comment;

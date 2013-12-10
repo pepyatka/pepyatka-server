@@ -1,6 +1,10 @@
 var models = require('./app/models')
   , async = require('async')
   , redis = require('redis')
+  , NewPostSerializer = models.PubSubNewPostSerializer
+  , UpdatePostSerializer = models.PubSubUpdatePostSerializer
+  , CommentSerializer = models.PubSubCommentSerializer
+  , LikeSerializer = models.PubSubLikeSerializer;
 
 exports.listen = function(server) {
   var io = require('socket.io').listen(server)
@@ -91,22 +95,9 @@ exports.listen = function(server) {
 
       models.Post.findById(data.postId, function(err, post) {
         if (post) {
-          post.toJSON({ select: ['id', 'body', 'createdBy',
-                                 'attachments', 'comments',
-                                 'createdAt', 'updatedAt', 'likes', "groups"],
-                        createdBy: { select: ['id', 'username', 'info'],
-                                     info: { select: ['screenName'] } },
-                        comments: { select: ['id', 'body', 'createdBy', 'info'],
-                                    info: { select: ['screenName'] },
-                                    createdBy: { select: ['id', 'username'] }},
-                        likes: { select: ['id', 'username', 'info'],
-                                 info: { select: ['screenName'] }},
-                        groups: { select: ['id', 'username', 'info'],
-                                  info: {select: ['screenName'] } }
-                      }, function(err, json) {
-            var event = { post: json }
-            io.sockets.in('timeline:' + data.timelineId).emit('newPost', event)
-          })
+          new NewPostSerializer(post).toJSON(function(err, json) {
+            io.sockets.in('timeline:' + data.timelineId).emit('newPost', { post: json });
+          });
         }
       })
       break
@@ -116,19 +107,12 @@ exports.listen = function(server) {
 
       models.Post.findById(data.postId, function(err, post) {
         if (post) {
-          post.toJSON({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],
-                        createdBy: { select: ['id', 'username', 'info'],
-                                     info: { select: ['screenName'] } },
-                        comments: { select: ['id', 'body', 'createdBy'],
-                                    createdBy: { select: ['id', 'username', 'info'],
-                                                 info: { select: ['screenName'] } }},
-                        likes: { select: ['id', 'username', 'info'],
-                                 info: { select: ['screenName'] }}
-                      }, function(err, json) {
-            var event = { post: json }
-            io.sockets.in('timeline:' + data.timelineId).emit('updatePost', event)
-            io.sockets.in('post:' + data.postId).emit('updatePost', event)
-          })
+          new UpdatePostSerializer(post).toJSON(function(err, json) {
+            var event = { post: json };
+
+            io.sockets.in('timeline:' + data.timelineId).emit('updatePost', event);
+            io.sockets.in('post:' + data.postId).emit('updatePost', event);
+          });
         }
       })
       break
@@ -138,17 +122,15 @@ exports.listen = function(server) {
 
       models.Comment.findById(data.commentId, function(err, comment) {
         if (comment) {
-          comment.toJSON({ select: ['id', 'body', 'createdAt', 'updatedAt', 'createdBy', 'postId'],
-                           createdBy: { select: ['id', 'username', 'info'],
-                                        info: { select: ['screenName'] } }
-                         }, function(err, json) {
-            var event = { comment: json }
+          new CommentSerializer(comment).toJSON(function(err, json) {
+            var event = { comment: json };
 
-            if (data.timelineId)
-              io.sockets.in('timeline:' + data.timelineId).emit('newComment', event)
-            else
-              io.sockets.in('post:' + data.postId).emit('newComment', event)
-          })
+            if (data.timelineId) {
+              io.sockets.in('timeline:' + data.timelineId).emit('newComment', event);
+            } else {
+              io.sockets.in('post:' + data.postId).emit('newComment', event);
+            }
+          });
         }
       })
       break
@@ -158,17 +140,15 @@ exports.listen = function(server) {
 
       models.Comment.findById(data.commentId, function(err, comment) {
         if (comment) {
-          comment.toJSON({ select: ['id', 'body', 'createdAt', 'updatedAt', 'createdBy', 'postId'],
-                           createdBy: { select: ['id', 'username', 'info'],
-                                        info: { select: ['screenName'] } }
-                         }, function(err, json) {
-            var event = { comment: json }
+          new CommentSerializer(comment).toJSON(function(err, json) {
+            var event = { comment: json };
 
-            if (data.timelineId)
-              io.sockets.in('timeline:' + data.timelineId).emit('updateComment', event)
-            else
-              io.sockets.in('post:' + data.postId).emit('updateComment', event)
-          })
+            if (data.timelineId) {
+              io.sockets.in('timeline:' + data.timelineId).emit('updateComment', event);
+            } else {
+              io.sockets.in('post:' + data.postId).emit('updateComment', event);
+            }
+          });
         }
       })
       break
@@ -197,15 +177,15 @@ exports.listen = function(server) {
 
       models.User.findById(data.userId, function(err, user) {
         if (user) {
-          user.toJSON({select: ['id', 'username', 'info'],
-                       info: { select: ['screenName'] }}, function(err, json) {
-            var event = { user: json, postId: data.postId }
+          new LikeSerializer(user).toJSON(function(err, json) {
+            var event = { user: json, postId: data.postId };
 
-            if (data.timelineId)
-              io.sockets.in('timeline:' + data.timelineId).emit('newLike', event)
-            else
-              io.sockets.in('post:' + data.postId).emit('newLike', event)
-          })
+            if (data.timelineId) {
+              io.sockets.in('timeline:' + data.timelineId).emit('newLike', event);
+            } else {
+              io.sockets.in('post:' + data.postId).emit('newLike', event);
+            }
+          });
         }
       })
       break

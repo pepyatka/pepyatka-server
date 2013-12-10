@@ -141,6 +141,11 @@ exports.addModel = function(db) {
     },
 
     getPosts: function(start, num, callback) {
+      if (!(start && num)) {
+        var start = this.start;
+        var num = this.num;
+      }
+
       if (this.posts)
         return callback(null, this.posts)
 
@@ -191,71 +196,8 @@ exports.addModel = function(db) {
       db.zcount('timeline:' + this.id + ':posts', '-inf', '+inf', function(err, res){
         callback(err, res)
       })
-    },
-
-    toJSON: function(params, callback) {
-      var that = this
-        , json = {}
-        , select = params.select ||
-            models.Timeline.getAttributes()
-
-      if (select.indexOf('id') != -1)
-        json.id = that.id
-
-      if (select.indexOf('name') != -1)
-        json.name = that.name
-
-      if (select.indexOf('userId') != -1)
-        json.userId = that.userId
-
-      if (select.indexOf('user') != -1) {
-        models.FeedFactory.findById(that.userId, function(err, feed) {
-          var fn = function() {
-            if (select.indexOf('posts') != -1) {
-              that.getPosts(that.start, that.num, function(err, posts) {
-                async.map(posts, function(post, callback) {
-                  post.toJSON(params.posts || {}, function(err, json) {
-                    callback(err, json)
-                  })
-                }, function(err, postsJSON) {
-                  json.posts = postsJSON
-
-                  if (select.indexOf('subscribers') != -1) {
-                    that.getSubscribers(function(err, subscribers) {
-                      async.map(subscribers, function(subscriber, callback) {
-                        subscriber.toJSON(params.subscribers || {}, function(err, json) {
-                          callback(err, json)
-                        })
-                      }, function(err, subscribersJSON) {
-                        json.subscribers = subscribersJSON
-
-                        callback(err, json)
-                      })
-                    })
-                  } else {
-                    callback(err, json)
-                  }
-                })
-              })
-            } else {
-              callback(err, json)
-            }
-          }
-
-          // most likely this is everyone timeline
-          if (feed === null)
-            return fn()
-
-          feed.toJSON(params.user || {}, function(err, userJSON) {
-            json.user = userJSON
-
-            fn()
-          })
-        })
-      } else {
-        callback(null, json)
-      }
     }
+
   }
 
   return Timeline;

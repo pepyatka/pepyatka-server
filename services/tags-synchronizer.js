@@ -1,6 +1,7 @@
 var models = require('./../app/models')
   , db = require('../db').connect()
   , async = require('async')
+  , Serializer = models.Serializer;
 
 var resultTagInfo = {}
 
@@ -68,26 +69,28 @@ var removeNotExistTags = function(callback) {
   })
 }
 
+var PostSerializer = new Serializer({
+  select: ['id', 'body', 'comments'],
+  comments: { select: ['id', 'body']}
+});
+
 var checkPost = function(postId, callback) {
   models.Post.findById(postId, function(err, post) {
     if (post) {
-      post.toJSON({ select: ['id', 'body', 'comments'],
-          comments: { select: ['id', 'body']}
-        },
-        function(err, json) {
-          async.parallel([
-            function(done) {
-              models.Tag.extract(json.body, function(err, res) {
-                addTagsInfoToResult(res, done)
-              })
-            },
-            function(done) {
-              checkComments(json.comments, done)
-            }],
-            function(err) {
-              callback(err)
-            })
-        });
+      new PostSerializer(post).toJSON(function(err, json) {
+        async.parallel([
+          function(done) {
+            models.Tag.extract(json.body, function(err, res) {
+              addTagsInfoToResult(res, done);
+            });
+          },
+          function(done) {
+            checkComments(json.comments, done);
+          }],
+                       function(err) {
+                         callback(err);
+                       });
+      });
     }
   })
 }
