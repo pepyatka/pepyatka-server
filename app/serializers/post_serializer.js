@@ -1,17 +1,16 @@
-var Serializer = require("../models").Serializer;
+var models = require("../models")
+  , Serializer = models.Serializer
+  , AttachmentSerializer = models.AttachmentSerializer
+  , UserSerializer = models.UserSerializer
+  , CommentSerializer = models.CommentSerializer;
 
 exports.addSerializer = function() {
   return new Serializer({
     select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'updatedAt', 'likes', 'groups'],
-    createdBy: { select: ['id', 'username', "info"],
-                 info: {select: ["screenName", "email", "receiveEmails"]}},
-    comments: { select: ['id', 'body', 'createdBy'],
-                createdBy: { select: ['id', 'username', 'info'],
-                             info: {select: ['screenName', "email", "receiveEmails"] }}},
-    attachments: { select: ["id", "media", "filename", "path", "thumbnail"]},
-    likes: { select: ['id', 'username', 'info'],
-             info: {select: ['screenName', "email", "receiveEmails"] }},
-    groups: { select: ['id', 'username', 'info'],
-              info: {select: ['screenName', "email", "receiveEmails"] }}
+    createdBy: { through: UserSerializer },
+    comments: { through: CommentSerializer },
+    attachments: { thorugh: AttachmentSerializer },
+    likes: { through: UserSerializer },
+    groups: { through: UserSerializer  }
   });
 };
