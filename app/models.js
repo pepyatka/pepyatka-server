@@ -23,5 +23,6 @@ exports.CommentSerializer = require("./serializers/comment_serializer").addSeria
 exports.TimelineSerializer = require("./serializers/timeline_serializer").addSerializer();
 exports.SubscriptionSerializer = require("./serializers/subscription_serializer").addSerializer();
 exports.SubscriberSerializer = require("./serializers/subscriber_serializer").addSerializer();
+exports.AttachmentSerializer = require("./serializers/attachment_serializer").addSerializer();
 exports.UserSerializer = require('./serializers/user_serializer').addSerializer(exports.User);
 exports.PostSerializer = require('./serializers/post_serializer').addSerializer(exports.Post);
