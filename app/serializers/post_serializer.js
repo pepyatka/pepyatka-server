@@ -9,7 +9,7 @@ exports.addSerializer = function() {
     select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'updatedAt', 'likes', 'groups'],
     createdBy: { through: UserSerializer },
     comments: { through: CommentSerializer },
-    attachments: { thorugh: AttachmentSerializer },
+    attachments: { through: AttachmentSerializer },
     likes: { through: UserSerializer },
     groups: { through: UserSerializer  }
   });

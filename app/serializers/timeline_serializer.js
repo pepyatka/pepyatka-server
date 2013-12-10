@@ -1,9 +1,9 @@
 var models = require("../models")
   , Serializer = models.Serializer
   , UserSerializer = models.UserSerializer
-  , SubscriptionsSerializer = models.SubscriptionsSerializer
+  , SubscriptionsSerializer = models.SubscriptionSerializer
   , CommentSerializer = models.CommentSerializer
-  , SubscribersSerializer = models.SubscribersSerializer;
+  , SubscribersSerializer = models.SubscriberSerializer;
 
 exports.addSerializer = function() {
   return new Serializer({
