@@ -1,29 +1,26 @@
-var Serializer = require("../models").Serializer;
+var models = require("../models")
+  , Serializer = models.Serializer
+  , UserSerializer = models.UserSerializer
+  , SubscriptionsSerializer = models.SubscriptionsSerializer
+  , CommentSerializer = models.CommentSerializer
+  , SubscribersSerializer = models.SubscribersSerializer;
 
 exports.addSerializer = function() {
   return new Serializer({
     select: ['name', 'id', 'posts', 'user', 'subscribers'],
     posts: {
       select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'groups'],
-      createdBy: { select: ['id', 'username', 'info'],
-                   info: {select: ['screenName'] } },
-      comments: { select: ['id', 'body', 'createdBy'],
-                  createdBy: { select: ['id', 'username', 'info'],
-                               info: {select: ['screenName'] } }
-                },
-      likes: { select: ['id', 'username', 'info'],
-               info: {select: ['screenName'] } },
-      groups: { select: ['id', 'username', 'info'],
-                info: {select: ['screenName'] } }
+      createdBy: { through: UserSerializer },
+      comments: { through: CommentSerializer },
+      likes: { through: UserSerializer },
+      groups: { through: UserSerializer }
     },
     user: {
       select: ['id', 'username', 'subscribers', 'subscriptions', 'statistics', 'type', 'admins', 'info'],
       info: {select: ['screenName'] },
-      subscriptions: { select: ['id', 'user', 'name'],
-                       user: { select: ['id', 'username'] }
-      },
-      subscribers: { select: ['id', 'username'] }
+      subscriptions: { through: SubscriptionsSerializer },
+      subscribers: { through: SubscribersSerializer }
     },
-    subscribers: { select: ['id', 'username'] }
+    subscribers: { through: SubscribersSerializer }
   });
 };
