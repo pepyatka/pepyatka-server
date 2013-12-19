@@ -5,14 +5,13 @@ var uuid = require('node-uuid')
   , _ = require("underscore")
   , mkKey = require("../support/models").mkKey
   , crypto = require('crypto')
-  , Serializer = models.Serializer;
+  , Serializer = models.Serializer
+  , AdminSerializer = models.AdminSerializer;
 
 var groupK = "user";
 var infoK = "info";
 var rssK = "rss";
 var timelinesK = "timelines";
-
-var AdminSerializer = new Serializer({ select: ['id', 'username'] });
 
 exports.addModel = function(db) {
   var statisticsSerializer = {
