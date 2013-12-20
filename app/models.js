@@ -4,6 +4,8 @@ var redis = require('../db')
 exports.AbstractSerializer = require('./serializers/abstract_serializer').addSerializer();
 exports.Serializer = require("./serializers/serializer").addSerializer();
 
+exports.AdminSerializer = require("./serializers/admin_serializer").addSerializer();
+
 exports.User        = require('./models/user').addModel(db);
 exports.Group       = require('./models/group').addModel(db);
 exports.Post        = require('./models/post').addModel(db);

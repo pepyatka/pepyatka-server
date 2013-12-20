@@ -5,7 +5,6 @@ var uuid = require('node-uuid')
   , _ = require("underscore")
   , mkKey = require("../support/models").mkKey
   , crypto = require('crypto')
-  , Serializer = models.Serializer
   , AdminSerializer = models.AdminSerializer;
 
 var groupK = "user";
