@@ -10,10 +10,6 @@ var userK = "user";
 var rssK = "rss";
 
 exports.addModel = function(db) {
-  var statisticsSerializer = {
-    select: ['userId', 'posts', 'likes', 'discussions', 'subscribers', 'subscriptions']
-  }
-
   function User(params) {
     this.id = params.id
     this.username = params.username || ""

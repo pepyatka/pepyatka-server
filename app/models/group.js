@@ -13,10 +13,6 @@ var rssK = "rss";
 var timelinesK = "timelines";
 
 exports.addModel = function(db) {
-  var statisticsSerializer = {
-    select: ['userId', 'posts', 'likes', 'discussions', 'subscribers', 'subscriptions']
-  }
-
   function Group(params) {
 //    Group.super_.call(this, params);
     this.id = params.id
