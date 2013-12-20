@@ -724,12 +724,12 @@ exports.addModel = function(db) {
       newAttachment.save(tmpPath, function(err, attachment) {
         if (!that.attachments)
           that.attachments = []
-        
+
         that.attachments.push(attachment)
         // move tmp file to a storage
         fs.rename(tmpPath, attachmentPath, function(err) {
           callback(err, that)
-        })         
+        })
       })
     },
 
@@ -741,7 +741,7 @@ exports.addModel = function(db) {
 
     getGroups: function(callback) {
       if (!this.timelineIds)
-        return callback(1, null)
+        return callback(1, [])
 
       async.map(this.timelineIds, function(timelineId, done) {
         models.Timeline.findById(timelineId, {}, function(err, timeline) {
@@ -766,133 +766,10 @@ exports.addModel = function(db) {
       });
     },
 
-    toJSON: function(params, callback) {
-      var that = this
-        , json = {}
-        , select = params.select ||
-            models.Post.getAttributes()
-
-      var returnJSON = function(err) {
-        var isReady = true
-        if(select.indexOf('comments') != -1) {
-          isReady = isReady && json.comments !== undefined
-        }
-        if(select.indexOf('attachments') != -1) {
-          isReady = isReady && json.attachments !== undefined
-        }
-        if(select.indexOf('createdBy') != -1) {
-          isReady = isReady && json.createdBy !== undefined
-        }
-        if(select.indexOf('likes') != -1) {
-          isReady = isReady && json.likes !== undefined
-        }
-        if(select.indexOf('groups') != -1) {
-          isReady = isReady && json.groups !== undefined
-        }
-
-        if(isReady) {
-          callback(err, json)
-        }
-      }
-
-      if (select.indexOf('id') != -1)
-        json.id = that.id
-
-      if (select.indexOf('timelineId') != -1)
-        json.timelineId = that.timelineId
-
-      if (select.indexOf('body') != -1)
-        json.body = that.body
-
-      if (select.indexOf('createdAt') != -1)
-        json.createdAt = that.createdAt
-
-      if (select.indexOf('updatedAt') != -1)
-        json.updatedAt = that.updatedAt
-
-      if (select.indexOf('comments') != -1) {
-        this.getComments(function(err, comments) {
-          async.map(comments, function(comment, callback) {
-            if (!comment)
-              return callback(err, null)
-
-            comment.toJSON(params.comments || {}, function(err, json) {
-              callback(err, json)
-            })
-          }, function(err, commentsJSON) {
-            json.comments = commentsJSON
-
-            returnJSON(err)
-          })
-        })
-      }
-
-      if (select.indexOf('attachments') != -1) {
-        that.getAttachments(function(err, attachments) {
-          async.map(attachments, function(attachment, callback) {
-            attachment.toJSON(function(err, json) {
-              callback(err, json)
-            })
-          }, function(err, attachmentsJSON) {
-            json.attachments = attachmentsJSON
-
-            returnJSON(err)
-          })
-        })
-      }
-
-      if (select.indexOf('createdBy') != -1) {
-        models.User.findById(that.userId, function(err, user) {
-          if (err || !user) {
-            json.createdBy = {}
-            returnJSON(err)
-          } else {
-            user.toJSON(params.createdBy || {}, function(err, userJSON) {
-              json.createdBy = userJSON
-              returnJSON(err)
-            })
-          }
-        })
-      }
-
-      if (select.indexOf('likes') != -1) {
-        that.getLikes(function(err, likes) {
-          async.map(likes, function(like, callback) {
-            like.toJSON(params.likes || {}, function(err, json) {
-              callback(err, json)
-            })
-          }, function(err, likesJSON) {
-            json.likes = likesJSON
-
-            returnJSON(err)
-          })
-        })
-      }
-
-      if (select.indexOf('groups') != -1) {
-        that.getGroups(function(err, groups) {
-          if (!groups || groups.length == 0) {
-            json.groups = []
-            returnJSON(err)
-          } else {
-            async.map(groups, function(group, done) {
-              group.toJSON(params.groups, function(err, json) {
-                done(false, json);
-                returnJSON(err);
-              });
-            }, function(err, res) {
-              if (err) {
-                json.groups = [];
-                returnJSON(err);
-              } else {
-                json.groups = res;
-              }
-            });
-          }
-        })
-      }
-
-      returnJSON(null)
+    getCreatedBy: function(callback) {
+      models.User.findById(this.userId, function(err, user) {
+        callback(err, user)
+      })
     }
 
   }

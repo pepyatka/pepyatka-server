@@ -10,10 +10,6 @@ var userK = "user";
 var rssK = "rss";
 
 exports.addModel = function(db) {
-  var statisticsSerializer = {
-    select: ['userId', 'posts', 'likes', 'discussions', 'subscribers', 'subscriptions']
-  }
-
   function User(params) {
     this.id = params.id
     this.username = params.username || ""
@@ -149,6 +145,38 @@ exports.addModel = function(db) {
       })
     },
 
+    getSubscribers: function(f) {
+      var subscriberIds = [];
+      var result = [];
+
+      this.getTimelines({start: 0}, function(err, timelines) {
+        async.forEach(timelines, function(timeline, done1) {
+
+          timeline.getSubscribers(function(err, subscribers) {
+
+            async.forEach(subscribers, function(subscriber, done2) {
+              if (subscriberIds.indexOf(subscriber.id) != -1) {
+                done2(null);
+              } else {
+                subscriberIds.push(subscriber.id);
+                result.push(subscriber);
+                done2(err);
+              }
+            }, function(err) {
+              done1(err);
+            });
+          });
+
+        }, function(err) {
+          f(err, result);
+        });
+      });
+    },
+
+    getStatistics: function(f) {
+      models.Stats.findByUserId(this.id, f);
+    },
+
     validPassword: function(clearPassword) {
       var hashedPassword = User.hashPassword(this.salt + User.hashPassword(clearPassword))
       return hashedPassword == this.hashedPassword
@@ -224,7 +252,7 @@ exports.addModel = function(db) {
     cleanRSS: function(nrss, f) {
       var user = this;
 
-      this.getRSS(function(err, rss) {
+      this.getRss(function(err, rss) {
         if (err) {
           f(err);
         } else {
@@ -518,7 +546,7 @@ exports.addModel = function(db) {
       }
     },
 
-    getRSS: function(f) {
+    getRss: function(f) {
       db.smembers(mkKey([userK, this.id, rssK]), f);
     },
 
@@ -869,127 +897,6 @@ exports.addModel = function(db) {
           f(null, feed);
         }
       });
-    },
-
-    toJSON: function(params, callback) {
-      var that = this
-        , json = {}
-        , select = params.select ||
-            models.User.getAttributes()
-
-      var returnJSON = function(err) {
-        var isReady = true
-
-        if (select.indexOf('subscriptions') != -1)
-          isReady = isReady && json.subscriptions !== undefined
-
-        if (select.indexOf('statistics') != -1)
-          isReady = isReady && json.statistics !== undefined
-
-        if (select.indexOf('subscribers') != -1)
-          isReady = isReady && json.subscribers !== undefined
-
-        if (select.indexOf('info') != -1)
-          isReady = isReady && json.info !== undefined
-
-        if (select.indexOf("rss") != -1) {
-          isReady = isReady && json.rss;
-        }
-
-        if (isReady)
-          callback(err, json)
-      }
-
-      if (select.indexOf('id') != -1)
-        json.id = that.id
-
-      if (select.indexOf('username') != -1)
-        json.username = that.username
-
-      if (select.indexOf('createdAt') != -1)
-        json.createdAt = that.createdAt
-
-      if (select.indexOf('updatedAt') != -1)
-        json.updatedAt = that.updatedAt
-
-      if (select.indexOf('type') != -1)
-        json.type = that.type
-
-      if (select.indexOf('info') != -1) {
-        that.getInfo(function(err, info) {
-          if (info !== undefined)
-            json.info = info
-          returnJSON(err)
-        })
-      }
-
-      if (select.indexOf("rss") != -1) {
-        that.getRSS(function(err, rss) {
-          if (rss) {
-            json.rss = rss;
-          }
-
-          returnJSON(err);
-        });
-      }
-
-      if (select.indexOf('subscriptions') != -1) {
-        that.getSubscriptions(function(err, subscriptions) {
-          async.map(subscriptions, function(subscription, callback) {
-            subscription.toJSON(params.subscriptions || {}, function(err, json) {
-              callback(err, json)
-            })
-          }, function(err, subscriptionsJSON) {
-            json.subscriptions = subscriptionsJSON
-
-            returnJSON(err)
-          })
-        })
-      }
-
-      if (select.indexOf('statistics') != -1) {
-        models.Stats.findByUserId(that.id, function(err, stats) {
-          if (stats) {
-            stats.toJSON(statisticsSerializer, function(err, statistics) {
-              json.statistics = statistics
-              returnJSON(err)
-            })
-          } else {
-            json.statistics = null
-            returnJSON(null)
-          }
-        })
-      }
-
-      if (select.indexOf('subscribers') != -1) {
-        var subscribersIds = []
-        var subscribersJSON = []
-        that.getTimelines( {start: 0}, function(err, timelines) {
-          async.forEach(timelines, function(timeline, done) {
-            timeline.getSubscribers(function(err, subscribers) {
-              async.forEach(subscribers, function(subscriber, done) {
-                if (subscribersIds.indexOf(subscriber.id) != -1)
-                  return done(null)
-
-                subscribersIds.push(subscriber.id)
-                subscriber.toJSON(params.subscribers || {},function(err, subscriberJSON) {
-                  subscribersJSON.push(subscriberJSON)
-                  done(err)
-                })
-              },
-              function(err) {
-                done(err)
-              })
-            })
-          },
-          function(err) {
-            json.subscribers = subscribersJSON
-            returnJSON(err)
-          })
-        })
-      }
-
-      returnJSON(null)
     }
   }
 

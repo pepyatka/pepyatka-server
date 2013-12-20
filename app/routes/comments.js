@@ -1,14 +1,9 @@
 var models = require('../models')
   , async = require('async')
   , redis = require('redis')
+  , CommentSerializer = models.CommentSerializer;
 
 exports.addRoutes = function(app, connections) {
-  var commentSerializer = {
-    select: ['id', 'body', 'createdAt', 'updatedAt', 'createdBy', 'postId'],
-    createdBy: { select: ['id', 'username', 'info'],
-                 info: { select: ['screenName'] } }
-  }
-
   app.delete('/v1/comments/:commentId', function(req, res) {
     if (!req.user || req.user.username == 'anonymous')
       return res.jsonp({})
@@ -53,7 +48,9 @@ exports.addRoutes = function(app, connections) {
     newComment.create(function(err, comment) {
       if (err) return res.jsonp({}, 422)
 
-      comment.toJSON(commentSerializer, function(err, json) { res.jsonp(json) })
+      new CommentSerializer(comment).toJSON(function(err, json) {
+        res.jsonp(json);
+      });
     })
   });
 }

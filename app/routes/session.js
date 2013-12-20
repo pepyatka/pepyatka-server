@@ -1,10 +1,8 @@
 var models = require('../models')
   , passport = require('passport')
+  , UserSerializer = models.UserSerializer;
 
 exports.addRoutes = function(app) {
-  var userSerializer = { select: ['id', 'username', 'info'],
-                         info: { select: ['screenName'] } }
-
   if (!conf.remoteUser) {
     app.post('/v1/session', function(req, res, next) {
       passport.authenticate('local', function(err, user, info) {
@@ -13,9 +11,9 @@ exports.addRoutes = function(app) {
         req.logIn(user, function(err) {
           if (err) { return next(err); }
           // everything is OK - let's redirect user to river of news
-          user.toJSON(userSerializer, function(err, userJSON) {
-            return res.jsonp({err: null, status: 'success', user: userJSON })
-          })
+          new UserSerializer(user).toJSON(function(err, userJSON) {
+            return res.jsonp({err: null, status: 'success', user: userJSON });
+          });
         });
       })(req, res, next);
     })

@@ -2,21 +2,9 @@ var searchClient = require('../../elastic-search/elastic-search-client.js')
   , async = require('async')
   , configLocal = require('../../conf/envLocal.js')
   , models = require('../models.js')
+  , PostSerializer = models.PostSerializer;
 
 var indicators = ['intitle', 'incomments', 'from'];
-
-var postSerializer = {
-  select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'groups'],
-  createdBy: { select: ['id', 'username', 'info'],
-               info: {select: ['screenName'] } },
-  comments: { select: ['id', 'body', 'createdBy'],
-              createdBy: { select: ['id', 'username', 'info'],
-                 info: {select: ['screenName'] } }},
-  likes: { select: ['id', 'username', 'info'],
-           info: {select: ['screenName'] } },
-  groups: { select: ['id', 'username', 'info'],
-            info: {select: ['screenName'] } }
-}
 
 // TODO: refactor me to Search model
 
@@ -47,9 +35,10 @@ exports.addRoutes = function(app) {
     startSearching(query, function(json){
       async.map(json.posts, function(post, done) {
         var newPost = new models.Post(post)
-        newPost.toJSON(postSerializer, function(err, postJSON) {
-          done(err, postJSON)
-        })
+
+        new PostSerializer(newPost).toJSON(function(err, postJSON) {
+          done(err, postJSON);
+        });
       },
       function(err, postsJSON) {
         res.jsonp({posts: postsJSON})

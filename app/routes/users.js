@@ -1,6 +1,11 @@
 var models = require('../models')
   , async = require('async')
 
+var UserSerializer = models.UserSerializer;
+var FeedInfoSerializer = models.FeedInfoSerializer;
+var SubscriptionSerializer = models.SubscriptionSerializer;
+var SubscriberSerializer = models.SubscriberSerializer;
+
 exports.addRoutes = function(app) {
   var requireAuthorization = function(requestingUser, feed, callback) {
     switch(feed.type) {
@@ -13,35 +18,6 @@ exports.addRoutes = function(app) {
       default :
         callback(null, requestingUser.id == feed.id)
     }
-  }
-
-  var feedInfoSerializer = {
-    select: ['id', 'username', 'type', 'subscriptions', 'subscribers', 'admins'],
-    subscriptions: {
-      select: ['id', 'user'],
-      user: { select: ['id', 'username', 'type', 'admins', 'info'],
-              info: { select: ['screenName'] } }
-    },
-    subscribers: {
-      select: ['id', 'username', 'type', 'admins', 'info'],
-      info: { select: ['screenName'] }
-    }
-  }
-
-  var userSerializer = {
-    select: ['id', 'username', 'admins', 'type', 'info', "rss"],
-    info: { select: ['screenName'] }
-  }
-
-  var subscriptionSerializer = {
-    select: ['id', 'user', 'name'],
-    user: { select: ['id', 'username', 'type', 'info'],
-            info: { select: ['screenName'] } }
-  }
-
-  var subscriberSerializer = {
-    select: ['id', 'username', 'info'],
-    info: { select: ['screenName'] }
   }
 
   app.get('/v1/users', function(req, res) {
@@ -64,9 +40,9 @@ exports.addRoutes = function(app) {
       feed.getPostsTimeline({}, function(err, timeline) {
         timeline.getSubscribers(function(err, subscribers) {
           async.map(subscribers, function(subscriber, callback) {
-            subscriber.toJSON(subscriberSerializer, function(err, json) {
-              callback(err, json)
-            })
+            new SubscriberSerializer(subscriber).toJSON(function(err, json) {
+              callback(err, json);
+            });
           }, function(err, json) {
             var response = { subscribers: json }
             if (feed.type == 'group') {
@@ -90,9 +66,9 @@ exports.addRoutes = function(app) {
 
       user.getSubscriptions(function(err, subscriptions) {
         async.map(subscriptions, function(subscription, callback) {
-          subscription.toJSON(subscriptionSerializer, function(err, json) {
-            callback(err, json)
-          })
+          new SubscriptionSerializer(subscription).toJSON(function(err, json) {
+            callback(err, json);
+          });
         }, function(err, json) {
           res.jsonp(json)
         })
@@ -104,7 +80,9 @@ exports.addRoutes = function(app) {
     models.FeedFactory.findById(req.params.userId, function(err, feed) {
       if (err) return res.jsonp({}, 404)
 
-      feed.toJSON(userSerializer, function(err, json) { res.jsonp(json) })
+      new UserSerializer(feed).toJSON(function(err, json) {
+        res.jsonp(json);
+      });
     })
   })
 
@@ -149,9 +127,9 @@ exports.addRoutes = function(app) {
     models.FeedFactory.findByName(req.params.username, function(err, feed) {
       if (err) return res.jsonp({}, 404)
 
-      feed.toJSON(feedInfoSerializer, function(err, json) {
-        res.jsonp(json)
-      })
+      new FeedInfoSerializer(feed).toJSON(function(err, json) {
+        res.jsonp(json);
+      });
     })
   })
 
@@ -174,7 +152,7 @@ exports.addRoutes = function(app) {
           user.update(attrs, function(err, user) {
             if (err) return res.json(err, 422);
 
-            user.toJSON(userSerializer, function(err, json) {
+            new UserSerializer(req.user).toJSON(function(err, json) {
               res.jsonp(json);
             });
           });
@@ -191,8 +169,10 @@ exports.addRoutes = function(app) {
     if (!req.user)
       return res.jsonp({}, 422)
 
-    req.user.toJSON(userSerializer, function(err, json) {
-      res.jsonp(json)
-    })
+    new UserSerializer(req.user).toJSON(function(err, json) {
+      if (err) return res.json(err, 422);
+
+      res.jsonp(json);
+    });
   })
 }

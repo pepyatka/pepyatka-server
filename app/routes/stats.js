@@ -1,5 +1,6 @@
-var models = require('../models'),
-  async = require('async')
+var models = require('../models')
+  , async = require('async')
+  , UserSerializer = models.UserSerializer;
 
 var userSerializer = {
   select: ['id', 'username', 'info'],
@@ -28,14 +29,14 @@ exports.addRoutes = function(app) {
           if (!user)
             return callback(null)
 
-          user.toJSON(userSerializer, function(err, json) {
+          new UserSerializer(user).toJSON(function(err, json) {
             if (!json)
-              return callback(err)
+              return callback(err);
 
-            json.score = userIdsScores[userId]
-            users.push(json)
-            callback(null)
-          })
+            json.score = userIdsScores[userId];
+            users.push(json);
+            callback(null);
+          });
         })
       }, function(err) {
         if (err)

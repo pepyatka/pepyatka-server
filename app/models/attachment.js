@@ -30,13 +30,17 @@ exports.addModel = function(db) {
     if (params.thumbnailId)
       this.thumbnailId = params.thumbnailId
   }
-  
+
   Attachment.findById = function(attachmentId, callback) {
     db.hgetall('attachment:' + attachmentId, function(err, attrs) {
-      // TODO: check if we find an attachment
-      attrs.id = attachmentId
-      var attachment = new Attachment(attrs)
-      callback(err, attachment)
+      if (attrs) {
+        attrs.id = attachmentId;
+        callback(err, new Attachment(attrs));
+      } else {
+        // XXX: if (!this.thumbnailId) return callback(null, attrs)
+        // Similar thing here but for abstract serializer.
+        callback(err, {});
+      }
     })
   },
 
@@ -74,14 +78,14 @@ exports.addModel = function(db) {
     handleMedia: function(tmpPath, callback) {
       var that = this
 
-      var _handleImage = function() {          
+      var _handleImage = function() {
         // try to create thumbnail
         gm(tmpPath).format(function(err, value) {
           if (err) {
             // throw new Error(err)
             return _handleGeneral();
           }
-          
+
           var thumbnailId = uuid.v4()
           var thumbnailPath = path.normalize(__dirname + '/../../public/files/' + thumbnailId + '.' + that.ext)
           var thumbnailHttpPath = '/files/' + thumbnailId + '.' + that.ext
@@ -98,7 +102,7 @@ exports.addModel = function(db) {
                     // throw new Error(err)
                     return _handleGeneral()
                   }
-                  
+
                   var newThumbnail = new models.Attachment({
                     'id': thumbnailId,
                     'ext': that.ext,
@@ -106,19 +110,19 @@ exports.addModel = function(db) {
                     'path': thumbnailHttpPath,
                     'fsPath': thumbnailPath
                   })
-                  
+
                   newThumbnail.save(thumbnailPath, function(err, thumbnail) {
                     // thumbnail stored and we're happy with it
                     that.thumbnailId = thumbnail.id
                     callback(err, that)
                   })
-                })    
+                })
             } else {
               // just set self as thumbnail
               that.thumbnailId = that.id
               callback(err, that)
-            }            
-          });      
+            }
+          });
         })
 
       }; // end image handling
@@ -127,7 +131,7 @@ exports.addModel = function(db) {
         that.mediaType = "audio"
         callback(null, that)
       }; // end audio handling
-      
+
       var _handleGeneral = function() {
           // default attachment
         that.mediaType = "general"
@@ -135,13 +139,13 @@ exports.addModel = function(db) {
       };
 
       var mimetype = mime.lookup(this.filename)
-      if (mimetype === "image/jpeg" || 
-          mimetype === "image/gif" || 
+      if (mimetype === "image/jpeg" ||
+          mimetype === "image/gif" ||
           mimetype === "image/png" ||
           mimetype === "image/bmp") {
         _handleImage()
-      } else if (mimetype === "audio/mpeg" || 
-                 mimetype === "audio/ogg" || 
+      } else if (mimetype === "audio/mpeg" ||
+                 mimetype === "audio/ogg" ||
                  mimetype === "audio/x-wav") {
         _handleAudio()
       } else {
@@ -165,7 +169,7 @@ exports.addModel = function(db) {
             _callback()
           })
         })
-      
+
       order.push(function(_callback) {
         // add main function
         that.handleMedia(tmpPath, function(err) {
@@ -176,25 +180,25 @@ exports.addModel = function(db) {
                          'mediaType': that.mediaType.toString(),
                          'size': that.size.toString()
                        }
-          
+
           if (that.thumbnailId) {
             that.thumbnailId = that.thumbnailId.toString()
             params.thumbnailId = that.thumbnailId
           }
-          
+
           if (that.postId) {
             that.postId = that.postId.toString()
             params.postId = that.postId.toString()
           }
-          
+
           that.validate(function(valid) {
             if (!valid)
               return callback(1, that)
-            
+
             db.hmset('attachment:' + that.id, params, function(err, res) {
               if (!that.postId)
                 return callback(null, that)
-              
+
               models.Post.addAttachment(that.postId, that.id, function(err, count) {
                 callback(err, that)
               })
@@ -209,29 +213,20 @@ exports.addModel = function(db) {
           callback(err, null)
       })
     },
-    
-    toJSON: function(callback) {
-      var attrs = {
-        id: this.id,
-        media: this.mediaType,
-        filename: this.filename,
-        size: this.size,
-        path: this.path
-      }
 
-      if (!this.thumbnailId)
-        return callback(null, attrs)
-
+    getThumbnail: function(f) {
       models.Attachment.findById(this.thumbnailId, function(err, thumbnail) {
-        attrs.thumbnail = {
+        f(err, {
           id: thumbnail.id,
           path: thumbnail.path
-        }
-        callback(err, attrs)
-      })
-    }
+        });
+      });
+    },
 
+    getMedia: function(f) {
+      f(null, this.mediaType);
+    }
   }
-  
+
   return Attachment;
 }
