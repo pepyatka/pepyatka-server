@@ -345,6 +345,27 @@ footer {
     position: relative;
 }
 
+.audio-wrapper .inner {
+    padding-top: .45em;
+    padding-bottom: .3em;
+}
+
+.text-small {
+    font-size: 0.8em;
+}
+
+.padding-left-small {
+    padding-left: .2em;
+}
+
+.attachment-wrapper {
+    margin-left: -3px;
+}
+
+.full-player {
+    width: 400px !important;
+}
+
 .download-audio {
     width: 16px;
     height: 16px;

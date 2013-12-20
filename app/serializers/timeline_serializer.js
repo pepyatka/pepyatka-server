@@ -3,7 +3,8 @@ var models = require("../models")
   , UserSerializer = models.UserSerializer
   , SubscriptionsSerializer = models.SubscriptionSerializer
   , CommentSerializer = models.CommentSerializer
-  , SubscribersSerializer = models.SubscriberSerializer;
+  , SubscribersSerializer = models.SubscriberSerializer
+  , AttachmentSerializer = models.AttachmentSerializer
 
 exports.addSerializer = function() {
   return new Serializer({
@@ -11,6 +12,7 @@ exports.addSerializer = function() {
     posts: {
       select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'groups'],
       createdBy: { through: UserSerializer },
+      attachments: { through: AttachmentSerializer },
       comments: { through: CommentSerializer },
       likes: { through: UserSerializer },
       groups: { through: UserSerializer }
