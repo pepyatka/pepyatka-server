@@ -26,6 +26,8 @@ define(["app/app",
 
     firstTwoGroups: function() {
       var groups = this.get("controller.content.groups");
+      groups = [].concat(groups);
+
       var post   = this.get("controller.content");
       var author = post.get("createdBy.username");
 
