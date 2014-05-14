@@ -33,7 +33,7 @@ define(["app/app",
 
       if (groups && groups.length === 1) {
         return groups.filter(function(e) {
-          return e.username !== author;
+          return e && e.username !== author;
         });
       }
 
