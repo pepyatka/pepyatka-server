@@ -42,7 +42,7 @@ define(["app/app",
   App.helpers = App.Helpers.create()
 
   App.ShowSpinnerWhileRendering = Ember.Mixin.create({
-    layout: Ember.Handlebars.compile('<div {{bindAttr class="isLoaded"}}>{{ yield }}</div>'),
+    layout: Ember.Handlebars.compile('<div {{bind-attr class="isLoaded"}}>{{ yield }}</div>'),
 
     classNameBindings: ['isLoaded::loading'],
 
@@ -110,7 +110,7 @@ define(["app/app",
         this.set('_parentView._parentView._parentView.isEditFormVisible', false)
         // dirty way to restore original height of post textarea
         this.$().find('textarea').height('56px')
-        
+
         return false;
       }
     },
@@ -140,7 +140,7 @@ define(["app/app",
 
         // dirty way to restore original height of post textarea
         this.$().find('textarea').height('56px')
-        
+
         return false
       }
     },

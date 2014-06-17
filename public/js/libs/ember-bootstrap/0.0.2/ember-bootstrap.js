@@ -344,7 +344,7 @@ var Bootstrap = window.Bootstrap;
 Bootstrap.ProgressBar = Ember.View.extend({
   classNames: ['progress'],
   classNameBindings: ['isStriped:progress-striped', 'isAnimated:active'],
-  template: Ember.Handlebars.compile('<div class="bar" {{bindAttr style="view.style"}}></div>'),
+  template: Ember.Handlebars.compile('<div class="bar" {{bind-attr style="view.style"}}></div>'),
   isAnimated: false,
   isStriped: false,
   progress: 0,
@@ -417,7 +417,7 @@ Bootstrap.Pagination = Ember.CollectionView.extend({
   },
   itemViewClass: Ember.View.extend(Bootstrap.ItemSelectionSupport, Bootstrap.ItemViewHrefSupport, {
     classNameBindings: ["content.disabled"],
-    template: Ember.Handlebars.compile('<a {{bindAttr href="view.href"}}>{{view.title}}</a>')
+    template: Ember.Handlebars.compile('<a {{bind-attr href="view.href"}}>{{view.title}}</a>')
   })
 });
 
@@ -443,7 +443,7 @@ Bootstrap.Pager = Ember.CollectionView.extend({
   },
   itemViewClass: Ember.View.extend(Bootstrap.ItemViewTitleSupport, Bootstrap.ItemViewHrefSupport, {
     classNameBindings: ["content.next", "content.previous", "content.disabled"],
-    template: Ember.Handlebars.compile('<a {{bindAttr href="view.href"}}>{{view.title}}</a>')
+    template: Ember.Handlebars.compile('<a {{bind-attr href="view.href"}}>{{view.title}}</a>')
   }),
   arrayDidChange: function(content, start, removed, added) {
     if (content) {

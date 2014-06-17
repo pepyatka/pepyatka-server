@@ -10,13 +10,13 @@
       </span>
       -
       <span class="author">
-        {{#linkTo 'user' createdBy.username}}
+        {{#link-to 'user' createdBy.username}}
           {{#if view.commentOwner}}
             {{t label.you}}
           {{else}}
             {{createdBy.info.screenName}}
           {{/if}}
-        {{/linkTo}}
+        {{/link-to}}
       </span>
 
       {{#if view.commentOwner}}

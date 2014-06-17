@@ -1,6 +1,6 @@
 define(["app/app"], function(App) {
   App.CommentPostViewSubst = Ember.View.extend(Ember.TargetActionSupport, {
-    classNameBindings: 'isVisible visible:invisible',
+    classNameBindings: ['isVisible', 'visible:invisible'],
 
     actions: {
       // XXX: this is a dup of App.PartialPostView.toggleVisibility()

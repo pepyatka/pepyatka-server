@@ -2,7 +2,7 @@ define(["app/app"], function(App) {
   // Text field to post a comment. Separate view to make it hideable
   App.CommentForm = Ember.View.extend({
     // I'd no success to use isVisibleBinding property...
-    classNameBindings: 'isVisible visible:invisible',
+    classNameBindings: ['isVisible', 'visible:invisible'],
     body: '',
 
     actions: {

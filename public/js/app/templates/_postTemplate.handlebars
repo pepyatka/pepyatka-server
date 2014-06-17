@@ -7,17 +7,17 @@
 
   <div class="media-body post">
     <h5 class="media-heading author">
-      {{#linkTo 'user' createdBy.username}}{{createdBy.info.screenName}}{{/linkTo}}{{#unless
+      {{#link-to 'user' createdBy.username}}{{createdBy.info.screenName}}{{/link-to}}{{#unless
         view.myFeedOnly}}{{#if
         view.toOrColon}}:{{else}}{{#if
         view.colonOrBlank}} to {{/if}}{{/if}}
       {{/unless}}
 
       {{#each group in view.firstTwoGroups}}
-        {{#linkTo 'user' group.username}}
+        {{#link-to 'user' group.username}}
           {{formatGroupName
           group.username
-          postBinding="controller.content"}}{{/linkTo}}{{maybeSep
+          postBinding="controller.content"}}{{/link-to}}{{maybeSep
           group listBinding="view.firstTwoGroups" sep=","}}
       {{/each}}
     </h5>
@@ -45,23 +45,23 @@
 
         {{#each attachment in attachments}}
           {{#if attachment.isAttachmentImage}}
-            <div class="image"><a target="_blank" {{bindAttr href="attachment.path"}}><img {{bindAttr alt="attachment.filename"}} {{bindAttr title="attachment.filename"}} {{bindAttr src="attachment.thumbnail.path"}} class="img-polaroid" /></a></div>
+            <div class="image"><a target="_blank" {{bind-attr href="attachment.path"}}><img {{bind-attr alt="attachment.filename"}} {{bind-attr title="attachment.filename"}} {{bind-attr src="attachment.thumbnail.path"}} class="img-polaroid" /></a></div>
           {{/if}}
           {{#if attachment.isAttachmentAudio}}
             <div class="audio-wrapper">
               <div class="inner">
-                <audio {{bindAttr id="attachment.id"}} {{bindAttr src="attachment.path"}}></audio>
+                <audio {{bind-attr id="attachment.id"}} {{bind-attr src="attachment.path"}}></audio>
                 {{view App.AudioPlayerView playerIdBinding="attachment.id"}}
               </div>
               <div class="attachment-wrapper">
-                <i class="icon-music"></i><a target="_blank" {{bindAttr href="attachment.path"}}>{{attachment.filename}}</a>&nbsp;
+                <i class="icon-music"></i><a target="_blank" {{bind-attr href="attachment.path"}}>{{attachment.filename}}</a>&nbsp;
                 <span class="padding-left-small text-small muted">{{attachment.size}}</span>
               </div>
             </div>
           {{/if}}
           {{#if attachment.isAttachmentGeneral}}
             <div class="attachment-wrapper">
-              <i class="icon-file"></i><a target="_blank" {{bindAttr href="attachment.path"}}>{{attachment.filename}}</a>&nbsp;
+              <i class="icon-file"></i><a target="_blank" {{bind-attr href="attachment.path"}}>{{attachment.filename}}</a>&nbsp;
               <span class="padding-left-small text-small muted">{{attachment.size}}</span>
             </div>
           {{/if}}
@@ -70,7 +70,7 @@
     {{/if}}
 
     <div class="tagline">
-      {{#linkTo 'post' this class="datetime"}}<time {{bindAttr datetime="createdAt"}}>{{createdAgo}}</time>{{/linkTo}}
+      {{#link-to 'post' this class="datetime"}}<time {{bind-attr datetime="createdAt"}}>{{createdAgo}}</time>{{/link-to}}
 
       {{#if App.properties.userId}}
         -

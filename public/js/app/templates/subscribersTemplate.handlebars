@@ -1,11 +1,11 @@
-<h3>{{t header.subscribers}} {{#linkTo 'user' controller.content.username}}{{controller.content.info.screenName}}{{/linkTo}}</h3>
+<h3>{{t header.subscribers}} {{#link-to 'user' controller.content.username}}{{controller.content.info.screenName}}{{/link-to}}</h3>
 
 <h3>{{t header.members}}</h3>
 <ul>
   {{#each content itemController="subscriber"}}
     {{#unless isAdmin}}
       <li>
-        {{#linkTo 'user' username}}{{info.screenName}}{{/linkTo}}
+        {{#link-to 'user' username}}{{info.screenName}}{{/link-to}}
 
         {{#if view.isOwner}}
           {{#if view.showManagement}}
@@ -31,7 +31,7 @@
     {{#each content itemController="subscriber"}}
       {{#if isAdmin}}
         <li>
-          {{#linkTo 'user' username}}{{info.screenName}}{{/linkTo}}
+          {{#link-to 'user' username}}{{info.screenName}}{{/link-to}}
             {{#if view.isOwner}}
               {{#if view.showManagement}}
                 (
@@ -47,8 +47,8 @@
 
 {{#if view.isOwner}}
   {{#if view.showManagement}}
-    {{#linkTo 'feedSubscribers' controller.content.username}}{{t label.browseSubscribers}}{{/linkTo}}
+    {{#link-to 'feedSubscribers' controller.content.username}}{{t label.browseSubscribers}}{{/link-to}}
   {{else}}
-    {{#linkTo 'manageSubscribers' controller.content.username}}{{t label.manageSubscribers}}{{/linkTo}}
+    {{#link-to 'manageSubscribers' controller.content.username}}{{t label.manageSubscribers}}{{/link-to}}
   {{/if}}
 {{/if}}

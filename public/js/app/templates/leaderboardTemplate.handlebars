@@ -3,7 +3,7 @@
   <tbody>
     {{#each content.posts}}
     <tr>
-      <td>{{#linkTo 'user' username}}{{info.screenName}}{{/linkTo}}</td>
+      <td>{{#link-to 'user' username}}{{info.screenName}}{{/link-to}}</td>
       <td>{{score}}</td>
     </tr>
     {{/each}}
@@ -15,7 +15,7 @@
   <tbody>
     {{#each content.likes}}
     <tr>
-      <td>{{#linkTo 'user' username}}{{info.screenName}}{{/linkTo}}</td>
+      <td>{{#link-to 'user' username}}{{info.screenName}}{{/link-to}}</td>
       <td>{{score}}</td>
     </tr>
     {{/each}}
@@ -27,7 +27,7 @@
   <tbody>
     {{#each content.discussions}}
     <tr>
-      <td>{{#linkTo 'user' username}}{{info.screenName}}{{/linkTo}}</td>
+      <td>{{#link-to 'user' username}}{{info.screenName}}{{/link-to}}</td>
       <td>{{score}}</td>
     </tr>
     {{/each}}

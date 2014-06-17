@@ -2,12 +2,12 @@
   To:
   <select id="sendToSelect" multiple="multiple">
     {{#if controller.content.postsTimelineId}}
-      <option {{bindAttr value=controller.content.postsTimelineId}}>My feed</option>
+      <option {{bind-attr value=controller.content.postsTimelineId}}>My feed</option>
       {{else}}
-      <option {{bindAttr value=controller.content.id}}>This feed</option>
+      <option {{bind-attr value=controller.content.id}}>This feed</option>
     {{/if}}
     {{#each controller.groups}}
-      <option {{bindAttr value="id"}}>{{user.username}}</option>
+      <option {{bind-attr value="id"}}>{{user.username}}</option>
     {{/each}}
   </select>
 

@@ -333,7 +333,7 @@ define(["app/app",
   (function() {
     var get = Ember.get, set = Ember.set;
     var popstateFired = false;
-    Ember.HistoryJsLocation = Ember.Object.extend({
+    var hashbangLocation = Ember.Object.extend({
       init: function() {
         set(this, 'location', get(this, 'location') || window.location);
         this._initialUrl = this.getURL();
@@ -395,7 +395,7 @@ define(["app/app",
         Ember.$(window).unbind('popstate.ember-location-'+guid);
       }
     });
-    Ember.Location.registerImplementation('historyJs', Ember.HistoryJsLocation);
+    App.register('location:hashbang', hashbangLocation);
   })();
 
   // jQuery 1.9.x removes msie method - temp enables this
@@ -406,6 +406,6 @@ define(["app/app",
   // NOTE: history.js (particularly replaceState method) replaces
   // encoded URLs like %23 to # which break search by tag functionality.
   App.Router.reopen({
-    location: $.browser && $.browser.msie ? 'historyJs' : 'history'
+    location: $.browser && $.browser.msie ? 'hashbang' : 'history'
   });
 });

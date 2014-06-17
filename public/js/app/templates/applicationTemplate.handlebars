@@ -19,9 +19,9 @@
     {{#unless isAnonymous}}
       {{#unless App.properties.isAuthorized}}
         <div class="span3 signin-toolbar">
-          {{#linkTo 'signin'}}{{t label.signin}}{{/linkTo}}
+          {{#link-to 'signin'}}{{t label.signin}}{{/link-to}}
           or
-          {{#linkTo 'signup'}}{{t label.signup}}{{/linkTo}}
+          {{#link-to 'signup'}}{{t label.signup}}{{/link-to}}
         </div>
       {{/unless}}
     {{/unless}}
@@ -42,11 +42,11 @@
 
           <div class="media-body">
             <div class="author">
-              {{#linkTo 'user' App.properties.username}}{{App.properties.screenName}}{{/linkTo}}
+              {{#link-to 'user' App.properties.username}}{{App.properties.screenName}}{{/link-to}}
             </div>
             <div>
               {{#unless view.isAnonymous}}
-                {{#linkTo 'settings' App.properties.userId}}{{t label.settings}}{{/linkTo}} -
+                {{#link-to 'settings' App.properties.userId}}{{t label.settings}}{{/link-to}} -
               {{/unless}}
                 <a href="/logout">{{t label.signout}}</a>
             </div>
@@ -60,7 +60,7 @@
         <h5>{{t header.groups}}</h5>
 
         {{view App.GroupsView}}
-        <p><small>{{#linkTo 'groups'}}{{t label.createGroup}}{{/linkTo}}</small></p>
+        <p><small>{{#link-to 'groups'}}{{t label.createGroup}}{{/link-to}}</small></p>
       </div>
 
       <div>

@@ -1,7 +1,7 @@
 define(["app/app"], function(App) {
   App.EditPostForm = Ember.View.extend({
     // I'd no success to use isVisibleBinding property...
-    classNameBindings: 'isVisible visible:invisible',
+    classNameBindings: ['isVisible', 'visible:invisible'],
     body: '',
 
     actions: {

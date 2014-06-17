@@ -5,7 +5,7 @@
     </div>
 
     {{#if view.isGroupAdmin}}
-      {{#linkTo 'settings' user.id}}{{t label.settings}}{{/linkTo}}
+      {{#link-to 'settings' user.id}}{{t label.settings}}{{/link-to}}
     {{/if}}
 
     <div class="media-body">
@@ -13,23 +13,23 @@
 
       <div class="pull-right profile-extra-info">
         {{#if view.subscriptionsLength}}
-          <div>{{#linkTo 'feedSubscriptions' controller.user.username}}{{content.user.statistics.subscriptions}} {{t label.subscriptions}}{{/linkTo}}</div>
+          <div>{{#link-to 'feedSubscriptions' controller.user.username}}{{content.user.statistics.subscriptions}} {{t label.subscriptions}}{{/link-to}}</div>
         {{/if}}
 
         {{#if view.subscribersLength}}
-          <div>{{#linkTo 'feedSubscribers' controller.user.username}}{{content.user.statistics.subscribers}} {{t label.subscribers}}{{/linkTo}}</div>
+          <div>{{#link-to 'feedSubscribers' controller.user.username}}{{content.user.statistics.subscribers}} {{t label.subscribers}}{{/link-to}}</div>
         {{/if}}
 
         {{#if view.postsLength}}
-          <div>{{#linkTo 'user' controller.user.username}}{{content.user.statistics.posts}} {{t label.posts}}{{/linkTo}}</div>
+          <div>{{#link-to 'user' controller.user.username}}{{content.user.statistics.posts}} {{t label.posts}}{{/link-to}}</div>
         {{/if}}
 
         {{#if view.likesLength}}
-          <div>{{#linkTo 'likes' controller.user.username}}{{content.user.statistics.likes}} {{t label.likes}}{{/linkTo}}</div>
+          <div>{{#link-to 'likes' controller.user.username}}{{content.user.statistics.likes}} {{t label.likes}}{{/link-to}}</div>
         {{/if}}
 
         {{#if view.commentsLength}}
-          <div>{{#linkTo 'comments' controller.user.username}}{{content.user.statistics.comments}} {{t label.comments}}{{/linkTo}}</div>
+          <div>{{#link-to 'comments' controller.user.username}}{{content.user.statistics.comments}} {{t label.comments}}{{/link-to}}</div>
         {{/if}}
 
         {{#unless view.ownProfile}}
@@ -62,7 +62,7 @@
       </div>
     </div>
 
-    <div id="progressBar" {{bindAttr class="controller.isProgressBarHidden"}}>
+    <div id="progressBar" {{bind-attr class="controller.isProgressBarHidden"}}>
       {{view Bootstrap.ProgressBar isStriped=true isAnimated=true
           progressBinding="controller.progress"}}
     </div>
