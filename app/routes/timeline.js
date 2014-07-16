@@ -59,7 +59,8 @@ exports.addRoutes = function(app) {
 
   app.get('/v1/timeline/everyone', function(req, res) {
     models.Timeline.getEveryoneTimeline({
-      start: req.query.offset
+      start: req.query.offset,
+        num: req.query.limit
     }, function(err, timeline) {
       if (!timeline)
         return res.jsonp({});
@@ -82,7 +83,8 @@ exports.addRoutes = function(app) {
         return res.jsonp({}, 404)
 
       user.getPostsTimeline({
-        start: req.query.offset
+        start: req.query.offset,
+        num: req.query.limit
       }, function(err, timeline) {
         if (!timeline)
           return res.jsonp({});
@@ -100,7 +102,8 @@ exports.addRoutes = function(app) {
         return res.jsonp({}, 404)
 
       user.getLikesTimeline({
-        start: req.query.offset
+        start: req.query.offset,
+        num: req.query.limit
       }, function(err, timeline) {
         if (!timeline)
           return res.jsonp({});
@@ -118,7 +121,8 @@ exports.addRoutes = function(app) {
         return res.jsonp({}, 404)
 
       user.getCommentsTimeline({
-        start: req.query.offset
+        start: req.query.offset,
+        num: req.query.limit
       }, function(err, timeline) {
         if (!timeline)
           return res.jsonp({});
@@ -136,7 +140,8 @@ exports.addRoutes = function(app) {
 
     models.User.findByUsername(req.user.username, function(err, user) {
       user.getRiverOfNews({
-        start: req.query.offset
+        start: req.query.offset,
+        num: req.query.limit
       }, function(err, timeline) {
         if (!timeline)
           return res.jsonp({});
