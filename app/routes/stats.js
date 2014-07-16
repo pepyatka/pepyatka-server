@@ -2,11 +2,6 @@ var models = require('../models')
   , async = require('async')
   , UserSerializer = models.UserSerializer;
 
-var userSerializer = {
-  select: ['id', 'username', 'info'],
-  info: { select: ['screenName'] }
-}
-
 exports.addRoutes = function(app) {
   app.get('/v1/top/:category', function(req, res) {
     models.Stats.getTopUserIdsWithScores(req.params.category, function(err, userIdsWithScores) {

@@ -4,37 +4,6 @@ var models = require('../models')
   , SubscriberSerializer = models.SubscriberSerializer;
 
 exports.addRoutes = function(app) {
-  var timelineSerializer = {
-    select: ['name', 'id', 'posts', 'user', 'subscribers'],
-    posts: {
-      select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes', 'groups'],
-      createdBy: { select: ['id', 'username', 'info'],
-                   info: {select: ['screenName'] } },
-      comments: { select: ['id', 'body', 'createdBy'],
-                  createdBy: { select: ['id', 'username', 'info'],
-                               info: {select: ['screenName'] } }
-                },
-      likes: { select: ['id', 'username', 'info'],
-               info: {select: ['screenName'] } },
-      groups: { select: ['id', 'username', 'info'],
-                info: {select: ['screenName'] } }
-    },
-    user: {
-      select: ['id', 'username', 'subscribers', 'subscriptions', 'statistics', 'type', 'admins', 'info'],
-      info: {select: ['screenName'] },
-      subscriptions: { select: ['id', 'user', 'name'],
-                       user: { select: ['id', 'username'] }
-      },
-      subscribers: { select: ['id', 'username'] }
-    },
-    subscribers: { select: ['id', 'username'] }
-  }
-
-  var subscriberSerializer = {
-    select: ['id', 'username', 'info'],
-    info: {select: ['screenName'] }
-  }
-
   app.get('/v1/timeline/:timelineId/subscribers', function(req, res) {
     models.Timeline.findById(req.params.timelineId, {}, function(err, timeline) {
       if (!timeline) return res.jsonp({}, 422)
