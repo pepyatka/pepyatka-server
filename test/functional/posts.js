@@ -63,7 +63,7 @@ describe('Post API', function() {
   })
 
   it('POST /v1/posts should create post and return json object', function(done) {
-    var params = { 
+    var params = {
       body: 'postBody'
     }
     request(server)
@@ -89,7 +89,7 @@ describe('Post API', function() {
   })
 
   it('POST /v1/posts with gif attachment should create post and return json object', function(done) {
-    var params = { 
+    var params = {
       body: 'postBody'
     }
     request(server)
@@ -130,7 +130,7 @@ describe('Post API', function() {
         assert(!!jsonThumbnail.path)
         // XXX
         // assert(!!jsonThumbnail.fsPath)
-        
+
         done()
       })
   })
