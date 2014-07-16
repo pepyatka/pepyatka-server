@@ -337,7 +337,10 @@ exports.addModel = function(db) {
                               }
 
                   for(var k in attrs)
-                    if(!attrs[k]) delete attrs[k]
+                    if (!attrs[k])
+                      delete attrs[k]
+                    else
+                      that.info[k] = attrs[k]
 
                   db.hmset('user:' + that.id + ':info',
                            attrs, function(err, res) {

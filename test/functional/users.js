@@ -93,4 +93,29 @@ describe('Users API', function() {
       .get('/v1/users/user-not-exist')
       .expect(404, done)
   })
+
+  it('PATCH /v1/users should update user', function(done) {
+    models.User.findByUsername('username', function(err, user) {
+      var params = {
+        params: {
+          userId: user.id,
+          screenName: "new name"
+        },
+        '_method': 'patch'
+      }
+      userAgent
+        .post('localhost:' + server.get('port') + '/v1/users')
+        .send(params)
+        .end(function(err, res) {
+          assert(res.res.headers['content-type'].match(/json/))
+          assert.equal(res.res.statusCode, 200)
+
+          assert.equal(res.body.id, user.id)
+          assert.equal(res.body.username, user.username)
+          assert.equal(res.body.info.screenName, params.params.screenName)
+
+          done()
+        })
+    })
+  })
 })

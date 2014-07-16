@@ -148,11 +148,10 @@ exports.addRoutes = function(app) {
             email: params.email,
             rss: params.rss
           };
-
           user.update(attrs, function(err, user) {
             if (err) return res.json(err, 422);
 
-            new UserSerializer(req.user).toJSON(function(err, json) {
+            new UserSerializer(user).toJSON(function(err, json) {
               res.jsonp(json);
             });
           });
