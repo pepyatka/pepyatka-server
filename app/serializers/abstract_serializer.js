@@ -50,7 +50,19 @@ exports.addSerializer = function() {
       }
     },
 
-    processMultiObjects: function(objects, strategy, f, serializer) {
+    prepareNestedField: function(name) {
+      var nestedField = name
+
+      if (name[name.length - 1] === 's') {
+        nestedField = name.substr(0, name.length-1) + "Ids"
+      } else {
+        nestedField += "Id"
+      }
+
+      return nestedField
+    },
+
+    processMultiObjects: function(objects, strategy, serializer, root, level, f) {
       var result = [];
       var jsonAdder = function(done) {
         return function(err, json) {
@@ -61,12 +73,38 @@ exports.addSerializer = function() {
 
       async.forEach(objects, function(object, done) {
         if (serializer) {
-          new serializer(object).toJSON(jsonAdder(done));
+          new serializer(object).toJSON(jsonAdder(done), root, level + 1);
         } else {
-          new AbstractSerializer(object, strategy).toJSON(jsonAdder(done));
+          new AbstractSerializer(object, strategy).toJSON(jsonAdder(done), root, level + 1);
         }
       }, function(err) {
         f(err, result);
+      });
+    },
+
+    processMultiObjectsWithRoot: function(field, objects, strategy, serializer, root, level, f) {
+      var result = [];
+      var jsonAdder = function(done) {
+        return function(err, json) {
+          result.push(json);
+          done(err);
+        };
+      };
+
+      async.forEach(objects, function(object, done) {
+        if (serializer) {
+          new serializer(object).toJSON(jsonAdder(done), root, level + 1);
+        } else {
+          new AbstractSerializer(object, strategy).toJSON(jsonAdder(done), root, level + 1);
+        }
+      }, function(err) {
+        if (typeof root[field] === 'undefined') {
+          root[field] = result
+        } else {
+          root[field] = Object.extend(root[field], result)
+        }
+
+        f(err)
       });
     },
 
@@ -76,27 +114,41 @@ exports.addSerializer = function() {
       });
     },
 
-    processNestedStrategy: function(field, f) {
+    processNestedStrategy: function(field, f, root, level) {
       var serializer = this;
 
       serializer.getMaybeObjects(field, function(object) {
-        new AbstractSerializer(object, serializer.strategy[field]).toJSON(f);
+        new AbstractSerializer(object, serializer.strategy[field]).toJSON(f, root, level + 1);
       }, function(objects) {
-        serializer.processMultiObjects(objects, serializer.strategy[field], f);
+        serializer.processMultiObjects(objects, serializer.strategy[field], null, root, level, f);
       });
     },
 
-    processThroughPoint: function(field, f) {
+    processThroughPoint: function(field, f, root, level) {
       var serializer = this;
 
       serializer.getMaybeObjects(field, function(object) {
-        new serializer.strategy[field].through(object).toJSON(f);
+        if (serializer.strategy[field].embed) {
+          var object_id = object.id
+
+          f(null, object_id)
+        } else {
+          new serializer.strategy[field].through(object).toJSON(f);
+        }
       }, function(objects) {
-        serializer.processMultiObjects(objects, null, f, serializer.strategy[field].through);
+        var object_ids = objects.map(function(e) { return e.id })
+
+        if (serializer.strategy[field].embed)
+          serializer.processMultiObjectsWithRoot(field, objects, serializer.strategy[field], serializer.strategy[field].through, root, level, function(err) {
+            f(err, object_ids)
+          })
+        else {
+          serializer.processMultiObjects(objects, null, serializer.strategy[field].through, root, level, f)
+        }
       });
     },
 
-    processNode: function(jsonAdder) {
+    processNode: function(jsonAdder, root, level) {
       var serializer = this;
 
       return function(field, done) {
@@ -107,18 +159,21 @@ exports.addSerializer = function() {
           break;
 
         case serializer.NESTED_STRATEGY:
-          serializer.processNestedStrategy(field, jsonAdder(field, done));
+          serializer.processNestedStrategy(field, jsonAdder(field, done), root, level);
           break;
 
         case serializer.THROUGH_POINT:
-          serializer.processThroughPoint(field, jsonAdder(field, done));
+          var node = serializer.embed ? serializer.prepareNestedField(field) : field
+          serializer.processThroughPoint(field, jsonAdder(node, done), root, level);
           break;
         }
       };
     },
 
-    toJSON: function(f) {
+    toJSON: function(f, root, level) {
       var json = {};
+      root = root || {}
+      level = level || 0
       var jsonAdder = function(field, done) {
         return function(err, res) {
           json[field] = res;
@@ -126,7 +181,10 @@ exports.addSerializer = function() {
         };
       };
 
-      async.forEach(this.strategy.select, this.processNode(jsonAdder) , function(err) {
+      async.forEach(this.strategy.select, this.processNode(jsonAdder, root, level + 1) , function(err) {
+        if (level === 0)
+          json = Object.extend(json, root)
+
         f(err, json);
       });
     }
