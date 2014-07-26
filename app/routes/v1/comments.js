@@ -1,7 +1,7 @@
-var models = require('../models')
+var models = require('../../models')
   , async = require('async')
   , redis = require('redis')
-  , CommentSerializer = models.CommentSerializer;
+  , CommentSerializer = models.CommentSerializerV1;
 
 exports.addRoutes = function(app, connections) {
   app.delete('/v1/comments/:commentId', function(req, res) {

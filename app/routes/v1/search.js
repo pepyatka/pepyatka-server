@@ -1,8 +1,8 @@
-var searchClient = require('../../elastic-search/elastic-search-client.js')
+var searchClient = require('../../../elastic-search/elastic-search-client')
   , async = require('async')
-  , configLocal = require('../../conf/envLocal.js')
-  , models = require('../models.js')
-  , PostSerializer = models.PostSerializer;
+  , configLocal = require('../../../conf/envLocal')
+  , models = require('../../models')
+  , PostSerializer = models.PostSerializerV1;
 
 var indicators = ['intitle', 'incomments', 'from'];
 

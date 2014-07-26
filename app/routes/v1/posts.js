@@ -1,7 +1,7 @@
-var models = require('../models')
+var models = require('../../models')
   , async = require('async')
 
-var PostSerializer = models.PostSerializer;
+var PostSerializer = models.PostSerializerV1;
 
 exports.addRoutes = function(app) {
   var requireAuthorization = function(requestingUser, timelineId, callback) {

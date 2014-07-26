@@ -1,6 +1,6 @@
-var models = require('../models')
+var models = require('../../models')
   , async = require('async')
-  , UserSerializer = models.UserSerializer;
+  , UserSerializer = models.UserSerializerV1;
 
 exports.addRoutes = function(app) {
   app.get('/v1/top/:category', function(req, res) {

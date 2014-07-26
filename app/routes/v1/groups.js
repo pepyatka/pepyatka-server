@@ -1,4 +1,4 @@
-var models = require('../models')
+var models = require('../../models')
   , async = require('async')
 
 exports.addRoutes = function(app) {

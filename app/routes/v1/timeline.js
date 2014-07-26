@@ -1,7 +1,7 @@
-var models = require('../models')
+var models = require('../../models')
   , async = require('async')
-  , TimelineSerializer = models.TimelineSerializer
-  , SubscriberSerializer = models.SubscriberSerializer;
+  , TimelineSerializer = models.TimelineSerializerV1
+  , SubscriberSerializer = models.SubscriberSerializerV1
 
 exports.addRoutes = function(app) {
   app.get('/v1/timeline/:timelineId/subscribers', function(req, res) {

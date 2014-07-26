@@ -1,4 +1,4 @@
-var models = require('../models')
+var models = require('../../models')
 
 exports.addRoutes = function(app, connections) {
   app.get('/v1/tags', function(req, res) {

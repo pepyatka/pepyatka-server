@@ -1,4 +1,4 @@
-var Serializer = require("../models").Serializer;
+var Serializer = require("../../models").Serializer;
 
 exports.addSerializer = function() {
   return new Serializer({ select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'likes'],

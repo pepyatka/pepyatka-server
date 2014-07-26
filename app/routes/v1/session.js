@@ -1,6 +1,6 @@
-var models = require('../models')
+var models = require('../../models')
   , passport = require('passport')
-  , UserSerializer = models.UserSerializer;
+  , UserSerializer = models.UserSerializerV1;
 
 exports.addRoutes = function(app) {
   if (!conf.remoteUser) {

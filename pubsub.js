@@ -1,10 +1,10 @@
 var models = require('./app/models')
   , async = require('async')
   , redis = require('redis')
-  , NewPostSerializer = models.PubSubNewPostSerializer
-  , UpdatePostSerializer = models.PubSubUpdatePostSerializer
-  , CommentSerializer = models.PubSubCommentSerializer
-  , LikeSerializer = models.PubSubLikeSerializer;
+  , NewPostSerializer = models.PubSubNewPostSerializerV1
+  , UpdatePostSerializer = models.PubSubUpdatePostSerializerV1
+  , CommentSerializer = models.PubSubCommentSerializerV1
+  , LikeSerializer = models.PubSubLikeSerializerV1
 
 exports.listen = function(server) {
   var io = require('socket.io').listen(server)

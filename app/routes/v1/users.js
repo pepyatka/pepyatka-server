@@ -1,10 +1,10 @@
-var models = require('../models')
+var models = require('../../models')
   , async = require('async')
 
-var UserSerializer = models.UserSerializer;
-var FeedInfoSerializer = models.FeedInfoSerializer;
-var SubscriptionSerializer = models.SubscriptionSerializer;
-var SubscriberSerializer = models.SubscriberSerializer;
+var UserSerializer = models.UserSerializerV1;
+var FeedInfoSerializer = models.FeedInfoSerializerV1;
+var SubscriptionSerializer = models.SubscriptionSerializerV1;
+var SubscriberSerializer = models.SubscriberSerializerV1;
 
 exports.addRoutes = function(app) {
   var requireAuthorization = function(requestingUser, feed, callback) {

@@ -1,8 +1,8 @@
-var models = require("../models")
+var models = require("../../models")
   , Serializer = models.Serializer
-  , AttachmentSerializer = models.AttachmentSerializer
-  , UserSerializer = models.UserSerializer
-  , CommentSerializer = models.CommentSerializer;
+  , AttachmentSerializer = models.AttachmentSerializerV1
+  , UserSerializer = models.UserSerializerV1
+  , CommentSerializer = models.CommentSerializerV1;
 
 exports.addSerializer = function() {
   return new Serializer({
