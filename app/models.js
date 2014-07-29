@@ -28,3 +28,17 @@ exports.FeedInfoSerializerV1 = require("./serializers/v1/feedinfo_serializer").a
 exports.AttachmentSerializerV1 = require("./serializers/v1/attachment_serializer").addSerializer();
 exports.PostSerializerV1 = require('./serializers/v1/post_serializer').addSerializer(exports.Post);
 exports.TimelineSerializerV1 = require("./serializers/v1/timeline_serializer").addSerializer();
+
+exports.AdminSerializerV2 = require("./serializers/v2/admin_serializer").addSerializer();
+exports.UserSerializerV2 = require('./serializers/v2/user_serializer').addSerializer(exports.User);
+exports.CommentSerializerV2 = require("./serializers/v2/comment_serializer").addSerializer();
+exports.SubscriptionSerializerV2 = require("./serializers/v2/subscription_serializer").addSerializer();
+exports.SubscriberSerializerV2 = require("./serializers/v2/subscriber_serializer").addSerializer();
+exports.PubSubNewPostSerializerV2 = require("./serializers/v2/pubsub_new_post_serializer").addSerializer();
+exports.PubSubUpdatePostSerializerV2 = require("./serializers/v2/pubsub_update_post_serializer").addSerializer();
+exports.PubSubCommentSerializerV2 = require("./serializers/v2/pubsub_comment_serializer").addSerializer();
+exports.PubSubLikeSerializerV2 = require("./serializers/v2/pubsub_like_serializer").addSerializer();
+exports.FeedInfoSerializerV2 = require("./serializers/v2/feedinfo_serializer").addSerializer();
+exports.AttachmentSerializerV2 = require("./serializers/v2/attachment_serializer").addSerializer();
+exports.PostSerializerV2 = require('./serializers/v2/post_serializer').addSerializer(exports.Post);
+exports.TimelineSerializerV2 = require("./serializers/v2/timeline_serializer").addSerializer();
