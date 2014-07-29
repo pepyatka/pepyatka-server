@@ -1,7 +1,7 @@
 var async = require('async');
 
 var replicate = function(n, x) {
-  if (n == 0) {
+  if (n <= 0) {
     return [];
   } else {
     return [x].concat(replicate(n - 1, x));
