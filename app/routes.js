@@ -1,15 +1,26 @@
 var localConf = require('./../conf/envLocal.js')
 
-var auth     = require('./routes/v1/auth')
-  , session  = require('./routes/v1/session')
-  , users    = require('./routes/v1/users')
-  , groups   = require('./routes/v1/groups')
-  , posts    = require('./routes/v1/posts')
-  , comments = require('./routes/v1/comments')
-  , timeline = require('./routes/v1/timeline')
-  , search   = require('./routes/v1/search')
-  , tags     = require('./routes/v1/tags')
-  , stats    = require('./routes/v1/stats')
+var authV1     = require('./routes/v1/auth')
+  , sessionV1  = require('./routes/v1/session')
+  , usersV1    = require('./routes/v1/users')
+  , groupsV1   = require('./routes/v1/groups')
+  , postsV1    = require('./routes/v1/posts')
+  , commentsV1 = require('./routes/v1/comments')
+  , timelineV1 = require('./routes/v1/timeline')
+  , searchV1   = require('./routes/v1/search')
+  , tagsV1     = require('./routes/v1/tags')
+  , statsV1    = require('./routes/v1/stats')
+
+  , authV2     = require('./routes/v2/auth')
+  , sessionV2  = require('./routes/v2/session')
+  , usersV2    = require('./routes/v2/users')
+  , groupsV2   = require('./routes/v2/groups')
+  , postsV2    = require('./routes/v2/posts')
+  , commentsV2 = require('./routes/v2/comments')
+  , timelineV2 = require('./routes/v2/timeline')
+  , searchV2   = require('./routes/v2/search')
+  , tagsV2     = require('./routes/v2/tags')
+  , statsV2    = require('./routes/v2/stats')
 
   , home = require('./routes/index')
   , rss      = require('./routes/rss')
@@ -90,20 +101,31 @@ passport.deserializeUser(function(id, done) {
 module.exports = function(app) {
   app.all('/*', helpers);
 
-  auth.addRoutes(app);
-  session.addRoutes(app);
+  authV1.addRoutes(app);
+  sessionV1.addRoutes(app);
+  authV2.addRoutes(app);
+  sessionV2.addRoutes(app);
 
   app.all('/*', findUser)
 
   home.addRoutes(app);
-  users.addRoutes(app);
-  groups.addRoutes(app);
-  posts.addRoutes(app);
-  comments.addRoutes(app);
-  timeline.addRoutes(app);
-  search.addRoutes(app);
-  tags.addRoutes(app);
-  stats.addRoutes(app);
   rss.addRoutes(app);
   bookmarklet.addRoutes(app);
+
+  usersV1.addRoutes(app);
+  groupsV1.addRoutes(app);
+  postsV1.addRoutes(app);
+  commentsV1.addRoutes(app);
+  timelineV1.addRoutes(app);
+  searchV1.addRoutes(app);
+  tagsV1.addRoutes(app);
+  statsV1.addRoutes(app);
+  usersV2.addRoutes(app);
+  groupsV2.addRoutes(app);
+  postsV2.addRoutes(app);
+  commentsV2.addRoutes(app);
+  timelineV2.addRoutes(app);
+  searchV2.addRoutes(app);
+  tagsV2.addRoutes(app);
+  statsV2.addRoutes(app);
 };
