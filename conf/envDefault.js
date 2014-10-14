@@ -12,6 +12,12 @@ exports.getAppConfig = function () {
   return configValues;
 }
 
+exports.getHTMLClientConfig = function() {
+  return {
+    origin: 'http://localhost:3333'
+  }
+}
+
 exports.getMailerConfig = function() {
   return {
     domain: 'domain',

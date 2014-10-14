@@ -35,6 +35,12 @@ app.configure(function() {
 
   app.use(express.logger('dev'));
 
+  app.use(function(req, res, next) {
+    var confHTMLClient = configLocal.getHTMLClientConfig()
+    res.setHeader('Access-Control-Allow-Origin', confHTMLClient.origin)
+    return next()
+  })
+
   app.use(express.bodyParser({
     uploadDir: path.normalize(__dirname + '/tmp'),
     keepExtensions: true
