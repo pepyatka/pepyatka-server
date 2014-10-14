@@ -3,7 +3,7 @@ var request = require('supertest')
   , assert = require('assert')
   , async = require('async')
 
-var server = require('../../server')
+var server = require('../../index')
   , models = require('../../app/models')
 
 describe('Post API', function() {

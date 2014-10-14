@@ -6,7 +6,7 @@ var request = require('supertest')
 var redis = require('../../db')
   , db = redis.connect()
 
-var server = require('../../server')
+var server = require('../../index')
   , models = require('../../app/models')
 
 describe('Timeline API', function() {

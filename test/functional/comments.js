@@ -2,7 +2,7 @@ var request = require('supertest')
   , agent = require('superagent')
   , assert = require('assert')
 
-var server = require('../../server')
+var server = require('../../index')
   , models = require('../../app/models')
 
 describe('Comment API', function() {
