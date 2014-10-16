@@ -14,6 +14,7 @@ Find out more
 -------------
 
 1. [Setting up Pepyatka](https://github.com/epicmonkey/pepyatka/wiki/Setting-up-Pepyatka)
+1. [Pepyatka on HTTPS](https://github.com/pepyatka/pepyatka/wiki/Pepyatka-on-HTTPS)
 1. [Database](https://github.com/epicmonkey/pepyatka/wiki/Database)
 1. [API](https://github.com/epicmonkey/pepyatka/wiki/API)
 1. [REST API by examples](https://github.com/epicmonkey/pepyatka/wiki/REST-API-example)
@@ -29,6 +30,7 @@ Roadmap
 -------
 
 Tasks: https://github.com/pepyatka/pepyatka/issues
+
 Old and unmaintained: https://trello.com/b/uvRkkOTH
 
 Questions or need help?
