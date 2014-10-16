@@ -1,5 +1,16 @@
 {
   "globals": {
+    // mocha
+    "describe"   : false,
+    "it"         : false,
+    "before"     : false,
+    "beforeEach" : false,
+    "after"      : false,
+    "afterEach"  : false,
+
+    // express
+    "require"    : false,
+    "exports"    : false
   },
 
   "asi": true,
