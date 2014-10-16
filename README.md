@@ -28,7 +28,8 @@ Contribute
 Roadmap
 -------
 
-Tasks: https://trello.com/b/uvRkkOTH
+Tasks: https://github.com/pepyatka/pepyatka/issues
+Old and unmaintained: https://trello.com/b/uvRkkOTH
 
 Questions or need help?
 -----------------------
