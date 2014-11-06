@@ -22,7 +22,6 @@ var authV1     = require('./routes/v1/auth')
   , tagsV2     = require('./routes/v2/tags')
   , statsV2    = require('./routes/v2/stats')
 
-  , home = require('./routes/index')
   , rss      = require('./routes/rss')
   , bookmarklet = require('./routes/bookmarklet')
 
@@ -68,7 +67,7 @@ var findUser = function(req, res, next) {
 }
 
 var passport = require('passport')
-  , LocalStrategy = require('passport-local').Strategy;
+  , LocalStrategy = require('passport-local').Strategy
 
 passport.use(new LocalStrategy({
     usernameField: 'username',
@@ -76,7 +75,7 @@ passport.use(new LocalStrategy({
   },
   function(username, clearPassword, done) {
     models.User.findByUsername(username, function (err, user) {
-      // if (err) { return done(err); }
+      if (err) { return done(err); }
       if (!user) {
         return done(null, false, { message: 'Incorrect username.' });
       }
@@ -108,7 +107,6 @@ module.exports = function(app) {
 
   app.all('/*', findUser)
 
-  home.addRoutes(app);
   rss.addRoutes(app);
   bookmarklet.addRoutes(app);
 
