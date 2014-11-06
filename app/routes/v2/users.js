@@ -1,5 +1,7 @@
 var models = require('../../models')
   , async = require('async')
+  , jwt = require('jsonwebtoken')
+  , config = require('../../../conf/envLocal')
 
 var UserSerializer = models.UserSerializerV1;
 var FeedInfoSerializer = models.FeedInfoSerializerV1;
@@ -171,7 +173,13 @@ exports.addRoutes = function(app) {
     new UserSerializer(req.user).toJSON(function(err, json) {
       if (err) return res.json(err, 422);
 
-      res.jsonp(json);
+      var token = req.query.authToken
+      if (!token || token.length === 0) {
+        var secret = config.getAppConfig()['secret']
+        token = jwt.sign({ userId: req.user.id }, secret);
+      }
+
+      res.json({ user: json, token: token });
     });
   })
 }

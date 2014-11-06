@@ -1,5 +1,7 @@
 var models = require('../../models')
-  , UserSerializer = models.UserSerializerV2;
+  , jwt = require('jsonwebtoken')
+  , UserSerializer = models.UserSerializerV2
+  , config = require('../../../conf/envLocal')
 
 exports.addRoutes = function(app) {
   if (!conf.remoteUser) {
@@ -17,9 +19,12 @@ exports.addRoutes = function(app) {
           if (err) return res.jsonp({}, 422)
 
           req.logIn(user, function(err) {
+            var secret = config.getAppConfig()['secret']
+            var token = jwt.sign({ userId: user.id }, secret);
+
             new UserSerializer(user).toJSON(function(err, userJSON) {
-              res.jsonp({ err: null, status: 'success', user: userJSON });
-            });
+              res.jsonp({ err: null, status: 'success', user: userJSON, token: token });
+            })
           })
         })
       })
