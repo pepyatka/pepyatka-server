@@ -50,5 +50,6 @@
     "mime": "1.2.11",
     "filesize": "2.0.0",
     "scarlet": "2.0.20"
+    "jsonwebtoken": "0.2.6"
   }
 }
