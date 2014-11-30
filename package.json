@@ -39,7 +39,7 @@
     "elasticsearchclient": "0.3.0",
     "nodemailer": "0.4.4",
     "request": "2.27.0",
-    "fast-feed": "git://github.com/Okasu/fast-feed#5447f448aa17c1fd2152a8a3690526b60838da43",
+    "fast-feed": "0.0.12",
     "coffee-resque": "0.1.9",
     "requirejs": "2.1.8",
     "validator": "1.5.0",
