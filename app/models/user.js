@@ -820,6 +820,12 @@ exports.addModel = function(db) {
     getInfo: function(callback) {
       var that = this
       db.hgetall('user:' + that.id + ':info', function(err, items) {
+
+        var crypto = require('crypto');
+        if (items.email) {
+            items.emailMd5 = crypto.createHash('md5').update(items.email.toLowerCase().trim()).digest('hex');
+        }
+
         callback(err, items)
       })
     },
