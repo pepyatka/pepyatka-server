@@ -1,4 +1,6 @@
 var localConf = require('./../conf/envLocal.js')
+  , jwt = require('jsonwebtoken')
+  , config = require('../conf/envLocal')
 
 var authV1     = require('./routes/v1/auth')
   , sessionV1  = require('./routes/v1/session')
@@ -49,6 +51,15 @@ var findUser = function(req, res, next) {
       res.writeHead(200, {'Connection': 'close'});
       res.end()
     }
+  } else if (req.body.token) {
+    var secret = config.getAppConfig()['secret']
+    var token = req.body.token
+    jwt.verify(token, secret, function(err, decoded) {
+      models.User.findById(decoded.userId, function(err, user) {
+        req.user = user
+        next()
+      });
+    });
   } else if (!req.user && localConf.isAnonymousPermitted()) {
     models.User.findAnon(function(err, user) {
       if (user) {
