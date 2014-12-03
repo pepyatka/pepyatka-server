@@ -51,9 +51,9 @@ var findUser = function(req, res, next) {
       res.writeHead(200, {'Connection': 'close'});
       res.end()
     }
-  } else if (req.body.token) {
+  } else if (req.body.token || req.query.token) {
     var secret = config.getAppConfig()['secret']
-    var token = req.body.token
+    var token = req.body.token || req.query.token
     jwt.verify(token, secret, function(err, decoded) {
       models.User.findById(decoded.userId, function(err, user) {
         req.user = user
