@@ -98,16 +98,6 @@ passport.use(new LocalStrategy({
   }
 ));
 
-passport.serializeUser(function(user, done) {
-  done(null, user.id);
-});
-
-passport.deserializeUser(function(id, done) {
-  models.User.findById(id, function(err, user) {
-    done(null, user);
-  });
-});
-
 module.exports = function(app) {
   app.all('/*', helpers);
 

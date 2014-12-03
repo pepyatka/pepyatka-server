@@ -51,22 +51,15 @@ app.configure(function() {
 
   app.use(express.cookieParser(conf.secret));
   var RedisStore = require('connect-redis')(express);
-  app.use(express.session({
-    secret: conf.secret,
-    store: new RedisStore,
-    cookie: { secure: false, maxAge:86400000000 }
-  }));
   app.use(flash());
 
   app.use(passport.initialize());
-  app.use(passport.session());
 
   app.use(app.router);
   app.use(express.static(path.join(__dirname, 'public')));
   app.use(logErrors);
   app.use(clientErrorHandler);
   app.use(errorHandler);
-  app.use(express.csrf());
 });
 
 function clientErrorHandler(err, req, res, next) {
