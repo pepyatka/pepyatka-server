@@ -13,21 +13,16 @@ exports.addRoutes = function(app) {
           return res.jsonp(401, { err: 'user ' + req.body.username + ' doesn\'t exist', status: 'fail' }) 
         }
 
-        req.logIn(user, function(err) {
-          if (err) { return next(err); }
+        var secret = config.getAppConfig()['secret']
+        var token = jwt.sign({ userId: user.id }, secret);
 
-          var secret = config.getAppConfig()['secret']
-          var token = jwt.sign({ userId: user.id }, secret);
-
-          new UserSerializer(user).toJSON(function(err, userJSON) {
-            return res.jsonp({err: null, status: 'success', user: userJSON, token: token });
-          })
+        new UserSerializer(user).toJSON(function(err, userJSON) {
+          return res.jsonp({err: null, status: 'success', user: userJSON, token: token });
         })
       })(req, res, next);
     })
 
     app.get('/logout', function(req, res){
-      req.logout()
       res.redirect("/")
     })
   }

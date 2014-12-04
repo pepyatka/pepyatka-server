@@ -18,13 +18,11 @@ exports.addRoutes = function(app) {
         newUser.create(function(err, user) {
           if (err) return res.jsonp({}, 422)
 
-          req.logIn(user, function(err) {
-            var secret = config.getAppConfig()['secret']
-            var token = jwt.sign({ userId: user.id }, secret);
+          var secret = config.getAppConfig()['secret']
+          var token = jwt.sign({ userId: user.id }, secret);
 
-            new UserSerializer(user).toJSON(function(err, userJSON) {
-              res.jsonp({ err: null, status: 'success', user: userJSON, token: token });
-            })
+          new UserSerializer(user).toJSON(function(err, userJSON) {
+            res.jsonp({ err: null, status: 'success', user: userJSON, token: token });
           })
         })
       })

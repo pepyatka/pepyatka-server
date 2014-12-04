@@ -41,7 +41,8 @@ var findUser = function(req, res, next) {
     if (req.headers['x-remote-user']) {
       models.User.findOrCreateByUsername(req.headers['x-remote-user'].toLowerCase(), function(err, user) {
         if (user) {
-          req.logIn(user, function(err) { next(); })
+          req.user = user
+          next()
         } else {
           next()
         }
@@ -56,16 +57,28 @@ var findUser = function(req, res, next) {
     var token = req.body.token || req.query.token
     jwt.verify(token, secret, function(err, decoded) {
       models.User.findById(decoded.userId, function(err, user) {
-        req.user = user
-        next()
+        if (err || !user) {
+          models.User.findAnon(function(err, user) {
+            if (user) {
+              req.user = user
+              next()
+            } else {
+              // redirect user to auth page.
+
+              next()
+            }
+          });
+        } else {
+          req.user = user
+          next()
+        }
       });
     });
   } else if (!req.user && localConf.isAnonymousPermitted()) {
     models.User.findAnon(function(err, user) {
       if (user) {
-        req.logIn(user, function(err) {
-          next();
-        })
+        req.user = user
+        next()
       } else {
         // redirect user to auth page.
 
