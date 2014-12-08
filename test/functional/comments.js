@@ -7,7 +7,8 @@ var server = require('../../index')
 
 describe('Comment API', function() {
   var post = null
-  var userAgent;
+  var userAgent
+    , token
 
   before(function(done) {
     var newUser = new models.User({
@@ -17,9 +18,10 @@ describe('Comment API', function() {
     newUser.create(function(err, user) {
       userAgent = agent.agent();
       userAgent
-        .post('localhost:' + server.get('port') + '/v1/session')
+        .post('localhost:' + server.get('port') + '/v2/session')
         .send({ username: 'username', password: 'password' })
         .end(function(err, res) {
+          token = res.body.token
           done()
         });
     })
@@ -38,13 +40,13 @@ describe('Comment API', function() {
     })
   })
 
-  it('POST /v1/comments should return json comment', function(done) {
+  it('POST /v2/comments should return json comment', function(done) {
     var params = {
       body: 'commentBody',
       postId: post.id
     }
     request(server)
-      .post('/v1/comments')
+      .post('/v2/comments' + '?token=' + token)
       .send(params)
       .expect(200)
       .expect('Content-Type', /json/)
@@ -65,38 +67,38 @@ describe('Comment API', function() {
       })
   })
 
-  it('POST /v1/comments with missing body should return 422', function(done) {
+  it('POST /v2/comments with missing body should return 422', function(done) {
     var params = {
       postId: post.id
     }
     request(server)
-      .post('/v1/comments')
+      .post('/v2/comments' + '?token=' + token)
       .send(params)
       .expect(422, done)
   })
 
-  it('POST /v1/comments with missing postId should return 422', function(done) {
+  it('POST /v2/comments with missing postId should return 422', function(done) {
     var params = {
       body: 'commentBody'
     }
     request(server)
-      .post('/v1/comments')
+      .post('/v2/comments' + '?token=' + token)
       .send(params)
       .expect(422, done)
   })
 
-  it('POST /v1/comments with wrong postId should return 422', function(done) {
+  it('POST /v2/comments with wrong postId should return 422', function(done) {
     var params = {
       body: 'commentBody',
       postId: 'this-post-does-not-exist'
     }
     request(server)
-      .post('/v1/comments')
+      .post('/v2/comments' + '?token=' + token)
       .send(params)
       .expect(422, done)
   })
 
-  it('DELETE /v1/comments/:commentId should remove comment', function(done) {
+  it('DELETE /v2/comments/:commentId should remove comment', function(done) {
     models.User.findByUsername('username', function(err, user) {
       user.newPost({
         body: 'postBody'
@@ -111,7 +113,7 @@ describe('Comment API', function() {
               '_method': 'delete'
             }
             userAgent
-              .post('localhost:' + server.get('port') + '/v1/comments/' + comment.id)
+              .post('localhost:' + server.get('port') + '/v2/comments/' + comment.id + '?token=' + token)
               .send(params)
               .end(function(err, res) {
                 // TODO: res should have status 200
@@ -127,7 +129,7 @@ describe('Comment API', function() {
     })
   })
 
-  it('PATCH /v1/comments/:commentId should edit comment', function(done) {
+  it('PATCH /v2/comments/:commentId should edit comment', function(done) {
     models.User.findByUsername('username', function(err, user) {
       user.newPost({
         body: 'postBody'
@@ -143,7 +145,7 @@ describe('Comment API', function() {
               '_method': 'patch'
             }
             userAgent
-              .post('localhost:' + server.get('port') + '/v1/comments/' + comment.id)
+              .post('localhost:' + server.get('port') + '/v2/comments/' + comment.id + '?token=' + token)
               .send(params)
               .end(function(res) {
                 // TODO: res should have status 200

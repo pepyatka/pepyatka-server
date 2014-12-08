@@ -10,8 +10,10 @@ var server = require('../../index')
   , models = require('../../app/models')
 
 describe('Timeline API', function() {
-  var userAgent;
-  var user2Agent;
+  var userAgent
+    , user2Agent
+    , token
+    , token2
 
   before(function(done) {
     var userAgentCreated = false;
@@ -28,10 +30,11 @@ describe('Timeline API', function() {
     newUser.create(function(err, user) {
       userAgent = agent.agent();
       userAgent
-        .post('localhost:' + server.get('port') + '/v1/session')
+        .post('localhost:' + server.get('port') + '/v2/session')
         .send({ username: 'username', password: 'password' })
         .end(function(err, res) {
           userAgentCreated = true
+          token = res.body.token
           invokeCallback()
         });
     })
@@ -43,16 +46,17 @@ describe('Timeline API', function() {
     newUser2.create(function(err, user) {
       user2Agent = agent.agent();
       user2Agent
-        .post('localhost:' + server.get('port') + '/v1/session')
+        .post('localhost:' + server.get('port') + '/v2/session')
         .send({ username: 'username2', password: 'password' })
         .end(function(err, res) {
           user2AgentCreated = true
+          token2 = res.body.token
           invokeCallback()
         });
     })
   })
 
-  it('POST /v1/timeline/:timelineId/subscribe should subscribe to timeline', function(done) {
+  it('POST /v2/timeline/:timelineId/subscribe should subscribe to timeline', function(done) {
     var checkSubscription = function(timelineId, callback) {
       models.User.findByUsername('username', function(err, user) {
         user.getSubscriptionsIds(function(err, subscriptionIds) {
@@ -94,7 +98,7 @@ describe('Timeline API', function() {
     models.User.findAnon(function(err, anonymous) {
       anonymous.getPostsTimeline({start: 0}, function(err, timeline) {
         userAgent
-          .post('localhost:' + server.get('port') + '/v1/timeline/' + timeline.id + '/subscribe')
+          .post('localhost:' + server.get('port') + '/v2/timeline/' + timeline.id + '/subscribe' + '?token=' + token)
           .end(function(err, res) {
             async.parallel([
               function(done){
@@ -111,7 +115,7 @@ describe('Timeline API', function() {
     })
   })
 
-  it('POST /v1/timeline/:timelineId/unsubscribe should unsubscribe from timeline', function(done) {
+  it('POST /v2/timeline/:timelineId/unsubscribe should unsubscribe from timeline', function(done) {
     var checkSubscription = function(timelineId, callback) {
       models.User.findByUsername('username', function(err, user) {
         user.getSubscriptionsIds(function(err, subscriptionIds) {
@@ -153,10 +157,10 @@ describe('Timeline API', function() {
     models.User.findAnon(function(err, anonymous) {
       anonymous.getPostsTimeline({start: 0}, function(err, timeline) {
         userAgent
-          .post('localhost:' + server.get('port') + '/v1/timeline/' + timeline.id + '/subscribe')
+          .post('localhost:' + server.get('port') + '/v2/timeline/' + timeline.id + '/subscribe' + '?token=' + token)
           .end(function(err, res) {
             userAgent
-              .post('localhost:' + server.get('port') + '/v1/timeline/' + timeline.id + '/unsubscribe')
+              .post('localhost:' + server.get('port') + '/v2/timeline/' + timeline.id + '/unsubscribe' + '?token=' + token)
               .end(function(err, res) {
                 async.parallel([
                   function(done){
@@ -174,14 +178,14 @@ describe('Timeline API', function() {
     })
   })
 
-  it('GET /v1/timeline/:timelineId/subcribers should return subscibers of timeline', function(done) {
+  it('GET /v2/timeline/:timelineId/subcribers should return subscibers of timeline', function(done) {
     models.User.findAnon(function(err, anonymous) {
       anonymous.getPostsTimeline({start: 0}, function(err, timeline) {
         userAgent
-          .post('localhost:' + server.get('port') + '/v1/timeline/' + timeline.id + '/subscribe')
+          .post('localhost:' + server.get('port') + '/v2/timeline/' + timeline.id + '/subscribe' + '?token=' + token)
           .end(function(err, res) {
             request(server)
-              .get('/v1/timeline/' + timeline.id + '/subscribers')
+              .get('/v2/timeline/' + timeline.id + '/subscribers' + '?token=' + token)
               .expect(200)
               .end(function(err, res) {
                 assert(res.body.length > 0)
@@ -192,7 +196,7 @@ describe('Timeline API', function() {
     })
   })
 
-  it('POST /v1/timeline/:timelineId/subscribe should subscribe A to B and B to C', function(done) {
+  it('POST /v2/timeline/:timelineId/subscribe should subscribe A to B and B to C', function(done) {
     var that = {}
 
     var subscribeUser2ToUser = function(callback){
@@ -200,7 +204,7 @@ describe('Timeline API', function() {
         that.user = user
         user.getLikesTimeline({start: 0}, function(err, timeline) {
           user2Agent
-            .post('localhost:' + server.get('port') + '/v1/timeline/' + timeline.id + '/subscribe')
+            .post('localhost:' + server.get('port') + '/v2/timeline/' + timeline.id + '/subscribe' + '?token=' + token2)
             .end(function(err, res) {
               callback()
             })
@@ -213,7 +217,7 @@ describe('Timeline API', function() {
         that.anonymous = anonymous
         anonymous.getLikesTimeline({start: 0}, function(err, timeline) {
           userAgent
-            .post('localhost:' + server.get('port') + '/v1/timeline/' + timeline.id + '/subscribe')
+            .post('localhost:' + server.get('port') + '/v2/timeline/' + timeline.id + '/subscribe' + '?token=' + token)
             .end(function(err, res) {
               callback()
             })
@@ -234,7 +238,7 @@ describe('Timeline API', function() {
 
     var likeAnonPostByUser = function(callback) {
       userAgent
-        .post('localhost:' + server.get('port') + '/v1/posts/' + that.postId + '/like')
+        .post('localhost:' + server.get('port') + '/v2/posts/' + that.postId + '/like' + '?token=' + token)
         .end(function(err, res) {
           callback()
         })
@@ -272,19 +276,19 @@ describe('Timeline API', function() {
     })
   })
 
-  it('POST /v1/timeline/not-exist-timelineId/subscribe should return 422', function(done) {
+  it('POST /v2/timeline/not-exist-timelineId/subscribe should return 422', function(done) {
     request(server)
-      .post('/v1/timeline/not-exist-timelineId/subscribe')
+      .post('/v2/timeline/not-exist-timelineId/subscribe' + '?token=' + token)
       .expect(422, done)
   })
 
-  it('POST /v1/timeline/not-exist-timelineId/unsubscribe should return 422', function(done) {
+  it('POST /v2/timeline/not-exist-timelineId/unsubscribe should return 422', function(done) {
     request(server)
-      .post('/v1/timeline/not-exist-timelineId/unsubscribe')
+      .post('/v2/timeline/not-exist-timelineId/unsubscribe' + '?token=' + token)
       .expect(422, done)
   })
 
-  it('GET /v1/timeline/anonymous should return json list of posts', function(done) {
+  it('GET /v2/timeline/anonymous should return json list of posts', function(done) {
     var posts = []
     var length = 40
 
@@ -308,7 +312,7 @@ describe('Timeline API', function() {
             })
           }, function(err) {
             request(server)
-              .get('/v1/timeline/anonymous')
+              .get('/v2/timeline/anonymous' + '?token=' + token)
               .expect('Content-Type', /json/)
               .expect(200, function(err, res) {
                 assert.equal(err, null)
@@ -326,7 +330,7 @@ describe('Timeline API', function() {
     })
   })
 
-  it('GET /v1/timeline?limit=1 should return one post', function(done) {
+  it('GET /v2/timeline?limit=1 should return one post', function(done) {
     var posts = []
     var length = 40
 
@@ -350,7 +354,7 @@ describe('Timeline API', function() {
             })
           }, function(err) {
             request(server)
-              .get('/v1/timeline?limit=1')
+              .get('/v2/timeline?limit=1&token=' + token)
               .expect('Content-Type', /json/)
               .expect(200, function(err, res) {
                 assert.equal(err, null)
@@ -367,9 +371,9 @@ describe('Timeline API', function() {
     })
   })
 
-  it('GET /v1/timeline/404-user should return 404', function(done) {
+  it('GET /v2/timeline/404-user should return 404', function(done) {
     request(server)
-      .get('/v1/timeline/404-user')
+      .get('/v2/timeline/404-user' + '?token=' + token)
       .expect(404, done)
   })
 })

@@ -10,7 +10,8 @@ var server = require('../../index')
   , models = require('../../app/models')
 
 describe('Users API', function() {
-  var userAgent;
+  var userAgent
+    , token
 
   before(function(done) {
     var newUser = new models.User({
@@ -20,23 +21,24 @@ describe('Users API', function() {
     newUser.create(function(err, user) {
       userAgent = agent.agent();
       userAgent
-        .post('localhost:' + server.get('port') + '/v1/session')
+        .post('localhost:' + server.get('port') + '/v2/session')
         .send({ username: 'username', password: 'password' })
         .end(function(err, res) {
+          token = res.body.token
           done()
         });
     })
   })
 
-  it('GET /v1/users/:username/subscriptions should return subscritions of user', function(done) {
+  it('GET /v2/users/:username/subscriptions should return subscritions of user', function(done) {
     models.User.findAnon(function(err, anonymous) {
       models.User.findByUsername('username', function(err, user) {
         anonymous.getPostsTimeline({start: 0}, function(err, timeline) {
           userAgent
-            .post('localhost:' + server.get('port') + '/v1/timeline/' + timeline.id + '/subscribe')
+            .post('localhost:' + server.get('port') + '/v2/timeline/' + timeline.id + '/subscribe' + '?token=' + token)
             .end(function(err, res) {
               request(server)
-                .get('/v1/users/' + user.username + '/subscriptions')
+                .get('/v2/users/' + user.username + '/subscriptions' + '?token=' + token)
                 .end(function(err, res) {
                   assert(res.body.length > 0)
                   done()
@@ -47,14 +49,14 @@ describe('Users API', function() {
     })
   })
 
-  it('GET /v1/users/:username/subscribers should return subscribers of user', function(done) {
+  it('GET /v2/users/:username/subscribers should return subscribers of user', function(done) {
     models.User.findAnon(function(err, anonymous) {
       anonymous.getPostsTimeline({start: 0}, function(err, timeline) {
         userAgent
-          .post('localhost:' + server.get('port') + '/v1/timeline/' + timeline.id + '/subscribe')
+          .post('localhost:' + server.get('port') + '/v2/timeline/' + timeline.id + '/subscribe' + '?token=' + token)
           .end(function(err, res) {
             request(server)
-              .get('/v1/users/anonymous/subscribers')
+              .get('/v2/users/anonymous/subscribers' + '?token=' + token)
               .end(function(err, res) {
                 assert(res.body.subscribers.length > 0)
                 done()
@@ -64,10 +66,10 @@ describe('Users API', function() {
     })
   })
 
-  it('GET /v1/users/:userId should return user', function(done) {
+  it('GET /v2/users/:userId should return user', function(done) {
     models.User.findByUsername('username', function(err, user) {
       request(server)
-        .get('/v1/users/' + user.id)
+        .get('/v2/users/' + user.id + '?token=' + token)
         .expect(200)
         .end(function(err, res) {
           assert.equal(res.body.id, user.id)
@@ -76,25 +78,25 @@ describe('Users API', function() {
     })
   })
 
-  it('GET /v1/users/user-not-exist/subscriptions should return 404', function(done) {
+  it('GET /v2/users/user-not-exist/subscriptions should return 404', function(done) {
     request(server)
-      .get('/v1/users/user-not-exist/subscriptions')
+      .get('/v2/users/user-not-exist/subscriptions' + '?token=' + token)
       .expect(404, done)
   })
 
-  it('GET /v1/users/user-not-exist/subscribers should return 404', function(done) {
+  it('GET /v2/users/user-not-exist/subscribers should return 404', function(done) {
     request(server)
-      .get('/v1/users/user-not-exist/subscribers')
+      .get('/v2/users/user-not-exist/subscribers' + '?token=' + token)
       .expect(404, done)
   })
 
-  it('GET /v1/users/user-not-exist should return 422', function(done) {
+  it('GET /v2/users/user-not-exist should return 422', function(done) {
     request(server)
-      .get('/v1/users/user-not-exist')
+      .get('/v2/users/user-not-exist' + '?token=' + token)
       .expect(404, done)
   })
 
-  it('PATCH /v1/users should update user', function(done) {
+  it('PATCH /v2/users should update user', function(done) {
     models.User.findByUsername('username', function(err, user) {
       var params = {
         params: {
@@ -104,7 +106,7 @@ describe('Users API', function() {
         '_method': 'patch'
       }
       userAgent
-        .post('localhost:' + server.get('port') + '/v1/users')
+        .post('localhost:' + server.get('port') + '/v2/users' + '?token=' + token)
         .send(params)
         .end(function(err, res) {
           assert(res.res.headers['content-type'].match(/json/))

@@ -7,7 +7,8 @@ var server = require('../../index')
   , models = require('../../app/models')
 
 describe('Post API', function() {
-  var userAgent;
+  var userAgent
+    , token
 
   before(function(done) {
     var newUser = new models.User({
@@ -17,29 +18,30 @@ describe('Post API', function() {
     newUser.create(function(err, user) {
       userAgent = agent.agent();
       userAgent
-        .post('localhost:' + server.get('port') + '/v1/session')
+        .post('localhost:' + server.get('port') + '/v2/session')
         .send({ username: 'username', password: 'password' })
         .end(function(err, res) {
+          token = res.body.token
           done()
         });
 
     })
   })
 
-  it('GET /v1/posts/this-post-does-not-exist should return 404', function(done) {
+  it('GET /v2/posts/this-post-does-not-exist should return 404', function(done) {
     request(server)
-      .get('/v1/posts/this-post-does-not-exist')
+      .get('/v2/posts/this-post-does-not-exist' + '?token=' + token)
       .expect(404, done)
   })
 
-  it('GET /v1/posts/:postId should return json post', function(done) {
+  it('GET /v2/posts/:postId should return json post', function(done) {
     models.User.findAnon(function(err, user) {
       user.newPost({
         body: 'postBody'
       }, function(err, newPost) {
         newPost.create(function(err, post) {
           request(server)
-            .get('/v1/posts/' + post.id)
+            .get('/v2/posts/' + post.id + '?token=' + token)
             .expect('Content-Type', /json/)
             .expect(200)
             .end(function(err, res) {
@@ -62,12 +64,12 @@ describe('Post API', function() {
     })
   })
 
-  it('POST /v1/posts should create post and return json object', function(done) {
+  it('POST /v2/posts should create post and return json object', function(done) {
     var params = {
       body: 'postBody'
     }
     request(server)
-      .post('/v1/posts')
+      .post('/v2/posts' + '?token=' + token)
       .send(params)
       .expect(200)
       .end(function(err, res) {
@@ -88,12 +90,12 @@ describe('Post API', function() {
       })
   })
 
-  it('POST /v1/posts with gif attachment should create post and return json object', function(done) {
+  it('POST /v2/posts with gif attachment should create post and return json object', function(done) {
     var params = {
       body: 'postBody'
     }
     request(server)
-      .post('/v1/posts')
+      .post('/v2/posts' + '?token=' + token)
       .attach('file-0', 'test/fixtures/animated.gif')
       .field('body', params.body)
       .expect(200)
@@ -135,12 +137,12 @@ describe('Post API', function() {
       })
   })
 
-  it('POST /v1/posts with zip attachment should create post and return json object with general attachment', function(done) {
+  it('POST /v2/posts with zip attachment should create post and return json object with general attachment', function(done) {
     var params = {
       body: 'postBody'
     }
     request(server)
-      .post('/v1/posts')
+      .post('/v2/posts' + '?token=' + token)
       .attach('file-0', 'test/fixtures/blank.zip')
       .field('body', params.body)
       .expect(200)
@@ -166,12 +168,12 @@ describe('Post API', function() {
       })
   })
 
-  it('POST /v1/posts with mp3 attachment should create post and return json object with audio attachment', function(done) {
+  it('POST /v2/posts with mp3 attachment should create post and return json object with audio attachment', function(done) {
     var params = {
       body: 'postBody'
     }
     request(server)
-      .post('/v1/posts')
+      .post('/v2/posts' + '?token=' + token)
       .attach('file-0', 'test/fixtures/blank.mp3')
       .field('body', params.body)
       .expect(200)
@@ -197,17 +199,17 @@ describe('Post API', function() {
       })
   })
 
-  it('POST /v1/posts with missing body should return 200', function(done) {
+  it('POST /v2/posts with missing body should return 200', function(done) {
     var params = {
       userId: 'userId'
     }
     request(server)
-      .post('/v1/posts')
+      .post('/v2/posts' + '?token=' + token)
       .send(params)
       .expect(422, done)
   })
 
-  it('DELETE /v1/posts/:postId should remove post', function(done) {
+  it('DELETE /v2/posts/:postId should remove post', function(done) {
     models.User.findByUsername('username', function(err, user) {
       user.newPost({
         body: 'postBody'
@@ -217,7 +219,7 @@ describe('Post API', function() {
             '_method': 'delete'
           }
           userAgent
-            .post('localhost:' + server.get('port') + '/v1/posts/' + post.id)
+            .post('localhost:' + server.get('port') + '/v2/posts/' + post.id + '?token=' + token)
             .send(params)
             .end(function(err, res) {
               // TODO: res should have status 200
@@ -232,7 +234,7 @@ describe('Post API', function() {
     })
   })
 
-  it('PATCH /v1/posts/:postId should edit post', function(done) {
+  it('PATCH /v2/posts/:postId should edit post', function(done) {
     models.User.findByUsername('username', function(err, user) {
       user.newPost({
         body: 'postBody'
@@ -243,7 +245,7 @@ describe('Post API', function() {
             '_method': 'patch'
           }
           userAgent
-            .post('localhost:' + server.get('port') + '/v1/posts/' + post.id)
+            .post('localhost:' + server.get('port') + '/v2/posts/' + post.id + '?token=' + token)
             .send(params)
             .end(function(res) {
               // TODO: res should have status 200
@@ -258,7 +260,7 @@ describe('Post API', function() {
     })
   })
 
-  it('POST /v1/posts/:postId/like should add like to post', function(done) {
+  it('POST /v2/posts/:postId/like should add like to post', function(done) {
     var that = {}
 
     var addPostByAnon = function(callback) {
@@ -277,7 +279,7 @@ describe('Post API', function() {
 
     var addLikeByUser = function(callback) {
       userAgent
-        .post('localhost:' + server.get('port') + '/v1/posts/' + that.postId + '/like')
+        .post('localhost:' + server.get('port') + '/v2/posts/' + that.postId + '/like' + '?token=' + token)
         .end(function(res) {
           // TODO: res should have status 200
           callback()
@@ -334,7 +336,7 @@ describe('Post API', function() {
     })
   })
 
-  it('POST /v1/posts/:postId/unlike should remove like from post', function(done) {
+  it('POST /v2/posts/:postId/unlike should remove like from post', function(done) {
     var that = {}
 
     var addPostByAnon = function(callback) {
@@ -353,7 +355,7 @@ describe('Post API', function() {
 
     var addLikeByUser = function(callback) {
       userAgent
-        .post('localhost:' + server.get('port') + '/v1/posts/' + that.postId + '/like')
+        .post('localhost:' + server.get('port') + '/v2/posts/' + that.postId + '/like' + '?token=' + token)
         .end(function(res) {
           // TODO: res should have status 200
           callback()
@@ -362,7 +364,7 @@ describe('Post API', function() {
 
     var removeUserLike = function(callback) {
       userAgent
-        .post('localhost:' + server.get('port') + '/v1/posts/' + that.postId + '/unlike')
+        .post('localhost:' + server.get('port') + '/v2/posts/' + that.postId + '/unlike' + '?token=' + token)
         .end(function(res) {
           // TODO: res should have status 200
           callback()
@@ -423,19 +425,19 @@ describe('Post API', function() {
     })
   })
 
-  it('POST /v1/posts/not-exist-postId/like should return 422', function(done) {
+  it('POST /v2/posts/not-exist-postId/like should return 422', function(done) {
     request(server)
-      .post('/v1/posts/not-exist-postId/like')
+      .post('/v2/posts/not-exist-postId/like' + '?token=' + token)
       .expect(422, done)
   })
 
-  it('POST /v1/posts/not-exist-postId/unlike should return 422', function(done) {
+  it('POST /v2/posts/not-exist-postId/unlike should return 422', function(done) {
     request(server)
-      .post('/v1/posts/not-exist-postId/unlike')
+      .post('/v2/posts/not-exist-postId/unlike' + '?token=' + token)
       .expect(422, done)
   })
 
-  it('POST /v1/posts/:postId/like add like to post twice', function(done) {
+  it('POST /v2/posts/:postId/like add like to post twice', function(done) {
     var that = {}
 
     var addPostByAnon = function(callback) {
@@ -454,7 +456,7 @@ describe('Post API', function() {
 
     var addLikeByUser = function(callback) {
       userAgent
-        .post('localhost:' + server.get('port') + '/v1/posts/' + that.postId + '/like')
+        .post('localhost:' + server.get('port') + '/v2/posts/' + that.postId + '/like' + '?token=' + token)
         .end(function(res) {
           // TODO: res should have status 200
           callback()
@@ -513,7 +515,7 @@ describe('Post API', function() {
     })
   })
 
-  it('POST /v1/posts/:postId/unlike remove not-exist like', function(done) {
+  it('POST /v2/posts/:postId/unlike remove not-exist like', function(done) {
     var that = {}
 
     var addPostByAnon = function(callback) {
@@ -532,7 +534,7 @@ describe('Post API', function() {
 
     var removeUserLike = function(callback) {
       userAgent
-        .post('localhost:' + server.get('port') + '/v1/posts/' + that.postId + '/unlike')
+        .post('localhost:' + server.get('port') + '/v2/posts/' + that.postId + '/unlike' + '?token=' + token)
         .end(function(res) {
           // TODO: res should have status 200
           callback()
