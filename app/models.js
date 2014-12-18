@@ -4,6 +4,9 @@ var redis = require('../db')
 exports.AbstractSerializer = require('./serializers/abstract_serializer').addSerializer();
 exports.Serializer = require("./serializers/serializer").addSerializer();
 
+exports.AdminSerializerV1 = require("./serializers/v1/admin_serializer").addSerializer();
+exports.AdminSerializerV2 = require("./serializers/v2/admin_serializer").addSerializer();
+
 exports.User        = require('./models/user').addModel(db);
 exports.Group       = require('./models/group').addModel(db);
 exports.Post        = require('./models/post').addModel(db);
@@ -15,7 +18,6 @@ exports.Stats       = require('./models/stats').addModel(db);
 exports.RSS         = require('./models/rss').addModel(db);
 exports.FeedFactory = require('./models/feed-factory').addModel(db);
 
-exports.AdminSerializerV1 = require("./serializers/v1/admin_serializer").addSerializer();
 exports.UserSerializerV1 = require('./serializers/v1/user_serializer').addSerializer(exports.User);
 exports.CommentSerializerV1 = require("./serializers/v1/comment_serializer").addSerializer();
 exports.SubscriptionSerializerV1 = require("./serializers/v1/subscription_serializer").addSerializer();
@@ -29,7 +31,6 @@ exports.AttachmentSerializerV1 = require("./serializers/v1/attachment_serializer
 exports.PostSerializerV1 = require('./serializers/v1/post_serializer').addSerializer(exports.Post);
 exports.TimelineSerializerV1 = require("./serializers/v1/timeline_serializer").addSerializer();
 
-exports.AdminSerializerV2 = require("./serializers/v2/admin_serializer").addSerializer();
 exports.UserSerializerV2 = require('./serializers/v2/user_serializer').addSerializer(exports.User);
 exports.CommentSerializerV2 = require("./serializers/v2/comment_serializer").addSerializer();
 exports.SubscriptionSerializerV2 = require("./serializers/v2/subscription_serializer").addSerializer();
