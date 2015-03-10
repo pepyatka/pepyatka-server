@@ -1,0 +1,7 @@
+language: "node_js"
+node_js:
+  - "iojs-v1.2.0"
+services:
+  - redis-server
+before_script:
+  - sudo apt-get install -qq graphicsmagick
