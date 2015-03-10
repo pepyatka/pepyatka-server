@@ -12,6 +12,7 @@ exports.addModel = function(database) {
 
     this.id = params.id
     this.name = params.name
+    this.userId = params.userId
     if (parseInt(params.createdAt, 10))
       this.createdAt = params.createdAt
     if (parseInt(params.updatedAt, 10))
@@ -36,6 +37,7 @@ exports.addModel = function(database) {
       var valid
 
       valid = this.name.length > 0
+        && this.userId.length > 0
 
       valid ? resolve(valid) : reject(new Error("Invalid"))
     }.bind(this))
@@ -64,13 +66,18 @@ exports.addModel = function(database) {
 
       that.validateOnCreate()
         .then(function(timeline) {
-          database.hmsetAsync(mkKey(['timeline', timeline.id]),
-                              { 'name': timeline.name,
-                                'createdAt': timeline.createdAt.toString(),
-                                'updatedAt': timeline.updatedAt.toString(),
-                              })
+          Promise.all([
+            database.hmsetAsync(mkKey(['user', that.userId, 'timelines']),
+                                'RiverOfNews', that.id),
+            database.hmsetAsync(mkKey(['timeline', that.id]),
+                                { 'name': that.name,
+                                  'userId': that.userId,
+                                  'createdAt': that.createdAt.toString(),
+                                  'updatedAt': that.updatedAt.toString(),
+                                })
+          ])
+            .then(function(res) { resolve(that) })
         })
-        .then(function(res) { resolve(that) })
         .catch(function(e) { reject(e) })
     })
   }

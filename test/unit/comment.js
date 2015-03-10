@@ -4,7 +4,7 @@ var models = require("../../app/models")
 describe('Comment', function() {
   beforeEach(function(done) {
     $database.flushdbAsync()
-      .then(done())
+      .then(function() { done() })
   })
 
   describe('#create()', function() {
@@ -28,7 +28,7 @@ describe('Comment', function() {
           newComment.should.have.property('id')
           newComment.id.should.eql(comment.id)
         })
-        .then(done())
+        .then(function() { done() })
     })
 
     it('should ignore whitespaces in body', function(done) {
@@ -47,7 +47,7 @@ describe('Comment', function() {
           newComment.id.should.eql(comment.id)
           newComment.body.should.eql(body.trim())
         })
-        .then(done())
+        .then(function() { done() })
     })
 
     it('should not create with empty body', function(done) {
@@ -59,7 +59,7 @@ describe('Comment', function() {
         .catch(function(e) {
           e.message.should.eql("Invalid")
         })
-        .then(done())
+        .then(function() { done() })
     })
   })
 
@@ -78,7 +78,7 @@ describe('Comment', function() {
           newComment.should.have.property('id')
           newComment.id.should.eql(comment.id)
         })
-        .then(done())
+        .then(function() { done() })
     })
 
     it('should not find comment with a valid id', function(done) {
@@ -88,7 +88,7 @@ describe('Comment', function() {
         .then(function(comment) {
           $should.not.exist(comment)
         })
-        .then(done)
+        .then(function() { done() })
     })
   })
 })

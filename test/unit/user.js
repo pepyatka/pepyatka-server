@@ -1,10 +1,11 @@
 var models = require("../../app/models")
   , User = models.User
+  , Timeline = models.Timeline
 
 describe('User', function() {
   beforeEach(function(done) {
     $database.flushdbAsync()
-      .then(done())
+      .then(function() { done() })
   })
 
   describe('#validPassword()', function() {
@@ -19,7 +20,7 @@ describe('User', function() {
         .then(function(valid) {
           valid.should.eql(true)
         })
-        .then(done())
+        .then(function() { done() })
     })
 
     it('should not validate invalid password', function(done) {
@@ -33,7 +34,7 @@ describe('User', function() {
         .then(function(valid) {
           valid.should.eql(false)
         })
-        .then(done())
+        .then(function() { done() })
     })
   })
 
@@ -57,7 +58,7 @@ describe('User', function() {
           newUser.should.have.property('id')
           newUser.screenName.should.eql(screenName)
         })
-        .then(done())
+        .then(function() { done() })
     })
 
     it('should update without screenName', function(done) {
@@ -79,7 +80,7 @@ describe('User', function() {
           newUser.should.have.property('id')
           newUser.screenName.should.eql(screenName)
         })
-        .then(done())
+        .then(function() { done() })
     })
 
     it('should not update with blank screenName', function(done) {
@@ -97,7 +98,7 @@ describe('User', function() {
         .catch(function(e) {
           e.message.should.eql("Invalid")
         })
-        .then(done())
+        .then(function() { done() })
     })
   })
 
@@ -123,7 +124,7 @@ describe('User', function() {
           newUser.should.have.property('id')
           newUser.id.should.eql(user.id)
         })
-        .then(done())
+        .then(function() { done() })
     })
 
     it('should ignore whitespaces in username', function(done) {
@@ -149,7 +150,7 @@ describe('User', function() {
           newUser.id.should.eql(user.id)
           newUser.username.should.eql(username.trim().toLowerCase())
         })
-        .then(done())
+        .then(function() { done() })
     })
 
     it('should not create with empty password', function(done) {
@@ -162,7 +163,7 @@ describe('User', function() {
         .catch(function(e) {
           e.message.should.eql("Invalid")
         })
-        .then(done)
+        .then(function() { done() })
     })
 
     it('should not create empty hashed password', function(done) {
@@ -175,7 +176,7 @@ describe('User', function() {
         .catch(function(e) {
           e.message.should.eql("Password cannot be blank")
         })
-        .then(done)
+        .then(function() { done() })
     })
 
     it('should not create two users with the same username', function(done) {
@@ -197,7 +198,7 @@ describe('User', function() {
         .catch(function(e) {
           e.message.should.eql("Invalid")
         })
-        .then(done)
+        .then(function() { done() })
     })
 
     it('should not create user from stop-list', function(done) {
@@ -210,7 +211,7 @@ describe('User', function() {
         .catch(function(e) {
           e.message.should.eql("Invalid")
         })
-        .then(done)
+        .then(function() { done() })
     })
   })
 
@@ -222,7 +223,7 @@ describe('User', function() {
         .then(function(user) {
           $should.not.exist(user)
         })
-        .then(done)
+        .then(function() { done() })
     })
 
     it('should find user with a valid id', function(done) {
@@ -242,7 +243,7 @@ describe('User', function() {
               newUser.id.should.eql(user.id)
             })
         })
-        .then(done)
+        .then(function() { done() })
     })
   })
 
@@ -261,7 +262,57 @@ describe('User', function() {
           newUser.should.have.property('username')
           newUser.username.should.eql(user.username.toLowerCase())
         })
-        .then(done)
+        .then(function() { done() })
+    })
+  })
+
+  describe('#getRiverOfNews()', function() {
+    it('should get river of news', function(done) {
+      var user = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      user.create()
+        .then(function(user) {
+          return user.getRiverOfNews()
+        })
+        .then(function(timeline) {
+          timeline.should.be.an.instanceOf(Timeline)
+          timeline.should.not.be.empty
+          timeline.should.have.property('name')
+          timeline.name.should.eql('River of news')
+        })
+        .then(function() { done() })
+    })
+  })
+
+  describe('#getTimelines()', function() {
+    it('should return timelines', function(done) {
+      var user = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      user.create()
+        .then(function(newUser) {
+          return user.getRiverOfNews()
+        })
+        .then(function(timeline) {
+          return user.getRiverOfNews()
+        })
+        .then(function(timeline) {
+          return user.getTimelines()
+        })
+        .then(function(timelines) {
+          timelines.should.be.an.instanceOf(Array)
+          timelines.should.not.be.empty
+          timelines.length.should.be.eql(1)
+          var timeline = timelines[0]
+          timeline.should.have.property('name')
+          timeline.name.should.eql('River of news')
+        })
+        .then(function() { done() })
     })
   })
 })

@@ -6,7 +6,9 @@ var Promise = require('bluebird')
   , config = require('../../config/config').load()
   , inherits = require("util").inherits
   , AbstractModel = require('../models').AbstractModel
+  , Timeline = require('../models').Timeline
   , mkKey = require("../support/models").mkKey
+  , _ = require('underscore')
 
 Promise.promisifyAll(crypto)
 
@@ -154,7 +156,7 @@ exports.addModel = function(database) {
                                   'hashedPassword': user.hashedPassword
                                 })
           ])
-            .then(resolve(user))
+            .then(function(res) { resolve(user) })
         })
         .catch(function(e) { reject(e) })
     }.bind(this))
@@ -177,6 +179,66 @@ exports.addModel = function(database) {
         })
         .then(function() { resolve(that) })
         .catch(function(e) { reject(e) })
+    })
+  }
+
+  User.prototype.getRiverOfNewsId = function() {
+    var that = this;
+
+    return new Promise(function(resolve, reject) {
+      that.getTimelineIds()
+        .then(function(timelineIds) {
+          var timeline
+          if (timelineIds.RiverOfNews) {
+            timeline = timelineIds.RiverOfNews
+          } else {
+            timeline = new Timeline({
+              name: 'River of news',
+              userId: that.id
+            })
+            timeline = timeline.create()
+          }
+          return timeline
+        })
+        .then(function(timeline) {
+          resolve(timeline.id)
+        })
+    })
+  }
+
+  User.prototype.getRiverOfNews = function(params) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getRiverOfNewsId()
+        .then(function(timelineId) {
+          return Timeline.findById(timelineId)
+        })
+        .then(function(timeline) {
+          that.RiverOfNews = timeline
+          resolve(timeline)
+        })
+    })
+  }
+
+  User.prototype.getTimelineIds = function() {
+    return new Promise(function(resolve, reject) {
+      database.hgetallAsync(mkKey(['user', this.id, 'timelines']))
+        .then(function(timelineIds) { resolve(timelineIds || []) })
+    }.bind(this))
+  }
+
+  User.prototype.getTimelines = function(params) {
+    return new Promise(function(resolve, reject) {
+      this.getTimelineIds()
+        .then(function(timelineIds) {
+          Promise.map(Object.keys(timelineIds), function(timelineId) {
+            return Timeline.findById(timelineIds[timelineId], params)
+          })
+            .then(function(timelines) {
+              resolve(timelines || [])
+            })
+        })
     }.bind(this))
   }
 
