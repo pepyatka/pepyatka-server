@@ -281,7 +281,7 @@ describe('User', function() {
           timeline.should.be.an.instanceOf(Timeline)
           timeline.should.not.be.empty
           timeline.should.have.property('name')
-          timeline.name.should.eql('River of news')
+          timeline.name.should.eql('RiverOfNews')
         })
         .then(function() { done() })
     })
@@ -351,6 +351,21 @@ describe('User', function() {
   })
 
   describe('#getTimelines()', function() {
+    it('should return no timelines', function(done) {
+      var user = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      user.create()
+        .then(function(user) { return user.getTimelines() })
+        .then(function(timelines) {
+          timelines.should.be.an.instanceOf(Array)
+          timelines.should.be.empty
+        })
+        .then(function() { done() })
+    })
+
     it('should return timelines', function(done) {
       var user = new User({
         username: 'Luna',
@@ -370,11 +385,10 @@ describe('User', function() {
         .then(function(timelines) {
           timelines.should.be.an.instanceOf(Array)
           timelines.should.not.be.empty
-          console.log(timelines)
           timelines.length.should.be.eql(4)
           var timeline = timelines[0]
           timeline.should.have.property('name')
-          timeline.name.should.eql('River of news')
+          timeline.name.should.eql('RiverOfNews')
         })
         .then(function() { done() })
     })

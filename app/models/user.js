@@ -192,7 +192,7 @@ exports.addModel = function(database) {
             timeline = timelineIds.RiverOfNews
           } else {
             timeline = new Timeline({
-              name: 'River of news',
+              name: 'RiverOfNews',
               userId: that.id
             })
             timeline = timeline.create()
@@ -336,7 +336,7 @@ exports.addModel = function(database) {
             return Timeline.findById(timelineIds[timelineId], params)
           })
             .then(function(timelines) {
-              resolve(timelines || {})
+              resolve(timelines)
             })
         })
     }.bind(this))
