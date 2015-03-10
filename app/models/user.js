@@ -93,6 +93,7 @@ exports.addModel = function(database) {
         , stopList = ['anonymous', 'public']
 
       valid = this.username.length > 1
+        && this.screenName.length > 1
         && stopList.indexOf(this.username.trim().toLowerCase()) == -1
         && this.password
         && this.password.length > 0
@@ -107,7 +108,7 @@ exports.addModel = function(database) {
     return new Promise(function(resolve, reject) {
       Promise.join(that.validate(),
                    that.validateUniquness(mkKey(['username', that.username.trim().toLowerCase(), 'uid'])),
-                   that.validateUniquness('user:' + that.id),
+                   that.validateUniquness(mkKey(['user', that.id])),
                    function(valid, usernameIsUnique, idIsUnique) {
                      resolve(that)
                    })
@@ -119,16 +120,16 @@ exports.addModel = function(database) {
     return new Promise(function(resolve, reject) {
       this.createdAt = new Date().getTime()
       this.updatedAt = new Date().getTime()
-      this.username = this.username.trim().toLowerCase()
       this.screenName = this.username.trim()
+      this.username = this.username.trim().toLowerCase()
       this.id = uuid.v4()
 
       this.validateOnCreate()
         .then(function(user) { return user.updateHashedPassword() })
         .then(function(user) {
           Promise.all([
-            database.setAsync('username:' + user.username + ':uid', user.id),
-            database.hmsetAsync('user:' + user.id,
+            database.setAsync(mkKey(['username', user.username, 'uid']), user.id),
+            database.hmsetAsync(mkKey(['user', user.id]),
                                 { 'username': user.username,
                                   'screeName': user.screenName,
                                   'createdAt': user.createdAt.toString(),
@@ -150,10 +151,10 @@ exports.addModel = function(database) {
       that.updatedAt = new Date().getTime()
       if (params.hasOwnProperty('screenName'))
         that.screenName = params.screenName.trim()
-      
+
       that.validate()
         .then(function(user) {
-          database.hmsetAsync('user:' + that.id,
+          database.hmsetAsync(mkKey(['user', that.id]),
                               { 'screenName': that.screenName,
                                 'updatedAt': that.updatedAt.toString()
                               })

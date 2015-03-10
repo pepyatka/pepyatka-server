@@ -59,6 +59,45 @@ describe('User', function() {
         })
         .then(done())
     })
+
+    it('should update without screenName', function(done) {
+      var screenName = 'Luna'
+      var user = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      user.create()
+        .then(function(user) {
+          return user.update({
+          })
+        })
+        .then(function(newUser) {
+          newUser.should.be.an.instanceOf(User)
+          newUser.should.not.be.empty
+          newUser.should.have.property('id')
+          newUser.screenName.should.eql(screenName)
+        })
+        .then(done())
+    })
+
+    it('should not update with blank screenName', function(done) {
+      var user = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      user.create()
+        .then(function(user) {
+          return user.update({
+            screenName: ''
+          })
+        })
+        .catch(function(e) {
+          e.message.should.eql("Invalid")
+        })
+        .then(done())
+    })
   })
 
   describe('#create()', function() {
