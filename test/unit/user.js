@@ -275,7 +275,7 @@ describe('User', function() {
 
       user.create()
         .then(function(user) {
-          return user.getRiverOfNews()
+          return user.getRiverOfNewsTimeline()
         })
         .then(function(timeline) {
           timeline.should.be.an.instanceOf(Timeline)
@@ -373,8 +373,8 @@ describe('User', function() {
       })
 
       user.create()
-        .then(function(newUser) { return user.getRiverOfNews() })
-        .then(function(timeline) { return user.getRiverOfNews() })
+        .then(function(newUser) { return user.getRiverOfNewsTimeline() })
+        .then(function(timeline) { return user.getRiverOfNewsTimeline() })
         .then(function(timeline) { return user.getCommentsTimeline() })
         .then(function(timeline) { return user.getCommentsTimeline() })
         .then(function(timeline) { return user.getLikesTimeline() })

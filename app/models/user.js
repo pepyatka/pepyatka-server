@@ -181,18 +181,19 @@ exports.addModel = function(database) {
     })
   }
 
-  User.prototype.getRiverOfNewsId = function() {
+
+  User.prototype.getGenericTimelineId = function(name) {
     var that = this
 
     return new Promise(function(resolve, reject) {
       that.getTimelineIds()
         .then(function(timelineIds) {
           var timeline
-          if (timelineIds.RiverOfNews) {
-            timeline = timelineIds.RiverOfNews
+          if (timelineIds[name]) {
+            timeline = timelineIds[name]
           } else {
             timeline = new Timeline({
-              name: 'RiverOfNews',
+              name: name,
               userId: that.id
             })
             timeline = timeline.create()
@@ -203,122 +204,49 @@ exports.addModel = function(database) {
     })
   }
 
-  User.prototype.getRiverOfNews = function(params) {
+  User.prototype.getGenericTimeline = function(name, params) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      that.getRiverOfNewsId()
+      that["get" + name + "TimelineId"]()
         .then(function(timelineId) { return Timeline.findById(timelineId) })
         .then(function(timeline) {
-          that.RiverOfNews = timeline
+          that[name] = timeline
           resolve(timeline)
         })
     })
+  }
+
+  User.prototype.getRiverOfNewsTimelineId = function() {
+    return this.getGenericTimelineId('RiverOfNews')
+  }
+
+  User.prototype.getRiverOfNewsTimeline = function(params) {
+    return this.getGenericTimeline('RiverOfNews')
   }
 
   User.prototype.getLikesTimelineId = function() {
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      that.getTimelineIds()
-        .then(function(timelineIds) {
-          var timeline
-          if (timelineIds.Likes) {
-            timeline = timelineIds.Likes
-          } else {
-            timeline = new Timeline({
-              name: 'Likes',
-              userId: that.id
-            })
-            timeline = timeline.create()
-          }
-          return timeline
-        })
-        .then(function(timeline) { resolve(timeline.id) })
-    })
+    return this.getGenericTimelineId('Likes')
   }
 
   User.prototype.getLikesTimeline = function(params) {
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      that.getLikesTimelineId()
-        .then(function(timelineId) { return Timeline.findById(timelineId) })
-        .then(function(timeline) {
-          that.Likes = timeline
-          resolve(timeline)
-        })
-    })
+    return this.getGenericTimeline('Likes')
   }
 
   User.prototype.getPostsTimelineId = function() {
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      that.getTimelineIds()
-        .then(function(timelineIds) {
-          var timeline
-          if (timelineIds.Posts) {
-            timeline = timelineIds.Posts
-          } else {
-            timeline = new Timeline({
-              name: 'Posts',
-              userId: that.id
-            })
-            timeline = timeline.create()
-          }
-          return timeline
-        })
-        .then(function(timeline) { resolve(timeline.id) })
-    })
+    return this.getGenericTimelineId('Posts')
   }
 
   User.prototype.getPostsTimeline = function(params) {
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      that.getPostsTimelineId()
-        .then(function(timelineId) { return Timeline.findById(timelineId) })
-        .then(function(timeline) {
-          that.Posts = timeline
-          resolve(timeline)
-        })
-    })
+    return this.getGenericTimeline('Posts')
   }
 
   User.prototype.getCommentsTimelineId = function() {
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      that.getTimelineIds()
-        .then(function(timelineIds) {
-          var timeline
-          if (timelineIds.Comments) {
-            timeline = timelineIds.Comments
-          } else {
-            timeline = new Timeline({
-              name: 'Comments',
-              userId: that.id
-            })
-            timeline = timeline.create()
-          }
-          return timeline
-        })
-        .then(function(timeline) { resolve(timeline.id) })
-    })
+    return this.getGenericTimelineId('Comments')
   }
 
   User.prototype.getCommentsTimeline = function(params) {
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      that.getCommentsTimelineId()
-        .then(function(timelineId) { return Timeline.findById(timelineId) })
-        .then(function(timeline) {
-          that.Comments = timeline
-          resolve(timeline)
-        })
-    })
+    return this.getGenericTimeline('Comments')
   }
 
   User.prototype.getTimelineIds = function() {
