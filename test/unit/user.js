@@ -287,6 +287,27 @@ describe('User', function() {
     })
   })
 
+  describe('#getLikesTimeline()', function() {
+    it('should get likes timeline', function(done) {
+      var user = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      user.create()
+        .then(function(user) {
+          return user.getLikesTimeline()
+        })
+        .then(function(timeline) {
+          timeline.should.be.an.instanceOf(Timeline)
+          timeline.should.not.be.empty
+          timeline.should.have.property('name')
+          timeline.name.should.eql('Likes')
+        })
+        .then(function() { done() })
+    })
+  })
+
   describe('#getCommentsTimeline()', function() {
     it('should get comments timeline', function(done) {
       var user = new User({
@@ -320,11 +341,13 @@ describe('User', function() {
         .then(function(timeline) { return user.getRiverOfNews() })
         .then(function(timeline) { return user.getCommentsTimeline() })
         .then(function(timeline) { return user.getCommentsTimeline() })
+        .then(function(timeline) { return user.getLikesTimeline() })
+        .then(function(timeline) { return user.getLikesTimeline() })
         .then(function(timeline) { return user.getTimelines() })
         .then(function(timelines) {
           timelines.should.be.an.instanceOf(Array)
           timelines.should.not.be.empty
-          timelines.length.should.be.eql(2)
+          timelines.length.should.be.eql(3)
           var timeline = timelines[0]
           timeline.should.have.property('name')
           timeline.name.should.eql('River of news')

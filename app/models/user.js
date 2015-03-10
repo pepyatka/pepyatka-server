@@ -216,6 +216,41 @@ exports.addModel = function(database) {
     })
   }
 
+  User.prototype.getLikesTimelineId = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getTimelineIds()
+        .then(function(timelineIds) {
+          var timeline
+          if (timelineIds.Likes) {
+            timeline = timelineIds.Likes
+          } else {
+            timeline = new Timeline({
+              name: 'Likes',
+              userId: that.id
+            })
+            timeline = timeline.create()
+          }
+          return timeline
+        })
+        .then(function(timeline) { resolve(timeline.id) })
+    })
+  }
+
+  User.prototype.getLikesTimeline = function(params) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getLikesTimelineId()
+        .then(function(timelineId) { return Timeline.findById(timelineId) })
+        .then(function(timeline) {
+          that.Likes = timeline
+          resolve(timeline)
+        })
+    })
+  }
+
   User.prototype.getCommentsTimelineId = function() {
     var that = this
 
