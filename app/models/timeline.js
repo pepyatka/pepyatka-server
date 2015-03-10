@@ -4,6 +4,7 @@ var Promise = require('bluebird')
   , uuid = require('uuid')
   , inherits = require("util").inherits
   , AbstractModel = require('../models').AbstractModel
+  , mkKey = require("../support/models").mkKey
 
 exports.addModel = function(database) {
   var Timeline = function(params) {
@@ -38,7 +39,7 @@ exports.addModel = function(database) {
 
     return new Promise(function(resolve, reject) {
       Promise.join(that.validate(),
-                   that.validateUniquness('timeline:' + that.id),
+                   that.validateUniquness(mkKey(['timeline', that.id])),
                    function(valid, idIsUnique) {
                      resolve(that)
                    })
@@ -56,7 +57,7 @@ exports.addModel = function(database) {
 
       that.validateOnCreate()
         .then(function(timeline) {
-          database.hmsetAsync('timeline:' + timeline.id,
+          database.hmsetAsync(mkKey(['timeline', timeline.id]),
                               { 'name': timeline.name.trim(),
                                 'createdAt': timeline.createdAt.toString(),
                                 'updatedAt': timeline.updatedAt.toString(),

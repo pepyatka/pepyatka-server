@@ -1,4 +1,5 @@
 var Promise = require('bluebird')
+  , mkKey = require("../support/models").mkKey
 
 exports.addModel = function(database) {
   var AbstractModel = function() {
@@ -8,7 +9,7 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      database.hgetallAsync(that.namespace + ':' + identifier)
+      database.hgetallAsync(mkKey([that.namespace, identifier]))
         .then(function(attrs) {
           if (attrs !== null) {
             attrs.id = identifier

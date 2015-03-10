@@ -4,6 +4,7 @@ var Promise = require('bluebird')
   , uuid = require('uuid')
   , inherits = require("util").inherits
   , AbstractModel = require('../models').AbstractModel
+  , mkKey = require("../support/models").mkKey
 
 exports.addModel = function(database) {
   var Comment = function(params) {
@@ -38,7 +39,7 @@ exports.addModel = function(database) {
 
     return new Promise(function(resolve, reject) {
       Promise.join(that.validate(),
-                   that.validateUniquness('comment:' + that.id),
+                   that.validateUniquness(mkKey(['comment', that.id])),
                    function(valid, idIsUnique) {
                      resolve(that)
                    })
@@ -56,7 +57,7 @@ exports.addModel = function(database) {
 
       that.validateOnCreate()
         .then(function(comment) {
-          database.hmsetAsync('comment:' + comment.id,
+          database.hmsetAsync(mkKey(['comment', comment.id]),
                               { 'body': comment.body.trim(),
                                 'createdAt': comment.createdAt.toString(),
                                 'updatedAt': comment.updatedAt.toString(),

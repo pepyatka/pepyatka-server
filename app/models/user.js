@@ -6,6 +6,7 @@ var Promise = require('bluebird')
   , config = require('../../config/config').load()
   , inherits = require("util").inherits
   , AbstractModel = require('../models').AbstractModel
+  , mkKey = require("../support/models").mkKey
 
 Promise.promisifyAll(crypto)
 
@@ -33,7 +34,7 @@ exports.addModel = function(database) {
 
   User.findByUsername = function(username) {
     return Promise.resolve(
-      database.getAsync('username:' + username.trim().toLowerCase() + ':uid')
+      database.getAsync(mkKey(['username', username.trim().toLowerCase(), 'uid']))
         .then(function(identifier) {
           return User.findById(identifier)
         })
@@ -105,7 +106,7 @@ exports.addModel = function(database) {
 
     return new Promise(function(resolve, reject) {
       Promise.join(that.validate(),
-                   that.validateUniquness('username:' + that.username.trim().toLowerCase() + ':uid'),
+                   that.validateUniquness(mkKey(['username', that.username.trim().toLowerCase(), 'uid'])),
                    that.validateUniquness('user:' + that.id),
                    function(valid, usernameIsUnique, idIsUnique) {
                      resolve(that)
