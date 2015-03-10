@@ -24,6 +24,13 @@ exports.addModel = function(database) {
   Comment.namespace = "comment"
   Comment.findById = Comment.super_.findById
 
+  Object.defineProperty(Comment.prototype, 'body', {
+    get: function() { return this.body_ },
+    set: function(newValue) {
+      newValue ? this.body_ = newValue.trim() : this.body_ = ''
+    }
+  })
+
   Comment.prototype.validate = function() {
     return new Promise(function(resolve, reject) {
       var valid
@@ -58,7 +65,7 @@ exports.addModel = function(database) {
       that.validateOnCreate()
         .then(function(comment) {
           database.hmsetAsync(mkKey(['comment', comment.id]),
-                              { 'body': comment.body.trim(),
+                              { 'body': comment.body,
                                 'createdAt': comment.createdAt.toString(),
                                 'updatedAt': comment.updatedAt.toString(),
                               })

@@ -32,9 +32,25 @@ exports.addModel = function(database) {
   User.namespace = "user"
   User.findById = User.super_.findById
 
+  Object.defineProperty(User.prototype, 'username', {
+    get: function() { return this.username_ },
+    set: function(newValue) {
+      if (newValue)
+        this.username_ = newValue.trim().toLowerCase()
+    }
+  })
+
+  Object.defineProperty(User.prototype, 'screenName', {
+    get: function() { return this.screenName_ },
+    set: function(newValue) {
+      if (newValue)
+        this.screenName_ = newValue.trim()
+    }
+  })
+
   User.findByUsername = function(username) {
     return Promise.resolve(
-      database.getAsync(mkKey(['username', username.trim().toLowerCase(), 'uid']))
+      database.getAsync(mkKey(['username', username, 'uid']))
         .then(function(identifier) {
           return User.findById(identifier)
         })
@@ -94,7 +110,7 @@ exports.addModel = function(database) {
 
       valid = this.username.length > 1
         && this.screenName.length > 1
-        && stopList.indexOf(this.username.trim().toLowerCase()) == -1
+        && stopList.indexOf(this.username) == -1
         && this.password
         && this.password.length > 0
 
@@ -107,7 +123,7 @@ exports.addModel = function(database) {
 
     return new Promise(function(resolve, reject) {
       Promise.join(that.validate(),
-                   that.validateUniquness(mkKey(['username', that.username.trim().toLowerCase(), 'uid'])),
+                   that.validateUniquness(mkKey(['username', that.username, 'uid'])),
                    that.validateUniquness(mkKey(['user', that.id])),
                    function(valid, usernameIsUnique, idIsUnique) {
                      resolve(that)
@@ -120,8 +136,8 @@ exports.addModel = function(database) {
     return new Promise(function(resolve, reject) {
       this.createdAt = new Date().getTime()
       this.updatedAt = new Date().getTime()
-      this.screenName = this.username.trim()
-      this.username = this.username.trim().toLowerCase()
+      this.screenName = this.screenName || this.username
+      this.username = this.username
       this.id = uuid.v4()
 
       this.validateOnCreate()
@@ -150,7 +166,7 @@ exports.addModel = function(database) {
     return new Promise(function(resolve, reject) {
       that.updatedAt = new Date().getTime()
       if (params.hasOwnProperty('screenName'))
-        that.screenName = params.screenName.trim()
+        that.screenName = params.screenName
 
       that.validate()
         .then(function(user) {

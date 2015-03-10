@@ -24,6 +24,13 @@ exports.addModel = function(database) {
   Timeline.namespace = "timeline"
   Timeline.findById = Timeline.super_.findById
 
+  Object.defineProperty(Timeline.prototype, 'name', {
+    get: function() { return this.name_ },
+    set: function(newValue) {
+      newValue ? this.name_ = newValue.trim() : this.name_ = ''
+    }
+  })
+
   Timeline.prototype.validate = function() {
     return new Promise(function(resolve, reject) {
       var valid
@@ -58,7 +65,7 @@ exports.addModel = function(database) {
       that.validateOnCreate()
         .then(function(timeline) {
           database.hmsetAsync(mkKey(['timeline', timeline.id]),
-                              { 'name': timeline.name.trim(),
+                              { 'name': timeline.name,
                                 'createdAt': timeline.createdAt.toString(),
                                 'updatedAt': timeline.updatedAt.toString(),
                               })

@@ -64,6 +64,7 @@ describe('User', function() {
       var screenName = 'Luna'
       var user = new User({
         username: 'Luna',
+        screenName: screenName,
         password: 'password'
       })
 
