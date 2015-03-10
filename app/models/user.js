@@ -251,6 +251,41 @@ exports.addModel = function(database) {
     })
   }
 
+  User.prototype.getPostsTimelineId = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getTimelineIds()
+        .then(function(timelineIds) {
+          var timeline
+          if (timelineIds.Posts) {
+            timeline = timelineIds.Posts
+          } else {
+            timeline = new Timeline({
+              name: 'Posts',
+              userId: that.id
+            })
+            timeline = timeline.create()
+          }
+          return timeline
+        })
+        .then(function(timeline) { resolve(timeline.id) })
+    })
+  }
+
+  User.prototype.getPostsTimeline = function(params) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getPostsTimelineId()
+        .then(function(timelineId) { return Timeline.findById(timelineId) })
+        .then(function(timeline) {
+          that.Posts = timeline
+          resolve(timeline)
+        })
+    })
+  }
+
   User.prototype.getCommentsTimelineId = function() {
     var that = this
 
