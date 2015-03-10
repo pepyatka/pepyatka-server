@@ -39,7 +39,7 @@ describe('User', function() {
   })
 
   describe('#update()', function() {
-    it('should update with error', function(done) {
+    it('should update without error', function(done) {
       var screenName = 'Mars'
       var user = new User({
         username: 'Luna',
@@ -287,6 +287,27 @@ describe('User', function() {
     })
   })
 
+  describe('#getCommentsTimeline()', function() {
+    it('should get comments timeline', function(done) {
+      var user = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      user.create()
+        .then(function(user) {
+          return user.getCommentsTimeline()
+        })
+        .then(function(timeline) {
+          timeline.should.be.an.instanceOf(Timeline)
+          timeline.should.not.be.empty
+          timeline.should.have.property('name')
+          timeline.name.should.eql('Comments')
+        })
+        .then(function() { done() })
+    })
+  })
+
   describe('#getTimelines()', function() {
     it('should return timelines', function(done) {
       var user = new User({
@@ -295,19 +316,15 @@ describe('User', function() {
       })
 
       user.create()
-        .then(function(newUser) {
-          return user.getRiverOfNews()
-        })
-        .then(function(timeline) {
-          return user.getRiverOfNews()
-        })
-        .then(function(timeline) {
-          return user.getTimelines()
-        })
+        .then(function(newUser) { return user.getRiverOfNews() })
+        .then(function(timeline) { return user.getRiverOfNews() })
+        .then(function(timeline) { return user.getCommentsTimeline() })
+        .then(function(timeline) { return user.getCommentsTimeline() })
+        .then(function(timeline) { return user.getTimelines() })
         .then(function(timelines) {
           timelines.should.be.an.instanceOf(Array)
           timelines.should.not.be.empty
-          timelines.length.should.be.eql(1)
+          timelines.length.should.be.eql(2)
           var timeline = timelines[0]
           timeline.should.have.property('name')
           timeline.name.should.eql('River of news')

@@ -68,7 +68,7 @@ exports.addModel = function(database) {
         .then(function(timeline) {
           Promise.all([
             database.hmsetAsync(mkKey(['user', that.userId, 'timelines']),
-                                'RiverOfNews', that.id),
+                                that.name, that.id),
             database.hmsetAsync(mkKey(['timeline', that.id]),
                                 { 'name': that.name,
                                   'userId': that.userId,

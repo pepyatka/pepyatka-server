@@ -8,7 +8,6 @@ var Promise = require('bluebird')
   , AbstractModel = require('../models').AbstractModel
   , Timeline = require('../models').Timeline
   , mkKey = require("../support/models").mkKey
-  , _ = require('underscore')
 
 Promise.promisifyAll(crypto)
 
@@ -183,7 +182,7 @@ exports.addModel = function(database) {
   }
 
   User.prototype.getRiverOfNewsId = function() {
-    var that = this;
+    var that = this
 
     return new Promise(function(resolve, reject) {
       that.getTimelineIds()
@@ -200,9 +199,7 @@ exports.addModel = function(database) {
           }
           return timeline
         })
-        .then(function(timeline) {
-          resolve(timeline.id)
-        })
+        .then(function(timeline) { resolve(timeline.id) })
     })
   }
 
@@ -211,11 +208,44 @@ exports.addModel = function(database) {
 
     return new Promise(function(resolve, reject) {
       that.getRiverOfNewsId()
-        .then(function(timelineId) {
-          return Timeline.findById(timelineId)
-        })
+        .then(function(timelineId) { return Timeline.findById(timelineId) })
         .then(function(timeline) {
           that.RiverOfNews = timeline
+          resolve(timeline)
+        })
+    })
+  }
+
+  User.prototype.getCommentsTimelineId = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getTimelineIds()
+        .then(function(timelineIds) {
+          var timeline
+          if (timelineIds.Comments) {
+            timeline = timelineIds.Comments
+          } else {
+            timeline = new Timeline({
+              name: 'Comments',
+              userId: that.id
+            })
+            timeline = timeline.create()
+          }
+          return timeline
+        })
+        .then(function(timeline) { resolve(timeline.id) })
+    })
+  }
+
+  User.prototype.getCommentsTimeline = function(params) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getCommentsTimelineId()
+        .then(function(timelineId) { return Timeline.findById(timelineId) })
+        .then(function(timeline) {
+          that.Comments = timeline
           resolve(timeline)
         })
     })
@@ -224,7 +254,7 @@ exports.addModel = function(database) {
   User.prototype.getTimelineIds = function() {
     return new Promise(function(resolve, reject) {
       database.hgetallAsync(mkKey(['user', this.id, 'timelines']))
-        .then(function(timelineIds) { resolve(timelineIds || []) })
+        .then(function(timelineIds) { resolve(timelineIds || {}) })
     }.bind(this))
   }
 
@@ -236,7 +266,7 @@ exports.addModel = function(database) {
             return Timeline.findById(timelineIds[timelineId], params)
           })
             .then(function(timelines) {
-              resolve(timelines || [])
+              resolve(timelines || {})
             })
         })
     }.bind(this))
