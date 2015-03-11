@@ -123,6 +123,8 @@ describe('User', function() {
           newUser.should.not.be.empty
           newUser.should.have.property('id')
           newUser.id.should.eql(user.id)
+          newUser.should.have.property('type')
+          newUser.type.should.eql('user')
         })
         .then(function() { done() })
     })

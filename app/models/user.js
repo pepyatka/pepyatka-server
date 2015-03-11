@@ -25,6 +25,7 @@ exports.addModel = function(database) {
       this.createdAt = params.createdAt
     if (parseInt(params.updatedAt, 10))
       this.updatedAt = params.updatedAt
+    this.type = "user"
   }
 
   inherits(User, AbstractModel)

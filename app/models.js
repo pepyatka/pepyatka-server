@@ -9,6 +9,7 @@ exports.Serializer         = require("./serializers/serializer").addSerializer()
 exports.AbstractModel = require('./models/abstract_model').addModel(database)
 exports.Timeline      = require('./models/timeline').addModel(database)
 exports.User          = require('./models/user').addModel(database)
+exports.FeedFactory   = require('./models/feed-factory').addModel(database)
 exports.Post          = require('./models/post').addModel(database)
 exports.Comment       = require('./models/comment').addModel(database)
 
