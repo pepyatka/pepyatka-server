@@ -1,6 +1,7 @@
 var models = require("../../app/models")
   , FeedFactory = models.FeedFactory
   , User = models.User
+  , Group = models.Group
 
 describe('FeedFactory', function() {
   beforeEach(function(done) {
@@ -42,6 +43,23 @@ describe('FeedFactory', function() {
           newUser.should.not.be.empty
           newUser.should.have.property('id')
           newUser.id.should.eql(user.id)
+
+          done()
+        })
+    })
+
+    it('should find group with a valid name', function(done) {
+      var group = new Group({
+        username: 'Luna'
+      })
+
+      group.create()
+        .then(function(group) { return FeedFactory.findByUsername(group.username) })
+        .then(function(newGroup) {
+          newGroup.should.be.an.instanceOf(Group)
+          newGroup.should.not.be.empty
+          newGroup.should.have.property('id')
+          newGroup.id.should.eql(group.id)
 
           done()
         })

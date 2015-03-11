@@ -13,18 +13,18 @@ exports.addModel = function(database) {
 
   inherits(FeedFactory, AbstractModel)
 
-  FeedFactory.findById = function(feedId) {
+  FeedFactory.findById = function(identifier) {
     return new Promise(function(resolve, reject) {
-      database.hgetAsync(mkKey(['user', feedId]), 'type')
+      database.hgetAsync(mkKey(['user', identifier]), 'type')
         .then(function(type) {
           switch(type) {
           case 'group':
-            Group.findById(feedId)
-              .then(function(group) { resolve(grooup) })
+            Group.findById(identifier)
+              .then(function(group) { resolve(group) })
             break
 
           default:
-            User.findById(feedId)
+            User.findById(identifier)
               .then(function(user) { resolve(user) })
             break
           }
