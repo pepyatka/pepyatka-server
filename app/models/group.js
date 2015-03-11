@@ -55,14 +55,16 @@ exports.addModel = function(database) {
   }
 
   Group.prototype.create = function() {
-    return new Promise(function(resolve, reject) {
-      this.createdAt = new Date().getTime()
-      this.updatedAt = new Date().getTime()
-      this.screenName = this.screenName || this.username
-      this.username = this.username
-      this.id = uuid.v4()
+    var that = this
 
-      this.validateOnCreate()
+    return new Promise(function(resolve, reject) {
+      that.createdAt = new Date().getTime()
+      that.updatedAt = new Date().getTime()
+      that.screenName = that.screenName || that.username
+      that.username = that.username
+      that.id = uuid.v4()
+
+      that.validateOnCreate()
         .then(function(group) {
           Promise.all([
             database.setAsync(mkKey(['username', group.username, 'uid']), group.id),
@@ -74,10 +76,10 @@ exports.addModel = function(database) {
                                   'updatedAt': group.updatedAt.toString()
                                 })
           ])
-            .then(function(res) { resolve(group) })
         })
+        .then(function(res) { resolve(that) })
         .catch(function(e) { reject(e) })
-    }.bind(this))
+    })
   }
 
   Group.prototype.update = function(params) {

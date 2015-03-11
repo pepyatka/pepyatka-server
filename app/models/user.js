@@ -5,8 +5,10 @@ var Promise = require('bluebird')
   , uuid = require('uuid')
   , config = require('../../config/config').load()
   , inherits = require("util").inherits
-  , AbstractModel = require('../models').AbstractModel
-  , Timeline = require('../models').Timeline
+  , models = require('../models')
+  , AbstractModel = models.AbstractModel
+  , FeedFactory = models.FeedFactory
+  , Timeline = models.Timeline
   , mkKey = require("../support/models").mkKey
 
 Promise.promisifyAll(crypto)
@@ -77,6 +79,24 @@ exports.addModel = function(database) {
       digest("hex")
   }
 
+  User.prototype.newPost = function(attrs) {
+    var that = this
+    attrs.userId = this.id
+
+    return new Promise(function(resolve, reject) {
+      if (!attrs.timelineIds || !attrs.timelineIds[0]) {
+        that.getPostsTimelineId()
+          .then(function(timelineId) {
+            attrs.timelineIds = [timelineId];
+
+            resolve(new models.Post(attrs))
+          })
+      } else {
+        resolve(new models.Post(attrs))
+      }
+    }.bind(this))
+  }
+
   User.prototype.updateHashedPassword = function() {
     var that = this
 
@@ -135,17 +155,19 @@ exports.addModel = function(database) {
   }
 
   User.prototype.create = function() {
-    return new Promise(function(resolve, reject) {
-      this.createdAt = new Date().getTime()
-      this.updatedAt = new Date().getTime()
-      this.screenName = this.screenName || this.username
-      this.username = this.username
-      this.id = uuid.v4()
+    var that = this
 
-      this.validateOnCreate()
+    return new Promise(function(resolve, reject) {
+      that.createdAt = new Date().getTime()
+      that.updatedAt = new Date().getTime()
+      that.screenName = that.screenName || that.username
+      that.username = that.username
+      that.id = uuid.v4()
+
+      that.validateOnCreate()
         .then(function(user) { return user.updateHashedPassword() })
         .then(function(user) {
-          Promise.all([
+          return Promise.all([
             database.setAsync(mkKey(['username', user.username, 'uid']), user.id),
             database.hmsetAsync(mkKey(['user', user.id]),
                                 { 'username': user.username,
@@ -157,10 +179,10 @@ exports.addModel = function(database) {
                                   'hashedPassword': user.hashedPassword
                                 })
           ])
-            .then(function(res) { resolve(user) })
         })
+        .then(function(res) { resolve(that) })
         .catch(function(e) { reject(e) })
-    }.bind(this))
+    })
   }
 
   User.prototype.update = function(params) {
@@ -183,7 +205,6 @@ exports.addModel = function(database) {
     })
   }
 
-
   User.prototype.getGenericTimelineId = function(name) {
     var that = this
 
@@ -194,7 +215,7 @@ exports.addModel = function(database) {
           if (timelineIds[name]) {
             timeline = timelineIds[name]
           } else {
-            timeline = new Timeline({
+            timeline = new models.Timeline({
               name: name,
               userId: that.id
             })
@@ -211,7 +232,7 @@ exports.addModel = function(database) {
 
     return new Promise(function(resolve, reject) {
       that["get" + name + "TimelineId"]()
-        .then(function(timelineId) { return Timeline.findById(timelineId) })
+        .then(function(timelineId) { return models.Timeline.findById(timelineId) })
         .then(function(timeline) {
           that[name] = timeline
           resolve(timeline)
@@ -262,14 +283,44 @@ exports.addModel = function(database) {
     return new Promise(function(resolve, reject) {
       this.getTimelineIds()
         .then(function(timelineIds) {
-          Promise.map(Object.keys(timelineIds), function(timelineId) {
-            return Timeline.findById(timelineIds[timelineId], params)
+          return Promise.map(Object.keys(timelineIds), function(timelineId) {
+            return models.Timeline.findById(timelineIds[timelineId], params)
           })
-            .then(function(timelines) {
-              resolve(timelines)
-            })
+        })
+        .then(function(timelines) {
+          resolve(timelines)
         })
     }.bind(this))
+  }
+
+  User.prototype.getPublicTimelineIds = function() {
+    return Promise.all([
+      this.getCommentsTimelineId,
+      this.getLikesTimelineId,
+      this.getPostsTimelineId
+    ])
+  }
+
+  User.prototype.subscribeTo = function(timelineId) {
+    var currentTime = new Date().getTime()
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      models.Timeline.findById(timeline)
+        .then(function(timeline) { return FeedFactory.findById(timeline.userId) })
+        .then(function(user) { return user.getPublicTimelineIds })
+        .then(function(timelineIds) {
+          return Promise.map(timelineIds, function(timelineId) {
+            return Promise.all([
+              database.zaddAsync(mkKey(['user', that.id, 'subscriptions']), currentTime, timelineId),
+              database.zaddAsync(mkKey(['timeline', timelineId, 'subscribers']), currentTime, that.id)
+            ])
+          })
+        })
+        .then(function(res) { return that.getRiverOfNewsTimelineId() })
+        .then(function(riverOfNewsId) { return timeline.merge(riverOfNewsId) })
+        .then(function(res) { resolve(res) })
+    })
   }
 
   return User

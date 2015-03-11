@@ -3,7 +3,10 @@
 var Promise = require('bluebird')
   , uuid = require('uuid')
   , inherits = require("util").inherits
-  , AbstractModel = require('../models').AbstractModel
+  , models = require('../models')
+  , AbstractModel = models.AbstractModel
+  , FeedFactory = models.FeedFactory
+  , Timeline = models.Timeline
   , mkKey = require("../support/models").mkKey
 
 exports.addModel = function(database) {
@@ -12,6 +15,7 @@ exports.addModel = function(database) {
 
     this.id = params.id
     this.body = params.body
+    this.userId = params.userId
     if (parseInt(params.createdAt, 10))
       this.createdAt = params.createdAt
     if (parseInt(params.updatedAt, 10))
@@ -36,6 +40,8 @@ exports.addModel = function(database) {
       var valid
 
       valid = this.body.length > 0
+        && this.userId
+        && this.userId.length > 0
 
       valid ? resolve(valid) : reject(new Error("Invalid"))
     }.bind(this))
@@ -64,11 +70,15 @@ exports.addModel = function(database) {
 
       that.validateOnCreate()
         .then(function(post) {
-          database.hmsetAsync(mkKey(['post', post.id]),
-                              { 'body': post.body,
-                                'createdAt': post.createdAt.toString(),
-                                'updatedAt': post.updatedAt.toString(),
-                              })
+          return Promise.all([
+            database.hmsetAsync(mkKey(['post', post.id]),
+                                { 'body': post.body,
+                                  'userId': post.userId,
+                                  'createdAt': post.createdAt.toString(),
+                                  'updatedAt': post.updatedAt.toString(),
+                                }),
+            models.Timeline.newPost(post.id)
+          ])
         })
         .then(function(res) { resolve(that) })
         .catch(function(e) { reject(e) })
@@ -76,6 +86,21 @@ exports.addModel = function(database) {
   }
 
   Post.prototype.update = function(params) {
+  }
+
+  Post.prototype.getSubscribedTimelineIds = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      FeedFactory.findById(that.userId)
+        .then(function(feed) {
+          return Promise.all([
+            feed.getRiverOfNewsTimelineId(),
+            feed.getPostsTimelineId()
+          ])
+        })
+        .then(function(timelines) { resolve(timelines) })
+    })
   }
 
   return Post

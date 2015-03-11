@@ -100,4 +100,21 @@ describe('Timeline', function() {
         .then(function() { done() })
     })
   })
+
+  describe('#getPosts()', function() {
+    it('should return an empty list for an empty timeline', function(done) {
+      var userId = uuid.v4()
+      var timeline = new Timeline({
+        name: 'name',
+        userId: userId
+      })
+
+      timeline.create()
+        .then(function(timeline) { return timeline.getPosts() })
+        .then(function(posts) {
+          posts.should.be.empty
+        })
+        .then(function() { done() })
+    })
+  })
 })
