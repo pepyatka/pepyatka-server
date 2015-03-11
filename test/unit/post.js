@@ -73,10 +73,10 @@ describe('Post', function() {
       post.create()
         .then(function(post) { return post.getSubscribedTimelineIds() })
         .then(function(timelines) {
-          console.log('WIP')
-          console.log(timelines)
+          timelines.should.not.be.empty
+          timelines.length.should.eql(2)
         })
-        // .then(function() { done() })
+        .then(function() { done() })
     })
 
     it('should not create with empty body', function(done) {

@@ -213,7 +213,7 @@ exports.addModel = function(database) {
         .then(function(timelineIds) {
           var timeline
           if (timelineIds[name]) {
-            timeline = timelineIds[name]
+            timeline = models.Timeline.findById(timelineIds[name])
           } else {
             timeline = new models.Timeline({
               name: name,
