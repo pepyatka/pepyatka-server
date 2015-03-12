@@ -139,7 +139,7 @@ exports.addModel = function(database) {
           })
         })
         .then(function(posts) {
-          that.posts = posts || []
+          that.posts = posts
           resolve(that.posts)
         })
     })
