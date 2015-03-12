@@ -12,6 +12,11 @@ exports.addModel = function(database) {
 
   inherits(FeedFactory, AbstractModel)
 
+  FeedFactory.stopList = function() {
+    return ['anonymous',
+            'public']
+  }
+
   FeedFactory.findById = function(identifier) {
     return new Promise(function(resolve, reject) {
       database.hgetAsync(mkKey(['user', identifier]), 'type')

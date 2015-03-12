@@ -44,11 +44,10 @@ exports.addModel = function(database) {
   Group.prototype.validate = function() {
     return new Promise(function(resolve, reject) {
       var valid
-        , stopList = ['anonymous', 'public']
 
       valid = this.username.length > 1
         && this.screenName.length > 1
-        && stopList.indexOf(this.username) == -1
+        && models.FeedFactory.stopList().indexOf(this.username) == -1
 
       valid ? resolve(valid) : reject(new Error("Invalid"))
     }.bind(this))
