@@ -7,8 +7,7 @@ var Promise = require('bluebird')
   , mkKey = require("../support/models").mkKey
 
 exports.addModel = function(database) {
-  function FeedFactory() {
-    FeedFactory.super_.call(this)
+  var FeedFactory = function() {
   }
 
   inherits(FeedFactory, AbstractModel)
