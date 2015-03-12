@@ -143,7 +143,6 @@ describe('Post', function() {
       })
 
       post.create()
-        .then(function(post) { return post })
         .then(function(post) { return Post.findById(post.id) })
         .then(function(newPost) {
           newPost.should.be.an.instanceOf(Post)

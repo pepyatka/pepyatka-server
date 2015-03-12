@@ -1,5 +1,6 @@
 var models = require("../../app/models")
   , User = models.User
+  , Post = models.Post
   , Timeline = models.Timeline
 
 describe('User', function() {
@@ -391,6 +392,78 @@ describe('User', function() {
           var timeline = timelines[0]
           timeline.should.have.property('name')
           timeline.name.should.eql('RiverOfNews')
+        })
+        .then(function() { done() })
+    })
+  })
+
+  describe('#newPost()', function() {
+    var user
+
+    beforeEach(function(done) {
+      user = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      user.create()
+        .then(function(user) { done() })
+    })
+
+    it('should create a new post', function(done) {
+      var post
+      var attrs = {
+        body: 'Post body'
+      }
+
+      user.newPost(attrs)
+        .then(function(newPost) {
+          post = newPost
+          return newPost.create()
+        })
+        .then(function(newPost) { return Post.findById(newPost.id) })
+        .then(function(newPost) {
+          newPost.should.be.an.instanceOf(Post)
+          newPost.should.not.be.empty
+          newPost.should.have.property('id')
+          newPost.id.should.eql(post.id)
+        })
+        .then(function() { done() })
+    })
+
+    it('should create a new post to a timeline', function(done) {
+      var post
+      var attrs = {
+        body: 'Post body'
+      }
+
+      user.getPostsTimelineId()
+        .then(function(timelineId) {
+          attrs.timelineIds = [timelineId]
+          return user.newPost(attrs)
+        })
+        .then(function(newPost) {
+          post = newPost
+          return newPost.create()
+        })
+        .then(function(newPost) { return Post.findById(newPost.id) })
+        .then(function(newPost) {
+          newPost.should.be.an.instanceOf(Post)
+          newPost.should.not.be.empty
+          newPost.should.have.property('id')
+          newPost.id.should.eql(post.id)
+
+          return user.getPostsTimeline()
+        })
+        .then(function(timeline) { return timeline.getPosts() })
+        .then(function(posts) {
+          posts.should.not.be.empty
+          posts.length.should.eql(1)
+          var newPost = posts[0]
+          newPost.should.be.an.instanceOf(Post)
+          newPost.should.not.be.empty
+          newPost.should.have.property('body')
+          newPost.body.should.eql(post.body)
         })
         .then(function() { done() })
     })
