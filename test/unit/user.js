@@ -532,4 +532,47 @@ describe('User', function() {
         .then(function() { done() })
     })
   })
+
+  describe('#unsubscribeTo()', function() {
+    var userA
+      , userB
+
+    beforeEach(function(done) {
+      userA = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      userB = new User({
+        username: 'Mars',
+        password: 'password'
+      })
+
+      userA.create()
+        .then(function(user) { return userB.create() })
+        .then(function(user) { done() })
+    })
+
+    it('should unsubscribe to timeline', function(done) {
+      var attrs = {
+        body: 'Post body'
+      }
+      var identifier
+
+      userB.newPost(attrs)
+        .then(function(newPost) { return newPost.create() })
+        .then(function(post) { return userB.getPostsTimelineId() })
+        .then(function(timelineId) {
+          identifier = timelineId
+          return userA.subscribeTo(timelineId)
+        })
+        .then(function(timelineId) { return userA.unsubscribeTo(identifier) })
+        .then(function() { return userA.getRiverOfNewsTimeline() })
+        .then(function(timeline) { return timeline.getPosts() })
+        .then(function(posts) {
+          posts.should.be.empty
+        })
+        .then(function() { done() })
+    })
+  })
 })

@@ -111,7 +111,7 @@ exports.addModel = function(database) {
   Timeline.prototype.update = function(params) {
   }
 
-  Timeline.prototype.getPostsIds = function(start, num) {
+  Timeline.prototype.getPostIds = function(start, num) {
     var that = this
 
     return new Promise(function(resolve, reject) {
@@ -132,7 +132,7 @@ exports.addModel = function(database) {
     }
 
     return new Promise(function(resolve, reject) {
-      that.getPostsIds(start, num)
+      that.getPostIds(start, num)
         .then(function(postIds) {
           return Promise.map(postIds, function(postId) {
             return Post.findById(postId)
@@ -150,17 +150,44 @@ exports.addModel = function(database) {
 
     return new Promise(function(resolve, reject) {
       database.zunionstoreAsync(
-        'timeline:' + timelineId + ':posts', 2,
-        'timeline:' + timelineId + ':posts',
-        'timeline:' + that.id + ':posts',
+        mkKey(['timeline', timelineId, 'posts']), 2,
+        mkKey(['timeline', timelineId, 'posts']),
+        mkKey(['timeline', that.id, 'posts']),
         'AGGREGATE', 'MAX')
         .then(function() { return Timeline.findById(timelineId) })
-        .then(function(timeline) { return timeline.getPosts(0, -1) })
-        .then(function(posts) {
-          return Promise.map(posts, function(post) {
-            return database.sadd(mkKey(['post', post.id, 'timelines']), that.id)
+        .then(function(timeline) { return timeline.getPostIds(0, -1) })
+        .then(function(postIds) {
+          return Promise.map(postIds, function(postId) {
+            return database.sadd(mkKey(['post', postId, 'timelines']), that.id)
           })
         })
+        .then(function(res) { resolve(res) })
+    })
+  }
+
+  Timeline.prototype.unmerge = function(timelineId) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      // zinterstore saves results to a key. so we have to
+      // create a temporary storage
+      var randomKey = mkKey(['timeline', that.id, 'random', uuid.v4()])
+
+      database.zinterstoreAsync(
+        randomKey, 2,
+        mkKey(['timeline', timelineId, 'posts']),
+        mkKey(['timeline', that.id, 'posts']),
+        'AGGREGATE', 'MAX')
+        .then(function() { return database.zrangeAsync(randomKey, 0, -1) })
+        .then(function(postIds) {
+          return Promise.map(postIds, function(postId) {
+            return Promise.all([
+              database.sremAsync(mkKey(['post', postId, 'timelines']), timelineId),
+              database.zremAsync(mkKey(['timeline', timelineId, 'posts']), postId)
+            ])
+          })
+        })
+        .then(function() { return database.delAsync(randomKey) })
         .then(function(res) { resolve(res) })
     })
   }

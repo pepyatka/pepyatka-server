@@ -327,5 +327,31 @@ exports.addModel = function(database) {
     })
   }
 
+  User.prototype.unsubscribeTo = function(timelineId) {
+    var currentTime = new Date().getTime()
+    var that = this
+    var timeline
+
+    return new Promise(function(resolve, reject) {
+      models.Timeline.findById(timelineId)
+        .then(function(newTimeline) {
+          timeline = newTimeline
+          return models.FeedFactory.findById(newTimeline.userId)
+        })
+        .then(function(user) { return user.getPublicTimelineIds() })
+        .then(function(timelineIds) {
+          return Promise.map(timelineIds, function(timelineId) {
+            return Promise.all([
+              database.zremAsync(mkKey(['user', that.id, 'subscriptions']), timelineId),
+              database.zremAsync(mkKey(['timeline', timelineId, 'subscribers']), that.id)
+            ])
+          })
+        })
+        .then(function(res) { return that.getRiverOfNewsTimelineId() })
+        .then(function(riverOfNewsId) { return timeline.unmerge(riverOfNewsId) })
+        .then(function(res) { resolve(res) })
+    })
+  }
+
   return User
 }
