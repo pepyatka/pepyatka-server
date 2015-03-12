@@ -471,7 +471,7 @@ describe('User', function() {
 
   describe('#getPublicTimelineIds()', function() {
     it('should return all public timesline ids', function(done) {
-      user = new User({
+      var user = new User({
         username: 'Luna',
         password: 'password'
       })
@@ -483,6 +483,53 @@ describe('User', function() {
           timelines.length.should.eql(3)
         })
         .then(function(user) { done() })
+    })
+  })
+
+  describe('#subscribeTo()', function() {
+    var userA
+      , userB
+
+    beforeEach(function(done) {
+      userA = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      userB = new User({
+        username: 'Mars',
+        password: 'password'
+      })
+
+      userA.create()
+        .then(function(user) { return userB.create() })
+        .then(function(user) { done() })
+    })
+
+    it('should subscribe to timeline', function(done) {
+      var attrs = {
+        body: 'Post body'
+      }
+      var post
+
+      userB.newPost(attrs)
+        .then(function(newPost) {
+          post = newPost
+          return newPost.create()
+        })
+        .then(function(post) { return userB.getPostsTimelineId() })
+        .then(function(timelineId) { return userA.subscribeTo(timelineId) })
+        .then(function() { return userA.getRiverOfNewsTimeline() })
+        .then(function(timeline) { return timeline.getPosts() })
+        .then(function(posts) {
+          posts.should.not.be.empty
+          posts.length.should.eql(1)
+          var newPost = posts[0]
+          newPost.should.have.property('body')
+          newPost.body.should.eql(post.body)
+          newPost.id.should.eql(post.id)
+        })
+        .then(function() { done() })
     })
   })
 })

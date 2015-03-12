@@ -154,14 +154,14 @@ exports.addModel = function(database) {
         'timeline:' + timelineId + ':posts',
         'timeline:' + that.id + ':posts',
         'AGGREGATE', 'MAX')
-        .then(function() { return timeline.getPosts(0, -1) })
+        .then(function() { return Timeline.findById(timelineId) })
+        .then(function(timeline) { return timeline.getPosts(0, -1) })
         .then(function(posts) {
           return Promise.map(posts, function(post) {
-            return database.sadd(mkKey(['post', post.id, 'timelines']), riverOfNewsId)
-          }, function(res){
-            resolve(res)
+            return database.sadd(mkKey(['post', post.id, 'timelines']), that.id)
           })
         })
+        .then(function(res) { resolve(res) })
     })
   }
 

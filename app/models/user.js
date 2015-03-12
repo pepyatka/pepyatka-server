@@ -304,11 +304,15 @@ exports.addModel = function(database) {
   User.prototype.subscribeTo = function(timelineId) {
     var currentTime = new Date().getTime()
     var that = this
+    var timeline
 
     return new Promise(function(resolve, reject) {
-      models.Timeline.findById(timeline)
-        .then(function(timeline) { return FeedFactory.findById(timeline.userId) })
-        .then(function(user) { return user.getPublicTimelineIds })
+      models.Timeline.findById(timelineId)
+        .then(function(newTimeline) {
+          timeline = newTimeline
+          return models.FeedFactory.findById(newTimeline.userId)
+        })
+        .then(function(user) { return user.getPublicTimelineIds() })
         .then(function(timelineIds) {
           return Promise.map(timelineIds, function(timelineId) {
             return Promise.all([
