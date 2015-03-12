@@ -468,4 +468,21 @@ describe('User', function() {
         .then(function() { done() })
     })
   })
+
+  describe('#getPublicTimelineIds()', function() {
+    it('should return all public timesline ids', function(done) {
+      user = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      user.create()
+        .then(function(user) { return user.getPublicTimelineIds() })
+        .then(function(timelines) {
+          timelines.should.not.be.empty
+          timelines.length.should.eql(3)
+        })
+        .then(function(user) { done() })
+    })
+  })
 })
