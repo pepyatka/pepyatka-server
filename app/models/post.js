@@ -340,8 +340,8 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      post.getSubscribedTimelineIds()
-        .then(function() { return database.sremAsync(mkKey(['post', postId, 'likes']), userId) })
+      that.getSubscribedTimelineIds()
+        .then(function() { return database.sremAsync(mkKey(['post', that.id, 'likes']), userId) })
         .then(function(res) { resolve(res) })
     })
   }

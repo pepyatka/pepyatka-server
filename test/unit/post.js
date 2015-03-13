@@ -314,6 +314,71 @@ describe('Post', function() {
     })
   })
 
+  describe('#removeLike()', function() {
+    var userA
+      , userB
+      , userC
+      , post
+
+    beforeEach(function(done) {
+      userA = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      userB = new User({
+        username: 'Mars',
+        password: 'password'
+      })
+
+      userC = new User({
+        username: 'Zeus',
+        password: 'password'
+      })
+
+      var attrs = {
+        body: 'Post body'
+      }
+
+      userA.create()
+        .then(function(user) { return userC.create() })
+        .then(function(user) { return userB.create() })
+        .then(function(user) { return userB.newPost(attrs) })
+        .then(function(newPost) { return newPost.create() })
+        .then(function(newPost) {
+          post = newPost
+          return userB.getPostsTimelineId()
+        })
+        .then(function(timelineId) { return userA.subscribeTo(timelineId) })
+        .then(function(res) { return userA.getPostsTimelineId() })
+        .then(function(timelineId) { return userC.subscribeTo(timelineId) })
+        .then(function(res) { done() })
+    })
+
+    it('should remove like from friend of friend timelines', function(done) {
+      post.addLike(userA.id)
+        .then(function(res) { return post.removeLike(userA.id) })
+        .then(function(res) { return post.getLikes() })
+        .then(function(users) {
+          users.should.be.empty
+        })
+        .then(function() { done() })
+    })
+
+    it('should add user to likes', function(done) {
+      post.addLike(userA.id)
+        .then(function(res) { return post.getLikes() })
+        .then(function(users) {
+          users.should.not.be.empty
+          users.length.should.eql(1)
+          var user = users[0]
+          user.should.have.property('id')
+          user.id.should.eql(userA.id)
+        })
+        .then(function() { done() })
+    })
+  })
+
   describe('#addComment()', function() {
     var userA
       , userB
@@ -420,7 +485,7 @@ describe('Post', function() {
     })
   })
 
-  describe('#postdestroy()', function() {
+  describe('#destroy()', function() {
     var user
 
     beforeEach(function(done) {
