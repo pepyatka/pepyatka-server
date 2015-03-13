@@ -39,7 +39,8 @@ exports.addModel = function(database) {
     return new Promise(function(resolve, reject) {
       var valid
 
-      valid = this.body.length > 0
+      valid = this.body
+        && this.body.length > 0
         && this.userId
         && this.userId.length > 0
 
@@ -100,6 +101,64 @@ exports.addModel = function(database) {
           ])
         })
         .then(function(timelines) { resolve(timelines) })
+    })
+  }
+
+  Post.prototype.getTimelineIds = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      database.smembersAsync(mkKey(['post', that.id, 'timelines']))
+        .then(function(timelineIds) {
+          that.timelineIds = timelineIds || []
+          resolve(that.timelineIds)
+        })
+    })
+  }
+
+  Post.prototype.addLike = function(userId) {
+    var that = this
+    var timelineIds = []
+    var user
+
+    return new Promise(function(resolve, reject) {
+      models.User.findById(userId)
+        .then(function(newUser) {
+          user = newUser
+          return user.getLikesTimeline()
+        })
+        .then(function(timeline) {
+          timelineIds.push(timeline.id)
+          return timeline.getSubscribers()
+        })
+        .then(function(users) {
+          return Promise.map(users, function(user) {
+            return user.getRiverOfNewsTimelineId()
+          })
+        })
+        .then(function(subscribedTimelineIds) {
+          timelineIds = timelineIds.concat(subscribedTimelineIds)
+          return that.getSubscribedTimelineIds()
+        })
+        .then(function(subscribedTimelineIds) {
+          timelineIds = timelineIds.concat(subscribedTimelineIds)
+          return user.getRiverOfNewsTimelineId()
+         })
+        .then(function(timelineId) {
+          timelineIds.push(timelineId)
+          return Promise.map(timelineIds, function(timelineId) {
+            return models.Timeline.findById(timelineId)
+          })
+        })
+        .then(function(timelines) {
+          return Promise.map(timelines, function(timeline) {
+            return timeline.updatePost(that.id)
+          })
+        })
+        .then(function() {
+          return database.saddAsync(mkKey(['post', that.id, 'likes']), userId)
+        })
+        .then(function(res) { resolve(res) })
     })
   }
 

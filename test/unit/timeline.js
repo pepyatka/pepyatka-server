@@ -1,6 +1,7 @@
 var models = require("../../app/models")
   , uuid = require('uuid')
   , Timeline = models.Timeline
+  , User = models.User
 
 describe('Timeline', function() {
   beforeEach(function(done) {
@@ -113,6 +114,52 @@ describe('Timeline', function() {
         .then(function(timeline) { return timeline.getPosts() })
         .then(function(posts) {
           posts.should.be.empty
+        })
+        .then(function() { done() })
+    })
+  })
+
+  describe('#getSubscribers()', function() {
+    var userA
+      , userB
+
+    beforeEach(function(done) {
+      userA = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      userB = new User({
+        username: 'Mars',
+        password: 'password'
+      })
+
+      userA.create()
+        .then(function(user) { return userB.create() })
+        .then(function(user) { done() })
+    })
+
+    it('should subscribe to timeline', function(done) {
+      var attrs = {
+        body: 'Post body'
+      }
+      var post
+
+      userB.newPost(attrs)
+        .then(function(newPost) {
+          post = newPost
+          return newPost.create()
+        })
+        .then(function(post) { return userB.getPostsTimelineId() })
+        .then(function(timelineId) { return userA.subscribeTo(timelineId) })
+        .then(function() { return userB.getPostsTimeline() })
+        .then(function(timeline) { return timeline.getSubscribers() })
+        .then(function(users) {
+          users.should.not.be.empty
+          users.length.should.eql(1)
+          var user = users[0]
+          user.should.have.property('id')
+          user.id.should.eql(userA.id)
         })
         .then(function() { done() })
     })

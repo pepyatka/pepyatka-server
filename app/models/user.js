@@ -294,9 +294,9 @@ exports.addModel = function(database) {
 
   User.prototype.getPublicTimelineIds = function() {
     return Promise.all([
-      this.getCommentsTimelineId,
-      this.getLikesTimelineId,
-      this.getPostsTimelineId
+      this.getCommentsTimelineId(),
+      this.getLikesTimelineId(),
+      this.getPostsTimelineId()
     ])
   }
 

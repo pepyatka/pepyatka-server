@@ -163,4 +163,102 @@ describe('Post', function() {
         .then(function() { done() })
     })
   })
+
+  describe('#getTimelineIds()', function() {
+    var userA
+      , userB
+      , post
+
+    beforeEach(function(done) {
+      userA = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      userB = new User({
+        username: 'Mars',
+        password: 'password'
+      })
+
+      var attrs = {
+        body: 'Post body'
+      }
+
+      userA.create()
+        .then(function(user) { return userB.create() })
+        .then(function(user) { return userB.newPost(attrs) })
+        .then(function(newPost) { return newPost.create() })
+        .then(function(newPost) {
+          post = newPost
+          return userB.getPostsTimelineId()
+        })
+        .then(function(timelineId) { return userA.subscribeTo(timelineId) })
+        .then(function(res) { done() })
+    })
+
+    it('should copy post to subscribed River of News', function(done) {
+      post.getTimelineIds()
+        .then(function(timelineIds) {
+          timelineIds.should.not.be.empty
+          timelineIds.length.should.eql(3)
+        })
+        .then(function() { done() })
+    })
+  })
+
+  describe('#addLike()', function() {
+    var userA
+      , userB
+      , userC
+      , post
+
+    beforeEach(function(done) {
+      userA = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      userB = new User({
+        username: 'Mars',
+        password: 'password'
+      })
+
+      userC = new User({
+        username: 'Zeus',
+        password: 'password'
+      })
+
+      var attrs = {
+        body: 'Post body'
+      }
+
+      userA.create()
+        .then(function(user) { return userC.create() })
+        .then(function(user) { return userB.create() })
+        .then(function(user) { return userB.newPost(attrs) })
+        .then(function(newPost) { return newPost.create() })
+        .then(function(newPost) {
+          post = newPost
+          return userB.getPostsTimelineId()
+        })
+        .then(function(timelineId) { return userA.subscribeTo(timelineId) })
+        .then(function(res) { return userA.getPostsTimelineId() })
+        .then(function(timelineId) { return userC.subscribeTo(timelineId) })
+        .then(function(res) { done() })
+    })
+
+    it('should friend of friend timelines', function(done) {
+      post.addLike(userA.id)
+        .then(function(res) { return userC.getRiverOfNewsTimeline() })
+        .then(function(timeline) { return timeline.getPosts() })
+        .then(function(posts) {
+          posts.should.not.be.empty
+          posts.length.should.eql(1)
+          var newPost = posts[0]
+          newPost.should.have.property('id')
+          newPost.id.should.eql(post.id)
+        })
+        .then(function() { done() })
+    })
+  })
 })
