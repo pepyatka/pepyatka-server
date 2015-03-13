@@ -288,6 +288,35 @@ exports.addModel = function(database) {
     })
   }
 
+  Post.prototype.getLikeIds = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      database.smembersAsync(mkKey(['post', that.id, 'likes']))
+        .then(function(likeIds) {
+          that.likeIds = likeIds
+          resolve(likeIds)
+        })
+    })
+  }
+
+  Post.prototype.getLikes = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getLikeIds()
+        .then(function(userIds) {
+          return Promise.map(userIds, function(userId) {
+            return models.User.findById(userId)
+          })
+        })
+        .then(function(users) {
+          that.likes = users
+          resolve(that.likes)
+        })
+    })
+  }
+
   Post.prototype.addLike = function(userId) {
     var that = this
     var timelineIds = []
