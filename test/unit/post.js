@@ -368,4 +368,44 @@ describe('Post', function() {
         .then(function() { done() })
     })
   })
+
+  describe('#destroy()', function() {
+    var user
+
+    beforeEach(function(done) {
+      user = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      user.create()
+        .then(function(user) { done() })
+    })
+
+    it('should create without error', function(done) {
+      var post = new Post({
+        body: 'Post body',
+        userId: user.id
+      })
+
+      post.create()
+        .then(function(newPost) {
+          var commentAttrs = {
+            body: 'Comment body',
+            postId: post.id
+          }
+
+          post = newPost
+          return user.newComment(commentAttrs)
+        })
+        .then(function(comment) { return comment.create() })
+        .then(function(comment) { return post.addComment(comment.id) })
+        .then(function() { return post.destroy() })
+        .then(function() { return Post.findById(post.id) })
+        .catch(function(e) {
+          e.message.should.eql("Invalid")
+        })
+        .then(function() { done() })
+    })
+  })
 })

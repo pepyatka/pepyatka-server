@@ -90,6 +90,55 @@ exports.addModel = function(database) {
   Post.prototype.update = function(params) {
   }
 
+  Post.prototype.destroy = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      Promise.all([
+        // remove post from all timelines
+        that.getTimelineIds()
+          .then(function(timelineIds) {
+            Promise.map(timelineIds, function(timelineId) {
+              return Promise.all([
+                database.sremAsync(mkKey(['post', that.id, 'timelines']), timelineId),
+                database.zremAsync(mkKey(['timeline', timelineId, 'posts']), that.id)
+              ])
+                .then(function() {
+                  database.zcardAsync(mkKey(['timeline', timelineId, 'posts']))
+                    .then(function(res) {
+                      // that timeline is empty
+                      if (res === 0)
+                        database.delAsync(mkKey(['post', that.id, 'timelines']))
+                    })
+                })
+            })
+          }),
+        // remove all comments
+        that.getComments()
+          .then(function(comments) {
+            return Promise.map(comments, function(comment) {
+              return comment.destroy()
+            })
+          }),
+        // delete likes
+        database.delAsync(mkKey(['post', that.id, 'likes'])),
+        // delete post
+        database.delAsync(mkKey(['post', that.id]))
+      ])
+        // delete orphaned keys
+        .then(function() {
+          database.scardAsync(mkKey(['post', that.id, 'timelines']))
+            .then(function(res) {
+              // post does not belong to any timelines
+              if (res === 0)
+                database.delAsync(mkKey(['post', that.id, 'timelines']))
+            })
+        })
+        .then(function() { return database.delAsync(mkKey(['post', that.id, 'comments'])) })
+        .then(function(res) { resolve(res) })
+    })
+  }
+
   Post.prototype.getSubscribedTimelineIds = function() {
     var that = this
     var timelineIds
