@@ -3,7 +3,9 @@
 var Promise = require('bluebird')
   , uuid = require('uuid')
   , inherits = require("util").inherits
-  , AbstractModel = require('../models').AbstractModel
+  , models = require('../models')
+  , AbstractModel = models.AbstractModel
+  , Post = models.Post
   , mkKey = require("../support/models").mkKey
 
 exports.addModel = function(database) {
@@ -13,6 +15,7 @@ exports.addModel = function(database) {
     this.id = params.id
     this.body = params.body
     this.userId = params.userId
+    this.postId = params.postId
     if (parseInt(params.createdAt, 10))
       this.createdAt = params.createdAt
     if (parseInt(params.updatedAt, 10))
@@ -36,7 +39,12 @@ exports.addModel = function(database) {
     return new Promise(function(resolve, reject) {
       var valid
 
-      valid = this.body.length > 0
+      valid = this.body
+        && this.body.length > 0
+        && this.userId
+        && this.userId.length > 0
+        && this.postId
+      && this.postId.length > 0
 
       valid ? resolve(valid) : reject(new Error("Invalid"))
     }.bind(this))
@@ -68,6 +76,7 @@ exports.addModel = function(database) {
           database.hmsetAsync(mkKey(['comment', comment.id]),
                               { 'body': comment.body,
                                 'userId': comment.userId,
+                                'postId': comment.postId,
                                 'createdAt': comment.createdAt.toString(),
                                 'updatedAt': comment.updatedAt.toString(),
                               })
@@ -78,6 +87,18 @@ exports.addModel = function(database) {
   }
 
   Comment.prototype.update = function(params) {
+  }
+
+  Comment.prototype.destroy = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      database.delAsync(mkKey(['comment:', that.id]))
+        .then(function(res) {
+          return database.lremAsync(mkKey(['post', that.postId, 'comments']), 1, that.id)
+        })
+        .then(function(res) { resolve(res) })
+    })
   }
 
   return Comment

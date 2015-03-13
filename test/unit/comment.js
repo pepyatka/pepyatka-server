@@ -1,5 +1,7 @@
 var models = require("../../app/models")
   , Comment = models.Comment
+  , User = models.User
+  , Post = models.Post
 
 describe('Comment', function() {
   beforeEach(function(done) {
@@ -8,9 +10,32 @@ describe('Comment', function() {
   })
 
   describe('#create()', function() {
+    var user
+      , post
+
+    beforeEach(function(done) {
+      user = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      user.create()
+        .then(function(user) {
+          post = new Post({
+            body: 'Post body',
+            userId: user.id
+          })
+
+          return post.create()
+        })
+        .then(function() { done() })
+    })
+
     it('should create without error', function(done) {
       var comment = new Comment({
         body: 'Comment body',
+        userId: user.id,
+        postId: post.id
       })
 
       comment.create()
@@ -33,8 +58,10 @@ describe('Comment', function() {
 
     it('should ignore whitespaces in body', function(done) {
       var body = '   Comment body    '
-        , comment = new Comment({
+      var comment = new Comment({
           body: body,
+          userId: user.id,
+          postId: post.id
         })
 
       comment.create()
@@ -53,6 +80,8 @@ describe('Comment', function() {
     it('should not create with empty body', function(done) {
       var comment = new Comment({
         body: '',
+        userId: user.id,
+        postId: post.id
       })
 
       comment.create()
@@ -64,9 +93,32 @@ describe('Comment', function() {
   })
 
   describe('#findById()', function() {
+    var user
+      , post
+
+    beforeEach(function(done) {
+      user = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      user.create()
+        .then(function(user) {
+          post = new Post({
+            body: 'Post body',
+            userId: user.id
+          })
+
+          return post.create()
+        })
+        .then(function() { done() })
+    })
+
     it('should find comment with a valid id', function(done) {
       var comment = new Comment({
         body: 'Comment body',
+        userId: user.id,
+        postId: post.id
       })
 
       comment.create()
@@ -87,6 +139,50 @@ describe('Comment', function() {
       Comment.findById(identifier)
         .then(function(comment) {
           $should.not.exist(comment)
+        })
+        .then(function() { done() })
+    })
+  })
+
+  describe('#destroy()', function() {
+    var userA
+      , post
+      , comment
+
+    beforeEach(function(done) {
+      userA = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      var postAttrs = { body: 'Post body' }
+
+      userA.create()
+        .then(function(user) { return userA.newPost(postAttrs) })
+        .then(function(newPost) { return newPost.create() })
+        .then(function(newPost) {
+          post = newPost
+          var commentAttrs = {
+            body: 'Comment body',
+            postId: post.id
+          }
+          return userA.newComment(commentAttrs)
+        })
+        .then(function(comment) { return comment.create() })
+        .then(function(newComment) {
+          comment = newComment
+          return post.addComment(comment.id)
+        })
+
+        .then(function(res) { done() })
+    })
+
+    it('should destroy comment', function(done) {
+      post.getComments()
+        .then(function(comments) { return comments[0].destroy() })
+        .then(function() { return post.getComments() })
+        .then(function(comments) {
+          comments.should.be.empty
         })
         .then(function() { done() })
     })

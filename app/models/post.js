@@ -188,9 +188,38 @@ exports.addModel = function(database) {
           })
         })
         .then(function() {
-          return database.saddAsync(mkKey(['post', that.id, 'comments']), commentId)
+          return database.rpushAsync(mkKey(['post', that.id, 'comments']), commentId)
         })
         .then(function(res) { resolve(res) })
+    })
+  }
+
+  Post.prototype.getCommentIds = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      database.lrangeAsync(mkKey(['post', that.id, 'comments']), 0, -1)
+        .then(function(commentIds) {
+          that.commentIds = commentIds
+          resolve(commentIds)
+        })
+    })
+  }
+
+  Post.prototype.getComments = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getCommentIds()
+        .then(function(commentIds) {
+          return Promise.map(commentIds, function(commentId) {
+            return models.Comment.findById(commentId)
+          })
+        })
+        .then(function(comments) {
+          that.comments = comments
+          resolve(that.comments)
+        })
     })
   }
 

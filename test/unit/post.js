@@ -303,7 +303,10 @@ describe('Post', function() {
     })
 
     it('should add comment to friend of friend timelines', function(done) {
-      var commentAttrs = { body: 'Comment body' }
+      var commentAttrs = {
+        body: 'Comment body',
+        postId: post.id
+      }
       userA.newComment(commentAttrs)
         .then(function(comment) { return comment.create() })
         .then(function(comment) { return post.addComment(comment.id) })
@@ -315,6 +318,52 @@ describe('Post', function() {
           var newPost = posts[0]
           newPost.should.have.property('id')
           newPost.id.should.eql(post.id)
+        })
+        .then(function() { done() })
+    })
+  })
+
+  describe('#getComments()', function() {
+    var userA
+      , post
+      , comment
+
+    beforeEach(function(done) {
+      userA = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      var postAttrs = { body: 'Post body' }
+
+      userA.create()
+        .then(function(user) { return userA.newPost(postAttrs) })
+        .then(function(newPost) { return newPost.create() })
+        .then(function(newPost) {
+          post = newPost
+          var commentAttrs = {
+            body: 'Comment body',
+            postId: post.id
+          }
+          return userA.newComment(commentAttrs)
+        })
+        .then(function(comment) { return comment.create() })
+        .then(function(newComment) {
+          comment = newComment
+          return post.addComment(comment.id)
+        })
+
+        .then(function(res) { done() })
+    })
+
+    it('should get comments', function(done) {
+      post.getComments()
+        .then(function(comments) {
+          comments.should.not.be.empty
+          comments.length.should.eql(1)
+          var newComment = comments[0]
+          newComment.should.have.property('id')
+          newComment.id.should.eql(comment.id)
         })
         .then(function() { done() })
     })
