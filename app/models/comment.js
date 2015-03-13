@@ -12,6 +12,7 @@ exports.addModel = function(database) {
 
     this.id = params.id
     this.body = params.body
+    this.userId = params.userId
     if (parseInt(params.createdAt, 10))
       this.createdAt = params.createdAt
     if (parseInt(params.updatedAt, 10))
@@ -66,6 +67,7 @@ exports.addModel = function(database) {
         .then(function(comment) {
           database.hmsetAsync(mkKey(['comment', comment.id]),
                               { 'body': comment.body,
+                                'userId': comment.userId,
                                 'createdAt': comment.createdAt.toString(),
                                 'updatedAt': comment.updatedAt.toString(),
                               })

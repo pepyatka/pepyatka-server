@@ -1,6 +1,7 @@
 var models = require("../../app/models")
   , User = models.User
   , Post = models.Post
+  , Comment = models.Comment
 
 describe('Post', function() {
   beforeEach(function(done) {
@@ -247,8 +248,65 @@ describe('Post', function() {
         .then(function(res) { done() })
     })
 
-    it('should friend of friend timelines', function(done) {
+    it('should add like to friend of friend timelines', function(done) {
       post.addLike(userA.id)
+        .then(function(res) { return userC.getRiverOfNewsTimeline() })
+        .then(function(timeline) { return timeline.getPosts() })
+        .then(function(posts) {
+          posts.should.not.be.empty
+          posts.length.should.eql(1)
+          var newPost = posts[0]
+          newPost.should.have.property('id')
+          newPost.id.should.eql(post.id)
+        })
+        .then(function() { done() })
+    })
+  })
+
+  describe('#addComment()', function() {
+    var userA
+      , userB
+      , userC
+      , post
+
+    beforeEach(function(done) {
+      userA = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      userB = new User({
+        username: 'Mars',
+        password: 'password'
+      })
+
+      userC = new User({
+        username: 'Zeus',
+        password: 'password'
+      })
+
+      var postAttrs = { body: 'Post body' }
+
+      userA.create()
+        .then(function(user) { return userC.create() })
+        .then(function(user) { return userB.create() })
+        .then(function(user) { return userB.newPost(postAttrs) })
+        .then(function(newPost) { return newPost.create() })
+        .then(function(newPost) {
+          post = newPost
+          return userB.getPostsTimelineId()
+        })
+        .then(function(timelineId) { return userA.subscribeTo(timelineId) })
+        .then(function(res) { return userA.getPostsTimelineId() })
+        .then(function(timelineId) { return userC.subscribeTo(timelineId) })
+        .then(function(res) { done() })
+    })
+
+    it('should add comment to friend of friend timelines', function(done) {
+      var commentAttrs = { body: 'Comment body' }
+      userA.newComment(commentAttrs)
+        .then(function(comment) { return comment.create() })
+        .then(function(comment) { return post.addComment(comment.id) })
         .then(function(res) { return userC.getRiverOfNewsTimeline() })
         .then(function(timeline) { return timeline.getPosts() })
         .then(function(posts) {

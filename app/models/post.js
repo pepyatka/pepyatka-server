@@ -116,7 +116,7 @@ exports.addModel = function(database) {
     })
   }
 
-  Post.prototype.addLike = function(userId) {
+  Post.prototype.getGenericFriendOfFriendTimelines = function(userId, type) {
     var that = this
     var timelineIds = []
     var user
@@ -125,7 +125,7 @@ exports.addModel = function(database) {
       models.User.findById(userId)
         .then(function(newUser) {
           user = newUser
-          return user.getLikesTimeline()
+          return user['get' + type + 'Timeline']()
         })
         .then(function(timeline) {
           timelineIds.push(timeline.id)
@@ -150,6 +150,47 @@ exports.addModel = function(database) {
             return models.Timeline.findById(timelineId)
           })
         })
+        .then(function(timelines) {
+          resolve(timelines)
+        })
+    })
+  }
+
+  Post.prototype.getLikesFriendOfFriendTimelines = function(userId) {
+    return this.getGenericFriendOfFriendTimelines(userId, 'Likes')
+  }
+
+  Post.prototype.getCommentsFriendOfFriendTimelines = function(userId) {
+    return this.getGenericFriendOfFriendTimelines(userId, 'Comments')
+  }
+
+  Post.prototype.addComment = function(commentId) {
+    var that = this
+    var timelineIds = []
+    var user
+
+    return new Promise(function(resolve, reject) {
+      models.Comment.findById(commentId)
+        .then(function(comment) { return that.getCommentsFriendOfFriendTimelines(comment.userId) })
+        .then(function(timelines) {
+          return Promise.map(timelines, function(timeline) {
+            return timeline.updatePost(that.id)
+          })
+        })
+        .then(function() {
+          return database.saddAsync(mkKey(['post', that.id, 'comments']), commentId)
+        })
+        .then(function(res) { resolve(res) })
+    })
+  }
+
+  Post.prototype.addLike = function(userId) {
+    var that = this
+    var timelineIds = []
+    var user
+
+    return new Promise(function(resolve, reject) {
+      that.getLikesFriendOfFriendTimelines(userId)
         .then(function(timelines) {
           return Promise.map(timelines, function(timeline) {
             return timeline.updatePost(that.id)

@@ -352,5 +352,13 @@ exports.addModel = function(database) {
     })
   }
 
+  User.prototype.newComment = function(attrs) {
+    return new Promise(function(resolve, reject) {
+      attrs.userId = this.id
+
+      resolve(new models.Comment(attrs))
+    }.bind(this))
+  }
+
   return User
 }
