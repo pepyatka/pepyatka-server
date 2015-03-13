@@ -8,6 +8,7 @@ var Promise = require('bluebird')
   , FeedFactory = models.FeedFactory
   , Timeline = models.Timeline
   , mkKey = require("../support/models").mkKey
+  , _ = require('underscore')
 
 exports.addModel = function(database) {
   var Post = function(params) {
@@ -91,16 +92,25 @@ exports.addModel = function(database) {
 
   Post.prototype.getSubscribedTimelineIds = function() {
     var that = this
+    var timelineIds
 
     return new Promise(function(resolve, reject) {
       FeedFactory.findById(that.userId)
         .then(function(feed) {
           return Promise.all([
             feed.getRiverOfNewsTimelineId(),
-            feed.getPostsTimelineId()
+            feed.getPostsTimelineId(),
           ])
         })
-        .then(function(timelines) { resolve(timelines) })
+        .then(function(newTimelineIds) {
+          timelineIds = newTimelineIds
+          return that.getTimelineIds()
+        })
+        .then(function(newTimelineIds) {
+          timelineIds = timelineIds.concat(newTimelineIds)
+          timelineIds = _.uniq(timelineIds)
+          resolve(timelineIds)
+        })
     })
   }
 
