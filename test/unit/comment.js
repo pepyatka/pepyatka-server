@@ -9,6 +9,55 @@ describe('Comment', function() {
       .then(function() { done() })
   })
 
+  describe('#update()', function() {
+    var userA
+      , comment
+      , post
+
+    beforeEach(function(done) {
+      userA = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      var postAttrs = { body: 'Post body' }
+
+      userA.create()
+        .then(function(user) { return userA.newPost(postAttrs) })
+        .then(function(newPost) { return newPost.create() })
+        .then(function(newPost) {
+          post = newPost
+          var commentAttrs = {
+            body: 'Comment body',
+            postId: post.id
+          }
+          return userA.newComment(commentAttrs)
+        })
+        .then(function(comment) { return comment.create() })
+        .then(function(newComment) {
+          comment = newComment
+          return post.addComment(comment.id)
+        })
+        .then(function(res) { done() })
+    })
+
+    it('should update without error', function(done) {
+      body = 'Body'
+      attrs = {
+        body: body
+      }
+
+      comment.update(attrs)
+        .then(function(newComment) {
+          newComment.should.be.an.instanceOf(Comment)
+          newComment.should.not.be.empty
+          newComment.should.have.property('body')
+          newComment.body.should.eql(comment.body)
+        })
+        .then(function() { done() })
+    })
+  })
+
   describe('#create()', function() {
     var user
       , post
@@ -173,7 +222,6 @@ describe('Comment', function() {
           comment = newComment
           return post.addComment(comment.id)
         })
-
         .then(function(res) { done() })
     })
 

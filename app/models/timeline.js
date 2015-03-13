@@ -108,9 +108,6 @@ exports.addModel = function(database) {
     })
   }
 
-  Timeline.prototype.update = function(params) {
-  }
-
   Timeline.prototype.getPostIds = function(start, num) {
     var that = this
 

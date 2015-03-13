@@ -87,6 +87,22 @@ exports.addModel = function(database) {
   }
 
   Comment.prototype.update = function(params) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.updatedAt = new Date().getTime()
+      that.body = params.body
+
+      that.validate()
+        .then(function(comment) {
+          database.hmsetAsync(mkKey(['comment', that.id]),
+                              { 'body': that.body,
+                                'updatedAt': that.updatedAt.toString()
+                              })
+        })
+        .then(function() { resolve(that) })
+        .catch(function(e) { reject(e) })
+    })
   }
 
   Comment.prototype.destroy = function() {

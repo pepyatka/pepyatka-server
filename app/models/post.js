@@ -88,6 +88,22 @@ exports.addModel = function(database) {
   }
 
   Post.prototype.update = function(params) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.updatedAt = new Date().getTime()
+      that.body = params.body
+
+      that.validate()
+        .then(function(post) {
+          database.hmsetAsync(mkKey(['post', that.id]),
+                              { 'body': that.body,
+                                'updatedAt': that.updatedAt.toString()
+                              })
+        })
+        .then(function() { resolve(that) })
+        .catch(function(e) { reject(e) })
+    })
   }
 
   Post.prototype.destroy = function() {
@@ -287,6 +303,16 @@ exports.addModel = function(database) {
         .then(function() {
           return database.saddAsync(mkKey(['post', that.id, 'likes']), userId)
         })
+        .then(function(res) { resolve(res) })
+    })
+  }
+
+  Post.prototype.removeLike = function(userId) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      post.getSubscribedTimelineIds()
+        .then(function() { return database.sremAsync(mkKey(['post', postId, 'likes']), userId) })
         .then(function(res) { resolve(res) })
     })
   }

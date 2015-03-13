@@ -9,6 +9,44 @@ describe('Post', function() {
       .then(function() { done() })
   })
 
+  describe('#update()', function() {
+    var userA
+      , post
+
+    beforeEach(function(done) {
+      userA = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      var postAttrs = { body: 'Post body' }
+
+      userA.create()
+        .then(function(user) { return userA.newPost(postAttrs) })
+        .then(function(newPost) { return newPost.create() })
+        .then(function(newPost) {
+          post = newPost
+          done()
+        })
+    })
+
+    it('should update without error', function(done) {
+      body = 'Body'
+      attrs = {
+        body: body
+      }
+
+      post.update(attrs)
+        .then(function(newPost) {
+          newPost.should.be.an.instanceOf(Post)
+          newPost.should.not.be.empty
+          newPost.should.have.property('body')
+          newPost.body.should.eql(post.body)
+        })
+        .then(function() { done() })
+    })
+  })
+
   describe('#create()', function() {
     var user
 
@@ -369,7 +407,7 @@ describe('Post', function() {
     })
   })
 
-  describe('#destroy()', function() {
+  describe('#postdestroy()', function() {
     var user
 
     beforeEach(function(done) {
