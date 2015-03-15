@@ -1,3 +1,5 @@
+"use strict";
+
 var Promise = require('bluebird')
   , inherits = require("util").inherits
   , models = require("../../app/models")

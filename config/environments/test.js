@@ -5,6 +5,7 @@ exports.getConfig = function() {
     port: 3000,
     database: 3,
 
-    saltSecret: 'secret token'
+    saltSecret: 'secret token',
+    secret: 'secret'
   }
 }
