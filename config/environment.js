@@ -27,9 +27,6 @@ exports.init = function(app) {
 
   return new Promise(function(resolve, reject) {
     selectEnvironment(app)
-      .then(function(app) {
-
-        resolve(app)
-      })
+      .then(function(app) { resolve(app) })
   })
 }
