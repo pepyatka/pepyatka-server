@@ -15,17 +15,16 @@ exports.addController = function(app) {
     })
 
     models.User.findByUsername(newUser.username)
-      .then(function(user) {
-        if (user !== null)
-          return res.status(401).jsonp({ err: 'user ' + user.username + ' exists', status: 'fail'})
-      })
       .then(function() { return newUser.create() })
       .then(function(user) {
         var secret = config.secret
         var token = jwt.sign({ userId: user.id }, secret);
         user.token = token
 
-        res.send(JSON.stringify(user))
+        res.jsonp(user)
+      })
+      .catch(function(e) {
+        res.status(401).jsonp({ err: 'user ' + newUser.username + ' exists', status: 'fail'})
       })
   }
 

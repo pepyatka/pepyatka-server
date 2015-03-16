@@ -6,6 +6,8 @@ var express = require('express')
   , http = require('http')
   , server = http.createServer(app)
 
+module.exports = app
+
 environment.init(app)
   .then(function(app) {
     var routes = require('./app/routes')(app)
@@ -15,4 +17,3 @@ environment.init(app)
       app.logger.info("Server is running on " + (process.env.NODE_ENV || "development") + " mode")
     })
   })
-

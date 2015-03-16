@@ -17,7 +17,7 @@ exports.addController = function(app) {
       var token = jwt.sign({ userId: user.id }, secret)
       user.token = token
 
-      res.send(JSON.stringify(user))
+      res.jsonp(user)
     })(req, res)
   }
 

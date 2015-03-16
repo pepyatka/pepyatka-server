@@ -2,10 +2,12 @@
 
 exports.getConfig = function() {
   return {
-    port: 3000,
+    port: 31337,
     database: 3,
 
     saltSecret: 'secret token',
-    secret: 'secret'
+    secret: 'secret',
+
+    host: "http://localhost:31337"
   }
 }
