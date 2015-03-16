@@ -3,6 +3,9 @@
 var passport = require('passport')
   , jwt = require('jsonwebtoken')
   , config = require('../../../../config/config').load()
+  , models = require('../../../models')
+  , UserSerializer = models.UserSerializer
+  , _ = require('underscore')
 
 exports.addController = function(app) {
   var SessionController = function() {
@@ -15,9 +18,10 @@ exports.addController = function(app) {
 
       var secret = config.secret
       var token = jwt.sign({ userId: user.id }, secret)
-      user.token = token
 
-      res.jsonp(user)
+      new UserSerializer(user).toJSON(function(err, json) {
+        return res.jsonp(_.extend(json, { token: token }))
+      })
     })(req, res)
   }
 

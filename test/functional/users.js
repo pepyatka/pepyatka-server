@@ -21,9 +21,10 @@ describe("UsersController", function() {
         .end(function(err, res) {
           res.should.not.be.empty
           res.body.should.not.be.empty
-          res.body.should.have.property('id')
-          res.body.should.have.property('username_')
-          res.body.username_.should.eql(user.username.toLowerCase())
+          res.body.should.have.property('users')
+          res.body.users.should.have.property('id')
+          res.body.users.should.have.property('username')
+          res.body.users.username.should.eql(user.username.toLowerCase())
           done()
         })
     })

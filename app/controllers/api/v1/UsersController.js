@@ -3,6 +3,8 @@
 var models = require('../../../models')
   , jwt = require('jsonwebtoken')
   , config = require('../../../../config/config').load()
+  , UserSerializer = models.UserSerializer
+  , _ = require('underscore')
 
 exports.addController = function(app) {
   var UsersController = function() {
@@ -21,7 +23,9 @@ exports.addController = function(app) {
         var token = jwt.sign({ userId: user.id }, secret);
         user.token = token
 
-        res.jsonp(user)
+        new UserSerializer(user).toJSON(function(err, json) {
+          return res.jsonp(_.extend(json, { token: token }))
+        })
       })
       .catch(function(e) {
         res.status(401).jsonp({ err: 'user ' + newUser.username + ' exists', status: 'fail'})

@@ -28,8 +28,9 @@ describe("SessionController", function() {
         .end(function(err, res) {
           res.should.not.be.empty
           res.body.should.not.be.empty
-          res.body.should.have.property('id')
-          res.body.id.should.eql(user.id)
+          res.body.should.have.property('users')
+          res.body.users.should.have.property('id')
+          res.body.users.id.should.eql(user.id)
           done()
         })
     })

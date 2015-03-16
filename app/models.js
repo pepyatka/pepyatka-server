@@ -14,11 +14,4 @@ exports.Post          = require('./models/post').addModel(database)
 exports.Timeline      = require('./models/timeline').addModel(database)
 exports.Comment       = require('./models/comment').addModel(database)
 
-
-
-
-
-
-
-
-
+exports.UserSerializer = require('./serializers/v1/UserSerializer').addSerializer()
