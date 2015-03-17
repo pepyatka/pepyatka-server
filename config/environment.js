@@ -1,6 +1,7 @@
 "use strict";
 
-var redis = require('./database')
+var Promise = require('bluebird')
+  , redis = require('./database')
   , database = redis.connect()
   , config = require('./config').load()
   , passport = require('passport')
