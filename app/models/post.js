@@ -155,6 +155,22 @@ exports.addModel = function(database) {
     })
   }
 
+  Post.prototype.getCreatedBy = function() {
+    return models.User.findById(this.userId)
+  }
+
+  Post.prototype.getLikes = function() {
+    return Promise.resolve(function() {
+      return []
+    })
+  }
+
+  Post.prototype.getGroups = function() {
+    return Promise.resolve(function() {
+      return []
+    })
+  }
+
   Post.prototype.getSubscribedTimelineIds = function() {
     var that = this
     var timelineIds

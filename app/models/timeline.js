@@ -5,6 +5,7 @@ var Promise = require('bluebird')
   , inherits = require("util").inherits
   , models = require('../models')
   , AbstractModel = models.AbstractModel
+  , FeedFactory = models.FeedFactory
   , Post = models.Post
   , mkKey = require("../support/models").mkKey
 
@@ -106,6 +107,10 @@ exports.addModel = function(database) {
         .then(function(res) { resolve(that) })
         .catch(function(e) { reject(e) })
     })
+  }
+
+  Timeline.prototype.getUser = function() {
+    return FeedFactory.findById(this.userId)
   }
 
   Timeline.prototype.getPostIds = function(start, num) {

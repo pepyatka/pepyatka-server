@@ -25,6 +25,7 @@
     "bluebird": "2.9.12",
     "jake": "8.0.11",
     "underscore": "1.8.2",
+    "underscore.string": "3.0.3",
     "passport": "0.2.1",
     "passport-local": "1.0.0",
     "jsonwebtoken": "4.1.0",

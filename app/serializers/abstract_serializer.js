@@ -1,22 +1,9 @@
 "use strict";
 
-var async = require('async')
+var Promise = require('bluebird')
+  , async = require('async')
   , _ = require('underscore')
-
-var replicate = function(n, x) {
-  if (n <= 0) {
-    return []
-  } else {
-    return [x].concat(replicate(n - 1, x))
-  }
-}
-
-// Sometimes getters are having more then one argument, filling those
-// arguments with nulls here, assuming last argument is a callback for
-// return value.
-var funcall = function(context, f, callback) {
-  f.apply(context, replicate(f.length - 1, null).concat([callback]))
-}
+  , s = require("underscore.string")
 
 exports.addSerializer = function() {
   var AbstractSerializer = function(object, strategy) {
@@ -33,12 +20,15 @@ exports.addSerializer = function() {
       if (!this.object) {
         f(null, null)
       } else if (!this.object[field]) {
-        var method = this.object["get" + field.capitalize()]
+        var name = "get" + s(field).capitalize().value()
+        var method = this.object[name]
 
-        method ? funcall(this.object, method, f) : f(null, null)
-      } else {
-        f(null, this.object[field])
-      }
+        if (method) {
+          method.apply(this.object)
+            .then(function(object) { f(null, object) })
+            .catch(function(e) { f(e, null) })
+        } else { f(null, null) }
+      } else { f(null, this.object[field]) }
     },
 
     decideNode: function(field) {
@@ -132,9 +122,13 @@ exports.addSerializer = function() {
 
       serializer.getMaybeObjects(field, function(object) {
         if (serializer.strategy[field].embed) {
-          var object_id = object.id
+          if (object) {
+            var object_id = object.id
 
-          f(null, object_id)
+            f(null, object_id)
+          } else {
+            f(null, null)
+          }
         } else {
           new serializer.strategy[field].through(object).toJSON(f)
         }
