@@ -6,6 +6,8 @@ exports.getConfig = function() {
     database: 2,
 
     saltSecret: 'secret token',
-    secret: 'secret'
+    secret: 'secret',
+
+    origin: 'http://localhost:3333'
   }
 }

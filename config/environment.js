@@ -10,6 +10,7 @@ var redis = require('./database')
   , morgan = require('morgan')
   , fs = require('fs')
   , winston = require('winston')
+  , origin = require('./initializers/origin')
 
 var selectEnvironment = function(app) {
   return new Promise(function(resolve, reject) {
@@ -26,7 +27,9 @@ var selectEnvironment = function(app) {
 
 exports.init = function(app) {
   app.use(bodyParser.json())
+  app.use(bodyParser.urlencoded({ extended: false}))
   app.use(passport.initialize())
+  app.use(origin.init)
 
   var accessLogStream = fs.createWriteStream(__dirname + '/../log/' + env + '.log', {flags: 'a'})
   app.use(morgan('combined', {stream: accessLogStream}))

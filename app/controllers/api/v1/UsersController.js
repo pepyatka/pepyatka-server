@@ -20,11 +20,10 @@ exports.addController = function(app) {
       .then(function() { return newUser.create() })
       .then(function(user) {
         var secret = config.secret
-        var token = jwt.sign({ userId: user.id }, secret);
-        user.token = token
+        var authToken = jwt.sign({ userId: user.id }, secret);
 
         new UserSerializer(user).toJSON(function(err, json) {
-          return res.jsonp(_.extend(json, { token: token }))
+          return res.jsonp(_.extend(json, { authToken: authToken }))
         })
       })
       .catch(function(e) {

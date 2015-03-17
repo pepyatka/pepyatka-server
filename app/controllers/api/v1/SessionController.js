@@ -17,10 +17,10 @@ exports.addController = function(app) {
         return res.status(401).jsonp({ err: 'user ' + req.body.username + ' doesn\'t exist', status: 'fail'})
 
       var secret = config.secret
-      var token = jwt.sign({ userId: user.id }, secret)
+      var authToken = jwt.sign({ userId: user.id }, secret)
 
       new UserSerializer(user).toJSON(function(err, json) {
-        return res.jsonp(_.extend(json, { token: token }))
+        return res.jsonp(_.extend(json, { authToken: authToken }))
       })
     })(req, res)
   }
