@@ -35,7 +35,7 @@ describe("PostsController", function() {
 
       request
         .post(app.config.host + '/v1/posts')
-        .send({ body: body, authToken: authToken })
+        .send({ post: { body: body }, authToken: authToken })
         .end(function(err, res) {
           res.body.should.not.be.empty
           res.body.should.have.property('posts')
@@ -51,7 +51,7 @@ describe("PostsController", function() {
 
       request
         .post(app.config.host + '/v1/posts')
-        .send({ body: body, authToken: 'token' })
+        .send({ post: { body: body }, authToken: 'token' })
         .end(function(err, res) {
           err.should.not.be.empty
           err.status.should.eql(401)

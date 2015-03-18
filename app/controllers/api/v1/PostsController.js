@@ -12,7 +12,7 @@ exports.addController = function(app) {
       return res.status(401).jsonp({ err: 'Not found' })
 
     req.user.newPost({
-      body: req.body.body
+      body: req.body.post.body
     })
       .then(function(newPost) { return newPost.create() })
       .then(function(newPost) {

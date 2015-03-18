@@ -13,9 +13,10 @@ var Promise = require('bluebird')
 Promise.promisifyAll(jwt)
 
 var findUser = function(req, res, next) {
-  if (req.body.authToken || req.query.authToken) {
+  var authToken = req.headers['x-authentication-token'] ||
+      req.body.authToken || req.query.authToken
+  if (authToken) {
     var secret = config.secret
-    var authToken = req.body.authToken || req.query.authToken
 
     jwt.verifyAsync(authToken, secret)
       .then(function(decoded) {
