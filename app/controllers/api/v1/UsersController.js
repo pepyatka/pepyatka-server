@@ -31,5 +31,14 @@ exports.addController = function(app) {
       })
   }
 
+  UsersController.whoami = function(req, res) {
+    if (!req.user)
+      return res.status(401).jsonp({ err: 'Not found', status: 'fail'})
+
+    new UserSerializer(req.user).toJSON(function(err, json) {
+      return res.jsonp(json)
+    })
+  }
+
   return UsersController
 }
