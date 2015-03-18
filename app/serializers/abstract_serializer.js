@@ -91,10 +91,11 @@ exports.addSerializer = function() {
           new AbstractSerializer(object, strategy).toJSON(jsonAdder(done), root, level + 1)
         }
       }, function(err) {
-        if (typeof root[field] === 'undefined') {
-          root[field] = result
+        var node = serializer ? new serializer(objects[0]).name : field
+        if (typeof root[node] === 'undefined') {
+          root[node] = result
         } else {
-          root[field] = _.extend(root[field], result)
+          root[node] = _.extend(root[node], result)
         }
 
         f(err)
@@ -120,12 +121,26 @@ exports.addSerializer = function() {
     processThroughPoint: function(field, f, root, level) {
       var serializer = this
 
+      var processWithRoot = function(objects, one) {
+        var object_ids = objects.map(function(e) { return e.id })
+
+        serializer.processMultiObjectsWithRoot(serializer.strategy[field].model || field,
+                                               objects,
+                                               serializer.strategy[field],
+                                               serializer.strategy[field].through,
+                                               root,
+                                               level, function(err) {
+          if (one)
+            object_ids = object_ids[0]
+
+          f(err, object_ids)
+        })
+      }
+
       serializer.getMaybeObjects(field, function(object) {
         if (serializer.strategy[field].embed) {
           if (object) {
-            var object_id = object.id
-
-            f(null, object_id)
+            processWithRoot([object], true)
           } else {
             f(null, null)
           }
@@ -133,18 +148,9 @@ exports.addSerializer = function() {
           new serializer.strategy[field].through(object).toJSON(f)
         }
       }, function(objects) {
-        var object_ids = objects.map(function(e) { return e.id })
-
-        if (serializer.strategy[field].embed)
-          serializer.processMultiObjectsWithRoot(serializer.strategy[field].model || field,
-                                                 objects,
-                                                 serializer.strategy[field],
-                                                 serializer.strategy[field].through,
-                                                 root,
-                                                 level, function(err) {
-            f(err, object_ids)
-          })
-        else {
+        if (serializer.strategy[field].embed) {
+          processWithRoot(objects)
+        } else {
           serializer.processMultiObjects(objects, null, serializer.strategy[field].through, root, level, f)
         }
       })

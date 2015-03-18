@@ -5,10 +5,9 @@ var models = require("../../models")
 
 exports.addSerializer = function() {
   return new Serializer("posts", {
-    select: ['id', 'body', 'createdBy', 'comments', 'createdAt', 'updatedAt', 'updatedAt', 'likes', 'groups'],
+    select: ['id', 'body', 'createdBy', 'comments', 'createdAt', 'updatedAt', 'updatedAt', 'likes'],
     createdBy: { through: UserSerializer, embed: true },
     comments: { through: CommentSerializer, embed: true },
-    likes: { through: UserSerializer, embed: true },
-    groups: { through: UserSerializer, embed: true}
+    likes: { through: UserSerializer, embed: true }
   })
 }

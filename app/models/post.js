@@ -165,12 +165,6 @@ exports.addModel = function(database) {
     })
   }
 
-  Post.prototype.getGroups = function() {
-    return Promise.resolve(function() {
-      return []
-    })
-  }
-
   Post.prototype.getSubscribedTimelineIds = function() {
     var that = this
     var timelineIds
