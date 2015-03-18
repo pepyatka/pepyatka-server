@@ -22,7 +22,8 @@ exports.addController = function(app) {
           res.jsonp(json)
         })
       })
-      .catch(function(e) { res.status(401).send({}) }) }
+      .catch(function(e) { res.status(401).send({}) })
+  }
 
   return TimelineController
 }

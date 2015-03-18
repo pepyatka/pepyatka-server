@@ -59,7 +59,34 @@ describe("TimelinesController", function() {
     })
 
     it('should return River of News with one post', function(done) {
-      done()
+      var body = 'Post body'
+
+      request
+        .post(app.config.host + '/v1/posts')
+        .send({ body: body, authToken: authToken })
+        .end(function(err, res) {
+          res.body.should.not.be.empty
+          res.body.should.have.property('posts')
+          res.body.posts.should.have.property('body')
+          res.body.posts.body.should.eql(body)
+
+          request
+            .get(app.config.host + '/v1/timelines/home')
+            .query({ authToken: authToken })
+            .end(function(err, res) {
+              res.should.not.be.empty
+              res.body.should.not.be.empty
+              res.body.should.have.property('timelines')
+              res.body.timelines.should.have.property('name')
+              res.body.timelines.name.should.eql('RiverOfNews')
+              res.body.timelines.should.have.property('posts')
+              res.body.timelines.posts.length.should.eql(1)
+              res.body.should.have.property('posts')
+              res.body.posts.length.should.eql(1)
+              res.body.posts[0].body.should.eql(body)
+              done()
+            })
+        })
     })
   })
 })
