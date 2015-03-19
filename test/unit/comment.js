@@ -36,7 +36,7 @@ describe('Comment', function() {
         .then(function(comment) { return comment.create() })
         .then(function(newComment) {
           comment = newComment
-          return post.addComment(comment.id)
+          return comment
         })
         .then(function(res) { done() })
     })
@@ -220,7 +220,7 @@ describe('Comment', function() {
         .then(function(comment) { return comment.create() })
         .then(function(newComment) {
           comment = newComment
-          return post.addComment(comment.id)
+          return comment
         })
         .then(function(res) { done() })
     })

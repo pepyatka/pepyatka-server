@@ -73,14 +73,16 @@ exports.addModel = function(database) {
 
       that.validateOnCreate()
         .then(function(comment) {
-          database.hmsetAsync(mkKey(['comment', comment.id]),
-                              { 'body': comment.body,
-                                'userId': comment.userId,
-                                'postId': comment.postId,
-                                'createdAt': comment.createdAt.toString(),
-                                'updatedAt': comment.updatedAt.toString(),
-                              })
+          return database.hmsetAsync(mkKey(['comment', comment.id]),
+                                     { 'body': comment.body,
+                                       'userId': comment.userId,
+                                       'postId': comment.postId,
+                                       'createdAt': comment.createdAt.toString(),
+                                       'updatedAt': comment.updatedAt.toString(),
+                                     })
         })
+        .then(function(res) { return Post.findById(that.postId) })
+        .then(function(post) { return post.addComment(that.id)})
         .then(function(res) { resolve(that) })
         .catch(function(e) { reject(e) })
     })

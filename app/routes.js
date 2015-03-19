@@ -4,6 +4,7 @@ var SessionRoute = require('./routes/api/v1/SessionRoute')
   , UsersRoute = require('./routes/api/v1/UsersRoute')
   , TimelinesRoute = require('./routes/api/v1/TimelinesRoute')
   , PostsRoute = require('./routes/api/v1/PostsRoute')
+  , CommentsRoute = require('./routes/api/v1/CommentsRoute')
 
 var Promise = require('bluebird')
   , jwt = require('jsonwebtoken')
@@ -39,4 +40,5 @@ module.exports = function(app) {
   UsersRoute.addRoutes(app)
   TimelinesRoute.addRoutes(app)
   PostsRoute.addRoutes(app)
+  CommentsRoute.addRoutes(app)
 }

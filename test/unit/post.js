@@ -425,7 +425,6 @@ describe('Post', function() {
       }
       userA.newComment(commentAttrs)
         .then(function(comment) { return comment.create() })
-        .then(function(comment) { return post.addComment(comment.id) })
         .then(function(res) { return userC.getRiverOfNewsTimeline() })
         .then(function(timeline) { return timeline.getPosts() })
         .then(function(posts) {
@@ -466,7 +465,7 @@ describe('Post', function() {
         .then(function(comment) { return comment.create() })
         .then(function(newComment) {
           comment = newComment
-          return post.addComment(comment.id)
+          return comment
         })
 
         .then(function(res) { done() })
@@ -515,7 +514,6 @@ describe('Post', function() {
           return user.newComment(commentAttrs)
         })
         .then(function(comment) { return comment.create() })
-        .then(function(comment) { return post.addComment(comment.id) })
         .then(function() { return post.destroy() })
         .then(function() { return Post.findById(post.id) })
         .catch(function(e) {

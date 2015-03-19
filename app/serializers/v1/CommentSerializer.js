@@ -4,7 +4,7 @@ var models = require("../../models")
 
 exports.addSerializer = function() {
   return new Serializer("comments", {
-    select: ['id', 'body', 'createdAt', 'updatedAt', 'createdBy', 'postId'],
+    select: ['id', 'body', 'createdAt', 'updatedAt', 'createdBy'],
     createdBy: { through: UserSerializer, embed: true }
   })
 }
