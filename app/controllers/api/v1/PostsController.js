@@ -38,7 +38,7 @@ exports.addController = function(app) {
       return res.status(401).jsonp({ err: 'Not found' })
 
     models.Post.findById(req.params.postId)
-      .then(function(post) { return post.removexLike(req.user.id) })
+      .then(function(post) { return post.removeLike(req.user.id) })
       .then(function() { res.status(200).send({}) })
       .catch(function(e) { res.status(401).send({}) })
   }
