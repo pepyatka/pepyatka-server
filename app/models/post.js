@@ -231,6 +231,7 @@ exports.addModel = function(database) {
          })
         .then(function(timelineId) {
           timelineIds.push(timelineId)
+          timelineIds = _.uniq(timelineIds)
           return Promise.map(timelineIds, function(timelineId) {
             return models.Timeline.findById(timelineId)
           })
@@ -329,18 +330,16 @@ exports.addModel = function(database) {
 
   Post.prototype.addLike = function(userId) {
     var that = this
-    var timelineIds = []
-    var user
 
     return new Promise(function(resolve, reject) {
       that.getLikesFriendOfFriendTimelines(userId)
         .then(function(timelines) {
-          return Promise.map(timelines, function(timeline) {
-            return timeline.updatePost(that.id)
-          })
-        })
-        .then(function() {
-          return database.saddAsync(mkKey(['post', that.id, 'likes']), userId)
+          return Promise.all([
+            Promise.map(timelines, function(timeline) {
+              return timeline.updatePost(that.id)
+            }),
+            database.saddAsync(mkKey(['post', that.id, 'likes']), userId)
+          ])
         })
         .then(function(res) { resolve(res) })
     })

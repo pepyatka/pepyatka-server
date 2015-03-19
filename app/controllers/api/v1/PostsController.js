@@ -23,5 +23,25 @@ exports.addController = function(app) {
       .catch(function(e) { res.status(401).send({}) })
   }
 
+  PostsController.like = function(req, res) {
+    if (!req.user)
+      return res.status(401).jsonp({ err: 'Not found' })
+
+    models.Post.findById(req.params.postId)
+      .then(function(post) { return post.addLike(req.user.id) })
+      .then(function() { res.status(200).send({}) })
+      .catch(function(e) { res.status(401).send({}) })
+  }
+
+  PostsController.unlike = function(req, res) {
+    if (!req.user)
+      return res.status(401).jsonp({ err: 'Not found' })
+
+    models.Post.findById(req.params.postId)
+      .then(function(post) { return post.removexLike(req.user.id) })
+      .then(function() { res.status(200).send({}) })
+      .catch(function(e) { res.status(401).send({}) })
+  }
+
   return PostsController
 }
