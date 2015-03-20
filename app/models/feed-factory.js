@@ -16,7 +16,8 @@ exports.addModel = function(database) {
 
   FeedFactory.stopList = function() {
     return ['anonymous',
-            'public']
+            'public',
+            'about']
   }
 
   FeedFactory.findById = function(identifier) {

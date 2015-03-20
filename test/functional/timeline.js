@@ -130,7 +130,7 @@ describe("TimelinesController", function() {
 
     it('should return posts timeline', function(done) {
       request
-        .get(app.config.host + '/v1/timelines/' + user.username + '/posts')
+        .get(app.config.host + '/v1/timelines/' + user.username)
         .query({ authToken: authToken })
         .end(function(err, res) {
           res.should.not.be.empty

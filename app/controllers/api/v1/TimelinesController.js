@@ -35,6 +35,20 @@ exports.addController = function(app) {
           res.jsonp(json)
         })
       })
+      .catch(function(e) { res.status(401).send({}) })
+  }
+
+  TimelineController.likes = function(req, res) {
+    var username = req.params.username
+
+    models.User.findByUsername(username)
+      .then(function(user) { return user.getLikesTimeline() })
+      .then(function(timeline) {
+        new TimelineSerializer(timeline).toJSON(function(err, json) {
+          res.jsonp(json)
+        })
+      })
+      .catch(function(e) { res.status(401).send({}) })
   }
 
   return TimelineController
