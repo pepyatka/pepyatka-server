@@ -25,5 +25,17 @@ exports.addController = function(app) {
       .catch(function(e) { res.status(401).send({}) })
   }
 
+  TimelineController.posts = function(req, res) {
+    var username = req.params.username
+
+    models.User.findByUsername(username)
+      .then(function(user) { return user.getPostsTimeline() })
+      .then(function(timeline) {
+        new TimelineSerializer(timeline).toJSON(function(err, json) {
+          res.jsonp(json)
+        })
+      })
+  }
+
   return TimelineController
 }
