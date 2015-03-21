@@ -44,6 +44,27 @@ describe("UsersController", function() {
           done()
         })
     })
+
+    it('should not create a user with a duplicate name', function(done) {
+      var user = {
+        username: 'Luna',
+        password: 'password'
+      }
+
+      request
+          .post(app.config.host + '/v1/users')
+          .send({ username: user.username, password: user.password })
+          .end(function(err, res) {
+            request
+                .post(app.config.host + '/v1/users')
+                .send({ username: user.username, password: user.password })
+                .end(function(err, res) {
+                  res.should.not.be.empty
+                  res.body.err.should.not.be.empty
+                  done()
+                })
+          })
+    })
   })
 
   describe("#whoami()", function() {

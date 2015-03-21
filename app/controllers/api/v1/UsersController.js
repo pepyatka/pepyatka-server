@@ -16,8 +16,7 @@ exports.addController = function(app) {
       password: req.body.password
     })
 
-    models.User.findByUsername(newUser.username)
-      .then(function() { return newUser.create() })
+    return newUser.create()
       .then(function(user) {
         var secret = config.secret
         var authToken = jwt.sign({ userId: user.id }, secret);
