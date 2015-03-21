@@ -39,6 +39,17 @@ exports.addController = function(app) {
           res.jsonp(json)
         })
       })
+      .catch(function(e) { res.status(401).send({}) })
+  }
+
+  CommentsController.destroy = function(req, res) {
+    if (!req.user)
+      return res.status(401).jsonp({ err: 'Not found' })
+
+    models.Comment.findById(req.params.commentId)
+      .then(function(comment) { return comment.destroy() })
+      .then(function(status) { res.jsonp({}) })
+      .catch(function(e) { res.status(422).send({}) })
   }
 
   return CommentsController

@@ -160,4 +160,73 @@ describe("CommentsController", function() {
         })
     })
   })
+
+  describe('#destroy()', function() {
+    var user
+      , post
+      , comment
+      , authToken
+
+    beforeEach(function(done) {
+      user = {
+        username: 'Luna',
+        password: 'password'
+      }
+
+      request
+        .post(app.config.host + '/v1/users')
+        .send({ username: user.username, password: user.password })
+        .end(function(err, res) {
+          authToken = res.body.authToken
+
+          var body = 'Post body'
+          request
+            .post(app.config.host + '/v1/posts')
+            .send({ post: { body: body }, authToken: authToken })
+            .end(function(err, res) {
+              post = res.body.posts
+
+              var body = "Comment"
+
+              request
+                .post(app.config.host + '/v1/comments')
+                .send({ comment: { body: body, post: post.id }, authToken: authToken })
+                .end(function(err, res) {
+                  comment = res.body.comments
+
+                  done()
+                })
+            })
+        })
+    })
+
+    it('should destroy valid comment', function(done) {
+      request
+        .post(app.config.host + '/v1/comments/' + comment.id)
+        .send({
+          authToken: authToken,
+          '_method': 'delete'
+        })
+        .end(function(err, res) {
+          res.body.should.be.empty
+          res.status.should.eql(200)
+
+          request
+            .get(app.config.host + '/v1/timelines/' + user.username + '/comments')
+            .query({ authToken: authToken })
+            .end(function(err, res) {
+              res.should.not.be.empty
+              res.body.should.not.be.empty
+              res.body.should.have.property('timelines')
+              res.body.timelines.should.have.property('name')
+              res.body.timelines.name.should.eql('Comments')
+              res.body.timelines.should.have.property('posts')
+              res.body.timelines.posts.length.should.eql(1)
+              res.body.should.have.property('posts')
+              res.body.posts[0].comments.length.should.eql(0)
+              done()
+            })
+        })
+    })
+  })
 })
