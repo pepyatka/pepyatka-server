@@ -12,6 +12,7 @@ var Promise = require('bluebird')
   , fs = require('fs')
   , winston = require('winston')
   , origin = require('./initializers/origin')
+  , methodOverride = require('method-override')
 
 var selectEnvironment = function(app) {
   return new Promise(function(resolve, reject) {
@@ -31,6 +32,14 @@ exports.init = function(app) {
   app.use(bodyParser.urlencoded({ extended: false}))
   app.use(passport.initialize())
   app.use(origin.init)
+  app.use(methodOverride(function(req, res) {
+    if (req.body && typeof req.body === 'object' && '_method' in req.body) {
+      // look in urlencoded POST bodies and delete it
+      var method = req.body._method
+      delete req.body._method
+      return method
+    }
+  }))
 
   var accessLogStream = fs.createWriteStream(__dirname + '/../log/' + env + '.log', {flags: 'a'})
   app.use(morgan('combined', {stream: accessLogStream}))

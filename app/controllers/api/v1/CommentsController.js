@@ -24,5 +24,22 @@ exports.addController = function(app) {
       .catch(function(e) { res.status(401).send({}) })
   }
 
+  CommentsController.update = function(req, res) {
+    if (!req.user)
+      return res.status(401).jsonp({ err: 'Not found' })
+
+    models.Comment.findById(req.params.commentId)
+      .then(function(comment) {
+        return comment.update({
+          body: req.body.comment.body
+        })
+      })
+      .then(function(comment) {
+        new CommentSerializer(comment).toJSON(function(err, json) {
+          res.jsonp(json)
+        })
+      })
+  }
+
   return CommentsController
 }
