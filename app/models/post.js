@@ -207,15 +207,20 @@ exports.addModel = function(db) {
   }
 
   Post.hide = function(postId, userId, callback) {
+    var pub = redis.createClient();
+
     models.User.findById(userId, function(err, user) {
       if (err) return callback(err)
       Post.findById(postId, function(err, post) {
         if (err) return callback(err)
         user.getHidesTimelineId(function (err, timelineId) {
           if (err) return callback(err)
-          db.zadd('timeline:' + timelineId + ':posts', post.createdAt, post.id, function(err, res) {
-            db.sadd('post:' + postId + ':timelines', timelineId, function(err, res) {
-              callback(err, res)
+          user.getRiverOfNewsId(function(err, riverOfNewsId) {
+            db.zadd('timeline:' + timelineId + ':posts', post.createdAt, post.id, function(err, res) {
+              db.sadd('post:' + postId + ':timelines', timelineId, function(err, res) {
+                pub.publish('hidePost', JSON.stringify({ timelineId: riverOfNewsId, postId: postId }))
+                callback(err, res)
+              })
             })
           })
         })
@@ -224,15 +229,20 @@ exports.addModel = function(db) {
   }
 
   Post.unhide = function(postId, userId, callback) {
+    var pub = redis.createClient();
+
     models.User.findById(userId, function(err, user) {
       if (err) return callback(err)
       Post.findById(postId, function(err, post) {
         if (err) return callback(err)
         user.getHidesTimelineId(function (err, timelineId) {
           if (err) return callback(err)
-          db.zrem('timeline:' + timelineId + ':posts', post.id, function(err, res) {
-            db.srem('post:' + postId + ':timelines', timelineId, function(err, res) {
-              callback(err, res)
+          user.getRiverOfNewsId(function(err, riverOfNewsId) {
+            db.zrem('timeline:' + timelineId + ':posts', post.id, function(err, res) {
+              db.srem('post:' + postId + ':timelines', timelineId, function(err, res) {
+                pub.publish('unhidePost', JSON.stringify({ timelineId: riverOfNewsId, postId: postId }))
+                callback(err, res)
+              })
             })
           })
         })
