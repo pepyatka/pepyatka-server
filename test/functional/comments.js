@@ -133,7 +133,7 @@ describe("CommentsController", function() {
         .post(app.config.host + '/v1/comments/' + comment.id)
         .send({ comment: { body: newBody },
                 authToken: authToken,
-                '_method': 'patch'
+                '_method': 'put'
               })
         .end(function(err, res) {
           res.body.should.not.be.empty
@@ -150,7 +150,7 @@ describe("CommentsController", function() {
       request
         .post(app.config.host + '/v1/comments/' + comment.id)
         .send({ comment: { body: newBody },
-                '_method': 'patch'
+                '_method': 'put'
               })
         .end(function(err, res) {
           err.should.not.be.empty
