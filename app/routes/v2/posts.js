@@ -66,6 +66,17 @@ exports.addRoutes = function(app) {
     })
   })
 
+  app.post('/v2/posts/:postId/unhide', function(req, res) {
+    if (!req.user)
+      return res.jsonp({})
+
+    models.Post.unhide(req.params.postId, req.user.id, function(err, r) {
+      if (err) return res.jsonp({}, 422)
+
+      res.jsonp({})
+    })
+  })
+
   app.delete('/v2/posts/:postId', function(req, res) {
     if (!req.user || req.user.username == 'anonymous')
       return res.jsonp({})

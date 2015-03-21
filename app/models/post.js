@@ -223,6 +223,23 @@ exports.addModel = function(db) {
     })
   }
 
+  Post.unhide = function(postId, userId, callback) {
+    models.User.findById(userId, function(err, user) {
+      if (err) return callback(err)
+      Post.findById(postId, function(err, post) {
+        if (err) return callback(err)
+        user.getHidesTimelineId(function (err, timelineId) {
+          if (err) return callback(err)
+          db.zrem('timeline:' + timelineId + ':posts', post.id, function(err, res) {
+            db.srem('post:' + postId + ':timelines', timelineId, function(err, res) {
+              callback(err, res)
+            })
+          })
+        })
+      })
+    })
+  }
+
   // XXX: this function duplicates 95% of addLike function - think
   // for a moment about this
   // FIXME: it doesn't remove likes from timelines yet
