@@ -147,4 +147,59 @@ describe("TimelinesController", function() {
         })
     })
   })
+
+  describe('#likes()', function() {
+    var authToken
+      , user
+      , post
+
+    beforeEach(function(done) {
+      user = {
+        username: 'Luna',
+        password: 'password'
+      }
+
+      request
+        .post(app.config.host + '/v1/users')
+        .send({ username: user.username, password: user.password })
+        .end(function(err, res) {
+          authToken = res.body.authToken
+
+          var body = 'Post body'
+
+          request
+            .post(app.config.host + '/v1/posts')
+            .send({ post: { body: body }, authToken: authToken })
+            .end(function(err, res) {
+              post = res.body.posts
+
+              request
+                .post(app.config.host + '/v1/posts/' + post.id + '/like')
+                .send({ authToken: authToken })
+                .end(function(req, res) {
+                  done()
+                })
+            })
+        })
+    })
+
+    it('should return posts timeline', function(done) {
+      request
+        .get(app.config.host + '/v1/timelines/' + user.username + '/likes')
+        .query({ authToken: authToken })
+        .end(function(err, res) {
+          res.should.not.be.empty
+          res.body.should.not.be.empty
+          res.body.should.have.property('timelines')
+          res.body.timelines.should.have.property('name')
+          res.body.timelines.name.should.eql('Likes')
+          res.body.timelines.should.have.property('posts')
+          res.body.timelines.posts.length.should.eql(1)
+          res.body.should.have.property('posts')
+          res.body.posts.length.should.eql(1)
+          res.body.posts[0].body.should.eql(post.body)
+          done()
+        })
+    })
+  })
 })
