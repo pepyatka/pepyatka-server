@@ -153,10 +153,8 @@ describe("CommentsController", function() {
                 '_method': 'patch'
               })
         .end(function(err, res) {
-          res.body.should.not.be.empty
-          res.body.should.have.property('comments')
-          res.body.comments.should.have.property('body')
-          res.body.comments.body.should.eql(newBody)
+          err.should.not.be.empty
+          err.status.should.eql(401)
 
           done()
         })
