@@ -228,5 +228,18 @@ describe("CommentsController", function() {
             })
         })
     })
+
+    it('should not destroy valid comment without user', function(done) {
+      request
+        .post(app.config.host + '/v1/comments/' + comment.id)
+        .send({
+          '_method': 'delete'
+        })
+        .end(function(err, res) {
+          err.should.not.be.empty
+          err.status.should.eql(401)
+          done()
+        })
+    })
   })
 })
