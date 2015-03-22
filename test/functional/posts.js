@@ -126,7 +126,7 @@ describe("PostsController", function() {
         .send({ authToken: authToken })
         .end(function(err, res) {
           err.should.not.be.empty
-          err.status.should.eql(401)
+          err.status.should.eql(422)
           done()
         })
     })
@@ -197,7 +197,7 @@ describe("PostsController", function() {
         .send({ authToken: authToken })
         .end(function(err, res) {
           err.should.not.be.empty
-          err.status.should.eql(401)
+          err.status.should.eql(422)
           done()
         })
     })

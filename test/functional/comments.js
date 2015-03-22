@@ -82,7 +82,7 @@ describe("CommentsController", function() {
         .send({ comment: { body: body, post: 'id' }, authToken: authToken })
         .end(function(err, res) {
           err.should.not.be.empty
-          err.status.should.eql(401)
+          err.status.should.eql(422)
 
           done()
         })
