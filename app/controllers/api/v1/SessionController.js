@@ -14,7 +14,7 @@ exports.addController = function(app) {
   SessionController.create = function(req, res) {
     passport.authenticate('local', function(err, user) {
       if (err || !user)
-        return res.status(401).jsonp({ err: 'user ' + req.body.username + ' doesn\'t exist', status: 'fail'})
+        return res.status(401).jsonp({ err: 'user ' + req.body.username + ' doesn\'t exist'})
 
       var secret = config.secret
       var authToken = jwt.sign({ userId: user.id }, secret)

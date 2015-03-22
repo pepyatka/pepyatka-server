@@ -26,13 +26,13 @@ exports.addController = function(app) {
         })
       })
       .catch(function(e) {
-        res.status(401).jsonp({ err: 'user ' + newUser.username + ' exists', status: 'fail'})
+        res.status(422).jsonp({ err: 'user ' + newUser.username + ' exists' })
       })
   }
 
   UsersController.whoami = function(req, res) {
     if (!req.user)
-      return res.status(401).jsonp({ err: 'Not found', status: 'fail'})
+      return res.status(401).jsonp({ err: 'Not found' })
 
     new UserSerializer(req.user).toJSON(function(err, json) {
       return res.jsonp(json)

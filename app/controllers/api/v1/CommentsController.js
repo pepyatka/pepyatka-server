@@ -21,7 +21,7 @@ exports.addController = function(app) {
           res.jsonp(json)
         })
       })
-      .catch(function(e) { res.status(401).send({}) })
+      .catch(function(e) { res.status(422).send({}) })
   }
 
   CommentsController.update = function(req, res) {
@@ -39,7 +39,7 @@ exports.addController = function(app) {
           res.jsonp(json)
         })
       })
-      .catch(function(e) { res.status(401).send({}) })
+      .catch(function(e) { res.status(422).send({}) })
   }
 
   CommentsController.destroy = function(req, res) {

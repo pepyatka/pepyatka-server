@@ -22,7 +22,7 @@ exports.addController = function(app) {
           res.jsonp(json)
         })
       })
-      .catch(function(e) { res.status(401).send({}) })
+      .catch(function(e) { res.status(422).send({}) })
   }
 
   TimelineController.posts = function(req, res) {
@@ -48,7 +48,7 @@ exports.addController = function(app) {
           res.jsonp(json)
         })
       })
-      .catch(function(e) { res.status(401).send({}) })
+      .catch(function(e) { res.status(422).send({}) })
   }
 
 
@@ -62,7 +62,7 @@ exports.addController = function(app) {
           res.jsonp(json)
         })
       })
-      .catch(function(e) { res.status(401).send({}) })
+      .catch(function(e) { res.status(422).send({}) })
   }
 
   return TimelineController
