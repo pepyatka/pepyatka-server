@@ -206,6 +206,50 @@ exports.addModel = function(db) {
     callback(true);
   }
 
+  Post.hide = function(postId, userId, callback) {
+    var pub = redis.createClient();
+
+    models.User.findById(userId, function(err, user) {
+      if (err) return callback(err)
+      Post.findById(postId, function(err, post) {
+        if (err) return callback(err)
+        user.getHidesTimelineId(function (err, timelineId) {
+          if (err) return callback(err)
+          user.getRiverOfNewsId(function(err, riverOfNewsId) {
+            db.zadd('timeline:' + timelineId + ':posts', post.createdAt, post.id, function(err, res) {
+              db.sadd('post:' + postId + ':timelines', timelineId, function(err, res) {
+                pub.publish('hidePost', JSON.stringify({ timelineId: riverOfNewsId, postId: postId }))
+                callback(err, res)
+              })
+            })
+          })
+        })
+      })
+    })
+  }
+
+  Post.unhide = function(postId, userId, callback) {
+    var pub = redis.createClient();
+
+    models.User.findById(userId, function(err, user) {
+      if (err) return callback(err)
+      Post.findById(postId, function(err, post) {
+        if (err) return callback(err)
+        user.getHidesTimelineId(function (err, timelineId) {
+          if (err) return callback(err)
+          user.getRiverOfNewsId(function(err, riverOfNewsId) {
+            db.zrem('timeline:' + timelineId + ':posts', post.id, function(err, res) {
+              db.srem('post:' + postId + ':timelines', timelineId, function(err, res) {
+                pub.publish('unhidePost', JSON.stringify({ timelineId: riverOfNewsId, postId: postId }))
+                callback(err, res)
+              })
+            })
+          })
+        })
+      })
+    })
+  }
+
   // XXX: this function duplicates 95% of addLike function - think
   // for a moment about this
   // FIXME: it doesn't remove likes from timelines yet

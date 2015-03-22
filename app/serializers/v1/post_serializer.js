@@ -6,7 +6,7 @@ var models = require("../../models")
 
 exports.addSerializer = function() {
   return new Serializer({
-    select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'updatedAt', 'likes', 'groups'],
+    select: ['id', 'body', 'createdBy', 'attachments', 'comments', 'createdAt', 'updatedAt', 'updatedAt', 'likes', 'groups', 'isHidden'],
     createdBy: { through: UserSerializer },
     comments: { through: CommentSerializer },
     attachments: { through: AttachmentSerializer },

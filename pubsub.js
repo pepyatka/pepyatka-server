@@ -77,7 +77,7 @@ exports.listen = function(server) {
 
   sub.subscribe('newPost', 'destroyPost', 'updatePost',
                 'newComment', 'destroyComment', 'updateComment',
-                'newLike', 'removeLike' )
+                'newLike', 'removeLike', 'hidePost', 'unhidePost' )
 
   // TODO: extract to separate functions
   sub.on('message', function(channel, msg) {
@@ -200,6 +200,20 @@ exports.listen = function(server) {
         io.sockets.in('post:' + data.postId).emit('removeLike', event)
 
       break
+
+      case 'hidePost':
+        var data = JSON.parse(msg)
+        var event = { userId: data.userId, postId: data.postId }
+        io.sockets.in('timeline:' + data.timelineId).emit('hidePost', event)
+
+        break
+
+      case 'unhidePost':
+        var data = JSON.parse(msg)
+        var event = { userId: data.userId, postId: data.postId }
+        io.sockets.in('timeline:' + data.timelineId).emit('unhidePost', event)
+
+        break
     }
   })
 }

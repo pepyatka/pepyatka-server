@@ -610,42 +610,64 @@ exports.addModel = function(db) {
       return new models.Comment(attrs)
     },
 
-    getRiverOfNewsId: function(callback) {
+    getWellKnownTimelineId: function(name, displayName, callback) {
       var that = this;
       this.getTimelinesIds(function(err, timelines) {
-        if (timelines.RiverOfNews) {
-          callback(null, timelines.RiverOfNews)
+        if (timelines[name]) {
+          callback(null, timelines[name])
         } else {
           // somehow this user has deleted its main timeline - let's
           // recreate from the scratch
           var timelineId = uuid.v4();
-          db.hset('user:' + that.id + ':timelines', 'RiverOfNews',
-                  timelineId, function(err, res) {
-                    db.hmset('timeline:' + timelineId,
-                             { 'name': 'River of news',
-                               'userId': that.id }, function(err, res) {
-                                 callback(err, timelineId);
-                               })
-                  })
+          db.hset('user:' + that.id + ':timelines', name,
+              timelineId, function(err, res) {
+                db.hmset('timeline:' + timelineId,
+                    { 'name': displayName,
+                      'userId': that.id }, function(err, res) {
+                      callback(err, timelineId);
+                    })
+              })
         }
       })
     },
 
-    getRiverOfNews: function(params, callback) {
-      if (this.riverOfNews) {
-        callback(null, this.riverOfNews)
-      } else {
-        var that = this
-        this.getRiverOfNewsId(function(err, timelineId) {
-          models.Timeline.findById(timelineId, params, function(err, timeline) {
-            that.riverOfNews = timeline
-            callback(err, that.riverOfNews)
-          })
-        })
-      }
+    getRiverOfNewsId: function(callback) {
+      this.getWellKnownTimelineId('RiverOfNews', 'River of news', callback)
     },
 
-    // TODO: DRY - getRiverOfNews
+    getHidesTimelineId: function(callback) {
+      this.getWellKnownTimelineId('Hides', 'Hidden posts', callback)
+    },
+
+    getRiverOfNews: function(params, callback) {
+      var that = this
+      this.getRiverOfNewsId(function(err, riverOfNewsId) {
+        if (err != null) callback(err)
+        that.getHidesTimelineId(function(err, hidesTimelineId) {
+          if (err != null) callback(err)
+          models.Timeline.findById(riverOfNewsId, params, function(err, riverOfNewsTimeline) {
+            if (err != null) callback(err)
+            var hidesTimelineParams = {start: 0, num: 25}
+            models.Timeline.findById(hidesTimelineId, hidesTimelineParams, function(err, hidesTimeline) {
+              if (err != null) callback(err)
+              hidesTimeline.getPostsIds(0, 30, function(err, hiddenPostIds) {
+                if (err != null) callback(err)
+                riverOfNewsTimeline.getPosts(riverOfNewsTimeline.start, riverOfNewsTimeline.num, function(err, posts) {
+                  if (err != null) callback(err)
+                  posts.forEach(function (post) {
+                    if (hiddenPostIds.indexOf(post.id) >= 0) {
+                      post.isHidden = true
+                    }
+                  });
+                  callback(err, riverOfNewsTimeline)
+                })
+              })
+            });
+          })
+        })
+      })
+    },
+
     getPostsTimelineId: function(callback) {
       var that = this;
       this.getTimelinesIds(function(err, timelines) {
