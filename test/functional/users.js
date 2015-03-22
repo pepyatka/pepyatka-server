@@ -171,7 +171,18 @@ describe("UsersController", function() {
         })
     })
 
-    it('should requiee valid user to subscribe to another user', function(done) {
+    it('should not subscribe to herself', function(done) {
+      request
+        .post(app.config.host + '/v1/users/' + userA.username + '/subscribe')
+        .send({ authToken: authTokenA })
+        .end(function(err, res) {
+          err.should.not.be.empty
+          err.status.should.eql(422)
+          done()
+        })
+    })
+
+    it('should require valid user to subscribe to another user', function(done) {
       request
         .post(app.config.host + '/v1/users/' + userA.username + '/subscribe')
         .end(function(err, res) {
