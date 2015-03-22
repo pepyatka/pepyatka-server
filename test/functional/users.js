@@ -113,4 +113,134 @@ describe("UsersController", function() {
         })
     })
   })
+
+  describe('#subscribers()', function() {
+    it('should return list of subscribers', function(done) {
+      done()
+    })
+  })
+
+  describe('#subscribe()', function() {
+    var userA
+      , userB
+      , authTokenA
+      , authTokenB
+
+    beforeEach(function(done) {
+      userA = {
+        username: 'Luna',
+        password: 'password'
+      }
+
+      userB = {
+        username: 'Mars',
+        password: 'password'
+      }
+
+      request
+        .post(app.config.host + '/v1/users')
+        .send({ username: userA.username, password: userA.password })
+        .end(function(err, res) {
+          authTokenA = res.body.authToken
+
+          request
+            .post(app.config.host + '/v1/users')
+            .send({ username: userB.username, password: userB.password })
+            .end(function(err, res) {
+              authTokenB = res.body.authToken
+
+              var body = 'Post body'
+
+              request
+                .post(app.config.host + '/v1/posts')
+                .send({ post: { body: body }, authToken: authTokenA })
+                .end(function(err, res) {
+                  done()
+                })
+            })
+        })
+    })
+
+    it('should subscribe to a user', function(done) {
+      request
+        .post(app.config.host + '/v1/users/' + userA.username + '/subscribe')
+        .send({ authToken: authTokenB })
+        .end(function(err, res) {
+          res.body.should.be.empty
+          done()
+        })
+    })
+
+    it('should requiee valid user to subscribe to another user', function(done) {
+      request
+        .post(app.config.host + '/v1/users/' + userA.username + '/subscribe')
+        .end(function(err, res) {
+          err.should.not.be.empty
+          err.status.should.eql(401)
+          done()
+        })
+    })
+  })
+
+  describe('#subscribers()', function() {
+    var userA
+      , userB
+      , authTokenA
+      , authTokenB
+
+    beforeEach(function(done) {
+      userA = {
+        username: 'Luna',
+        password: 'password'
+      }
+
+      userB = {
+        username: 'Mars',
+        password: 'password'
+      }
+
+      request
+        .post(app.config.host + '/v1/users')
+        .send({ username: userA.username, password: userA.password })
+        .end(function(err, res) {
+          authTokenA = res.body.authToken
+
+          request
+            .post(app.config.host + '/v1/users')
+            .send({ username: userB.username, password: userB.password })
+            .end(function(err, res) {
+              authTokenB = res.body.authToken
+
+              var body = 'Post body'
+
+              request
+                .post(app.config.host + '/v1/posts')
+                .send({ post: { body: body }, authToken: authTokenA })
+                .end(function(err, res) {
+                  request
+                    .post(app.config.host + '/v1/users/' + userA.username + '/subscribe')
+                    .send({ authToken: authTokenB })
+                    .end(function(err, res) {
+                      done()
+                    })
+                })
+            })
+        })
+    })
+
+    it('should return list of subscribers', function(done) {
+      request
+        .get(app.config.host + '/v1/users/' + userA.username + '/subscribers')
+        .query({ authToken: authTokenB })
+        .end(function(err, res) {
+          res.body.should.not.be.empty
+          res.body.should.have.property('subscribers')
+          res.body.subscribers.should.not.be.empty
+          res.body.subscribers.length.should.eql(1)
+          res.body.subscribers[0].should.have.property('id')
+          res.body.subscribers[0].username.should.eql(userB.username.toLowerCase())
+          done()
+        })
+    })
+  })
 })
