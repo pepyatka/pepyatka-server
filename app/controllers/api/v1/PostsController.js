@@ -33,7 +33,6 @@ exports.addController = function(app) {
       .catch(function(e) { res.status(422).send({}) })
   }
 
-  l1
   PostsController.unlike = function(req, res) {
     if (!req.user)
       return res.status(401).jsonp({ err: 'Not found' })
