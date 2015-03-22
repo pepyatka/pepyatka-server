@@ -11,8 +11,6 @@ var Promise = require('bluebird')
   , Timeline = models.Timeline
   , mkKey = require("../support/models").mkKey
 
-Promise.promisifyAll(crypto)
-
 exports.addModel = function(database) {
   var User = function(params) {
     User.super_.call(this)
