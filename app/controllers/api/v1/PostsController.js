@@ -69,6 +69,16 @@ exports.addController = function(app) {
       .then(function(post) { return post.removeLike(req.user.id) })
       .then(function() { res.status(200).send({}) })
       .catch(function(e) { res.status(422).send({}) })
+  },
+
+  PostsController.destroy = function(req, res) {
+    if (!req.user)
+      return res.status(401).jsonp({ err: 'Not found' })
+
+    models.Post.findById(req.params.postId)
+      .then(function(post) { return post.destroy() })
+      .then(function(status) { res.jsonp({}) })
+      .catch(function(e) { res.status(422).send({}) })
   }
 
   return PostsController
