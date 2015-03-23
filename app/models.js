@@ -15,6 +15,7 @@ exports.Timeline      = require('./models/timeline').addModel(database)
 exports.Comment       = require('./models/comment').addModel(database)
 
 exports.UserSerializer     = require('./serializers/v1/UserSerializer').addSerializer()
+exports.GroupSerializer    = require('./serializers/v1/GroupSerializer').addSerializer()
 exports.CommentSerializer = require('./serializers/v1/CommentSerializer').addSerializer()
 exports.SubscriberSerializer = require('./serializers/v1/SubscriberSerializer').addSerializer()
 exports.SubscriptionSerializer = require('./serializers/v1/SubscriptionSerializer').addSerializer()
