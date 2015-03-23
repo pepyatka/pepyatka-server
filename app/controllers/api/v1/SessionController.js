@@ -25,9 +25,5 @@ exports.addController = function(app) {
     })(req, res)
   }
 
-  SessionController.destroy = function(req, res) {
-    res.redirect("/")
-  }
-
   return SessionController
 }
