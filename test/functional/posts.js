@@ -202,4 +202,109 @@ describe("PostsController", function() {
         })
     })
   })
+
+  describe('#update()', function() {
+    var post
+      , authToken
+
+    beforeEach(function(done) {
+      var user = {
+        username: 'Luna',
+        password: 'password'
+      }
+
+      request
+        .post(app.config.host + '/v1/users')
+        .send({ username: user.username, password: user.password })
+        .end(function(err, res) {
+          authToken = res.body.authToken
+
+          var body = 'Post body'
+          request
+            .post(app.config.host + '/v1/posts')
+            .send({ post: { body: body }, authToken: authToken })
+            .end(function(err, res) {
+              post = res.body.posts
+
+              done()
+            })
+        })
+    })
+
+    it('should update post with a valid user', function(done) {
+      var newBody = "New body"
+      request
+        .post(app.config.host + '/v1/posts/' + post.id)
+        .send({ post: { body: newBody },
+                authToken: authToken,
+                '_method': 'put'
+              })
+        .end(function(err, res) {
+          res.body.should.not.be.empty
+          res.body.should.have.property('posts')
+          res.body.posts.should.have.property('body')
+          res.body.posts.body.should.eql(newBody)
+
+          done()
+        })
+    })
+
+    it('should not update post with a invalid user', function(done) {
+      var newBody = "New body"
+      request
+        .post(app.config.host + '/v1/posts/' + post.id)
+        .send({ post: { body: newBody },
+                '_method': 'put'
+              })
+        .end(function(err, res) {
+          err.should.not.be.empty
+          err.status.should.eql(401)
+
+          done()
+        })
+    })
+  })
+
+  describe('#show()', function() {
+    var post
+      , authToken
+
+    beforeEach(function(done) {
+      var user = {
+        username: 'Luna',
+        password: 'password'
+      }
+
+      request
+        .post(app.config.host + '/v1/users')
+        .send({ username: user.username, password: user.password })
+        .end(function(err, res) {
+          authToken = res.body.authToken
+
+          var body = 'Post body'
+          request
+            .post(app.config.host + '/v1/posts')
+            .send({ post: { body: body }, authToken: authToken })
+            .end(function(err, res) {
+              post = res.body.posts
+
+              done()
+            })
+        })
+    })
+
+    it('should show a post', function(done) {
+      request
+        .get(app.config.host + '/v1/posts/' + post.id)
+        .query({ authToken: authToken })
+        .end(function(err, res) {
+          res.body.should.not.be.empty
+          res.body.should.have.property('posts')
+          res.body.posts.should.have.property('body')
+          res.body.posts.body.should.eql(post.body)
+
+          done()
+        })
+    })
+  })
 })

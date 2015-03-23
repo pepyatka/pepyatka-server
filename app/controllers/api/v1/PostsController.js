@@ -23,6 +23,34 @@ exports.addController = function(app) {
       .catch(function(e) { res.status(422).send({}) })
   }
 
+  PostsController.update = function(req, res) {
+    if (!req.user)
+      return res.status(401).jsonp({ err: 'Not found' })
+
+    models.Post.findById(req.params.postId)
+      .then(function(post) {
+        return post.update({
+          body: req.body.post.body
+        })
+      })
+      .then(function(post) {
+        new PostSerializer(post).toJSON(function(err, json) {
+          res.jsonp(json)
+        })
+      })
+      .catch(function(e) { res.status(422).send({}) })
+  }
+
+  PostsController.show = function(req, res) {
+    models.Post.findById(req.params.postId)
+      .then(function(post) {
+        new PostSerializer(post).toJSON(function(err, json) {
+          res.jsonp(json)
+        })
+      })
+      .catch(function(e) { res.status(422).send({}) })
+  }
+
   PostsController.like = function(req, res) {
     if (!req.user)
       return res.status(401).jsonp({ err: 'Not found' })
