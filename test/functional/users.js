@@ -167,7 +167,17 @@ describe("UsersController", function() {
         .send({ authToken: authTokenB })
         .end(function(err, res) {
           res.body.should.be.empty
-          done()
+
+          request
+            .get(app.config.host + '/v1/timelines/home')
+            .query({ authToken: authTokenB })
+            .end(function(err, res) {
+              res.body.should.not.be.empty
+              res.body.should.have.property('timelines')
+              res.body.timelines.should.have.property('posts')
+              res.body.timelines.posts.length.should.eql(1)
+              done()
+            })
         })
     })
 
@@ -250,6 +260,81 @@ describe("UsersController", function() {
           res.body.subscribers.length.should.eql(1)
           res.body.subscribers[0].should.have.property('id')
           res.body.subscribers[0].username.should.eql(userB.username.toLowerCase())
+          done()
+        })
+    })
+  })
+
+  describe('#unsubscribe()', function() {
+    var userA
+      , userB
+      , authTokenA
+      , authTokenB
+
+    beforeEach(function(done) {
+      userA = {
+        username: 'Luna',
+        password: 'password'
+      }
+
+      userB = {
+        username: 'Mars',
+        password: 'password'
+      }
+
+      request
+        .post(app.config.host + '/v1/users')
+        .send({ username: userA.username, password: userA.password })
+        .end(function(err, res) {
+          authTokenA = res.body.authToken
+
+          request
+            .post(app.config.host + '/v1/users')
+            .send({ username: userB.username, password: userB.password })
+            .end(function(err, res) {
+              authTokenB = res.body.authToken
+
+              var body = 'Post body'
+
+              request
+                .post(app.config.host + '/v1/posts')
+                .send({ post: { body: body }, authToken: authTokenA })
+                .end(function(err, res) {
+                  request
+                    .post(app.config.host + '/v1/users/' + userA.username + '/subscribe')
+                    .send({ authToken: authTokenB })
+                    .end(function(err, res) {
+                      done()
+                    })
+                })
+            })
+        })
+    })
+
+    it('should unsubscribe to a user', function(done) {
+      request
+        .post(app.config.host + '/v1/users/' + userA.username + '/unsubscribe')
+        .send({ authToken: authTokenB })
+        .end(function(err, res) {
+          request
+            .get(app.config.host + '/v1/timelines/home')
+            .query({ authToken: authTokenB })
+            .end(function(err, res) {
+              res.body.should.not.be.empty
+              res.body.should.have.property('timelines')
+              res.body.timelines.should.have.property('posts')
+              res.body.timelines.posts.length.should.eql(0)
+              done()
+            })
+        })
+    })
+
+    it('should require valid user to unsubscribe to another user', function(done) {
+      request
+        .post(app.config.host + '/v1/users/' + userA.username + '/unsubscribe')
+        .end(function(err, res) {
+          err.should.not.be.empty
+          err.status.should.eql(401)
           done()
         })
     })

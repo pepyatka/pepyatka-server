@@ -76,5 +76,17 @@ exports.addController = function(app) {
       .catch(function(e) { res.status(422).send({}) })
   }
 
+  UsersController.unsubscribe = function(req, res) {
+    if (!req.user)
+      return res.status(401).jsonp({ err: 'Not found' })
+
+    var username = req.params.username
+    models.User.findByUsername(username)
+      .then(function(user) { return user.getPostsTimelineId() })
+      .then(function(timelineId) { return req.user.unsubscribeTo(timelineId) })
+      .then(function(status) { res.jsonp({}) })
+      .catch(function(e) { res.status(422).send({}) })
+  }
+
   return UsersController
 }
