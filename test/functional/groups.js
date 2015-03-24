@@ -11,6 +11,8 @@ describe("GroupsController", function() {
   })
 
   describe("#create()", function() {
+    var authToken
+
     beforeEach(function(done) {
       var user = {
         username: 'Luna',

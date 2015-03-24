@@ -31,8 +31,8 @@ describe('Post', function() {
     })
 
     it('should update without error', function(done) {
-      body = 'Body'
-      attrs = {
+      var body = 'Body'
+      var attrs = {
         body: body
       }
 
