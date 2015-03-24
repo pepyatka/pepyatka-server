@@ -342,7 +342,12 @@ exports.addModel = function(database) {
           timeline = newTimeline
           return models.FeedFactory.findById(newTimeline.userId)
         })
-        .then(function(user) { return user.getPublicTimelineIds() })
+        .then(function(user) {
+          if (user.username == that.username)
+            throw new Error("Invalid")
+
+          return user.getPublicTimelineIds()
+        })
         .then(function(timelineIds) {
           return Promise.map(timelineIds, function(timelineId) {
             return Promise.all([
@@ -354,6 +359,7 @@ exports.addModel = function(database) {
         .then(function(res) { return that.getRiverOfNewsTimelineId() })
         .then(function(riverOfNewsId) { return timeline.unmerge(riverOfNewsId) })
         .then(function(res) { resolve(res) })
+        .catch(function(e) { reject(e) })
     })
   }
 
