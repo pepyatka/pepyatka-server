@@ -1,6 +1,7 @@
 var request = require('superagent')
   , app = require('../../index')
   , models = require('../../app/models')
+, async = require('async')
 
 describe("UsersController", function() {
   beforeEach(function(done) {
@@ -347,6 +348,63 @@ describe("UsersController", function() {
           err.should.not.be.empty
           err.status.should.eql(401)
           done()
+        })
+    })
+  })
+
+  describe('#subscriptions()', function() {
+    var userA
+      , userB
+      , authTokenA
+      , authTokenB
+
+    beforeEach(function(done) {
+      userA = {
+        username: 'Luna',
+        password: 'password'
+      }
+
+      userB = {
+        username: 'Mars',
+        password: 'password'
+      }
+
+      request
+        .post(app.config.host + '/v1/users')
+        .send({ username: userA.username, password: userA.password })
+        .end(function(err, res) {
+          authTokenA = res.body.authToken
+
+          request
+            .post(app.config.host + '/v1/users')
+            .send({ username: userB.username, password: userB.password })
+            .end(function(err, res) {
+              authTokenB = res.body.authToken
+
+              request
+                .post(app.config.host + '/v1/users/' + userA.username + '/subscribe')
+                .send({ authToken: authTokenB })
+                .end(function(err, res) {
+                  done()
+                })
+            })
+        })
+    })
+
+    it('should return list of subscriptions', function(done) {
+      request
+        .get(app.config.host + '/v1/users/' + userB.username + '/subscriptions')
+        .query({ authToken: authTokenB })
+        .end(function(err, res) {
+          res.body.should.not.be.empty
+          res.body.should.have.property('subscriptions')
+          var types = ['Comments', 'Likes', 'Posts']
+          async.reduce(res.body.subscriptions, true, function(memo, user, callback) {
+            callback(null, memo && (types.indexOf(user.name) >= 0))
+          }, function(err, contains) {
+            contains.should.eql(true)
+            done()
+          })
         })
     })
   })

@@ -2,6 +2,7 @@ var models = require("../../app/models")
   , User = models.User
   , Post = models.Post
   , Timeline = models.Timeline
+  , async = require('async')
 
 describe('User', function() {
   beforeEach(function(done) {
@@ -573,6 +574,54 @@ describe('User', function() {
           posts.should.be.empty
         })
         .then(function() { done() })
+    })
+  })
+
+  describe('#getSubscriptions()', function() {
+    var userA
+      , userB
+
+    beforeEach(function(done) {
+      userA = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      userB = new User({
+        username: 'Mars',
+        password: 'password'
+      })
+
+      userA.create()
+        .then(function(user) { return userB.create() })
+        .then(function(user) { done() })
+    })
+
+    it('should list subscriptions', function(done) {
+      var attrs = {
+        body: 'Post body'
+      }
+      var post
+
+      userB.newPost(attrs)
+        .then(function(newPost) {
+          post = newPost
+          return newPost.create()
+        })
+        .then(function(post) { return userB.getPostsTimelineId() })
+        .then(function(timelineId) { return userA.subscribeTo(timelineId) })
+        .then(function() { return userA.getSubscriptions() })
+        .then(function(users) {
+          users.should.not.be.empty
+          users.length.should.eql(3)
+          var types = ['Comments', 'Likes', 'Posts']
+          async.reduce(users, true, function(memo, user, callback) {
+            callback(null, memo && (types.indexOf(user.name) >= 0))
+          }, function(err, contains) {
+            contains.should.eql(true)
+            done()
+          })
+        })
     })
   })
 })

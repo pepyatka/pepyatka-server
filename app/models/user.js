@@ -299,6 +299,35 @@ exports.addModel = function(database) {
     ])
   }
 
+  User.prototype.getSubscriptionIds = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      database.zrevrangeAsync(mkKey(['user', that.id, 'subscriptions']), 0, -1)
+        .then(function(userIds) {
+          that.subscriptionsIds = userIds
+          resolve(userIds)
+        })
+    })
+  }
+
+  User.prototype.getSubscriptions = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getSubscriptionIds()
+        .then(function(userIds) {
+          return Promise.map(userIds, function(userId) {
+            return models.Timeline.findById(userId)
+          })
+        })
+        .then(function(subscriptions) {
+          that.subscriptions = subscriptions
+          resolve(that.subscriptions)
+        })
+    })
+  }
+
   User.prototype.subscribeTo = function(timelineId) {
     var currentTime = new Date().getTime()
     var that = this

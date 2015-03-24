@@ -199,6 +199,10 @@ exports.addModel = function(database) {
     })
   }
 
+  Timeline.prototype.getUser = function() {
+    return models.FeedFactory.findById(this.userId)
+  }
+
   Timeline.prototype.getSubscriberIds = function() {
     var that = this
 

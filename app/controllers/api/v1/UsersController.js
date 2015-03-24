@@ -5,6 +5,7 @@ var models = require('../../../models')
   , config = require('../../../../config/config').load()
   , UserSerializer = models.UserSerializer
   , SubscriberSerializer = models.SubscriberSerializer
+  , SubscriptionSerializer = models.SubscriptionSerializer
   , _ = require('underscore')
   , Promise = require('bluebird')
   , async = require('async')
@@ -58,6 +59,28 @@ exports.addController = function(app) {
             memo.subscribers.push(obj.subscribers)
             return memo
           }, { subscribers: []})
+          res.jsonp(json)
+        })
+      })
+      .catch(function(e) { res.status(422).send({}) })
+  }
+
+  UsersController.subscriptions = function(req, res) {
+    var username = req.params.username
+
+    models.User.findByUsername(username)
+      .then(function(user) { return user.getSubscriptions() })
+      .then(function(subscriptions) {
+        async.map(subscriptions, function(subscription, callback) {
+          new SubscriptionSerializer(subscription).toJSON(function(err, json) {
+            callback(err, json)
+          })
+        }, function(err, json) {
+          json = _.reduce(json, function(memo, obj) {
+            memo.subscriptions.push(obj.subscriptions)
+            memo.users.push(obj.subscribers[0])
+            return memo
+          }, { subscriptions: [], users: [] })
           res.jsonp(json)
         })
       })
