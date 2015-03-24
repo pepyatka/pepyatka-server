@@ -35,6 +35,8 @@ var findUser = function(req, res, next) {
 }
 
 module.exports = function(app) {
+  app.options('/*', function(req, res) { res.send(200) })
+
   SessionRoute.addRoutes(app)
 
   app.all('/*', findUser)
