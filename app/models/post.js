@@ -355,5 +355,9 @@ exports.addModel = function(database) {
     })
   }
 
+  Post.prototype.getCreatedBy = function() {
+    return models.FeedFactory.findById(this.userId)
+  }
+
   return Post
 }

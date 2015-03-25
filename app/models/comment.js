@@ -119,5 +119,9 @@ exports.addModel = function(database) {
     })
   }
 
+  Comment.prototype.getCreatedBy = function() {
+    return models.FeedFactory.findById(this.userId)
+  }
+
   return Comment
 }
