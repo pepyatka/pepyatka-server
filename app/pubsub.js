@@ -1,4 +1,5 @@
-var models = require('./models')
+var Promise = require('bluebird')
+  , models = require('./models')
   , async = require('async')
   , redis = require('redis').createClient
   , PostSerializer = models.PostSerializer
@@ -61,40 +62,41 @@ exports.listen = function(server, app) {
 
       io.sockets.in('timeline:' + data.timelineId).emit('destroyPost', event)
       io.sockets.in('post:' + data.postId).emit('destroyPost', event)
+
       break
 
     case 'newPost':
       var data = JSON.parse(msg)
 
-      models.Post.findById(data.postId, function(err, post) {
-        if (post) {
-          new NewPostSerializer(post).toJSON(function(err, json) {
+      models.Post.findById(data.postId)
+        .then(function(post) {
+          new PostSerializer(post).toJSON(function(err, json) {
             io.sockets.in('timeline:' + data.timelineId).emit('newPost', { post: json })
           })
-        }
-      })
+        })
+
       break
 
     case 'updatePost':
       var data = JSON.parse(msg)
 
-      models.Post.findById(data.postId, function(err, post) {
-        if (post) {
-          new UpdatePostSerializer(post).toJSON(function(err, json) {
+      models.Post.findById(data.postId)
+        .then(function(post) {
+          new PostSerializer(post).toJSON(function(err, json) {
             var event = { post: json }
 
             io.sockets.in('timeline:' + data.timelineId).emit('updatePost', event)
             io.sockets.in('post:' + data.postId).emit('updatePost', event)
           })
-        }
-      })
+        })
+
       break
 
     case 'newComment':
       var data = JSON.parse(msg)
 
-      models.Comment.findById(data.commentId, function(err, comment) {
-        if (comment) {
+      models.Comment.findById(data.commentId)
+        .then(function(comment) {
           new CommentSerializer(comment).toJSON(function(err, json) {
             var event = { comment: json }
 
@@ -104,15 +106,15 @@ exports.listen = function(server, app) {
               io.sockets.in('post:' + data.postId).emit('newComment', event)
             }
           })
-        }
-      })
+        })
+
       break
 
     case 'updateComment':
       var data = JSON.parse(msg)
 
-      models.Comment.findById(data.commentId, function(err, comment) {
-        if (comment) {
+      models.Comment.findById(data.commentId)
+        .then(function(comment) {
           new CommentSerializer(comment).toJSON(function(err, json) {
             var event = { comment: json }
 
@@ -122,8 +124,8 @@ exports.listen = function(server, app) {
               io.sockets.in('post:' + data.postId).emit('updateComment', event)
             }
           })
-        }
-      })
+        })
+
       break
 
     case 'destroyComment':
@@ -132,24 +134,21 @@ exports.listen = function(server, app) {
 
       io.sockets.in('post:' + data.postId).emit('destroyComment', event)
 
-      models.Post.findById(data.postId, function(err, post) {
-        if (!post) return
-
-        post.getTimelinesIds(function(err, timelinesIds) {
-          async.forEach(timelinesIds, function(timelineId, callback) {
-            io.sockets.in('timeline:' + timelineId).emit('destroyComment', event)
-            callback(null)
-          }, function(err) {
+      models.Post.findById(data.postId)
+        .then(function(post) { return post.getTimelineIds() })
+        .then(function(timelineIds) {
+          return Promise.map(timelineIds, function(timelineId) {
+            return io.sockets.in('timeline:' + timelineId).emit('destroyComment', event)
           })
         })
-      })
+
       break
 
     case 'newLike':
       var data = JSON.parse(msg)
 
-      models.User.findById(data.userId, function(err, user) {
-        if (user) {
+      models.User.findById(data.userId)
+        .then(function(user) {
           new LikeSerializer(user).toJSON(function(err, json) {
             var event = { user: json, postId: data.postId }
 
@@ -159,8 +158,8 @@ exports.listen = function(server, app) {
               io.sockets.in('post:' + data.postId).emit('newLike', event)
             }
           })
-        }
-      })
+        })
+
       break
 
     case 'removeLike':
