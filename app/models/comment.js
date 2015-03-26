@@ -109,7 +109,7 @@ exports.addModel = function(database) {
                                 })
           ])
         })
-        .then(function() { return comment.getPost() })
+        .then(function() { return that.getPost() })
         .then(function(post) { return post.getSubscribedTimelineIds() })
         .then(function(timelineIds) {
           return Promise.all(timelineIds, function(timelineId) {

@@ -174,19 +174,19 @@ exports.listen = function(server, app) {
 
       break
 
-      case 'hidePost':
-        var data = JSON.parse(msg)
-        var event = { userId: data.userId, postId: data.postId }
-        io.sockets.in('timeline:' + data.timelineId).emit('hidePost', event)
+    case 'hidePost':
+      var data = JSON.parse(msg)
+      var event = { userId: data.userId, postId: data.postId }
+      io.sockets.in('timeline:' + data.timelineId).emit('hidePost', event)
 
-        break
+      break
 
-      case 'unhidePost':
-        var data = JSON.parse(msg)
-        var event = { userId: data.userId, postId: data.postId }
-        io.sockets.in('timeline:' + data.timelineId).emit('unhidePost', event)
+    case 'unhidePost':
+      var data = JSON.parse(msg)
+      var event = { userId: data.userId, postId: data.postId }
+      io.sockets.in('timeline:' + data.timelineId).emit('unhidePost', event)
 
-        break
+      break
     }
   })
 }
