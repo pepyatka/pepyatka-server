@@ -95,7 +95,7 @@ exports.addSerializer = function() {
         if (typeof root[node] === 'undefined') {
           root[node] = result
         } else {
-          root[node] = _.extend(root[node], result)
+          root[node] = root[node].concat(result)
         }
 
         f(err)

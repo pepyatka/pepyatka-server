@@ -96,10 +96,20 @@ exports.addModel = function(database) {
 
       that.validate()
         .then(function(post) {
-          database.hmsetAsync(mkKey(['post', that.id]),
-                              { 'body': that.body,
-                                'updatedAt': that.updatedAt.toString()
-                              })
+          return database.hmsetAsync(mkKey(['post', that.id]),
+                                { 'body': that.body,
+                                  'updatedAt': that.updatedAt.toString()
+                                })
+        })
+        .then(function() { return that.getSubscribedTimelineIds() })
+        .then(function(timelineIds) {
+          return Promise.map(timelineIds, function(timelineId) {
+            return database.publishAsync('updatePost',
+                                         JSON.stringify({
+                                           postId: that.id,
+                                           timelineId: timelineId
+                                         }))
+          })
         })
         .then(function() { resolve(that) })
         .catch(function(e) { reject(e) })
@@ -117,7 +127,12 @@ exports.addModel = function(database) {
             Promise.map(timelineIds, function(timelineId) {
               return Promise.all([
                 database.sremAsync(mkKey(['post', that.id, 'timelines']), timelineId),
-                database.zremAsync(mkKey(['timeline', timelineId, 'posts']), that.id)
+                database.zremAsync(mkKey(['timeline', timelineId, 'posts']), that.id),
+                database.publishAsync('destroyPost',
+                                 JSON.stringify({
+                                   postId: that.id,
+                                   timelineId: timelineId
+                                 }))
               ])
                 .then(function() {
                   database.zcardAsync(mkKey(['timeline', timelineId, 'posts']))
@@ -260,11 +275,26 @@ exports.addModel = function(database) {
         .then(function(comment) { return that.getCommentsFriendOfFriendTimelines(comment.userId) })
         .then(function(timelines) {
           return Promise.map(timelines, function(timeline) {
-            return timeline.updatePost(that.id)
+            return Promise.all([
+              timeline.updatePost(that.id),
+              database.publishAsync('newComment',
+                                    JSON.stringify({
+                                      timelineId: timeline.id,
+                                      commentId: commentId
+                                    }))
+            ])
           })
         })
         .then(function() {
-          return database.rpushAsync(mkKey(['post', that.id, 'comments']), commentId)
+          return Promise.all([
+            database.rpushAsync(mkKey(['post', that.id, 'comments']), commentId),
+            database.publishAsync('newComment',
+                                  JSON.stringify({
+                                    postId: that.id,
+                                    commentId: commentId
+                                  }))
+
+          ])
         })
         .then(function(res) { resolve(res) })
     })
@@ -336,8 +366,21 @@ exports.addModel = function(database) {
         .then(function(timelines) {
           return Promise.all([
             Promise.map(timelines, function(timeline) {
-              return timeline.updatePost(that.id)
+              Promise.all([
+                timeline.updatePost(that.id),
+                database.publishAsync('newLike',
+                                      JSON.stringify({
+                                        timelineId: timeline.id,
+                                        userId: userId,
+                                        postId: that.id
+                                      }))
+              ])
             }),
+            database.publishAsync('newLike',
+                                  JSON.stringify({
+                                    userId: userId,
+                                    postId: that.id
+                                  })),
             database.saddAsync(mkKey(['post', that.id, 'likes']), userId)
           ])
         })
@@ -350,7 +393,27 @@ exports.addModel = function(database) {
 
     return new Promise(function(resolve, reject) {
       that.getSubscribedTimelineIds()
-        .then(function() { return database.sremAsync(mkKey(['post', that.id, 'likes']), userId) })
+        .then(function(timelineIds) {
+          return Promise.map(timelineIds, function(timelineId) {
+            return database.publishAsync('removeLike',
+                                  JSON.stringify({
+                                    timelineId: timelineId,
+                                    userId: userId,
+                                    postId: that.id
+                                  }))
+
+          })
+        })
+        .then(function() {
+          return Promise.all([
+            database.sremAsync(mkKey(['post', that.id, 'likes']), userId),
+            database.publishAsync('removeLike',
+                                  JSON.stringify({
+                                    userId: userId,
+                                    postId: that.id
+                                  }))
+          ])
+        })
         .then(function(res) { resolve(res) })
     })
   }

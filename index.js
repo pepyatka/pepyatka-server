@@ -10,6 +10,7 @@ module.exports = app
 
 environment.init(app)
   .then(function(app) {
+    var pubsub = require('./app/pubsub').listen(server, app)
     var routes = require('./app/routes')(app)
 
     server.listen(app.get('port'), function() {

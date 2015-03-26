@@ -97,14 +97,36 @@ exports.addModel = function(database) {
 
       that.validate()
         .then(function(comment) {
-          database.hmsetAsync(mkKey(['comment', that.id]),
-                              { 'body': that.body,
-                                'updatedAt': that.updatedAt.toString()
-                              })
+          return Promise.all([
+            database.publishAsync('updateComment',
+                                  JSON.stringify({
+                                    postId: that.postId,
+                                    commentId: that.id
+                                  })),
+            database.hmsetAsync(mkKey(['comment', that.id]),
+                                { 'body': that.body,
+                                  'updatedAt': that.updatedAt.toString()
+                                })
+          ])
+        })
+        .then(function() { return comment.getPost() })
+        .then(function(post) { return post.getSubscribedTimelineIds() })
+        .then(function(timelineIds) {
+          return Promise.all(timelineIds, function(timelineId) {
+            database.publishAsync('updateComment',
+                                  JSON.stringify({
+                                    timelineId: timelineId,
+                                    commentId: that.id
+                                  }))
+          })
         })
         .then(function() { resolve(that) })
         .catch(function(e) { reject(e) })
     })
+  }
+
+  Comment.prototype.getPost = function() {
+    return models.Post.findById(this.postId)
   }
 
   Comment.prototype.destroy = function() {
@@ -113,7 +135,14 @@ exports.addModel = function(database) {
     return new Promise(function(resolve, reject) {
       database.delAsync(mkKey(['comment:', that.id]))
         .then(function(res) {
-          return database.lremAsync(mkKey(['post', that.postId, 'comments']), 1, that.id)
+          return Promise.all([
+            database.publishAsync('destroyComment',
+                                  JSON.stringify({
+                                    postId: that.postId,
+                                    commentId: that.id
+                                  })),
+            database.lremAsync(mkKey(['post', that.postId, 'comments']), 1, that.id)
+          ])
         })
         .then(function(res) { resolve(res) })
     })

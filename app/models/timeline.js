@@ -49,7 +49,12 @@ exports.addModel = function(database) {
             return Promise.all([
               database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), currentTime, postId),
               database.hsetAsync(mkKey(['post', postId]), 'updatedAt', currentTime),
-              database.saddAsync(mkKey(['post', postId, 'timelines']), timelineId)
+              database.saddAsync(mkKey(['post', postId, 'timelines']), timelineId),
+              database.publishAsync('newPost',
+                                    JSON.stringify({
+                                      postId: postId,
+                                      timelineId: timelineId
+                                    }))
             ])
           })
         })
