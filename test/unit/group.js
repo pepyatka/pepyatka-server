@@ -99,4 +99,29 @@ describe('Group', function() {
         .then(function() { done() })
     })
   })
+
+  describe('addAdministrator', function(done) {
+    var group
+
+    beforeEach(function(done) {
+      group = new Group({
+        username: 'Luna',
+        screenName: 'Moon'
+      })
+      group.create().then(function() {
+        done()
+      })
+    })
+
+    it('should add an administrator', function(done) {
+      group.addAdministrator('123')
+        .then(function() {
+          return group.getAdministratorIds()
+        })
+        .then(function(res) {
+          res.should.contain('123')
+        })
+        .then(function() { done() })
+    })
+  })
 })

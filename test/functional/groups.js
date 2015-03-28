@@ -71,6 +71,20 @@ describe("GroupsController", function() {
             done()
           })
     })
+
+    it('should add the creating user as the administrator', function(done) {
+      var userName = 'Luna';
+      var screenName = 'Pepyatka Developers';
+      request
+          .post(app.config.host + '/v1/groups')
+          .send({ group: {username: userName, screenName: screenName},
+            authToken: authToken })
+          .end(function(err, res) {
+            err.should.not.be.empty
+            err.status.should.eql(401)
+            done()
+          })
+    })
   })
 })
 

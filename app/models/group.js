@@ -101,5 +101,30 @@ exports.addModel = function(database) {
     })
   }
 
+  Group.prototype.mkAdminsKey = function() {
+    return mkKey(['user', this.id, 'administrators'])
+  }
+
+  Group.prototype.addAdministrator = function(feedId) {
+    var that = this
+    var currentTime = new Date().getTime()
+
+    return new Promise(function(resolve, reject) {
+      database.zaddAsync(that.mkAdminsKey(), currentTime, feedId)
+        .then(function(res) { resolve(res) })
+        .catch(function(e) { reject(e) })
+    })
+  }
+
+  Group.prototype.getAdministratorIds = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      database.zrevrangeAsync(that.mkAdminsKey(), 0, -1)
+        .then(function(result) { resolve(result) })
+        .catch(function(e) { reject(e) })
+    })
+  }
+
   return Group
 }
