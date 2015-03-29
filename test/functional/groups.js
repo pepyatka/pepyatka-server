@@ -1,6 +1,7 @@
 var request = require('superagent')
     , app = require('../../index')
     , models = require('../../app/models')
+    , funcTestHelper = require('./functional_test_helper')
 
 describe("GroupsController", function() {
   beforeEach(function (done) {
@@ -11,24 +12,11 @@ describe("GroupsController", function() {
   })
 
   describe("#create()", function() {
-    beforeEach(function(done) {
-      var user = {
-        username: 'Luna',
-        password: 'password'
-      }
+    var authToken
 
-      request
-          .post(app.config.host + '/v1/users')
-          .send({ username: user.username, password: user.password })
-          .end(function(err, res) {
-            res.should.not.be.empty
-            res.body.should.not.be.empty
-            res.body.should.have.property('authToken')
-            authToken = res.body.authToken
-
-            done()
-          })
-    })
+    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
+      authToken = token
+    }))
 
     it('should reject unauthenticated users', function(done) {
       request
