@@ -29,7 +29,7 @@ exports.addController = function(app) {
         })
   }
 
-  GroupsController.admin = function(req, res) {
+  GroupsController.changeAdminStatus = function(req, res, newStatus) {
     Group.findByUsername(req.params.groupName).bind({})
         .then(function(group) {
           this.group = group
@@ -41,8 +41,12 @@ exports.addController = function(app) {
           }
           return User.findByUsername(req.params.adminName)
         })
-        .then(function(adminId) {
-          return this.group.addAdministrator(adminId)
+        .then(function(newAdmin) {
+          if (newStatus) {
+            return this.group.addAdministrator(newAdmin.id)
+          } else {
+            return this.group.removeAdministrator(newAdmin.id)
+          }
         })
         .then(function() {
           res.jsonp({err: null, status: 'success'})
@@ -50,6 +54,14 @@ exports.addController = function(app) {
         .catch(function(e) {
           res.status(401).jsonp({ err: 'failed to add admin', status: 'fail'})
         })
+  }
+
+  GroupsController.admin = function(req, res) {
+    GroupsController.changeAdminStatus(req, res, true)
+  }
+
+  GroupsController.unadmin = function(req, res) {
+    GroupsController.changeAdminStatus(req, res, false)
   }
 
   return GroupsController

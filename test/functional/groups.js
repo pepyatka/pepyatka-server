@@ -126,6 +126,48 @@ describe("GroupsController", function() {
           })
     })
   })
+
+  describe('#unadmin', function() {
+    var authTokenAdmin, authTokenNonAdmin
+
+    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
+      authTokenAdmin = token
+    }))
+
+    beforeEach(funcTestHelper.createUser('yole', 'wordpass', function(token) {
+      authTokenNonAdmin = token
+    }))
+
+    beforeEach(function(done) {
+      request
+          .post(app.config.host + '/v1/groups')
+          .send({ group: {username: 'pepyatka-dev', screenName: 'Pepyatka Developers'},
+            authToken: authTokenAdmin })
+          .end(function(err, res) {
+            done()
+          })
+
+    })
+
+    beforeEach(function(done) {
+      request
+          .post(app.config.host + '/v1/groups/pepyatka-dev/subscribers/yole/admin')
+          .send({authToken: authTokenAdmin})
+          .end(function(err, res) {
+            done()
+          })
+    })
+
+    it('should allow an administrator to remove another administrator', function(done) {
+      request
+          .post(app.config.host + '/v1/groups/pepyatka-dev/subscribers/yole/unadmin')
+          .send({authToken: authTokenAdmin})
+          .end(function(err, res) {
+            res.status.should.eql(200)
+            done()
+          })
+    })
+  })
 })
 
 
