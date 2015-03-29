@@ -10,6 +10,7 @@ var Promise = require('bluebird')
   , FeedFactory = models.FeedFactory
   , Timeline = models.Timeline
   , mkKey = require("../support/models").mkKey
+  , _ = require('underscore')
 
 exports.addModel = function(database) {
   var User = function(params) {
@@ -45,7 +46,7 @@ exports.addModel = function(database) {
   Object.defineProperty(User.prototype, 'screenName', {
     get: function() { return this.screenName_ },
     set: function(newValue) {
-      if (newValue)
+      if (_.isString(newValue))
         this.screenName_ = newValue.trim()
     }
   })

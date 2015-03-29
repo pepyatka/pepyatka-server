@@ -53,8 +53,8 @@ describe('Group', function() {
       group.create()
         .catch(function(e) {
           e.message.should.eql("Invalid")
+          done()
         })
-        .then(function() { done() })
     })
   })
 
