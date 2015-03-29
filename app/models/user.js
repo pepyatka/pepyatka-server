@@ -51,11 +51,12 @@ exports.addModel = function(database) {
   })
 
   User.findByUsername = function(username) {
+    var that = this
     username = username.trim().toLowerCase()
     return Promise.resolve(
       database.getAsync(mkKey(['username', username, 'uid']))
         .then(function(identifier) {
-          return User.findById(identifier)
+          return that.className.findById(identifier)
         })
     )
   }

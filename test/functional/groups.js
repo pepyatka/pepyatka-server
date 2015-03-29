@@ -74,6 +74,58 @@ describe("GroupsController", function() {
           })
     })
   })
+
+  describe('#admin', function() {
+    var authTokenAdmin, authTokenNonAdmin
+
+    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
+      authTokenAdmin = token
+    }))
+
+    beforeEach(funcTestHelper.createUser('yole', 'wordpass', function(token) {
+      authTokenNonAdmin = token
+    }))
+
+    beforeEach(function(done) {
+      request
+          .post(app.config.host + '/v1/groups')
+          .send({ group: {username: 'pepyatka-dev', screenName: 'Pepyatka Developers'},
+            authToken: authTokenAdmin })
+          .end(function(err, res) {
+            done()
+          })
+
+    })
+
+    it('should reject unauthenticated users', function(done) {
+      request
+          .post(app.config.host + '/v1/groups/pepyatka-dev/subscribers/yole/admin')
+          .end(function(err, res) {
+            err.should.not.be.empty
+            err.status.should.eql(401)
+            done()
+          })
+    })
+
+    it('should reject nonexisting group', function(done) {
+      request
+          .post(app.config.host + '/v1/groups/foobar/subscribers/yole/admin')
+          .end(function(err, res) {
+            err.should.not.be.empty
+            err.status.should.eql(401)
+            done()
+          })
+    })
+    it('should allow an administrator to add another administrator', function(done) {
+      request
+          .post(app.config.host + '/v1/groups/pepyatka-dev/subscribers/yole/admin')
+          .send({authToken: authTokenAdmin})
+          .end(function(err, res) {
+            res.status.should.eql(200)
+            done()
+          })
+    })
+  })
 })
 
 

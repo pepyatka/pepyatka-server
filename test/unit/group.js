@@ -12,8 +12,9 @@ describe('Group', function() {
       var group = new Group({
         username: 'FriendFeed'
       })
+      var ownerId = 'abc'
 
-      group.create()
+      group.create(ownerId)
         .then(function(group) {
           group.should.be.an.instanceOf(Group)
           group.should.not.be.empty
@@ -29,6 +30,16 @@ describe('Group', function() {
           newGroup.id.should.eql(group.id)
           newGroup.should.have.property('type')
           newGroup.type.should.eql('group')
+
+          return Group.findByUsername(group.username)
+        })
+        .then(function(groupByName) {
+          groupByName.id.should.eql(group.id)
+          groupByName.should.be.an.instanceOf(Group)
+          return groupByName.getAdministratorIds()
+        })
+        .then(function(adminIds) {
+          adminIds.should.contain(ownerId)
         })
         .then(function() { done() })
     })

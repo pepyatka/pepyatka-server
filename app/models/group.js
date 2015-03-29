@@ -53,7 +53,7 @@ exports.addModel = function(database) {
     }.bind(this))
   }
 
-  Group.prototype.create = function() {
+  Group.prototype.create = function(ownerId) {
     var that = this
 
     return new Promise(function(resolve, reject) {
@@ -65,7 +65,7 @@ exports.addModel = function(database) {
 
       that.validateOnCreate()
         .then(function(group) {
-          Promise.all([
+          return Promise.all([
             database.setAsync(mkKey(['username', group.username, 'uid']), group.id),
             database.hmsetAsync(mkKey(['user', group.id]),
                                 { 'username': group.username,
@@ -73,7 +73,8 @@ exports.addModel = function(database) {
                                   'type': group.type,
                                   'createdAt': group.createdAt.toString(),
                                   'updatedAt': group.updatedAt.toString()
-                                })
+                                }),
+            group.addAdministrator(ownerId)
           ])
         })
         .then(function(res) { resolve(that) })
