@@ -117,6 +117,27 @@ exports.addModel = function(database) {
     })
   }
 
+  Group.prototype.removeAdministrator = function(feedId) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getAdministratorIds()
+          .then(function(adminIds) {
+            if (adminIds.indexOf(feedId) == -1) {
+              reject(new Error("Not an administrator"))
+            }
+            else if (adminIds.length == 1) {
+              reject(new Error("Cannot remove last administrator"))
+            }
+            else {
+              database.zremAsync(that.mkAdminsKey(), feedId)
+                  .then(function(res) { resolve(res) })
+                  .catch(function(e) { reject(e) })
+            }
+          })
+    })
+  }
+
   Group.prototype.getAdministratorIds = function() {
     var that = this
 

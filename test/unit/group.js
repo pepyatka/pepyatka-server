@@ -111,7 +111,7 @@ describe('Group', function() {
     })
   })
 
-  describe('addAdministrator', function(done) {
+  describe('addAdministrator', function() {
     var group
 
     beforeEach(function(done) {
@@ -133,6 +133,44 @@ describe('Group', function() {
           res.should.contain('123')
         })
         .then(function() { done() })
+    })
+  })
+
+  describe('removeAdministrator', function() {
+    var group
+
+    beforeEach(function(done) {
+      group = new Group({
+        username: 'Luna',
+        screenName: 'Moon'
+      })
+      group.create('123').then(function() {
+        group.addAdministrator('456').then(function() {
+          done()
+        })
+      })
+    })
+
+    it('should remove an administrator', function(done) {
+      group.removeAdministrator('123')
+          .then(function() {
+            return group.getAdministratorIds()
+          })
+          .then(function(res) {
+            res.length.should.eql(1)
+          })
+          .then(function() { done() })
+    })
+
+    it('should refuse to remove the last administrator', function(done) {
+      group.removeAdministrator('456')
+          .then(function() {
+            return group.removeAdministrator('123')
+          })
+          .catch(function(e) {
+            e.message.should.eql("Cannot remove last administrator")
+            done()
+          })
     })
   })
 })
