@@ -136,9 +136,10 @@ exports.listen = function(server, app) {
 
       models.Post.findById(data.postId)
         .then(function(post) {
-          if (!post) {
-            return Promise.resolve([])
-          }
+          // NOTE: we could delete post keys *before*
+          // 'destroyComment' event and so Post.findById will return
+          // null. In fact, we do not need Post model here, but postId
+          // is totally sufficient.
           return post.getTimelineIds()
         })
         .then(function(timelineIds) {
