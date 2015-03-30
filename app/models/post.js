@@ -329,6 +329,49 @@ exports.addModel = function(database) {
     })
   }
 
+  Post.prototype.addAttachment = function(attachmentId) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      models.Attachment.findById(attachmentId)
+        .then(function() {
+          return Promise.all([
+            database.rpushAsync(mkKey(['post', that.id, 'attachments']), attachmentId)
+          ])
+        })
+        .then(function(res) { resolve(res) })
+    })
+  }
+
+  Post.prototype.getAttachmentIds = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      database.lrangeAsync(mkKey(['post', that.id, 'attachments']), 0, -1)
+        .then(function(attachmentIds) {
+          that.attachmentIds = attachmentIds
+          resolve(attachmentIds)
+        })
+    })
+  }
+
+  Post.prototype.getAttachments = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getAttachmentIds()
+        .then(function(attachmentIds) {
+          return Promise.map(attachmentIds, function(attachmentId) {
+            return models.Attachment.findById(attachmentId)
+          })
+        })
+        .then(function(attachments) {
+          that.attachments = attachments
+          resolve(that.attachments)
+        })
+    })
+  }
+
   Post.prototype.getLikeIds = function() {
     var that = this
 

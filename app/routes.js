@@ -35,6 +35,8 @@ var findUser = function(req, res, next) {
 }
 
 module.exports = function(app) {
+  app.use(require('express').static(__dirname + '/../public'))
+
   app.options('/*', function(req, res) { res.status(200).send({}) })
 
   SessionRoute.addRoutes(app)
