@@ -74,7 +74,8 @@ exports.addModel = function(database) {
                                   'createdAt': group.createdAt.toString(),
                                   'updatedAt': group.updatedAt.toString()
                                 }),
-            group.addAdministrator(ownerId)
+            group.addAdministrator(ownerId),
+            group.subscribeOwner(ownerId)
           ])
         })
         .then(function(res) { resolve(that) })
@@ -104,6 +105,26 @@ exports.addModel = function(database) {
 
   Group.prototype.mkAdminsKey = function() {
     return mkKey(['user', this.id, 'administrators'])
+  }
+
+  Group.prototype.subscribeOwner = function(ownerId) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      return User.findById(ownerId).bind({}).then(function(owner) {
+        if (!owner) {
+          resolve(null)
+          return
+        }
+        this.owner = owner
+        return that.getPostsTimelineId()
+      })
+      .then(function(timelineId) {
+        return this.owner.subscribeTo(timelineId)
+      })
+      .then(function(res) { resolve(res)})
+      .catch(function(e) { reject(e) })
+    })
   }
 
   Group.prototype.addAdministrator = function(feedId) {
