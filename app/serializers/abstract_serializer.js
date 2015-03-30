@@ -122,6 +122,7 @@ exports.addSerializer = function() {
       var serializer = this
 
       var processWithRoot = function(objects, one) {
+        var objects = _.filter(objects, function(object) { return _.has(object, 'id') })
         var object_ids = objects.map(function(e) { return e.id })
 
         serializer.processMultiObjectsWithRoot(serializer.strategy[field].model || field,
