@@ -12,8 +12,9 @@ describe('Group', function() {
       var group = new Group({
         username: 'FriendFeed'
       })
+      var ownerId = 'abc'
 
-      group.create()
+      group.create(ownerId)
         .then(function(group) {
           group.should.be.an.instanceOf(Group)
           group.should.not.be.empty
@@ -29,6 +30,16 @@ describe('Group', function() {
           newGroup.id.should.eql(group.id)
           newGroup.should.have.property('type')
           newGroup.type.should.eql('group')
+
+          return Group.findByUsername(group.username)
+        })
+        .then(function(groupByName) {
+          groupByName.id.should.eql(group.id)
+          groupByName.should.be.an.instanceOf(Group)
+          return groupByName.getAdministratorIds()
+        })
+        .then(function(adminIds) {
+          adminIds.should.contain(ownerId)
         })
         .then(function() { done() })
     })
@@ -42,8 +53,8 @@ describe('Group', function() {
       group.create()
         .catch(function(e) {
           e.message.should.eql("Invalid")
+          done()
         })
-        .then(function() { done() })
     })
   })
 
@@ -97,6 +108,69 @@ describe('Group', function() {
           newGroup.screenName.should.eql(screenName)
         })
         .then(function() { done() })
+    })
+  })
+
+  describe('addAdministrator', function() {
+    var group
+
+    beforeEach(function(done) {
+      group = new Group({
+        username: 'Luna',
+        screenName: 'Moon'
+      })
+      group.create().then(function() {
+        done()
+      })
+    })
+
+    it('should add an administrator', function(done) {
+      group.addAdministrator('123')
+        .then(function() {
+          return group.getAdministratorIds()
+        })
+        .then(function(res) {
+          res.should.contain('123')
+        })
+        .then(function() { done() })
+    })
+  })
+
+  describe('removeAdministrator', function() {
+    var group
+
+    beforeEach(function(done) {
+      group = new Group({
+        username: 'Luna',
+        screenName: 'Moon'
+      })
+      group.create('123').then(function() {
+        group.addAdministrator('456').then(function() {
+          done()
+        })
+      })
+    })
+
+    it('should remove an administrator', function(done) {
+      group.removeAdministrator('123')
+          .then(function() {
+            return group.getAdministratorIds()
+          })
+          .then(function(res) {
+            res.length.should.eql(1)
+          })
+          .then(function() { done() })
+    })
+
+    it('should refuse to remove the last administrator', function(done) {
+      group.removeAdministrator('456')
+          .then(function() {
+            return group.removeAdministrator('123')
+          })
+          .catch(function(e) {
+            e.message.should.eql("Cannot remove last administrator")
+            done()
+          })
     })
   })
 })
