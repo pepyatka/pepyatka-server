@@ -111,5 +111,23 @@ exports.addController = function(app) {
       .catch(function(e) { res.status(422).send({}) })
   }
 
+  UsersController.update = function(req, res) {
+    if (!req.user || req.user.id != req.params.userId)
+      return res.status(401).jsonp({ err: 'Not found' })
+
+    var attrs = {
+      screenName: req.body.user.screenName,
+      isPrivate: req.body.user.isPrivate
+    }
+    models.User.findById(req.params.userId)
+      .then(function(user) { return user.update(attrs) })
+      .then(function(user) {
+        new UserSerializer(user).toJSON(function(err, json) {
+          res.jsonp(json)
+        })
+      })
+      .catch(function(e) { res.status(422).send({}) })
+  }
+
   return UsersController
 }

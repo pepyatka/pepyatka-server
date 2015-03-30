@@ -22,6 +22,7 @@ exports.addModel = function(database) {
     this.hashedPassword = params.hashedPassword
     this.salt = params.salt
     this.password = params.password
+    this.isPrivate = params.isPrivate
     if (parseInt(params.createdAt, 10))
       this.createdAt = params.createdAt
     if (parseInt(params.updatedAt, 10))
@@ -48,6 +49,13 @@ exports.addModel = function(database) {
     set: function(newValue) {
       if (_.isString(newValue))
         this.screenName_ = newValue.trim()
+    }
+  })
+
+  Object.defineProperty(User.prototype, 'isPrivate', {
+    get: function() { return this.isPrivate_ },
+    set: function(newValue) {
+      this.isPrivate_ = newValue || "0"
     }
   })
 
@@ -133,8 +141,6 @@ exports.addModel = function(database) {
       valid = this.username.length > 1
         && this.screenName.length > 1
         && models.FeedFactory.stopList().indexOf(this.username) == -1
-        && this.password
-        && this.password.length > 0
 
       valid ? resolve(valid) : reject(new Error("Invalid"))
     }.bind(this))
@@ -173,6 +179,7 @@ exports.addModel = function(database) {
                                 { 'username': user.username,
                                   'screenName': user.screenName,
                                   'type': user.type,
+                                  'isPrivate': '0',
                                   'createdAt': user.createdAt.toString(),
                                   'updatedAt': user.updatedAt.toString(),
                                   'salt': user.salt,
@@ -192,11 +199,13 @@ exports.addModel = function(database) {
       that.updatedAt = new Date().getTime()
       if (params.hasOwnProperty('screenName'))
         that.screenName = params.screenName
+      that.isPrivate = params.isPrivate
 
       that.validate()
-        .then(function(user) {
+        .then(function() {
           database.hmsetAsync(mkKey(['user', that.id]),
                               { 'screenName': that.screenName,
+                                'isPrivate': that.isPrivate,
                                 'updatedAt': that.updatedAt.toString()
                               })
         })

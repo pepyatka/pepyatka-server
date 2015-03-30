@@ -165,7 +165,7 @@ describe('User', function() {
 
       user.create()
         .catch(function(e) {
-          e.message.should.eql("Invalid")
+          e.message.should.eql("Password cannot be blank")
           done()
         })
     })
