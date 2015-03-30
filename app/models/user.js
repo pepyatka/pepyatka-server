@@ -10,6 +10,7 @@ var Promise = require('bluebird')
   , FeedFactory = models.FeedFactory
   , Timeline = models.Timeline
   , mkKey = require("../support/models").mkKey
+  , _ = require('underscore')
 
 exports.addModel = function(database) {
   var User = function(params) {
@@ -45,17 +46,18 @@ exports.addModel = function(database) {
   Object.defineProperty(User.prototype, 'screenName', {
     get: function() { return this.screenName_ },
     set: function(newValue) {
-      if (newValue)
+      if (_.isString(newValue))
         this.screenName_ = newValue.trim()
     }
   })
 
   User.findByUsername = function(username) {
+    var that = this
     username = username.trim().toLowerCase()
     return Promise.resolve(
       database.getAsync(mkKey(['username', username, 'uid']))
         .then(function(identifier) {
-          return User.findById(identifier)
+          return that.className.findById(identifier)
         })
     )
   }

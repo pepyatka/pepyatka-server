@@ -1,6 +1,7 @@
 var request = require('superagent')
     , app = require('../../index')
     , models = require('../../app/models')
+    , funcTestHelper = require('./functional_test_helper')
 
 describe("GroupsController", function() {
   beforeEach(function (done) {
@@ -13,24 +14,9 @@ describe("GroupsController", function() {
   describe("#create()", function() {
     var authToken
 
-    beforeEach(function(done) {
-      var user = {
-        username: 'Luna',
-        password: 'password'
-      }
-
-      request
-          .post(app.config.host + '/v1/users')
-          .send({ username: user.username, password: user.password })
-          .end(function(err, res) {
-            res.should.not.be.empty
-            res.body.should.not.be.empty
-            res.body.should.have.property('authToken')
-            authToken = res.body.authToken
-
-            done()
-          })
-    })
+    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
+      authToken = token
+    }))
 
     it('should reject unauthenticated users', function(done) {
       request
@@ -70,6 +56,114 @@ describe("GroupsController", function() {
           .end(function(err, res) {
             err.should.not.be.empty
             err.status.should.eql(401)
+            done()
+          })
+    })
+
+    it('should add the creating user as the administrator', function(done) {
+      var userName = 'Luna';
+      var screenName = 'Pepyatka Developers';
+      request
+          .post(app.config.host + '/v1/groups')
+          .send({ group: {username: userName, screenName: screenName},
+            authToken: authToken })
+          .end(function(err, res) {
+            err.should.not.be.empty
+            err.status.should.eql(401)
+            done()
+          })
+    })
+  })
+
+  describe('#admin', function() {
+    var authTokenAdmin, authTokenNonAdmin
+
+    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
+      authTokenAdmin = token
+    }))
+
+    beforeEach(funcTestHelper.createUser('yole', 'wordpass', function(token) {
+      authTokenNonAdmin = token
+    }))
+
+    beforeEach(function(done) {
+      request
+          .post(app.config.host + '/v1/groups')
+          .send({ group: {username: 'pepyatka-dev', screenName: 'Pepyatka Developers'},
+            authToken: authTokenAdmin })
+          .end(function(err, res) {
+            done()
+          })
+
+    })
+
+    it('should reject unauthenticated users', function(done) {
+      request
+          .post(app.config.host + '/v1/groups/pepyatka-dev/subscribers/yole/admin')
+          .end(function(err, res) {
+            err.should.not.be.empty
+            err.status.should.eql(401)
+            done()
+          })
+    })
+
+    it('should reject nonexisting group', function(done) {
+      request
+          .post(app.config.host + '/v1/groups/foobar/subscribers/yole/admin')
+          .end(function(err, res) {
+            err.should.not.be.empty
+            err.status.should.eql(401)
+            done()
+          })
+    })
+    it('should allow an administrator to add another administrator', function(done) {
+      request
+          .post(app.config.host + '/v1/groups/pepyatka-dev/subscribers/yole/admin')
+          .send({authToken: authTokenAdmin})
+          .end(function(err, res) {
+            res.status.should.eql(200)
+            done()
+          })
+    })
+  })
+
+  describe('#unadmin', function() {
+    var authTokenAdmin, authTokenNonAdmin
+
+    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
+      authTokenAdmin = token
+    }))
+
+    beforeEach(funcTestHelper.createUser('yole', 'wordpass', function(token) {
+      authTokenNonAdmin = token
+    }))
+
+    beforeEach(function(done) {
+      request
+          .post(app.config.host + '/v1/groups')
+          .send({ group: {username: 'pepyatka-dev', screenName: 'Pepyatka Developers'},
+            authToken: authTokenAdmin })
+          .end(function(err, res) {
+            done()
+          })
+
+    })
+
+    beforeEach(function(done) {
+      request
+          .post(app.config.host + '/v1/groups/pepyatka-dev/subscribers/yole/admin')
+          .send({authToken: authTokenAdmin})
+          .end(function(err, res) {
+            done()
+          })
+    })
+
+    it('should allow an administrator to remove another administrator', function(done) {
+      request
+          .post(app.config.host + '/v1/groups/pepyatka-dev/subscribers/yole/unadmin')
+          .send({authToken: authTokenAdmin})
+          .end(function(err, res) {
+            res.status.should.eql(200)
             done()
           })
     })

@@ -53,7 +53,7 @@ exports.addModel = function(database) {
     }.bind(this))
   }
 
-  Group.prototype.create = function() {
+  Group.prototype.create = function(ownerId) {
     var that = this
 
     return new Promise(function(resolve, reject) {
@@ -65,7 +65,7 @@ exports.addModel = function(database) {
 
       that.validateOnCreate()
         .then(function(group) {
-          Promise.all([
+          return Promise.all([
             database.setAsync(mkKey(['username', group.username, 'uid']), group.id),
             database.hmsetAsync(mkKey(['user', group.id]),
                                 { 'username': group.username,
@@ -73,7 +73,8 @@ exports.addModel = function(database) {
                                   'type': group.type,
                                   'createdAt': group.createdAt.toString(),
                                   'updatedAt': group.updatedAt.toString()
-                                })
+                                }),
+            group.addAdministrator(ownerId)
           ])
         })
         .then(function(res) { resolve(that) })
@@ -97,6 +98,52 @@ exports.addModel = function(database) {
                               })
         })
         .then(function() { resolve(that) })
+        .catch(function(e) { reject(e) })
+    })
+  }
+
+  Group.prototype.mkAdminsKey = function() {
+    return mkKey(['user', this.id, 'administrators'])
+  }
+
+  Group.prototype.addAdministrator = function(feedId) {
+    var that = this
+    var currentTime = new Date().getTime()
+
+    return new Promise(function(resolve, reject) {
+      database.zaddAsync(that.mkAdminsKey(), currentTime, feedId)
+        .then(function(res) { resolve(res) })
+        .catch(function(e) { reject(e) })
+    })
+  }
+
+  Group.prototype.removeAdministrator = function(feedId) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getAdministratorIds()
+          .then(function(adminIds) {
+            if (adminIds.indexOf(feedId) == -1) {
+              reject(new Error("Not an administrator"))
+            }
+            else if (adminIds.length == 1) {
+              reject(new Error("Cannot remove last administrator"))
+            }
+            else {
+              database.zremAsync(that.mkAdminsKey(), feedId)
+                  .then(function(res) { resolve(res) })
+                  .catch(function(e) { reject(e) })
+            }
+          })
+    })
+  }
+
+  Group.prototype.getAdministratorIds = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      database.zrevrangeAsync(that.mkAdminsKey(), 0, -1)
+        .then(function(result) { resolve(result) })
         .catch(function(e) { reject(e) })
     })
   }

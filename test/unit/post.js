@@ -157,8 +157,8 @@ describe('Post', function() {
       post.create()
         .catch(function(e) {
           e.message.should.eql("Invalid")
+          done()
         })
-        .then(function() { done() })
     })
   })
 
@@ -516,10 +516,10 @@ describe('Post', function() {
         .then(function(comment) { return comment.create() })
         .then(function() { return post.destroy() })
         .then(function() { return Post.findById(post.id) })
-        .catch(function(e) {
-          e.message.should.eql("Invalid")
+        .then(function(post) {
+          (post === null).should.be.true
+          done()
         })
-        .then(function() { done() })
     })
   })
 })

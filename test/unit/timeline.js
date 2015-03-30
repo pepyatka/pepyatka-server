@@ -66,8 +66,8 @@ describe('Timeline', function() {
       timeline.create()
         .catch(function(e) {
           e.message.should.eql("Invalid")
+          done()
         })
-        .then(function() { done() })
     })
   })
 

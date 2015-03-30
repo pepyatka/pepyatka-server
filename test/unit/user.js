@@ -99,8 +99,8 @@ describe('User', function() {
         })
         .catch(function(e) {
           e.message.should.eql("Invalid")
+          done()
         })
-        .then(function() { done() })
     })
   })
 
@@ -166,8 +166,8 @@ describe('User', function() {
       user.create()
         .catch(function(e) {
           e.message.should.eql("Invalid")
+          done()
         })
-        .then(function() { done() })
     })
 
     it('should not create empty hashed password', function(done) {
@@ -179,8 +179,8 @@ describe('User', function() {
       user.updateHashedPassword()
         .catch(function(e) {
           e.message.should.eql("Password cannot be blank")
+          done()
         })
-        .then(function() { done() })
     })
 
     it('should not create two users with the same username', function(done) {
@@ -201,8 +201,8 @@ describe('User', function() {
         .then(function(user) { return userB.create() })
         .catch(function(e) {
           e.message.should.eql("Invalid")
+          done()
         })
-        .then(function() { done() })
     })
 
     it('should not create user from stop-list', function(done) {
@@ -214,8 +214,8 @@ describe('User', function() {
       user.create()
         .catch(function(e) {
           e.message.should.eql("Invalid")
+          done()
         })
-        .then(function() { done() })
     })
   })
 
