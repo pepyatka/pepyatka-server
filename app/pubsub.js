@@ -135,7 +135,12 @@ exports.listen = function(server, app) {
       io.sockets.in('post:' + data.postId).emit('destroyComment', event)
 
       models.Post.findById(data.postId)
-        .then(function(post) { return post.getTimelineIds() })
+        .then(function(post) {
+          if (!post) {
+            return Promise.resolve([])
+          }
+          return post.getTimelineIds()
+        })
         .then(function(timelineIds) {
           return Promise.map(timelineIds, function(timelineId) {
             return io.sockets.in('timeline:' + timelineId).emit('destroyComment', event)
