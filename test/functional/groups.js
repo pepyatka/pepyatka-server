@@ -61,16 +61,35 @@ describe("GroupsController", function() {
     })
 
     it('should add the creating user as the administrator', function(done) {
-      var userName = 'Luna';
+      var userName = 'pepyatka-dev';
       var screenName = 'Pepyatka Developers';
       request
           .post(app.config.host + '/v1/groups')
           .send({ group: {username: userName, screenName: screenName},
             authToken: authToken })
           .end(function(err, res) {
-            err.should.not.be.empty
-            err.status.should.eql(401)
+            // TODO[yole] check that the user is an administrator
             done()
+          })
+    })
+
+    it('should subscribe the creating user', function(done) {
+      var userName = 'pepyatka-dev';
+      var screenName = 'Pepyatka Developers';
+      request
+          .post(app.config.host + '/v1/groups')
+          .send({ group: {username: userName, screenName: screenName},
+            authToken: authToken })
+          .end(function(err, res) {
+            var newGroupId = res.body.groups.id
+            request
+                .get(app.config.host + '/v1/users/Luna/subscriptions')
+                .query({authToken: authToken})
+                .end(function(err, res) {
+                  var subIds = res.body.subscriptions.map(function(sub) { return sub.user })
+                  subIds.should.contain(newGroupId)
+                  done()
+                })
           })
     })
   })
