@@ -214,7 +214,7 @@ exports.addModel = function(database) {
     })
   }
 
-  User.prototype.getGenericTimelineId = function(name) {
+  User.prototype.getGenericTimelineId = function(name, params) {
     var that = this
 
     return new Promise(function(resolve, reject) {
@@ -222,7 +222,10 @@ exports.addModel = function(database) {
         .then(function(timelineIds) {
           var timeline
           if (timelineIds[name]) {
-            timeline = models.Timeline.findById(timelineIds[name])
+            timeline = models.Timeline.findById(timelineIds[name], {
+              offset: params.offset,
+              limit: params.limit
+            })
           } else {
             timeline = new models.Timeline({
               name: name,
@@ -240,8 +243,8 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      that["get" + name + "TimelineId"]()
-        .then(function(timelineId) { return models.Timeline.findById(timelineId) })
+      that["get" + name + "TimelineId"](params)
+        .then(function(timelineId) { return models.Timeline.findById(timelineId, params) })
         .then(function(timeline) {
           that[name] = timeline
           resolve(timeline)
@@ -249,36 +252,36 @@ exports.addModel = function(database) {
     })
   }
 
-  User.prototype.getRiverOfNewsTimelineId = function() {
-    return this.getGenericTimelineId('RiverOfNews')
+  User.prototype.getRiverOfNewsTimelineId = function(params) {
+    return this.getGenericTimelineId('RiverOfNews', params)
   }
 
   User.prototype.getRiverOfNewsTimeline = function(params) {
-    return this.getGenericTimeline('RiverOfNews')
+    return this.getGenericTimeline('RiverOfNews', params)
   }
 
-  User.prototype.getLikesTimelineId = function() {
-    return this.getGenericTimelineId('Likes')
+  User.prototype.getLikesTimelineId = function(params) {
+    return this.getGenericTimelineId('Likes', params)
   }
 
   User.prototype.getLikesTimeline = function(params) {
-    return this.getGenericTimeline('Likes')
+    return this.getGenericTimeline('Likes', params)
   }
 
-  User.prototype.getPostsTimelineId = function() {
-    return this.getGenericTimelineId('Posts')
+  User.prototype.getPostsTimelineId = function(params) {
+    return this.getGenericTimelineId('Posts', params)
   }
 
   User.prototype.getPostsTimeline = function(params) {
-    return this.getGenericTimeline('Posts')
+    return this.getGenericTimeline('Posts', params)
   }
 
-  User.prototype.getCommentsTimelineId = function() {
-    return this.getGenericTimelineId('Comments')
+  User.prototype.getCommentsTimelineId = function(params) {
+    return this.getGenericTimelineId('Comments', params)
   }
 
   User.prototype.getCommentsTimeline = function(params) {
-    return this.getGenericTimeline('Comments')
+    return this.getGenericTimeline('Comments', params)
   }
 
   User.prototype.getTimelineIds = function() {

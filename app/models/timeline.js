@@ -20,8 +20,8 @@ exports.addModel = function(database) {
       this.createdAt = params.createdAt
     if (parseInt(params.updatedAt, 10))
       this.updatedAt = params.updatedAt
-    this.start = parseInt(params.start, 10) || 0
-    this.num = parseInt(params.num, 10) || 25
+    this.offset = parseInt(params.offset, 10) || 0
+    this.limit = parseInt(params.limit, 10) || 25
   }
 
   inherits(Timeline, AbstractModel)
@@ -118,16 +118,16 @@ exports.addModel = function(database) {
     return FeedFactory.findById(this.userId)
   }
 
-  Timeline.prototype.getPostIds = function(start, num) {
+  Timeline.prototype.getPostIds = function(offset, limit) {
     var that = this
 
-    if (!start || !num) {
-      start = this.start
-      num = this.num
+    if (!offset || !limit) {
+      offset = this.offset
+      limit = this.limit
     }
 
     return new Promise(function(resolve, reject) {
-      database.zrevrangeAsync(mkKey(['timeline', that.id, 'posts']), start, start+num-1)
+      database.zrevrangeAsync(mkKey(['timeline', that.id, 'posts']), offset, offset+limit-1)
         .then(function(postIds) {
           that.postIds = postIds
           resolve(that.postIds)
@@ -135,16 +135,16 @@ exports.addModel = function(database) {
     })
   }
 
-  Timeline.prototype.getPosts = function(start, num) {
+  Timeline.prototype.getPosts = function(offset, limit) {
     var that = this
 
-    if (!start || !num) {
-      start = this.start
-      num = this.num
+    if (!offset || !limit) {
+      offset = this.offset
+      limit = this.limit
     }
 
     return new Promise(function(resolve, reject) {
-      that.getPostIds(start, num)
+      that.getPostIds(offset, limit)
         .then(function(postIds) {
           return Promise.map(postIds, function(postId) {
             return Post.findById(postId)

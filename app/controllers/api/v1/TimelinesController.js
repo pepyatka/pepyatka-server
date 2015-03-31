@@ -14,8 +14,8 @@ exports.addController = function(app) {
     var user = req.user
 
     user.getRiverOfNewsTimeline({
-      start: req.query.offset,
-      num: req.query.limit
+      offset: req.query.offset,
+      limit: req.query.limit
     })
       .then(function(timeline) {
         new TimelineSerializer(timeline).toJSON(function(err, json) {
