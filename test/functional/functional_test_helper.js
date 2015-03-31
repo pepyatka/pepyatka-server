@@ -15,7 +15,9 @@ exports.createUser = function(username, password, callback) {
         .send({ username: user.username, password: user.password })
         .end(function(err, res) {
           if (callback) {
-            callback(res.body.authToken)
+            var luna = res.body.users
+            luna.password = user.password
+            callback(res.body.authToken, luna)
           }
           done()
         })

@@ -1,7 +1,8 @@
 var request = require('superagent')
   , app = require('../../index')
   , models = require('../../app/models')
-, async = require('async')
+  , async = require('async')
+  , funcTestHelper = require('./functional_test_helper')
 
 describe("UsersController", function() {
   beforeEach(function(done) {
@@ -405,6 +406,182 @@ describe("UsersController", function() {
             contains.should.eql(true)
             done()
           })
+        })
+    })
+  })
+
+  describe("#update()", function() {
+    var authToken
+      , user
+
+    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token, luna) {
+      authToken = token
+      user = luna
+    }))
+
+    it('should update current user', function(done) {
+      var screenName = 'Mars'
+
+      request
+        .post(app.config.host + '/v1/users/' + user.id)
+        .send({ authToken: authToken,
+                user: { screenName: screenName },
+                '_method': 'put' })
+        .end(function(err, res) {
+          res.should.not.be.empty
+          res.body.should.not.be.empty
+          res.body.should.have.property('users')
+          res.body.users.should.have.property('id')
+          res.body.users.should.have.property('screenName')
+          res.body.users.screenName.should.eql(screenName)
+          done()
+        })
+    })
+
+    it('should require signed in user', function(done) {
+      var screenName = 'Mars'
+
+      request
+        .post(app.config.host + '/v1/users/' + user.id)
+        .send({ authToken: 'abc',
+                user: { screenName: screenName },
+                '_method': 'put' })
+        .end(function(err, res) {
+          err.should.not.be.empty
+          err.status.should.eql(401)
+          done()
+        })
+    })
+  })
+
+  describe("#updatePassword()", function() {
+    var authToken
+      , user
+
+    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token, luna) {
+      authToken = token
+      user = luna
+    }))
+
+    it('should update current user password', function(done) {
+      var screenName = 'Mars'
+      var password = "drowssap"
+
+      request
+        .post(app.config.host + '/v1/users/updatePassword')
+        .send({ authToken: authToken,
+                currentPassword: user.password,
+                password: password,
+                passwordConfirmation: password,
+                '_method': 'put' })
+        .end(function(err, res) {
+          (err === null).should.be.true
+
+          request
+            .post(app.config.host + '/v1/session')
+            .send({ username: user.username, password: password })
+            .end(function(err, res) {
+              res.should.not.be.empty
+              res.body.should.not.be.empty
+              res.body.should.have.property('users')
+              res.body.users.should.have.property('id')
+              res.body.users.id.should.eql(user.id)
+              done()
+            })
+        })
+    })
+
+    it('should not sign in with old password', function(done) {
+      var screenName = 'Mars'
+      var password = "drowssap"
+
+      request
+        .post(app.config.host + '/v1/users/updatePassword')
+        .send({ authToken: authToken,
+                currentPassword: user.password,
+                password: password,
+                passwordConfirmation: password,
+                '_method': 'put' })
+        .end(function(err, res) {
+          (err === null).should.be.true
+
+          request
+            .post(app.config.host + '/v1/session')
+            .send({ username: user.username, password: user.password })
+            .end(function(err, res) {
+              err.should.not.be.empty
+              err.status.should.eql(401)
+              done()
+            })
+        })
+    })
+
+    it('should not update password that does not match', function(done) {
+      var screenName = 'Mars'
+      var password = "drowssap"
+
+      request
+        .post(app.config.host + '/v1/users/updatePassword')
+        .send({ authToken: authToken,
+                currentPassword: user.password,
+                password: password,
+                passwordConfirmation: "abc",
+                '_method': 'put' })
+        .end(function(err, res) {
+          err.should.not.be.empty
+          err.status.should.eql(422)
+          done()
+        })
+    })
+
+    it('should not update with blank password', function(done) {
+      var screenName = 'Mars'
+      var password = ""
+
+      request
+        .post(app.config.host + '/v1/users/updatePassword')
+        .send({ authToken: authToken,
+                currentPassword: user.password,
+                password: password,
+                passwordConfirmation: password,
+                '_method': 'put' })
+        .end(function(err, res) {
+          err.should.not.be.empty
+          err.status.should.eql(422)
+          done()
+        })
+    })
+
+    it('should not update with invalid password', function(done) {
+      var screenName = 'Mars'
+      var password = "drowssap"
+
+      request
+        .post(app.config.host + '/v1/users/updatePassword')
+        .send({ authToken: authToken,
+                currentPassword: "abc",
+                password: password,
+                passwordConfirmation: password,
+                '_method': 'put' })
+        .end(function(err, res) {
+          err.should.not.be.empty
+          err.status.should.eql(422)
+          done()
+        })
+    })
+
+    it('should require signed in user', function(done) {
+      var screenName = 'Mars'
+
+      request
+        .post(app.config.host + '/v1/users/updatePassword')
+        .send({ authToken: 'abc',
+                user: { screenName: screenName },
+                '_method': 'put' })
+        .end(function(err, res) {
+          err.should.not.be.empty
+          err.status.should.eql(401)
+          done()
         })
     })
   })
