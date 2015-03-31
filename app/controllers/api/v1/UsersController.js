@@ -129,5 +129,20 @@ exports.addController = function(app) {
       .catch(function(e) { res.status(422).send({}) })
   }
 
+  UsersController.updatePassword = function(req, res) {
+    if (!req.user)
+      return res.status(401).jsonp({ err: 'Not found' })
+
+    req.user.validPassword(req.body.currentPassword)
+      .then(function(valid) {
+        if (valid)
+          return req.user.updatePassword(req.body.password, req.body.passwordConfirmation)
+        else
+          return Promise.reject('Invalid')
+      })
+      .then(function(user) { res.jsonp({}) })
+      .catch(function(e) { res.status(422).send({}) })
+  }
+
   return UsersController
 }

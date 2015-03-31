@@ -5,6 +5,7 @@ var UsersController = require('../../../controllers').UsersController
 exports.addRoutes = function(app) {
   app.post('/v1/users',                         UsersController.create)
   app.get( '/v1/users/whoami',                  UsersController.whoami)
+  app.put( '/v1/users/updatePassword',          UsersController.updatePassword)
   app.put( '/v1/users/:userId',                 UsersController.update)
   app.post('/v1/users/:username/subscribe',     UsersController.subscribe)
   app.post('/v1/users/:username/unsubscribe',   UsersController.unsubscribe)

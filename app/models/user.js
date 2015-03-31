@@ -214,6 +214,31 @@ exports.addModel = function(database) {
     })
   }
 
+  User.prototype.updatePassword = function(password, passwordConfirmation) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.updatedAt = new Date().getTime()
+
+      if (password == passwordConfirmation) {
+        that.password = password
+
+        that.updateHashedPassword()
+          .then(function(user) {
+            database.hmsetAsync(mkKey(['user', user.id]),
+                                { 'updatedAt': user.updatedAt.toString(),
+                                  'salt': user.salt,
+                                  'hashedPassword': user.hashedPassword
+                                })
+          })
+          .then(function(res) { resolve(that) })
+          .catch(function(e) { reject(e) })
+      } else {
+        reject(new Error("Invalid"))
+      }
+    })
+  }
+
   User.prototype.getGenericTimelineId = function(name, params) {
     var that = this
 

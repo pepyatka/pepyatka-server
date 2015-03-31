@@ -13,10 +13,13 @@ exports.init = function(passport) {
         if (!user)
           return done(null, false, { message: 'Incorrect username.'})
 
-        if (!user.validPassword(clearPassword))
-          return done(null, false, { message: 'Incorrect password.'})
-
-        return done(null, user)
+        user.validPassword(clearPassword)
+          .then(function(valid) {
+            if (valid)
+              return done(null, user)
+            else
+              return done(null, false, { message: 'Incorrect password.'})
+          })
       })
   }))
 }
