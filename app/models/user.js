@@ -278,6 +278,14 @@ exports.addModel = function(database) {
     })
   }
 
+  User.prototype.getHidesTimelineId = function(params) {
+    return this.getGenericTimelineId('Hides', params)
+  },
+
+  User.prototype.getHidesTimeline = function(params) {
+    return this.getGenericTimeline('Hides', params)
+  }
+
   User.prototype.getRiverOfNewsTimelineId = function(params) {
     return this.getGenericTimelineId('RiverOfNews', params)
   }

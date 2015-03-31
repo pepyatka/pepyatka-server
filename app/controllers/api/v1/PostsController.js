@@ -81,5 +81,25 @@ exports.addController = function(app) {
       .catch(function(e) { res.status(422).send({}) })
   }
 
+  PostsController.hide = function(req, res) {
+    if (!req.user)
+      return res.status(401).jsonp({ err: 'Not found' })
+
+    models.Post.findById(req.params.postId)
+      .then(function(post) { return post.hide() })
+      .then(function() { res.jsonp({} )})
+      .catch(function(e) { res.status(422).send({}) })
+  }
+
+  PostsController.unhide = function(req, res) {
+    if (!req.user)
+      return res.status(401).jsonp({ err: 'Not found' })
+
+    models.Post.findById(req.params.postId)
+      .then(function(post) { return post.unhide() })
+      .then(function() { res.jsonp({} )})
+      .catch(function(e) { res.status(422).send({}) })
+  }
+
   return PostsController
 }

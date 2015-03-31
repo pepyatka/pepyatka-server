@@ -265,6 +265,66 @@ exports.addModel = function(database) {
     return this.getGenericFriendOfFriendTimelines(userId, 'Comments')
   }
 
+  Post.prototype.hide = function(userId) {
+    var that = this
+      , timelineId
+      , user
+
+    return new Promise(function(resolve, reject) {
+      models.User.findById(userId)
+        .then(function(u) {
+          user = u
+          return u.getHidesTimelineId()
+        })
+        .then(function(tId) {
+          timelineId = tId
+          return user.getRiverOfNewsTimelineId()
+        })
+        .then(function(riverOfNewsId) {
+          return Promise.all([
+            database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), that.createdAt, that.id),
+            database.saddAsync(mkKey(['post', that.id, 'timelines']), timelineId),
+            database.publishAsync('hidePost',
+                                  JSON.stringify({
+                                    timelineId: riverOfNewsId,
+                                    postId: that.id
+                                  }))
+          ])
+        })
+        .then(function(res) { resolve(res) })
+    })
+  }
+
+  Post.prototype.unhide = function(userId) {
+    var that = this
+      , timelineId
+      , user
+
+    return new Promise(function(resolve, reject) {
+      models.User.findById(userId)
+        .then(function(u) {
+          user = u
+          return u.getHidesTimelineId()
+        })
+        .then(function(tId) {
+          timelineId = tId
+          return user.getRiverOfNewsTimelineId()
+        })
+        .then(function(riverOfNewsId) {
+          return Promise.all([
+            database.zremAsync(mkKey(['timeline', timelineId, 'posts']), that.id),
+            database.sremAsync(mkKey(['post', that.id, 'timelines']), timelineId),
+            database.publishAsync('unhidePost',
+                                  JSON.stringify({
+                                    timelineId: riverOfNewsId,
+                                    postId: that.id
+                                  }))
+          ])
+        })
+        .then(function(res) { resolve(res) })
+    })
+  }
+
   Post.prototype.addComment = function(commentId) {
     var that = this
     var timelineIds = []
