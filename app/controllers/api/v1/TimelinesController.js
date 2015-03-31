@@ -29,8 +29,10 @@ exports.addController = function(app) {
     var username = req.params.username
 
     models.User.findByUsername(username)
-      .then(function(user) { return user.getPostsTimeline() })
-      .then(function(timeline) {
+      .then(function(user) { return user.getPostsTimeline({
+        offset: req.query.offset,
+        limit: req.query.limit
+      })}).then(function(timeline) {
         new TimelineSerializer(timeline).toJSON(function(err, json) {
           res.jsonp(json)
         })
@@ -42,7 +44,10 @@ exports.addController = function(app) {
     var username = req.params.username
 
     models.User.findByUsername(username)
-      .then(function(user) { return user.getLikesTimeline() })
+      .then(function(user) { return user.getLikesTimeline({
+        offset: req.query.offset,
+        limit: req.query.limit
+      })})
       .then(function(timeline) {
         new TimelineSerializer(timeline).toJSON(function(err, json) {
           res.jsonp(json)
@@ -56,7 +61,10 @@ exports.addController = function(app) {
     var username = req.params.username
 
     models.User.findByUsername(username)
-      .then(function(user) { return user.getCommentsTimeline() })
+      .then(function(user) { return user.getCommentsTimeline({
+        offset: req.query.offset,
+        limit: req.query.limit
+      })})
       .then(function(timeline) {
         new TimelineSerializer(timeline).toJSON(function(err, json) {
           res.jsonp(json)
