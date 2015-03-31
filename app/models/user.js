@@ -222,6 +222,7 @@ exports.addModel = function(database) {
         .then(function(timelineIds) {
           var timeline
           if (timelineIds[name]) {
+            params = params || {}
             timeline = models.Timeline.findById(timelineIds[name], {
               offset: params.offset,
               limit: params.limit
