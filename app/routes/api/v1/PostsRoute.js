@@ -9,4 +9,6 @@ exports.addRoutes = function(app) {
   app.delete('/v1/posts/:postId',        PostsController.destroy)
   app.post(  '/v1/posts/:postId/like',   PostsController.like)
   app.post(  '/v1/posts/:postId/unlike', PostsController.unlike)
+  app.post(  '/v1/posts/:postId/hide',   PostsController.hide)
+  app.post(  '/v1/posts/:postId/unhide', PostsController.unhide)
 }
