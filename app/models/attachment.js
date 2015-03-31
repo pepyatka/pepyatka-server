@@ -29,13 +29,6 @@ exports.addModel = function(database) {
   Attachment.namespace = 'attachment'
   Attachment.findById = Attachment.super_.findById
 
-  Object.defineProperty(Attachment.prototype, 'body', {
-    get: function() { return this.body_ },
-    set: function(newValue) {
-      newValue ? this.body_ = newValue.trim() : this.body_ = ''
-    }
-  })
-
   Attachment.prototype.validate = function() {
     return new Promise(function(resolve, reject) {
       var valid
@@ -102,6 +95,7 @@ exports.addModel = function(database) {
                                     postId: that.postId,
                                     attachmentId: that.id
                                   })),
+            database.delAsync(mkKey(['attachment', that.id])),
             database.lremAsync(mkKey(['post', that.postId, 'attachments']), 1, that.id)
           ])
         })
