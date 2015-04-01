@@ -84,14 +84,24 @@ exports.addSerializer = function() {
         }
       }
 
+      var node = serializer ? new serializer(objects[0]).name : field
       async.forEach(objects, function(object, done) {
-        if (serializer) {
-          new serializer(object).toJSON(jsonAdder(done), root, level + 1)
+        // Does not request objects that already has been serialized
+        // and they are in root.
+        var inArray = _.filter(root[node], function(item) {
+          return item.id == object.id
+        }).length > 0
+
+        if (!inArray) {
+          if (serializer) {
+            new serializer(object).toJSON(jsonAdder(done), root, level + 1)
+          } else {
+            new AbstractSerializer(object, strategy).toJSON(jsonAdder(done), root, level + 1)
+          }
         } else {
-          new AbstractSerializer(object, strategy).toJSON(jsonAdder(done), root, level + 1)
+          done()
         }
       }, function(err) {
-        var node = serializer ? new serializer(objects[0]).name : field
         if (typeof root[node] === 'undefined') {
           root[node] = result
         } else {
@@ -124,18 +134,7 @@ exports.addSerializer = function() {
       var processWithRoot = function(objects, one) {
         var objects = _.filter(objects, function(object) { return _.has(object, 'id') })
         var objectIds = objects.map(function(e) { return e.id })
-
         var strategy = serializer.strategy[field]
-
-        // Does not request objects that already has been serialized
-        // and they are in root.
-        // NOTE: this code is rather slow itself
-        // var node = new strategy.through(objects[0]).name
-        // var rootIds = _.map(root[node] || [], function(object) { return object.id })
-        // objectIds = _.difference(objectIds, rootIds)
-        // objects = _.filter(objects, function(object) {
-        //   return _.contains(objectIds, object.id)
-        // })
 
         serializer.processMultiObjectsWithRoot(strategy.model || field,
                                                objects,
