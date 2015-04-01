@@ -27,7 +27,7 @@ Contribute
 Roadmap
 -------
 
-Tasks: https://github.com/pepyatka/pepyatka/issues
+Tasks: https://github.com/pepyatka/pepyatka-server/issues
 
 Questions or need help?
 -----------------------
