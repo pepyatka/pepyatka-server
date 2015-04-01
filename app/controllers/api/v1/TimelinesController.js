@@ -73,5 +73,23 @@ exports.addController = function(app) {
       .catch(function(e) { res.status(422).send({}) })
   }
 
+  TimelinesController.myDiscussions = function(req, res) {
+    if (!req.user)
+      return res.status(401).jsonp({ err: 'Not found', status: 'fail'})
+
+    var user = req.user
+
+    user.getMyDiscussionsTimeline({
+      offset: req.query.offset,
+      limit: req.query.limit
+    })
+      .then(function(timeline) {
+        new TimelineSerializer(timeline).toJSON(function(err, json) {
+          res.jsonp(json)
+        })
+      })
+      .catch(function(e) { res.status(422).send({}) })
+  }
+
   return TimelineController
 }

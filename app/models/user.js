@@ -239,6 +239,16 @@ exports.addModel = function(database) {
     })
   }
 
+  User.prototype.getMyDiscussionsTimeline = function(params) {
+    return Promise.join(
+      this.getCommentsTimelineId(),
+      this.getLikesTimelineId()
+      , function(commentsId, likesId) {
+        // NOTE: we'll need to union those timelines
+        return []
+    })
+  }
+
   User.prototype.getGenericTimelineId = function(name, params) {
     var that = this
 
@@ -339,11 +349,11 @@ exports.addModel = function(database) {
     }.bind(this))
   }
 
-  User.prototype.getPublicTimelineIds = function() {
+  User.prototype.getPublicTimelineIds = function(params) {
     return Promise.all([
-      this.getCommentsTimelineId(),
-      this.getLikesTimelineId(),
-      this.getPostsTimelineId()
+      this.getCommentsTimelineId(params),
+      this.getLikesTimelineId(params),
+      this.getPostsTimelineId(params )
     ])
   }
 
