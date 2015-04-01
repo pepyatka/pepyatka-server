@@ -123,18 +123,30 @@ exports.addSerializer = function() {
 
       var processWithRoot = function(objects, one) {
         var objects = _.filter(objects, function(object) { return _.has(object, 'id') })
-        var object_ids = objects.map(function(e) { return e.id })
+        var objectIds = objects.map(function(e) { return e.id })
 
-        serializer.processMultiObjectsWithRoot(serializer.strategy[field].model || field,
+        var strategy = serializer.strategy[field]
+
+        // Does not request objects that already has been serialized
+        // and they are in root.
+        // NOTE: this code is rather slow itself
+        // var node = new strategy.through(objects[0]).name
+        // var rootIds = _.map(root[node] || [], function(object) { return object.id })
+        // objectIds = _.difference(objectIds, rootIds)
+        // objects = _.filter(objects, function(object) {
+        //   return _.contains(objectIds, object.id)
+        // })
+
+        serializer.processMultiObjectsWithRoot(strategy.model || field,
                                                objects,
-                                               serializer.strategy[field],
-                                               serializer.strategy[field].through,
+                                               strategy,
+                                               strategy.through,
                                                root,
                                                level, function(err) {
           if (one)
-            object_ids = object_ids[0]
+            objectIds = objectIds[0]
 
-          f(err, object_ids)
+          f(err, objectIds)
         })
       }
 
