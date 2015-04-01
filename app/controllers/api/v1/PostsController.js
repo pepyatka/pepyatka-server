@@ -86,7 +86,7 @@ exports.addController = function(app) {
       return res.status(401).jsonp({ err: 'Not found' })
 
     models.Post.findById(req.params.postId)
-      .then(function(post) { return post.hide() })
+      .then(function(post) { return post.hide(req.user.id) })
       .then(function() { res.jsonp({} )})
       .catch(function(e) { res.status(422).send({}) })
   }
@@ -96,7 +96,7 @@ exports.addController = function(app) {
       return res.status(401).jsonp({ err: 'Not found' })
 
     models.Post.findById(req.params.postId)
-      .then(function(post) { return post.unhide() })
+      .then(function(post) { return post.unhide(req.user.id) })
       .then(function() { res.jsonp({} )})
       .catch(function(e) { res.status(422).send({}) })
   }

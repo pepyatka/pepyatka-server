@@ -17,6 +17,7 @@ exports.addModel = function(database) {
     this.id = params.id
     this.body = params.body
     this.userId = params.userId
+    this.isHidden = params.isHidden
     if (parseInt(params.createdAt, 10))
       this.createdAt = params.createdAt
     if (parseInt(params.updatedAt, 10))
