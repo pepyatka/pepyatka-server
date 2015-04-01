@@ -94,7 +94,8 @@ exports.addModel = function(database) {
     return new Promise(function(resolve, reject) {
       that.createdAt = new Date().getTime()
       that.updatedAt = new Date().getTime()
-      that.id = uuid.v4()
+      if (!that.id)
+        that.id = uuid.v4()
 
       that.validateOnCreate()
         .then(function(timeline) {

@@ -354,6 +354,61 @@ describe('User', function() {
     })
   })
 
+  describe('#getMyDiscussionsTimeline()', function() {
+    var user
+
+    beforeEach(function(done) {
+      user = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      user.create()
+        .then(function(user) { done() })
+    })
+
+    it('should get my discussions timeline', function(done) {
+      user.getMyDiscussionsTimeline()
+        .then(function(timeline) {
+          timeline.should.be.an.instanceOf(Timeline)
+          timeline.should.not.be.empty
+          timeline.should.have.property('name')
+          timeline.name.should.eql('MyDiscussions')
+        })
+        .then(function() { done() })
+    })
+
+    it('should include post to my discussions timeline', function(done) {
+      var post
+      var attrs = {
+        body: 'Post body'
+      }
+      user.newPost(attrs)
+        .then(function(newPost) {
+          post = newPost
+          return newPost.create()
+        })
+        .then(function(post) { return post.addLike(user.id) })
+        .then(function() { return user.getMyDiscussionsTimeline() })
+        .then(function(timeline) {
+          timeline.should.be.an.instanceOf(Timeline)
+          timeline.should.not.be.empty
+          timeline.should.have.property('name')
+          timeline.name.should.eql('MyDiscussions')
+
+          return timeline.getPosts()
+        })
+        .then(function(posts) {
+          posts.should.not.be.empty
+          posts.length.should.eql(1)
+          var newPost = posts[0]
+          newPost.should.have.property('id')
+          newPost.id.should.eql(post.id)
+          done()
+        })
+    })
+  })
+
   describe('#getTimelines()', function() {
     it('should return no timelines', function(done) {
       var user = new User({

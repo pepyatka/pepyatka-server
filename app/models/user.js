@@ -240,12 +240,40 @@ exports.addModel = function(database) {
   }
 
   User.prototype.getMyDiscussionsTimeline = function(params) {
-    return Promise.join(
-      this.getCommentsTimelineId(),
-      this.getLikesTimelineId()
-      , function(commentsId, likesId) {
-        // NOTE: we'll need to union those timelines
-        return []
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      var commentsId
+        , likesId
+
+      Promise.join(
+        that.getCommentsTimelineId(),
+        that.getLikesTimelineId()
+        , function(cId, lId) {
+          commentsId = cId
+          likesId = lId
+        })
+        .then(function() { return models.Timeline.findById(that.id) })
+        .then(function(timeline) {
+          if (!timeline) {
+            timeline = new models.Timeline({
+              id: that.id,
+              name: "MyDiscussions",
+              userId: that.id
+            })
+            return timeline.create()
+          } else {
+            return timeline
+          }
+        })
+        .then(function(timeline) {
+          return database.zunionstoreAsync(
+            mkKey(['timeline', that.id, 'posts']), 2,
+            mkKey(['timeline', commentsId, 'posts']),
+            mkKey(['timeline', likesId, 'posts']),
+            'AGGREGATE', 'MAX')
+        })
+        .then(function(res) { resolve(models.Timeline.findById(that.id)) })
     })
   }
 
