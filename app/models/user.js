@@ -329,7 +329,44 @@ exports.addModel = function(database) {
   }
 
   User.prototype.getRiverOfNewsTimeline = function(params) {
-    return this.getGenericTimeline('RiverOfNews', params)
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getRiverOfNewsTimelineId(params).bind({})
+        .then(function(timelineId) {
+          this.riverOfNewsId = timelineId
+          return that.getHidesTimelineId(params)
+        })
+        .then(function(timelineId) {
+          this.hidesTimelineId = timelineId
+          return models.Timeline.findById(this.riverOfNewsId, params)
+        })
+        .then(function(riverOfNewsTimeline) {
+          this.riverOfNewsTimeline = riverOfNewsTimeline
+          return models.Timeline.findById(this.hidesTimelineId)
+        })
+        // NOTE: this is better get done with zrangebyscore where min
+        // is 25th post and max is 1st post.
+        .then(function(hidesTimeline) {
+          return hidesTimeline.getPostIds(0, 30)
+        })
+        .then(function(hiddenPostIds) {
+          this.hiddenPostIds = hiddenPostIds
+          return this.riverOfNewsTimeline.getPosts(this.riverOfNewsTimeline.offset,
+                                                   this.riverOfNewsTimeline.limit)
+        })
+        .then(function(posts) {
+          return Promise.map(posts, function(post) {
+            if (this.hiddenPostIds.indexOf(post.id) >= 0) {
+              post.isHidden = true
+            }
+            return post
+          }.bind(this))
+        })
+        .then(function(posts) {
+          resolve(this.riverOfNewsTimeline)
+        })
+    })
   }
 
   User.prototype.getLikesTimelineId = function(params) {
