@@ -444,7 +444,7 @@ describe('User', function() {
         .then(function(timelines) {
           timelines.should.be.an.instanceOf(Array)
           timelines.should.not.be.empty
-          timelines.length.should.be.eql(4)
+          timelines.length.should.be.eql(5)
           var timeline = timelines[0]
           timeline.should.have.property('name')
           timeline.name.should.eql('RiverOfNews')
