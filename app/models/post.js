@@ -82,6 +82,8 @@ exports.addModel = function(database) {
             models.Timeline.newPost(post.id)
           ])
         })
+        .then(function() { return models.Stats.findById(that.userId) })
+        .then(function(stats) { return stats.addPost() })
         .then(function(res) { resolve(that) })
         .catch(function(e) { reject(e) })
     })
@@ -166,6 +168,8 @@ exports.addModel = function(database) {
             })
         })
         .then(function() { return database.delAsync(mkKey(['post', that.id, 'comments'])) })
+        .then(function() { return models.Stats.findById(that.userId) })
+        .then(function(stats) { return stats.removePost() })
         .then(function(res) { resolve(res) })
     })
   }
@@ -487,6 +491,8 @@ exports.addModel = function(database) {
             database.saddAsync(mkKey(['post', that.id, 'likes']), userId)
           ])
         })
+        .then(function() { return models.Stats.findById(that.userId) })
+        .then(function(stats) { return stats.addLike() })
         .then(function(res) { resolve(res) })
     })
   }
@@ -517,6 +523,8 @@ exports.addModel = function(database) {
                                   }))
           ])
         })
+        .then(function() { return models.Stats.findById(that.userId) })
+        .then(function(stats) { return stats.removeLike() })
         .then(function(res) { resolve(res) })
     })
   }

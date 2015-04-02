@@ -65,6 +65,10 @@ exports.addModel = function(database) {
 
       that.validateOnCreate()
         .then(function(group) {
+          var stats = new models.Stats({
+            id: group.id
+          })
+
           return Promise.all([
             database.setAsync(mkKey(['username', group.username, 'uid']), group.id),
             database.hmsetAsync(mkKey(['user', group.id]),
@@ -75,7 +79,8 @@ exports.addModel = function(database) {
                                   'updatedAt': group.updatedAt.toString()
                                 }),
             group.addAdministrator(ownerId),
-            group.subscribeOwner(ownerId)
+            group.subscribeOwner(ownerId),
+            stats.create()
           ])
         })
         .then(function(res) { resolve(that) })

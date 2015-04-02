@@ -83,7 +83,9 @@ exports.addModel = function(database) {
         })
         .then(function(res) { return Post.findById(that.postId) })
         .then(function(post) { return post.addComment(that.id)})
-        .then(function(res) { resolve(that) })
+        .then(function() { return models.Stats.findById(that.userId) })
+        .then(function(stats) { return stats.addComment() })
+        .then(function() { resolve(that) })
         .catch(function(e) { reject(e) })
     })
   }
@@ -144,6 +146,8 @@ exports.addModel = function(database) {
             database.lremAsync(mkKey(['post', that.postId, 'comments']), 1, that.id)
           ])
         })
+        .then(function() { return models.Stats.findById(that.userId) })
+        .then(function(stats) { return stats.removeComment() })
         .then(function(res) { resolve(res) })
     })
   }

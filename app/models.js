@@ -14,6 +14,7 @@ exports.Post          = require('./models/post').addModel(database)
 exports.Timeline      = require('./models/timeline').addModel(database)
 exports.Attachment    = require('./models/attachment').addModel(database)
 exports.Comment       = require('./models/comment').addModel(database)
+exports.Stats         = require('./models/stats').addModel(database)
 
 exports.UserSerializer         = require('./serializers/v1/UserSerializer').addSerializer()
 exports.LikeSerializer         = require('./serializers/v1/LikeSerializer').addSerializer()

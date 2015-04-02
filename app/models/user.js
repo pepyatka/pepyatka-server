@@ -173,6 +173,10 @@ exports.addModel = function(database) {
       that.validateOnCreate()
         .then(function(user) { return user.updateHashedPassword() })
         .then(function(user) {
+          var stats = new models.Stats({
+            id: user.id
+          })
+
           return Promise.all([
             database.setAsync(mkKey(['username', user.username, 'uid']), user.id),
             database.hmsetAsync(mkKey(['user', user.id]),
@@ -184,7 +188,8 @@ exports.addModel = function(database) {
                                   'updatedAt': user.updatedAt.toString(),
                                   'salt': user.salt,
                                   'hashedPassword': user.hashedPassword
-                                })
+                                }),
+            stats.create()
           ])
         })
         .then(function(res) { resolve(that) })
@@ -457,12 +462,13 @@ exports.addModel = function(database) {
     var timeline
 
     return new Promise(function(resolve, reject) {
-      models.Timeline.findById(timelineId)
+      models.Timeline.findById(timelineId).bind({})
         .then(function(newTimeline) {
           timeline = newTimeline
           return models.FeedFactory.findById(newTimeline.userId)
         })
         .then(function(user) {
+          this.user = user
           if (user.username == that.username)
             throw new Error("Invalid")
 
@@ -478,6 +484,10 @@ exports.addModel = function(database) {
         })
         .then(function(res) { return that.getRiverOfNewsTimelineId() })
         .then(function(riverOfNewsId) { return timeline.merge(riverOfNewsId) })
+        .then(function() { return models.Stats.findById(that.id) })
+        .then(function(stats) { return stats.addSubscription() })
+        .then(function() { return models.Stats.findById(this.user.id) })
+        .then(function(stats) { return stats.addSubscriber() })
         .then(function(res) { resolve(res) })
         .catch(function(e) { reject(e) })
     })
@@ -489,12 +499,13 @@ exports.addModel = function(database) {
     var timeline
 
     return new Promise(function(resolve, reject) {
-      models.Timeline.findById(timelineId)
+      models.Timeline.findById(timelineId).bind({})
         .then(function(newTimeline) {
           timeline = newTimeline
           return models.FeedFactory.findById(newTimeline.userId)
         })
         .then(function(user) {
+          this.user = user
           if (user.username == that.username)
             throw new Error("Invalid")
 
@@ -510,9 +521,17 @@ exports.addModel = function(database) {
         })
         .then(function(res) { return that.getRiverOfNewsTimelineId() })
         .then(function(riverOfNewsId) { return timeline.unmerge(riverOfNewsId) })
+        .then(function() { return models.Stats.findById(that.id) })
+        .then(function(stats) { return stats.removeSubscription() })
+        .then(function() { return models.Stats.findById(this.user.id) })
+        .then(function(stats) { return stats.removeSubscriber() })
         .then(function(res) { resolve(res) })
         .catch(function(e) { reject(e) })
     })
+  }
+
+  User.prototype.getStatistics = function() {
+    return models.Stats.findById(this.id)
   }
 
   User.prototype.newComment = function(attrs) {
