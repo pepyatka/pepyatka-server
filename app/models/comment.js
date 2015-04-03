@@ -114,7 +114,7 @@ exports.addModel = function(database) {
         .then(function() { return that.getPost() })
         .then(function(post) { return post.getSubscribedTimelineIds() })
         .then(function(timelineIds) {
-          return Promise.all(timelineIds, function(timelineId) {
+          return Promise.map(timelineIds, function(timelineId) {
             database.publishAsync('updateComment',
                                   JSON.stringify({
                                     timelineId: timelineId,
