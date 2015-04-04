@@ -7,6 +7,7 @@ var Promise = require('bluebird')
   , AbstractModel = models.AbstractModel
   , Post = models.Post
   , mkKey = require("../support/models").mkKey
+  , pubSub = models.PubSub
 
 exports.addModel = function(database) {
   var Comment = function(params) {
@@ -99,29 +100,12 @@ exports.addModel = function(database) {
 
       that.validate()
         .then(function(comment) {
-          return Promise.all([
-            database.publishAsync('updateComment',
-                                  JSON.stringify({
-                                    postId: that.postId,
-                                    commentId: that.id
-                                  })),
-            database.hmsetAsync(mkKey(['comment', that.id]),
-                                { 'body': that.body,
-                                  'updatedAt': that.updatedAt.toString()
-                                })
-          ])
+          return database.hmsetAsync(mkKey(['comment', that.id]),
+                                     { 'body': that.body,
+                                       'updatedAt': that.updatedAt.toString()
+                                     })
         })
-        .then(function() { return that.getPost() })
-        .then(function(post) { return post.getSubscribedTimelineIds() })
-        .then(function(timelineIds) {
-          return Promise.map(timelineIds, function(timelineId) {
-            database.publishAsync('updateComment',
-                                  JSON.stringify({
-                                    timelineId: timelineId,
-                                    commentId: that.id
-                                  }))
-          })
-        })
+        .then(function() { return pubSub.updateComment(that.id) })
         .then(function() { resolve(that) })
         .catch(function(e) { reject(e) })
     })
@@ -135,16 +119,10 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      database.delAsync(mkKey(['comment:', that.id]))
+      pubSub.destroyComment(that.id)
+        .then(function(res) { return database.delAsync(mkKey(['comment:', that.id])) })
         .then(function(res) {
-          return Promise.all([
-            database.publishAsync('destroyComment',
-                                  JSON.stringify({
-                                    postId: that.postId,
-                                    commentId: that.id
-                                  })),
-            database.lremAsync(mkKey(['post', that.postId, 'comments']), 1, that.id)
-          ])
+          return database.lremAsync(mkKey(['post', that.postId, 'comments']), 1, that.id)
         })
         .then(function() { return models.Stats.findById(that.userId) })
         .then(function(stats) { return stats.removeComment() })

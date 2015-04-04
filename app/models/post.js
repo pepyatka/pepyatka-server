@@ -9,6 +9,7 @@ var Promise = require('bluebird')
   , Timeline = models.Timeline
   , mkKey = require("../support/models").mkKey
   , _ = require('underscore')
+  , pubSub = models.PubSub
 
 exports.addModel = function(database) {
   var Post = function(params) {
@@ -103,16 +104,7 @@ exports.addModel = function(database) {
                                   'updatedAt': that.updatedAt.toString()
                                 })
         })
-        .then(function() { return that.getSubscribedTimelineIds() })
-        .then(function(timelineIds) {
-          return Promise.map(timelineIds, function(timelineId) {
-            return database.publishAsync('updatePost',
-                                         JSON.stringify({
-                                           postId: that.id,
-                                           timelineId: timelineId
-                                         }))
-          })
-        })
+        .then(function() { return pubSub.updatePost(that.id) })
         .then(function() { resolve(that) })
         .catch(function(e) { reject(e) })
     })
@@ -122,42 +114,40 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      Promise.all([
-        // remove post from all timelines
-        that.getTimelineIds()
-          .then(function(timelineIds) {
-            Promise.map(timelineIds, function(timelineId) {
-              return Promise.all([
-                database.sremAsync(mkKey(['post', that.id, 'timelines']), timelineId),
-                database.zremAsync(mkKey(['timeline', timelineId, 'posts']), that.id),
-                database.publishAsync('destroyPost',
-                                 JSON.stringify({
-                                   postId: that.id,
-                                   timelineId: timelineId
-                                 }))
-              ])
-                .then(function() {
-                  database.zcardAsync(mkKey(['timeline', timelineId, 'posts']))
-                    .then(function(res) {
-                      // that timeline is empty
-                      if (res === 0)
-                        database.delAsync(mkKey(['post', that.id, 'timelines']))
+      pubSub.destroyPost(that.id)
+        .then(function() {
+          Promise.all([
+            // remove post from all timelines
+            that.getTimelineIds()
+              .then(function(timelineIds) {
+                Promise.map(timelineIds, function(timelineId) {
+                  return Promise.all([
+                    database.sremAsync(mkKey(['post', that.id, 'timelines']), timelineId),
+                    database.zremAsync(mkKey(['timeline', timelineId, 'posts']), that.id),
+                  ])
+                    .then(function() {
+                      database.zcardAsync(mkKey(['timeline', timelineId, 'posts']))
+                        .then(function(res) {
+                          // that timeline is empty
+                          if (res === 0)
+                            database.delAsync(mkKey(['post', that.id, 'timelines']))
+                        })
                     })
                 })
-            })
-          }),
-        // remove all comments
-        that.getComments()
-          .then(function(comments) {
-            return Promise.map(comments, function(comment) {
-              return comment.destroy()
-            })
-          }),
-        // delete likes
-        database.delAsync(mkKey(['post', that.id, 'likes'])),
-        // delete post
-        database.delAsync(mkKey(['post', that.id]))
-      ])
+              }),
+            // remove all comments
+            that.getComments()
+              .then(function(comments) {
+                return Promise.map(comments, function(comment) {
+                  return comment.destroy()
+                })
+              }),
+            // delete likes
+            database.delAsync(mkKey(['post', that.id, 'likes'])),
+            // delete post
+            database.delAsync(mkKey(['post', that.id]))
+          ])
+        })
         // delete orphaned keys
         .then(function() {
           database.scardAsync(mkKey(['post', that.id, 'timelines']))
@@ -271,28 +261,22 @@ exports.addModel = function(database) {
 
   Post.prototype.hide = function(userId) {
     var that = this
-      , timelineId
-      , user
 
     return new Promise(function(resolve, reject) {
-      models.User.findById(userId)
-        .then(function(u) {
-          user = u
-          return u.getHidesTimelineId()
+      models.User.findById(userId).bind({})
+        .then(function(user) {
+          this.user = user
+          return pubSub.hidePost(user.id, that.id)
         })
-        .then(function(tId) {
-          timelineId = tId
-          return user.getRiverOfNewsTimelineId()
+        .then(function() { return user.getHidesTimelineId() })
+        .then(function(timelineId) {
+          this.timelineId = timelineId
+          return this.user.getRiverOfNewsTimelineId()
         })
         .then(function(riverOfNewsId) {
           return Promise.all([
-            database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), that.createdAt, that.id),
-            database.saddAsync(mkKey(['post', that.id, 'timelines']), timelineId),
-            database.publishAsync('hidePost',
-                                  JSON.stringify({
-                                    timelineId: riverOfNewsId,
-                                    postId: that.id
-                                  }))
+            database.zaddAsync(mkKey(['timeline', this.timelineId, 'posts']), that.createdAt, that.id),
+            database.saddAsync(mkKey(['post', that.id, 'timelines']), this.timelineId)
           ])
         })
         .then(function(res) { resolve(res) })
@@ -301,28 +285,22 @@ exports.addModel = function(database) {
 
   Post.prototype.unhide = function(userId) {
     var that = this
-      , timelineId
-      , user
 
     return new Promise(function(resolve, reject) {
-      models.User.findById(userId)
-        .then(function(u) {
-          user = u
-          return u.getHidesTimelineId()
+      models.User.findById(userId).bind({})
+        .then(function(user) {
+          this.user = user
+          return pubSub.unhide(user.id, that.id)
         })
-        .then(function(tId) {
-          timelineId = tId
+        .then(function() { return user.getHidesTimelineId() })
+        .then(function(timelineId) {
+          this.timelineId = timelineId
           return user.getRiverOfNewsTimelineId()
         })
         .then(function(riverOfNewsId) {
           return Promise.all([
-            database.zremAsync(mkKey(['timeline', timelineId, 'posts']), that.id),
-            database.sremAsync(mkKey(['post', that.id, 'timelines']), timelineId),
-            database.publishAsync('unhidePost',
-                                  JSON.stringify({
-                                    timelineId: riverOfNewsId,
-                                    postId: that.id
-                                  }))
+            database.zremAsync(mkKey(['timeline', this.timelineId, 'posts']), that.id),
+            database.sremAsync(mkKey(['post', that.id, 'timelines']), this.timelineId)
           ])
         })
         .then(function(res) { resolve(res) })
@@ -339,26 +317,14 @@ exports.addModel = function(database) {
         .then(function(comment) { return that.getCommentsFriendOfFriendTimelines(comment.userId) })
         .then(function(timelines) {
           return Promise.map(timelines, function(timeline) {
-            return Promise.all([
-              timeline.updatePost(that.id),
-              database.publishAsync('newComment',
-                                    JSON.stringify({
-                                      timelineId: timeline.id,
-                                      commentId: commentId
-                                    }))
-            ])
+            return timeline.updatePost(that.id)
           })
         })
         .then(function() {
-          return Promise.all([
-            database.rpushAsync(mkKey(['post', that.id, 'comments']), commentId),
-            database.publishAsync('newComment',
-                                  JSON.stringify({
-                                    postId: that.id,
-                                    commentId: commentId
-                                  }))
-
-          ])
+          return database.rpushAsync(mkKey(['post', that.id, 'comments']), commentId)
+        })
+        .then(function() {
+          return pubSub.newComment(commentId)
         })
         .then(function(res) { resolve(res) })
     })
@@ -473,24 +439,12 @@ exports.addModel = function(database) {
         .then(function(timelines) {
           return Promise.all([
             Promise.map(timelines, function(timeline) {
-              Promise.all([
-                timeline.updatePost(that.id),
-                database.publishAsync('newLike',
-                                      JSON.stringify({
-                                        timelineId: timeline.id,
-                                        userId: userId,
-                                        postId: that.id
-                                      }))
-              ])
+              return timeline.updatePost(that.id)
             }),
-            database.publishAsync('newLike',
-                                  JSON.stringify({
-                                    userId: userId,
-                                    postId: that.id
-                                  })),
             database.saddAsync(mkKey(['post', that.id, 'likes']), userId)
           ])
         })
+        .then(function() { return pubSub.newLike(that.id, userId)})
         .then(function() { return models.Stats.findById(that.userId) })
         .then(function(stats) { return stats.addLike() })
         .then(function(res) { resolve(res) })
@@ -501,28 +455,8 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      that.getSubscribedTimelineIds()
-        .then(function(timelineIds) {
-          return Promise.map(timelineIds, function(timelineId) {
-            return database.publishAsync('removeLike',
-                                  JSON.stringify({
-                                    timelineId: timelineId,
-                                    userId: userId,
-                                    postId: that.id
-                                  }))
-
-          })
-        })
-        .then(function() {
-          return Promise.all([
-            database.sremAsync(mkKey(['post', that.id, 'likes']), userId),
-            database.publishAsync('removeLike',
-                                  JSON.stringify({
-                                    userId: userId,
-                                    postId: that.id
-                                  }))
-          ])
-        })
+      database.sremAsync(mkKey(['post', that.id, 'likes']), userId)
+        .then(function() { return pubSub.removeLike(that.id, userId) })
         .then(function() { return models.Stats.findById(that.userId) })
         .then(function(stats) { return stats.removeLike() })
         .then(function(res) { resolve(res) })

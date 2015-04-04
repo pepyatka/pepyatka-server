@@ -8,6 +8,7 @@ var Promise = require('bluebird')
   , FeedFactory = models.FeedFactory
   , Post = models.Post
   , mkKey = require("../support/models").mkKey
+  , pubSub = models.PubSub
 
 exports.addModel = function(database) {
   var Timeline = function(params) {
@@ -49,16 +50,12 @@ exports.addModel = function(database) {
             return Promise.all([
               database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), currentTime, postId),
               database.hsetAsync(mkKey(['post', postId]), 'updatedAt', currentTime),
-              database.saddAsync(mkKey(['post', postId, 'timelines']), timelineId),
-              database.publishAsync('newPost',
-                                    JSON.stringify({
-                                      postId: postId,
-                                      timelineId: timelineId
-                                    }))
+              database.saddAsync(mkKey(['post', postId, 'timelines']), timelineId)
             ])
           })
         })
-        .then(function(res) { resolve(that) })
+        .then(function() { return pubSub.newPost(postId) })
+        .then(function() { resolve(that) })
     })
   }
 

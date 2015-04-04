@@ -6,6 +6,8 @@ var redis = require('../config/database')
 exports.AbstractSerializer = require('./serializers/abstract_serializer').addSerializer()
 exports.Serializer         = require("./serializers/serializer").addSerializer()
 
+exports.PubSub = require('./pubsub').init(database)
+
 exports.AbstractModel = require('./models/abstract_model').addModel(database)
 exports.User          = require('./models/user').addModel(database)
 exports.Group         = require('./models/group').addModel(database)

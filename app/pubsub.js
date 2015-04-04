@@ -2,196 +2,419 @@ var Promise = require('bluebird')
   , models = require('./models')
   , async = require('async')
   , redis = require('redis').createClient
-  , PostSerializer = models.PostSerializer
-  , CommentSerializer = models.CommentSerializer
-  , LikeSerializer = models.LikeSerializer
 
-exports.listen = function(server, app) {
-  var io = require('socket.io')(server)
+exports.init = function(database) {
+  "use strict";
 
-  var adapter = require('socket.io-redis')
-    , redisPub = redis()
-    , redisSub = redis({ detect_buffers: true })
+  var pubSub = function() {
+  }
 
-  io.adapter(adapter({
-    pubClient: redisPub,
-    subClient: redisSub
-  }))
-
-  io.sockets.on('connection', function(socket) {
-    socket.on('subscribe', function(data) {
-      for(var channel in data) {
-        if (data[channel]) {
-          data[channel].forEach(function(id) {
-            if (id) {
-              app.logger.info('User has subscribed to ' + id + ' ' + channel)
-
-              socket.join(channel + ':' + id)
-            }
+  pubSub.newPost = function(postId) {
+    return new Promise(function(resolve, reject) {
+      models.Post.findById(postId)
+        .then(function(post) { return post.getSubscribedTimelineIds() })
+        .then(function(timelineIds) {
+          return Promise.map(timelineIds, function(timelineId) {
+            database.publishAsync('newPost',
+                                  JSON.stringify({
+                                    postId: postId,
+                                    timelineId: timelineId
+                                  }))
           })
-        }
-      }
+        })
+        .then(function(res) { resolve(res) })
     })
+  }
 
-    socket.on('unsubscribe', function(data) {
-      for(var channel in data) {
-        if (data[channel]) {
-          data[channel].forEach(function(id) {
-            if (id) {
-              app.logger.info('User has disconnected from ' + id + ' ' + channel)
-
-              socket.leave(channel + ':' + id)
-            }
+  pubSub.destroyPost = function(postId) {
+    return new Promise(function(resolve, reject) {
+      models.Post.findById(postId)
+        .then(function(post) { return post.getSubscribedTimelineIds() })
+        .then(function(timelineIds) {
+          return Promise.map(timelineIds, function(timelineId) {
+            database.publishAsync('destroyPost',
+                                  JSON.stringify({
+                                    postId: postId,
+                                    timelineId: timelineId
+                                  }))
           })
-        }
-      }
+        })
+        .then(function(res) { resolve(res) })
     })
-  })
+  }
 
-  var channels = redis()
-  channels.subscribe('newPost', 'destroyPost', 'updatePost',
-                  'newComment', 'destroyComment', 'updateComment',
-                  'newLike', 'removeLike', 'hidePost', 'unhidePost' )
-
-  // TODO: extract to separate functions
-  channels.on('message', function(channel, msg) {
-    switch(channel) {
-    case 'destroyPost':
-      var data = JSON.parse(msg)
-      var event = { postId: data.postId }
-
-      io.sockets.in('timeline:' + data.timelineId).emit('destroyPost', event)
-      io.sockets.in('post:' + data.postId).emit('destroyPost', event)
-
-      break
-
-    case 'newPost':
-      var data = JSON.parse(msg)
-
-      models.Post.findById(data.postId)
-        .then(function(post) {
-          new PostSerializer(post).toJSON(function(err, json) {
-            io.sockets.in('timeline:' + data.timelineId).emit('newPost', { post: json })
+  pubSub.updatePost = function(postId) {
+    return new Promise(function(resolve, reject) {
+      models.Post.findById(postId)
+        .then(function(post) { return post.getSubscribedTimelineIds() })
+        .then(function(timelineIds) {
+          return Promise.map(timelineIds, function(timelineId) {
+            database.publishAsync('updatePost',
+                                  JSON.stringify({
+                                    postId: postId,
+                                    timelineId: timelineId
+                                  }))
           })
         })
+        .then(function(res) { resolve(res) })
+    })
+  }
 
-      break
-
-    case 'updatePost':
-      var data = JSON.parse(msg)
-
-      models.Post.findById(data.postId)
-        .then(function(post) {
-          new PostSerializer(post).toJSON(function(err, json) {
-            var event = { post: json }
-
-            io.sockets.in('timeline:' + data.timelineId).emit('updatePost', event)
-            io.sockets.in('post:' + data.postId).emit('updatePost', event)
-          })
-        })
-
-      break
-
-    case 'newComment':
-      var data = JSON.parse(msg)
-
-      models.Comment.findById(data.commentId)
+  pubSub.newComment = function(commentId) {
+    return new Promise(function(resolve, reject) {
+      models.Comment.findById(commentId).bind({})
         .then(function(comment) {
-          new CommentSerializer(comment).toJSON(function(err, json) {
-            var event = { comment: json }
-
-            if (data.timelineId) {
-              io.sockets.in('timeline:' + data.timelineId).emit('newComment', event)
-            } else {
-              io.sockets.in('post:' + data.postId).emit('newComment', event)
-            }
-          })
+          this.comment = comment
+          return comment.getPost()
         })
-
-      break
-
-    case 'updateComment':
-      var data = JSON.parse(msg)
-
-      models.Comment.findById(data.commentId)
-        .then(function(comment) {
-          new CommentSerializer(comment).toJSON(function(err, json) {
-            var event = { comment: json }
-
-            if (data.timelineId) {
-              io.sockets.in('timeline:' + data.timelineId).emit('updateComment', event)
-            } else {
-              io.sockets.in('post:' + data.postId).emit('updateComment', event)
-            }
-          })
-        })
-
-      break
-
-    case 'destroyComment':
-      var data = JSON.parse(msg)
-      var event = { postId: data.postId, commentId: data.commentId }
-
-      io.sockets.in('post:' + data.postId).emit('destroyComment', event)
-
-      models.Post.findById(data.postId)
         .then(function(post) {
-          // NOTE: we could delete post keys *before*
-          // 'destroyComment' event and so Post.findById will return
-          // null. In fact, we do not need Post model here, but postId
-          // is totally sufficient.
-          return post.getTimelineIds()
+          this.post = post
+          return post.getCommentsFriendOfFriendTimelines(this.comment.userId)
+        })
+        .then(function(timelines) {
+          return Promise.map(timelines, function(timeline) {
+            database.publishAsync('newComment',
+                                  JSON.stringify({
+                                    timelineId: timeline.id,
+                                    commentId: commentId
+                                  }))
+          })
+        })
+        .then(function() {
+          return database.publishAsync('newComment',
+                                       JSON.stringify({
+                                         postId: this.post.id,
+                                         commentId: commentId
+                                       }))
+        })
+        .then(function(res) { resolve(res) })
+    })
+  }
+
+  pubSub.destroyComment = function(commentId) {
+    return new Promise(function(resolve, reject) {
+      models.Comment.findById(commentId).bind({})
+        .then(function(comment) {
+          this.comment = comment
+          return comment.getPost()
+        })
+        .then(function(post) {
+          this.post = post
+          return database.publishAsync('destroyComment',
+                                JSON.stringify({
+                                  postId: post.postId,
+                                  commentId: this.comment.id
+                                }))
+        })
+        .then(function(res) { resolve(res) })
+    })
+  }
+
+  pubSub.updateComment = function(commentId) {
+    return new Promise(function(resolve, reject) {
+      models.Comment.findById(commentId).bind({})
+        .then(function(comment) {
+          this.comment = comment
+          return comment.getPost()
+        })
+        .then(function(post) {
+          this.post = post
+          return database.publishAsync('updateComment',
+                                       JSON.stringify({
+                                         postId: post.postId,
+                                         commentId: this.comment.id
+                                       }))
+        })
+        .then(function() { return this.post.getSubscribedTimelineIds() })
+        .then(function(timelineIds) {
+          return Promise.map(timelineIds, function(timelineId) {
+            database.publishAsync('updateComment',
+                                  JSON.stringify({
+                                    timelineId: timelineId,
+                                    commentId: commentId
+                                  }))
+          })
+        })
+        .then(function(res) { resolve(res) })
+    })
+  }
+
+  pubSub.newLike = function(postId, userId) {
+    return new Promise(function(resolve, reject) {
+      models.Post.findById(postId).bind({})
+        .then(function(post) {
+          this.post = post
+          return post.getLikesFriendOfFriendTimelines(userId)
+        })
+        .then(function(timelines) {
+          return Promise.map(timelines, function(timeline) {
+            return database.publishAsync('newLike',
+                                  JSON.stringify({
+                                    timelineId: timeline.id,
+                                    userId: userId,
+                                    postId: postId
+                                  }))
+
+          })
+        })
+        .then(function() {
+          return database.publishAsync('newLike',
+                                       JSON.stringify({
+                                         userId: userId,
+                                         postId: postId
+                                       }))
+        })
+        .then(function(res) { resolve(res) })
+    })
+  }
+
+  pubSub.removeLike = function(postId, userId) {
+    return new Promise(function(resolve, reject) {
+      models.Post.findById(postId).bind({})
+        .then(function(post) {
+          this.post = post
+          return post.getSubscribedTimelineIds()
         })
         .then(function(timelineIds) {
           return Promise.map(timelineIds, function(timelineId) {
-            return io.sockets.in('timeline:' + timelineId).emit('destroyComment', event)
+            return database.publishAsync('removeLike',
+                                  JSON.stringify({
+                                    timelineId: timelineId,
+                                    userId: userId,
+                                    postId: postId
+                                  }))
           })
         })
-
-      break
-
-    case 'newLike':
-      var data = JSON.parse(msg)
-
-      models.User.findById(data.userId)
-        .then(function(user) {
-          new LikeSerializer(user).toJSON(function(err, json) {
-            var event = { user: json, postId: data.postId }
-
-            if (data.timelineId) {
-              io.sockets.in('timeline:' + data.timelineId).emit('newLike', event)
-            } else {
-              io.sockets.in('post:' + data.postId).emit('newLike', event)
-            }
-          })
+        .then(function() {
+          return database.publishAsync('removeLike',
+                                       JSON.stringify({
+                                         userId: userId,
+                                         postId: postId
+                                       }))
         })
+        .then(function(res) { resolve(res) })
+    })
+  }
 
-      break
+  pubSub.hidePost = function(postId, userId) {
+    return new Promise(function(resolve, reject) {
+      models.User.findById(userId).bind({})
+        .then(function(user) { return user.getRiverOfNewsTimelineId() })
+        .then(function(riverOfNewsId) {
+          return database.publishAsync('hidePost',
+                                       JSON.stringify({
+                                         timelineId: riverOfNewsId,
+                                         postId: that.id
+                                       }))
+        })
+        .then(function(res) { resolve(res) })
+    })
+  }
 
-    case 'removeLike':
+  pubSub.unhidePost = function(postId, userId) {
+    return new Promise(function(resolve, reject) {
+      models.User.findById(userId).bind({})
+        .then(function(user) { return user.getRiverOfNewsTimelineId() })
+        .then(function(riverOfNewsId) {
+          return database.publishAsync('unhidePost',
+                                       JSON.stringify({
+                                         timelineId: riverOfNewsId,
+                                         postId: postId
+                                       }))
+        })
+        .then(function(res) { resolve(res) })
+    })
+  }
+
+  pubSub.listen = function(server, app) {
+    var io = require('socket.io')(server)
+
+    var adapter = require('socket.io-redis')
+     , redisPub = redis()
+     , redisSub = redis({ detect_buffers: true })
+
+    io.adapter(adapter({
+      pubClient: redisPub,
+      subClient: redisSub
+    }))
+
+    io.sockets.on('connection', function(socket) {
+      socket.on('subscribe', function(data) {
+        for(var channel in data) {
+          if (data[channel]) {
+            data[channel].forEach(function(id) {
+              if (id) {
+                app.logger.info('User has subscribed to ' + id + ' ' + channel)
+
+                socket.join(channel + ':' + id)
+              }
+            })
+          }
+        }
+      })
+
+      socket.on('unsubscribe', function(data) {
+        for(var channel in data) {
+          if (data[channel]) {
+            data[channel].forEach(function(id) {
+              if (id) {
+                app.logger.info('User has disconnected from ' + id + ' ' + channel)
+
+                socket.leave(channel + ':' + id)
+              }
+            })
+          }
+        }
+      })
+    })
+
+    var channels = redis()
+    channels.subscribe('newPost', 'destroyPost', 'updatePost',
+                       'newComment', 'destroyComment', 'updateComment',
+                       'newLike', 'removeLike', 'hidePost', 'unhidePost' )
+
+    // TODO: extract to separate functions
+    channels.on('message', function(channel, msg) {
+      switch(channel) {
+      case 'destroyPost':
+        var data = JSON.parse(msg)
+        var event = { postId: data.postId }
+
+        io.sockets.in('timeline:' + data.timelineId).emit('destroyPost', event)
+        io.sockets.in('post:' + data.postId).emit('destroyPost', event)
+
+        break
+
+      case 'newPost':
       var data = JSON.parse(msg)
-      var event = { userId: data.userId, postId: data.postId }
 
-      if (data.timelineId)
-        io.sockets.in('timeline:' + data.timelineId).emit('removeLike', event)
-      else
-        io.sockets.in('post:' + data.postId).emit('removeLike', event)
+        models.Post.findById(data.postId)
+          .then(function(post) {
+            new models.PostSerializer(post).toJSON(function(err, json) {
+              io.sockets.in('timeline:' + data.timelineId).emit('newPost', { post: json })
+            })
+          })
 
-      break
+        break
 
-    case 'hidePost':
-      var data = JSON.parse(msg)
-      var event = { userId: data.userId, postId: data.postId }
-      io.sockets.in('timeline:' + data.timelineId).emit('hidePost', event)
+      case 'updatePost':
+        var data = JSON.parse(msg)
 
-      break
+        models.Post.findById(data.postId)
+          .then(function(post) {
+            new models.PostSerializer(post).toJSON(function(err, json) {
+              var event = { post: json }
 
-    case 'unhidePost':
-      var data = JSON.parse(msg)
-      var event = { userId: data.userId, postId: data.postId }
-      io.sockets.in('timeline:' + data.timelineId).emit('unhidePost', event)
+              io.sockets.in('timeline:' + data.timelineId).emit('updatePost', event)
+              io.sockets.in('post:' + data.postId).emit('updatePost', event)
+            })
+          })
 
-      break
-    }
-  })
+        break
+
+      case 'newComment':
+        var data = JSON.parse(msg)
+
+        models.Comment.findById(data.commentId)
+          .then(function(comment) {
+            new models.CommentSerializer(comment).toJSON(function(err, json) {
+              var event = { comment: json }
+
+              if (data.timelineId) {
+                io.sockets.in('timeline:' + data.timelineId).emit('newComment', event)
+              } else {
+                io.sockets.in('post:' + data.postId).emit('newComment', event)
+              }
+            })
+          })
+
+        break
+
+      case 'updateComment':
+        var data = JSON.parse(msg)
+
+        models.Comment.findById(data.commentId)
+          .then(function(comment) {
+            new models.CommentSerializer(comment).toJSON(function(err, json) {
+              var event = { comment: json }
+
+              if (data.timelineId) {
+                io.sockets.in('timeline:' + data.timelineId).emit('updateComment', event)
+              } else {
+                io.sockets.in('post:' + data.postId).emit('updateComment', event)
+              }
+            })
+          })
+
+        break
+
+      case 'destroyComment':
+        var data = JSON.parse(msg)
+        var event = { postId: data.postId, commentId: data.commentId }
+
+        io.sockets.in('post:' + data.postId).emit('destroyComment', event)
+
+        models.Post.findById(data.postId)
+          .then(function(post) {
+            // NOTE: we could delete post keys *before*
+            // 'destroyComment' event and so Post.findById will return
+            // null. In fact, we do not need Post model here, but postId
+            // is totally sufficient.
+            return post.getTimelineIds()
+          })
+          .then(function(timelineIds) {
+            return Promise.map(timelineIds, function(timelineId) {
+              return io.sockets.in('timeline:' + timelineId).emit('destroyComment', event)
+            })
+          })
+
+        break
+
+      case 'newLike':
+        var data = JSON.parse(msg)
+
+        models.User.findById(data.userId)
+          .then(function(user) {
+            new models.LikeSerializer(user).toJSON(function(err, json) {
+              var event = { user: json, postId: data.postId }
+
+              if (data.timelineId) {
+                io.sockets.in('timeline:' + data.timelineId).emit('newLike', event)
+              } else {
+                io.sockets.in('post:' + data.postId).emit('newLike', event)
+              }
+            })
+          })
+
+        break
+
+      case 'removeLike':
+        var data = JSON.parse(msg)
+        var event = { userId: data.userId, postId: data.postId }
+
+        if (data.timelineId)
+          io.sockets.in('timeline:' + data.timelineId).emit('removeLike', event)
+        else
+          io.sockets.in('post:' + data.postId).emit('removeLike', event)
+
+        break
+
+      case 'hidePost':
+        var data = JSON.parse(msg)
+        var event = { userId: data.userId, postId: data.postId }
+        io.sockets.in('timeline:' + data.timelineId).emit('hidePost', event)
+
+        break
+
+      case 'unhidePost':
+        var data = JSON.parse(msg)
+        var event = { userId: data.userId, postId: data.postId }
+        io.sockets.in('timeline:' + data.timelineId).emit('unhidePost', event)
+
+        break
+      }
+    })
+  }
+
+  return pubSub
 }
