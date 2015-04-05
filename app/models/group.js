@@ -15,6 +15,11 @@ exports.addModel = function(database) {
     this.screenName = params.screenName
     this.createdAt = params.createdAt
     this.updatedAt = params.updatedAt
+    if (params.hasOwnProperty('visibility')) {
+      this.visibility = params.visibility
+    } else {
+      this.visibility = 'public'
+    }
     this.type = "group"
   }
 
@@ -48,6 +53,7 @@ exports.addModel = function(database) {
       valid = this.username.length > 1
         && this.screenName.length > 1
         && models.FeedFactory.stopList().indexOf(this.username) == -1
+        && (this.visibility == 'public' || this.visibility == 'private')
 
       valid ? resolve(valid) : reject(new Error("Invalid"))
     }.bind(this))
@@ -60,7 +66,6 @@ exports.addModel = function(database) {
       that.createdAt = new Date().getTime()
       that.updatedAt = new Date().getTime()
       that.screenName = that.screenName || that.username
-      that.username = that.username
       that.id = uuid.v4()
 
       that.validateOnCreate()
@@ -76,7 +81,8 @@ exports.addModel = function(database) {
                                   'screenName': group.screenName,
                                   'type': group.type,
                                   'createdAt': group.createdAt.toString(),
-                                  'updatedAt': group.updatedAt.toString()
+                                  'updatedAt': group.updatedAt.toString(),
+                                  'visibility': group.visibility
                                 }),
             group.addAdministrator(ownerId),
             group.subscribeOwner(ownerId),
@@ -100,6 +106,7 @@ exports.addModel = function(database) {
         .then(function(user) {
           database.hmsetAsync(mkKey(['user', that.id]),
                               { 'screenName': that.screenName,
+                                'visibility': that.visibility,
                                 'updatedAt': that.updatedAt.toString()
                               })
         })

@@ -46,6 +46,21 @@ describe("GroupsController", function() {
           })
     })
 
+    it('should create a private group', function(done) {
+      var userName = 'pepyatka-dev';
+      var screenName = 'Pepyatka Developers';
+      request
+          .post(app.config.host + '/v1/groups')
+          .send({ group: {username: userName, screenName: screenName, visibility: 'private'},
+            authToken: authToken })
+          .end(function(err, res) {
+            res.body.should.not.be.empty
+            res.body.should.have.property('groups')
+            res.body.groups.visibility.should.eql('private')
+            done()
+          })
+    })
+
     it('should not create a group if a user with that name already exists', function(done) {
       var userName = 'Luna';
       var screenName = 'Pepyatka Developers';
