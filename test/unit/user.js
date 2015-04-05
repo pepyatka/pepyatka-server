@@ -3,6 +3,7 @@ var models = require("../../app/models")
   , Post = models.Post
   , Timeline = models.Timeline
   , async = require('async')
+  , expect = require('chai').expect
 
 describe('User', function() {
   beforeEach(function(done) {
@@ -37,6 +38,51 @@ describe('User', function() {
           valid.should.eql(false)
         })
         .then(function() { done() })
+    })
+  })
+
+  describe('#validEmail()', function() {
+    // @todo Provide fixtures to validate various email formats
+    it('should validate syntactically correct email', function(done) {
+      var user = new User({
+        username: 'Luna',
+        password: 'password',
+        email: 'user@example.com'
+      })
+
+      user.create()
+        .then(function(user) { return user.isValidEmail() })
+        .then(function(valid) {
+          valid.should.eql(true)
+        })
+        .then(function() { done() })
+    })
+
+    it('should validate without email', function(done) {
+      var user = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      user.create()
+        .then(function(user) { return user.isValidEmail() })
+        .then(function(valid) {
+          valid.should.eql(true)
+        })
+        .then(function() { done() })
+    })
+
+    it('should not validate syntactically incorrect email', function() {
+      var user = new User({
+        username: 'Luna',
+        password: 'password',
+        email: 'user2@.example..com'
+      })
+
+      return user.create()
+        .catch(function(e) {
+          expect(e.message).to.equal('Invalid');
+        })
     })
   })
 
