@@ -11,6 +11,7 @@ var Promise = require('bluebird')
   , Timeline = models.Timeline
   , mkKey = require("../support/models").mkKey
   , _ = require('underscore')
+  , validator = require('validator')
 
 exports.addModel = function(database) {
   var User = function(params) {
@@ -141,6 +142,14 @@ exports.addModel = function(database) {
   User.prototype.validPassword = function(clearPassword) {
     var hashedPassword = User.hashPassword(this.salt + User.hashPassword(clearPassword))
     return Promise.resolve(hashedPassword == this.hashedPassword)
+  }
+
+  User.prototype.isValidEmail = function() {
+    var valid = true
+    if (this.email.length > 0) {
+      valid = validator.isEmail(this.email)
+    }
+    return Promise.resolve(valid)
   }
 
   User.prototype.validate = function() {
