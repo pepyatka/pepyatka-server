@@ -9,24 +9,9 @@ describe("PostsController", function() {
   describe('#create()', function() {
     var authToken
 
-    beforeEach(function(done) {
-      var user = {
-        username: 'Luna',
-        password: 'password'
-      }
-
-      request
-        .post(app.config.host + '/v1/users')
-        .send({ username: user.username, password: user.password })
-        .end(function(err, res) {
-          res.should.not.be.empty
-          res.body.should.not.be.empty
-          res.body.should.have.property('authToken')
-          authToken = res.body.authToken
-
-          done()
-        })
-    })
+    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
+      authToken = token
+    }))
 
     it('should create a post with a valid user', function(done) {
       var body = 'Post body'
@@ -63,36 +48,25 @@ describe("PostsController", function() {
     var authToken
       , post
 
+    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
+      authToken = token
+    }))
+
     beforeEach(function(done) {
-      var user = {
-        username: 'Luna',
-        password: 'password'
-      }
+      var body = 'Post body'
 
       request
-        .post(app.config.host + '/v1/users')
-        .send({ username: user.username, password: user.password })
+        .post(app.config.host + '/v1/posts')
+        .send({ post: { body: body }, authToken: authToken })
         .end(function(err, res) {
-          res.should.not.be.empty
           res.body.should.not.be.empty
-          res.body.should.have.property('authToken')
-          authToken = res.body.authToken
+          res.body.should.have.property('posts')
+          res.body.posts.should.have.property('body')
+          res.body.posts.body.should.eql(body)
 
-          var body = 'Post body'
+          post = res.body.posts
 
-          request
-            .post(app.config.host + '/v1/posts')
-            .send({ post: { body: body }, authToken: authToken })
-            .end(function(err, res) {
-              res.body.should.not.be.empty
-              res.body.should.have.property('posts')
-              res.body.posts.should.have.property('body')
-              res.body.posts.body.should.eql(body)
-
-              post = res.body.posts
-
-              done()
-            })
+          done()
         })
     })
 
@@ -134,36 +108,25 @@ describe("PostsController", function() {
     var authToken
       , post
 
+    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
+      authToken = token
+    }))
+
     beforeEach(function(done) {
-      var user = {
-        username: 'Luna',
-        password: 'password'
-      }
+        var body = 'Post body'
 
       request
-        .post(app.config.host + '/v1/users')
-        .send({ username: user.username, password: user.password })
+        .post(app.config.host + '/v1/posts')
+        .send({ post: { body: body }, authToken: authToken })
         .end(function(err, res) {
-          res.should.not.be.empty
           res.body.should.not.be.empty
-          res.body.should.have.property('authToken')
-          authToken = res.body.authToken
+          res.body.should.have.property('posts')
+          res.body.posts.should.have.property('body')
+          res.body.posts.body.should.eql(body)
 
-          var body = 'Post body'
+          post = res.body.posts
 
-          request
-            .post(app.config.host + '/v1/posts')
-            .send({ post: { body: body }, authToken: authToken })
-            .end(function(err, res) {
-              res.body.should.not.be.empty
-              res.body.should.have.property('posts')
-              res.body.posts.should.have.property('body')
-              res.body.posts.body.should.eql(body)
-
-              post = res.body.posts
-
-              done()
-            })
+          done()
         })
     })
 
@@ -205,27 +168,19 @@ describe("PostsController", function() {
     var post
       , authToken
 
+    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
+      authToken = token
+    }))
+
     beforeEach(function(done) {
-      var user = {
-        username: 'Luna',
-        password: 'password'
-      }
-
+      var body = 'Post body'
       request
-        .post(app.config.host + '/v1/users')
-        .send({ username: user.username, password: user.password })
+        .post(app.config.host + '/v1/posts')
+        .send({ post: { body: body }, authToken: authToken })
         .end(function(err, res) {
-          authToken = res.body.authToken
+          post = res.body.posts
 
-          var body = 'Post body'
-          request
-            .post(app.config.host + '/v1/posts')
-            .send({ post: { body: body }, authToken: authToken })
-            .end(function(err, res) {
-              post = res.body.posts
-
-              done()
-            })
+          done()
         })
     })
 
@@ -267,27 +222,19 @@ describe("PostsController", function() {
     var post
       , authToken
 
+    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
+      authToken = token
+    }))
+
     beforeEach(function(done) {
-      var user = {
-        username: 'Luna',
-        password: 'password'
-      }
-
+      var body = 'Post body'
       request
-        .post(app.config.host + '/v1/users')
-        .send({ username: user.username, password: user.password })
+        .post(app.config.host + '/v1/posts')
+        .send({ post: { body: body }, authToken: authToken })
         .end(function(err, res) {
-          authToken = res.body.authToken
+          post = res.body.posts
 
-          var body = 'Post body'
-          request
-            .post(app.config.host + '/v1/posts')
-            .send({ post: { body: body }, authToken: authToken })
-            .end(function(err, res) {
-              post = res.body.posts
-
-              done()
-            })
+          done()
         })
     })
 
@@ -307,31 +254,23 @@ describe("PostsController", function() {
   })
 
   describe('#destroy()', function() {
-    var user
-      , post
+    var username = 'Luna'
+    var post
       , authToken
 
+    beforeEach(funcTestHelper.createUser(username, 'password', function(token) {
+      authToken = token
+    }))
+
     beforeEach(function(done) {
-      user = {
-        username: 'Luna',
-        password: 'password'
-      }
-
+      var body = 'Post body'
       request
-        .post(app.config.host + '/v1/users')
-        .send({ username: user.username, password: user.password })
+        .post(app.config.host + '/v1/posts')
+        .send({ post: { body: body }, authToken: authToken })
         .end(function(err, res) {
-          authToken = res.body.authToken
+          post = res.body.posts
 
-          var body = 'Post body'
-          request
-            .post(app.config.host + '/v1/posts')
-            .send({ post: { body: body }, authToken: authToken })
-            .end(function(err, res) {
-              post = res.body.posts
-
-              done()
-            })
+          done()
         })
     })
 
@@ -347,7 +286,7 @@ describe("PostsController", function() {
           res.status.should.eql(200)
 
           request
-            .get(app.config.host + '/v1/timelines/' + user.username)
+            .get(app.config.host + '/v1/timelines/' + username)
             .query({ authToken: authToken })
             .end(function(err, res) {
               res.should.not.be.empty
