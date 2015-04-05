@@ -19,6 +19,7 @@ exports.addModel = function(database) {
     this.id = params.id
     this.username = params.username
     this.screenName = params.screenName
+    this.email = params.email
     this.hashedPassword = params.hashedPassword
     this.salt = params.salt
     this.password = params.password
@@ -49,6 +50,14 @@ exports.addModel = function(database) {
     set: function(newValue) {
       if (_.isString(newValue))
         this.screenName_ = newValue.trim()
+    }
+  })
+
+  Object.defineProperty(User.prototype, 'email', {
+    get: function() { return _.isUndefined(this.email_) ? "" : this.email_ },
+    set: function(newValue) {
+      if (_.isString(newValue))
+        this.email_ = newValue.trim()
     }
   })
 
@@ -141,8 +150,9 @@ exports.addModel = function(database) {
       valid = this.username.length > 1
         && this.screenName.length > 1
         && models.FeedFactory.stopList().indexOf(this.username) == -1
+        && this.isValidEmail().value()
 
-      valid ? resolve(valid) : reject(new Error("Invalid"))
+      valid ? resolve(true) : reject(new Error("Invalid"))
     }.bind(this))
   }
 
@@ -167,7 +177,7 @@ exports.addModel = function(database) {
       that.createdAt = new Date().getTime()
       that.updatedAt = new Date().getTime()
       that.screenName = that.screenName || that.username
-      that.username = that.username
+
       that.id = uuid.v4()
 
       that.validateOnCreate()
@@ -182,6 +192,7 @@ exports.addModel = function(database) {
             database.hmsetAsync(mkKey(['user', user.id]),
                                 { 'username': user.username,
                                   'screenName': user.screenName,
+                                  'email': user.email,
                                   'type': user.type,
                                   'isPrivate': '0',
                                   'createdAt': user.createdAt.toString(),
@@ -204,12 +215,15 @@ exports.addModel = function(database) {
       that.updatedAt = new Date().getTime()
       if (params.hasOwnProperty('screenName'))
         that.screenName = params.screenName
+      if (params.hasOwnProperty('email'))
+        that.email = params.email
       that.isPrivate = params.isPrivate
 
       that.validate()
         .then(function() {
           database.hmsetAsync(mkKey(['user', that.id]),
                               { 'screenName': that.screenName,
+                                'email': that.email,
                                 'isPrivate': that.isPrivate,
                                 'updatedAt': that.updatedAt.toString()
                               })

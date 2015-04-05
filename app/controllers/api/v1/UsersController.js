@@ -17,6 +17,7 @@ exports.addController = function(app) {
   UsersController.create = function(req, res) {
     var newUser = new models.User({
       username: req.body.username,
+      email: req.body.email,
       password: req.body.password
     })
 
@@ -117,6 +118,7 @@ exports.addController = function(app) {
 
     var attrs = {
       screenName: req.body.user.screenName,
+      email: req.body.user.email,
       isPrivate: req.body.user.isPrivate
     }
     models.User.findById(req.params.userId)
