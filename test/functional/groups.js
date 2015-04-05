@@ -88,6 +88,8 @@ describe("GroupsController", function() {
                 .end(function(err, res) {
                   var subIds = res.body.subscriptions.map(function(sub) { return sub.user })
                   subIds.should.contain(newGroupId)
+                  var users = res.body.users
+                  users.length.should.eql(1)
                   done()
                 })
           })
