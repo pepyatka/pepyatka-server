@@ -42,6 +42,51 @@ describe("PostsController", function() {
           done()
         })
     })
+
+    describe('in a group', function() {
+      var groupName = 'pepyatka-dev';
+      var groupTimelineId
+      var unsubscribedUserAuthToken
+
+      beforeEach(function(done) {
+        var screenName = 'Pepyatka Developers';
+        request
+            .post(app.config.host + '/v1/groups')
+            .send({ group: {username: groupName, screenName: screenName},
+              authToken: authToken })
+            .end(function(err, res) {
+              groupTimelineId = res.body.groups.postsTimelineId
+              done()
+            })
+      })
+
+      beforeEach(funcTestHelper.createUser('yole', 'pw', function(token) {
+        unsubscribedUserAuthToken = token
+      }))
+
+      it('should allow subscribed user to post to group', function(done) {
+        var body = 'Post body'
+
+        request
+            .post(app.config.host + '/v1/posts')
+            .send({ post: { body: body }, timelinesIds: [groupTimelineId], authToken: authToken })
+            .end(function(err, res) {
+              res.body.should.not.be.empty
+              res.body.should.have.property('posts')
+              res.body.posts.should.have.property('body')
+              res.body.posts.body.should.eql(body)
+
+              request
+                  .get(app.config.host + '/v1/timelines/' + groupName)
+                  .query({authToken: authToken})
+                  .end(function (err, res) {
+                    res.body.posts.length.should.eql(1)
+                    res.body.posts[0].body.should.eql(body)
+                    done()
+                  })
+            })
+      })
+    })
   })
 
   describe('#like()', function() {
