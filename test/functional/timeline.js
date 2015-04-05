@@ -4,10 +4,7 @@ var request = require('superagent')
   , funcTestHelper = require('./functional_test_helper')
 
 describe("TimelinesController", function() {
-  beforeEach(function(done) {
-    $database.flushdbAsync()
-      .then(function() { done() })
-  })
+  beforeEach(funcTestHelper.flushDb())
 
   describe("#home()", function() {
     var username = 'Luna'

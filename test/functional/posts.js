@@ -1,12 +1,10 @@
 var request = require('superagent')
   , app = require('../../index')
   , models = require('../../app/models')
+  , funcTestHelper = require('./functional_test_helper')
 
 describe("PostsController", function() {
-  beforeEach(function(done) {
-    $database.flushdbAsync()
-      .then(function() { done() })
-  })
+  beforeEach(funcTestHelper.flushDb())
 
   describe('#create()', function() {
     var authToken

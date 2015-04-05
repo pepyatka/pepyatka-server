@@ -4,12 +4,7 @@ var request = require('superagent')
     , funcTestHelper = require('./functional_test_helper')
 
 describe("GroupsController", function() {
-  beforeEach(function (done) {
-    $database.flushdbAsync()
-        .then(function () {
-          done()
-        })
-  })
+  beforeEach(funcTestHelper.flushDb())
 
   describe("#create()", function() {
     var authToken
