@@ -90,6 +90,7 @@ describe("GroupsController", function() {
                   subIds.should.contain(newGroupId)
                   var users = res.body.users
                   users.length.should.eql(1)
+                  users[0].type.should.eql("group")
                   done()
                 })
           })
