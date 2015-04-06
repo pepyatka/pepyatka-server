@@ -570,6 +570,14 @@ exports.addModel = function(database) {
     }.bind(this))
   }
 
+  User.prototype.newAttachment = function(attrs) {
+    return new Promise(function(resolve, reject) {
+      attrs.userId = this.id
+
+      resolve(new models.Attachment(attrs))
+    }.bind(this))
+  }
+
   /**
    * Checks if the specified user can post to the timeline of this user.
    */
