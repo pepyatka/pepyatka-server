@@ -21,6 +21,7 @@ exports.addModel = function(database) {
 
     this.id = params.id
     this.body = params.body
+    this.attachments = params.attachments
     this.userId = params.userId
     this.timelineIds = params.timelineIds
     if (parseInt(params.createdAt, 10))
@@ -87,6 +88,7 @@ exports.addModel = function(database) {
                               })
         })
         .then(function() { return models.Timeline.newPost(that.id, that.timelineIds) })
+        .then(function() { return that.linkAttachments() })
         .then(function() { return models.Stats.findById(that.userId) })
         .then(function(stats) { return stats.addPost() })
         .then(function(res) { resolve(that) })
@@ -384,18 +386,27 @@ exports.addModel = function(database) {
     })
   }
 
-  Post.prototype.addAttachment = function(attachmentId) {
+  Post.prototype.linkAttachments = function() {
     var that = this
 
-    return new Promise(function(resolve, reject) {
-      models.Attachment.findById(attachmentId)
-        .then(function() {
-          return Promise.all([
-            database.rpushAsync(mkKey(['post', that.id, 'attachments']), attachmentId)
-          ])
-        })
-        .then(function(res) { resolve(res) })
+    var attachmentPromises = that.attachments.map(function(attachmentId, index) {
+      return new Promise(function(resolve, reject) {
+        models.Attachment.findById(attachmentId)
+          .then(function(attachment) {
+            // Replace attachment ids with attachment objects
+            that.attachments[index] = attachment
+
+            // Update connections in DB
+            return Promise.all([
+              database.rpushAsync(mkKey(['post', that.id, 'attachments']), attachmentId),
+              database.hsetAsync(mkKey(['attachment', attachmentId]), 'postId', that.id)
+            ])
+          })
+          .then(function(res) { resolve(res) })
+      })
     })
+
+    return Promise.settle(attachmentPromises)
   }
 
   Post.prototype.getAttachmentIds = function() {

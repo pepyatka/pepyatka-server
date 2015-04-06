@@ -39,6 +39,7 @@ exports.addController = function(app) {
       .then(function(timelineIds) {
         return req.user.newPost({
           body: req.body.post.body,
+          attachments: req.body.post.attachments,
           timelineIds: timelineIds
         })
       })

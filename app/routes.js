@@ -4,6 +4,7 @@ var SessionRoute = require('./routes/api/v1/SessionRoute')
   , UsersRoute = require('./routes/api/v1/UsersRoute')
   , TimelinesRoute = require('./routes/api/v1/TimelinesRoute')
   , PostsRoute = require('./routes/api/v1/PostsRoute')
+  , AttachmentsRoute = require('./routes/api/v1/AttachmentsRoute')
   , CommentsRoute = require('./routes/api/v1/CommentsRoute')
   , GroupsRoute = require('./routes/api/v1/GroupsRoute')
 
@@ -46,5 +47,6 @@ module.exports = function(app) {
   GroupsRoute.addRoutes(app)
   TimelinesRoute.addRoutes(app)
   PostsRoute.addRoutes(app)
+  AttachmentsRoute.addRoutes(app)
   CommentsRoute.addRoutes(app)
 }
