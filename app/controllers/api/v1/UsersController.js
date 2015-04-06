@@ -4,6 +4,7 @@ var models = require('../../../models')
   , jwt = require('jsonwebtoken')
   , config = require('../../../../config/config').load()
   , UserSerializer = models.UserSerializer
+  , MyProfileSerializer = models.MyProfileSerializer
   , SubscriberSerializer = models.SubscriberSerializer
   , SubscriptionSerializer = models.SubscriptionSerializer
   , _ = require('underscore')
@@ -17,6 +18,7 @@ exports.addController = function(app) {
   UsersController.create = function(req, res) {
     var newUser = new models.User({
       username: req.body.username,
+      email: req.body.email,
       password: req.body.password
     })
 
@@ -25,7 +27,7 @@ exports.addController = function(app) {
         var secret = config.secret
         var authToken = jwt.sign({ userId: user.id }, secret);
 
-        new UserSerializer(user).toJSON(function(err, json) {
+        new MyProfileSerializer(user).toJSON(function(err, json) {
           return res.jsonp(_.extend(json, { authToken: authToken }))
         })
       })
@@ -38,7 +40,7 @@ exports.addController = function(app) {
     if (!req.user)
       return res.status(401).jsonp({ err: 'Not found' })
 
-    new UserSerializer(req.user).toJSON(function(err, json) {
+    new MyProfileSerializer(req.user).toJSON(function(err, json) {
       return res.jsonp(json)
     })
   }
@@ -117,6 +119,7 @@ exports.addController = function(app) {
 
     var attrs = {
       screenName: req.body.user.screenName,
+      email: req.body.user.email,
       isPrivate: req.body.user.isPrivate
     }
     models.User.findById(req.params.userId)

@@ -19,6 +19,7 @@ exports.Comment       = require('./models/comment').addModel(database)
 exports.Stats         = require('./models/stats').addModel(database)
 
 exports.UserSerializer         = require('./serializers/v1/UserSerializer').addSerializer()
+exports.MyProfileSerializer    = require('./serializers/v1/MyProfileSerializer').addSerializer()
 exports.LikeSerializer         = require('./serializers/v1/LikeSerializer').addSerializer()
 exports.GroupSerializer        = require('./serializers/v1/GroupSerializer').addSerializer()
 exports.AttachmentSerializer   = require('./serializers/v1/AttachmentSerializer').addSerializer()

@@ -31,6 +31,29 @@ describe("UsersController", function() {
         })
     })
 
+    it('should create a valid user with email', function(done) {
+      var user = {
+        username: 'Luna',
+        password: 'password',
+        email: 'user@example.com'
+      }
+
+      request
+        .post(app.config.host + '/v1/users')
+        .send({ username: user.username, password: user.password, email: user.email })
+        .end(function(err, res) {
+          res.should.not.be.empty
+          res.body.should.not.be.empty
+          res.body.should.have.property('users')
+          res.body.users.should.have.property('id')
+          res.body.users.should.have.property('username')
+          res.body.users.username.should.eql(user.username.toLowerCase())
+          res.body.users.should.have.property('email')
+          res.body.users.email.should.eql(user.email)
+          done()
+        })
+    })
+
     it('should not create an invalid user', function(done) {
       var user = {
         username: 'Luna',
@@ -40,6 +63,23 @@ describe("UsersController", function() {
       request
         .post(app.config.host + '/v1/users')
         .send({ username: user.username, password: user.password })
+        .end(function(err, res) {
+          res.should.not.be.empty
+          res.body.err.should.not.be.empty
+          done()
+        })
+    })
+
+    it('should not create user with invalid email', function(done) {
+      var user = {
+        username: 'Luna',
+        password: 'password',
+        email: 'user2.example.com'
+      }
+
+      request
+        .post(app.config.host + '/v1/users')
+        .send({ username: user.username, password: user.password, email: user.email })
         .end(function(err, res) {
           res.should.not.be.empty
           res.body.err.should.not.be.empty
