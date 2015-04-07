@@ -102,7 +102,7 @@ exports.init = function(database) {
           this.post = post
           return database.publishAsync('destroyComment',
                                 JSON.stringify({
-                                  postId: post.postId,
+                                  postId: post.id,
                                   commentId: this.comment.id
                                 }))
         })
@@ -121,7 +121,7 @@ exports.init = function(database) {
           this.post = post
           return database.publishAsync('updateComment',
                                        JSON.stringify({
-                                         postId: post.postId,
+                                         postId: post.id,
                                          commentId: this.comment.id
                                        }))
         })
@@ -303,10 +303,8 @@ exports.init = function(database) {
         models.Post.findById(data.postId)
           .then(function(post) {
             new models.PostSerializer(post).toJSON(function(err, json) {
-              var event = { post: json }
-
-              io.sockets.in('timeline:' + data.timelineId).emit('updatePost', event)
-              io.sockets.in('post:' + data.postId).emit('updatePost', event)
+              io.sockets.in('timeline:' + data.timelineId).emit('updatePost', json)
+              io.sockets.in('post:' + data.postId).emit('updatePost', json)
             })
           })
 
@@ -317,13 +315,11 @@ exports.init = function(database) {
 
         models.Comment.findById(data.commentId)
           .then(function(comment) {
-            new models.CommentSerializer(comment).toJSON(function(err, json) {
-              var event = { comment: json }
-
+            new models.PubsubCommentSerializer(comment).toJSON(function(err, json) {
               if (data.timelineId) {
-                io.sockets.in('timeline:' + data.timelineId).emit('newComment', event)
+                io.sockets.in('timeline:' + data.timelineId).emit('newComment', json)
               } else {
-                io.sockets.in('post:' + data.postId).emit('newComment', event)
+                io.sockets.in('post:' + data.postId).emit('newComment', json)
               }
             })
           })
@@ -335,13 +331,11 @@ exports.init = function(database) {
 
         models.Comment.findById(data.commentId)
           .then(function(comment) {
-            new models.CommentSerializer(comment).toJSON(function(err, json) {
-              var event = { comment: json }
-
+            new models.PubsubCommentSerializer(comment).toJSON(function(err, json) {
               if (data.timelineId) {
-                io.sockets.in('timeline:' + data.timelineId).emit('updateComment', event)
+                io.sockets.in('timeline:' + data.timelineId).emit('updateComment', json)
               } else {
-                io.sockets.in('post:' + data.postId).emit('updateComment', event)
+                io.sockets.in('post:' + data.postId).emit('updateComment', json)
               }
             })
           })

@@ -24,6 +24,7 @@ exports.LikeSerializer         = require('./serializers/v1/LikeSerializer').addS
 exports.GroupSerializer        = require('./serializers/v1/GroupSerializer').addSerializer()
 exports.AttachmentSerializer   = require('./serializers/v1/AttachmentSerializer').addSerializer()
 exports.CommentSerializer      = require('./serializers/v1/CommentSerializer').addSerializer()
+exports.PubsubCommentSerializer      = require('./serializers/v1/PubsubCommentSerializer').addSerializer()
 exports.SubscriberSerializer   = require('./serializers/v1/SubscriberSerializer').addSerializer()
 exports.SubscriptionSerializer = require('./serializers/v1/SubscriptionSerializer').addSerializer()
 exports.PostSerializer         = require('./serializers/v1/PostSerializer').addSerializer()
