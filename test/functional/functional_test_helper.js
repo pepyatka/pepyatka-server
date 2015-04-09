@@ -3,6 +3,15 @@
 var request = require('superagent')
     , app = require('../../index')
 
+exports.flushDb = function() {
+  return function(done) {
+    $database.flushdbAsync()
+        .then(function () {
+          done()
+        })
+  }
+}
+
 exports.createUser = function(username, password, callback) {
   return function(done) {
     var user = {

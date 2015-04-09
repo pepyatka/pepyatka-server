@@ -9,6 +9,7 @@ var Promise = require('bluebird')
   , Post = models.Post
   , mkKey = require("../support/models").mkKey
   , pubSub = models.PubSub
+  , _ = require('underscore')
 
 exports.addModel = function(database) {
   var Timeline = function(params) {
@@ -38,7 +39,7 @@ exports.addModel = function(database) {
     }
   })
 
-  Timeline.newPost = function(postId) {
+  Timeline.newPost = function(postId, additionalTimelines) {
     var that = this
     var currentTime = new Date().getTime()
 
@@ -46,6 +47,7 @@ exports.addModel = function(database) {
       Post.findById(postId)
         .then(function(post) { return post.getSubscribedTimelineIds() })
         .then(function(timelineIds) {
+          timelineIds = _.union(timelineIds, additionalTimelines)
           return Promise.map(timelineIds, function(timelineId) {
             return Promise.all([
               database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), currentTime, postId),
@@ -103,7 +105,7 @@ exports.addModel = function(database) {
                                 { 'name': that.name,
                                   'userId': that.userId,
                                   'createdAt': that.createdAt.toString(),
-                                  'updatedAt': that.updatedAt.toString(),
+                                  'updatedAt': that.updatedAt.toString()
                                 })
           ])
         })

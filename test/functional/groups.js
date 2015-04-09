@@ -4,12 +4,7 @@ var request = require('superagent')
     , funcTestHelper = require('./functional_test_helper')
 
 describe("GroupsController", function() {
-  beforeEach(function (done) {
-    $database.flushdbAsync()
-        .then(function () {
-          done()
-        })
-  })
+  beforeEach(funcTestHelper.flushDb())
 
   describe("#create()", function() {
     var authToken
@@ -40,8 +35,24 @@ describe("GroupsController", function() {
             res.body.should.have.property('groups')
             res.body.groups.should.have.property('username')
             res.body.groups.should.have.property('screenName')
+            res.body.groups.should.have.property('postsTimelineId')
             res.body.groups.username.should.eql(userName)
             res.body.groups.screenName.should.eql(screenName)
+            done()
+          })
+    })
+
+    it('should create a private group', function(done) {
+      var userName = 'pepyatka-dev';
+      var screenName = 'Pepyatka Developers';
+      request
+          .post(app.config.host + '/v1/groups')
+          .send({ group: {username: userName, screenName: screenName, visibility: 'private'},
+            authToken: authToken })
+          .end(function(err, res) {
+            res.body.should.not.be.empty
+            res.body.should.have.property('groups')
+            res.body.groups.visibility.should.eql('private')
             done()
           })
     })
@@ -88,6 +99,9 @@ describe("GroupsController", function() {
                 .end(function(err, res) {
                   var subIds = res.body.subscriptions.map(function(sub) { return sub.user })
                   subIds.should.contain(newGroupId)
+                  var users = res.body.users
+                  users.length.should.eql(1)
+                  users[0].type.should.eql("group")
                   done()
                 })
           })

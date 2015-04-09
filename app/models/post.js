@@ -18,6 +18,7 @@ exports.addModel = function(database) {
     this.id = params.id
     this.body = params.body
     this.userId = params.userId
+    this.timelineIds = params.timelineIds
     if (parseInt(params.createdAt, 10))
       this.createdAt = params.createdAt
     if (parseInt(params.updatedAt, 10))
@@ -78,9 +79,9 @@ exports.addModel = function(database) {
                                 { 'body': post.body,
                                   'userId': post.userId,
                                   'createdAt': post.createdAt.toString(),
-                                  'updatedAt': post.updatedAt.toString(),
+                                  'updatedAt': post.updatedAt.toString()
                                 }),
-            models.Timeline.newPost(post.id)
+            models.Timeline.newPost(post.id, that.timelineIds)
           ])
         })
         .then(function() { return models.Stats.findById(that.userId) })

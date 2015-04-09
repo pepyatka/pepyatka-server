@@ -1,34 +1,18 @@
 var request = require('superagent')
   , app = require('../../index')
   , models = require('../../app/models')
+  , funcTestHelper = require('./functional_test_helper')
 
 describe("TimelinesController", function() {
-  beforeEach(function(done) {
-    $database.flushdbAsync()
-      .then(function() { done() })
-  })
+  beforeEach(funcTestHelper.flushDb())
 
   describe("#home()", function() {
+    var username = 'Luna'
     var authToken
 
-    beforeEach(function(done) {
-      var user = {
-        username: 'Luna',
-        password: 'password'
-      }
-
-      request
-        .post(app.config.host + '/v1/users')
-        .send({ username: user.username, password: user.password })
-        .end(function(err, res) {
-          res.should.not.be.empty
-          res.body.should.not.be.empty
-          res.body.should.have.property('authToken')
-          authToken = res.body.authToken
-
-          done()
-        })
-    })
+    beforeEach(funcTestHelper.createUser(username, 'password', function(token) {
+      authToken = token
+    }))
 
     it('should return empty River Of News', function(done) {
       request
@@ -91,46 +75,35 @@ describe("TimelinesController", function() {
   })
 
   describe('#posts()', function() {
+    var username = 'Luna'
     var authToken
-      , user
       , post
 
+    beforeEach(funcTestHelper.createUser(username, 'password', function(token) {
+      authToken = token
+    }))
+
     beforeEach(function(done) {
-      user = {
-        username: 'Luna',
-        password: 'password'
-      }
+      var body = 'Post body'
 
       request
-        .post(app.config.host + '/v1/users')
-        .send({ username: user.username, password: user.password })
-        .end(function(err, res) {
-          res.should.not.be.empty
-          res.body.should.not.be.empty
-          res.body.should.have.property('authToken')
-          authToken = res.body.authToken
+          .post(app.config.host + '/v1/posts')
+          .send({ post: { body: body }, authToken: authToken })
+          .end(function(err, res) {
+            res.body.should.not.be.empty
+            res.body.should.have.property('posts')
+            res.body.posts.should.have.property('body')
+            res.body.posts.body.should.eql(body)
 
-          var body = 'Post body'
+            post = res.body.posts
 
-          request
-            .post(app.config.host + '/v1/posts')
-            .send({ post: { body: body }, authToken: authToken })
-            .end(function(err, res) {
-              res.body.should.not.be.empty
-              res.body.should.have.property('posts')
-              res.body.posts.should.have.property('body')
-              res.body.posts.body.should.eql(body)
-
-              post = res.body.posts
-
-              done()
-            })
-        })
+            done()
+          })
     })
 
     it('should return posts timeline', function(done) {
       request
-        .get(app.config.host + '/v1/timelines/' + user.username)
+        .get(app.config.host + '/v1/timelines/' + username)
         .query({ authToken: authToken })
         .end(function(err, res) {
           res.should.not.be.empty
@@ -149,43 +122,35 @@ describe("TimelinesController", function() {
   })
 
   describe('#likes()', function() {
+    var username = 'Luna'
     var authToken
-      , user
       , post
 
+    beforeEach(funcTestHelper.createUser(username, 'password', function(token) {
+      authToken = token
+    }))
+
     beforeEach(function(done) {
-      user = {
-        username: 'Luna',
-        password: 'password'
-      }
+      var body = 'Post body'
 
       request
-        .post(app.config.host + '/v1/users')
-        .send({ username: user.username, password: user.password })
+        .post(app.config.host + '/v1/posts')
+        .send({ post: { body: body }, authToken: authToken })
         .end(function(err, res) {
-          authToken = res.body.authToken
-
-          var body = 'Post body'
+          post = res.body.posts
 
           request
-            .post(app.config.host + '/v1/posts')
-            .send({ post: { body: body }, authToken: authToken })
-            .end(function(err, res) {
-              post = res.body.posts
-
-              request
-                .post(app.config.host + '/v1/posts/' + post.id + '/like')
-                .send({ authToken: authToken })
-                .end(function(req, res) {
-                  done()
-                })
+            .post(app.config.host + '/v1/posts/' + post.id + '/like')
+            .send({ authToken: authToken })
+            .end(function(req, res) {
+              done()
             })
         })
     })
 
     it('should return likes timeline', function(done) {
       request
-        .get(app.config.host + '/v1/timelines/' + user.username + '/likes')
+        .get(app.config.host + '/v1/timelines/' + username + '/likes')
         .query({ authToken: authToken })
         .end(function(err, res) {
           res.should.not.be.empty
@@ -204,48 +169,41 @@ describe("TimelinesController", function() {
   })
 
   describe('#comments()', function() {
+    var username = 'Luna'
     var authToken
       , user
       , post
       , comment
 
+    beforeEach(funcTestHelper.createUser(username, 'password', function(token) {
+      authToken = token
+    }))
+
     beforeEach(function(done) {
-      user = {
-        username: 'Luna',
-        password: 'password'
-      }
+      var body = 'Post body'
 
       request
-        .post(app.config.host + '/v1/users')
-        .send({ username: user.username, password: user.password })
+        .post(app.config.host + '/v1/posts')
+        .send({ post: { body: body }, authToken: authToken })
         .end(function(err, res) {
-          authToken = res.body.authToken
+          post = res.body.posts
 
-          var body = 'Post body'
+          var body = "Comment"
 
           request
-            .post(app.config.host + '/v1/posts')
-            .send({ post: { body: body }, authToken: authToken })
+            .post(app.config.host + '/v1/comments')
+            .send({ comment: { body: body, post: post.id }, authToken: authToken })
             .end(function(err, res) {
-              post = res.body.posts
+              comment = res.body.comments
 
-              var body = "Comment"
-
-              request
-                .post(app.config.host + '/v1/comments')
-                .send({ comment: { body: body, post: post.id }, authToken: authToken })
-                .end(function(err, res) {
-                  comment = res.body.comments
-
-                  done()
-                })
+              done()
             })
         })
     })
 
     it('should return comments timeline', function(done) {
       request
-        .get(app.config.host + '/v1/timelines/' + user.username + '/comments')
+        .get(app.config.host + '/v1/timelines/' + username + '/comments')
         .query({ authToken: authToken })
         .end(function(err, res) {
           res.should.not.be.empty

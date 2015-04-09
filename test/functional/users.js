@@ -5,10 +5,7 @@ var request = require('superagent')
   , funcTestHelper = require('./functional_test_helper')
 
 describe("UsersController", function() {
-  beforeEach(function(done) {
-    $database.flushdbAsync()
-      .then(function() { done() })
-  })
+  beforeEach(funcTestHelper.flushDb())
 
   describe("#create()", function() {
     it('should create a valid user', function(done) {

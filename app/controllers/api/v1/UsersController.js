@@ -80,9 +80,11 @@ exports.addController = function(app) {
         }, function(err, json) {
           json = _.reduce(json, function(memo, obj) {
             memo.subscriptions.push(obj.subscriptions)
-            memo.users.push(obj.subscribers[0])
+            var user = obj.subscribers[0]
+            memo.users[user.id] = user
             return memo
-          }, { subscriptions: [], users: [] })
+          }, { subscriptions: [], users: {} })
+          json.users = _.values(json.users)
           res.jsonp(json)
         })
       })

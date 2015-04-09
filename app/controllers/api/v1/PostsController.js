@@ -11,8 +11,16 @@ exports.addController = function(app) {
     if (!req.user)
       return res.status(401).jsonp({ err: 'Not found' })
 
+    var timelineIds = []
+    if (Array.isArray(req.body.timelinesIds)) {
+      timelineIds = req.body.timelinesIds;
+    } else if (req.body.timelinesIds) {
+      timelineIds = [req.body.timelinesIds];
+    }
+
     req.user.newPost({
-      body: req.body.post.body
+      body: req.body.post.body,
+      timelineIds: timelineIds
     })
       .then(function(newPost) { return newPost.create() })
       .then(function(newPost) {
