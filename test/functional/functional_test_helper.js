@@ -33,3 +33,19 @@ exports.createUser = function(username, password, callback) {
 
   }
 }
+
+exports.createComment = function(body, postId, authToken, callback) {
+  return function(done) {
+    var comment = {
+      body: body,
+      postId: postId
+    }
+
+    request
+      .post(app.config.host + '/v1/comments')
+      .send({ comment: comment, authToken: authToken })
+      .end(function(err, res) {
+        done(err, res)
+      })
+  }(callback)
+}

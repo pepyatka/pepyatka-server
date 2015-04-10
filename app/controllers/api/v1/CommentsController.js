@@ -13,7 +13,7 @@ exports.addController = function(app) {
 
     req.user.newComment({
       body: req.body.comment.body,
-      postId: req.body.comment.post
+      postId: req.body.comment.postId
     })
       .then(function(newComment) { return newComment.create() })
       .then(function(newComment) {

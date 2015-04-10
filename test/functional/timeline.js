@@ -190,14 +190,11 @@ describe("TimelinesController", function() {
 
           var body = "Comment"
 
-          request
-            .post(app.config.host + '/v1/comments')
-            .send({ comment: { body: body, post: post.id }, authToken: authToken })
-            .end(function(err, res) {
-              comment = res.body.comments
+          funcTestHelper.createComment(body, post.id, authToken, function(err, res) {
+            comment = res.body.comments
 
-              done()
-            })
+            done()
+          })
         })
     })
 

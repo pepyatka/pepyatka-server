@@ -45,45 +45,36 @@ describe("CommentsController", function() {
     it('should create a comment with a valid user', function(done) {
       var body = "Comment"
 
-      request
-        .post(app.config.host + '/v1/comments')
-        .send({ comment: { body: body, post: post.id }, authToken: authToken })
-        .end(function(err, res) {
-          res.body.should.not.be.empty
-          res.body.should.have.property('comments')
-          res.body.comments.should.have.property('body')
-          res.body.comments.body.should.eql(body)
+      funcTestHelper.createComment(body, post.id, authToken, function(err, res) {
+        res.body.should.not.be.empty
+        res.body.should.have.property('comments')
+        res.body.comments.should.have.property('body')
+        res.body.comments.body.should.eql(body)
 
-          done()
-        })
+        done()
+      })
     })
 
     it('should not create a comment for an invalid user', function(done) {
       var body = "Comment"
 
-      request
-        .post(app.config.host + '/v1/comments')
-        .send({ comment: { body: body, post: post.id } })
-        .end(function(err, res) {
-          err.should.not.be.empty
-          err.status.should.eql(401)
+      funcTestHelper.createComment(body, post.id, "token", function(err, res) {
+        err.should.not.be.empty
+        err.status.should.eql(401)
 
-          done()
-        })
+        done()
+      })
     })
 
     it('should not create a comment for an invalid post', function(done) {
       var body = "Comment"
 
-      request
-        .post(app.config.host + '/v1/comments')
-        .send({ comment: { body: body, post: 'id' }, authToken: authToken })
-        .end(function(err, res) {
-          err.should.not.be.empty
-          err.status.should.eql(422)
+      funcTestHelper.createComment(body, 'id', authToken, function(err, res) {
+        err.should.not.be.empty
+        err.status.should.eql(422)
 
-          done()
-        })
+        done()
+      })
     })
   })
 
@@ -113,14 +104,11 @@ describe("CommentsController", function() {
 
               var body = "Comment"
 
-              request
-                .post(app.config.host + '/v1/comments')
-                .send({ comment: { body: body, post: post.id }, authToken: authToken })
-                .end(function(err, res) {
-                  comment = res.body.comments
+              funcTestHelper.createComment(body, post.id, authToken, function(err, res) {
+                comment = res.body.comments
 
-                  done()
-                })
+                done()
+              })
             })
         })
     })
@@ -186,14 +174,11 @@ describe("CommentsController", function() {
 
               var body = "Comment"
 
-              request
-                .post(app.config.host + '/v1/comments')
-                .send({ comment: { body: body, post: post.id }, authToken: authToken })
-                .end(function(err, res) {
-                  comment = res.body.comments
+              funcTestHelper.createComment(body, post.id, authToken, function(err, res) {
+                comment = res.body.comments
 
-                  done()
-                })
+                done()
+              })
             })
         })
     })
