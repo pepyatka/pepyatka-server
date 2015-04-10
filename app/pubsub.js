@@ -350,10 +350,6 @@ exports.init = function(database) {
 
         models.Post.findById(data.postId)
           .then(function(post) {
-            // NOTE: we could delete post keys *before*
-            // 'destroyComment' event and so Post.findById will return
-            // null. In fact, we do not need Post model here, but postId
-            // is totally sufficient.
             return post.getTimelineIds()
           })
           .then(function(timelineIds) {
@@ -370,7 +366,8 @@ exports.init = function(database) {
         models.User.findById(data.userId)
           .then(function(user) {
             new models.LikeSerializer(user).toJSON(function(err, json) {
-              var event = { user: json, postId: data.postId }
+              var event = json
+              event.meta = { postId: data.postId }
 
               if (data.timelineId) {
                 io.sockets.in('timeline:' + data.timelineId).emit('newLike', event)
