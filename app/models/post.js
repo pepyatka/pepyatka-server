@@ -293,12 +293,12 @@ exports.addModel = function(database) {
       models.User.findById(userId).bind({})
         .then(function(user) {
           this.user = user
-          return pubSub.unhide(user.id, that.id)
+          return pubSub.unhidePost(user.id, that.id)
         })
-        .then(function() { return user.getHidesTimelineId() })
+        .then(function() { return this.user.getHidesTimelineId() })
         .then(function(timelineId) {
           this.timelineId = timelineId
-          return user.getRiverOfNewsTimelineId()
+          return this.user.getRiverOfNewsTimelineId()
         })
         .then(function(riverOfNewsId) {
           return Promise.all([

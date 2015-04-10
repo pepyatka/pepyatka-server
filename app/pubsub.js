@@ -196,7 +196,7 @@ exports.init = function(database) {
     })
   }
 
-  pubSub.hidePost = function(postId, userId) {
+  pubSub.hidePost = function(userId, postId) {
     return new Promise(function(resolve, reject) {
       models.User.findById(userId).bind({})
         .then(function(user) { return user.getRiverOfNewsTimelineId() })
@@ -204,14 +204,14 @@ exports.init = function(database) {
           return database.publishAsync('hidePost',
                                        JSON.stringify({
                                          timelineId: riverOfNewsId,
-                                         postId: that.id
+                                         postId: postId
                                        }))
         })
         .then(function(res) { resolve(res) })
     })
   }
 
-  pubSub.unhidePost = function(postId, userId) {
+  pubSub.unhidePost = function(userId, postId) {
     return new Promise(function(resolve, reject) {
       models.User.findById(userId).bind({})
         .then(function(user) { return user.getRiverOfNewsTimelineId() })
@@ -391,15 +391,19 @@ exports.init = function(database) {
         break
 
       case 'hidePost':
+        // NOTE: posts are hidden only on RiverOfNews timeline so this
+        // event won't leak any personal information
         var data = JSON.parse(msg)
-        var event = { userId: data.userId, postId: data.postId }
+        var event = { meta: { postId: data.postId } }
         io.sockets.in('timeline:' + data.timelineId).emit('hidePost', event)
 
         break
 
       case 'unhidePost':
+        // NOTE: posts are hidden only on RiverOfNews timeline so this
+        // event won't leak any personal information
         var data = JSON.parse(msg)
-        var event = { userId: data.userId, postId: data.postId }
+        var event = { meta: { postId: data.postId } }
         io.sockets.in('timeline:' + data.timelineId).emit('unhidePost', event)
 
         break
