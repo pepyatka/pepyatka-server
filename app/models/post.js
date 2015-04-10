@@ -115,7 +115,16 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      pubSub.destroyPost(that.id)
+      // remove all comments
+      that.getComments()
+        .then(function(comments) {
+          return Promise.map(comments, function(comment) {
+            return comment.destroy()
+          })
+        })
+        .then(function() {
+          return pubSub.destroyPost(that.id)
+        })
         .then(function() {
           Promise.all([
             // remove post from all timelines
@@ -134,13 +143,6 @@ exports.addModel = function(database) {
                             database.delAsync(mkKey(['post', that.id, 'timelines']))
                         })
                     })
-                })
-              }),
-            // remove all comments
-            that.getComments()
-              .then(function(comments) {
-                return Promise.map(comments, function(comment) {
-                  return comment.destroy()
                 })
               }),
             // delete likes
