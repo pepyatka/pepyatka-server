@@ -381,7 +381,7 @@ exports.init = function(database) {
 
       case 'removeLike':
         var data = JSON.parse(msg)
-        var event = { userId: data.userId, postId: data.postId }
+        var event = { meta: { userId: data.userId, postId: data.postId } }
 
         if (data.timelineId)
           io.sockets.in('timeline:' + data.timelineId).emit('removeLike', event)
