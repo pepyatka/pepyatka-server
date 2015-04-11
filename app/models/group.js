@@ -4,11 +4,18 @@ var Promise = require('bluebird')
   , uuid = require('uuid')
   , inherits = require("util").inherits
   , models = require('../models')
+  , exceptions = require('../support/exceptions')
+  , ForbiddenException = exceptions.ForbiddenException
   , AbstractModel = models.AbstractModel
   , User = models.User
   , mkKey = require("../support/models").mkKey
+  , _ = require('underscore')
 
 exports.addModel = function(database) {
+  /**
+   * @constructor
+   * @extends User
+   */
   var Group = function(params) {
     this.id = params.id
     this.username = params.username
@@ -178,6 +185,25 @@ exports.addModel = function(database) {
         .then(function(result) { resolve(result) })
         .catch(function(e) { reject(e) })
     })
+  }
+
+  /**
+   * Checks if the specified user can post to the timeline of this group.
+   */
+  Group.prototype.validateCanPost = function(postingUser) {
+    var that = this
+
+    return this.getPostsTimeline()
+        .then(function(timeline) {
+          return timeline.getSubscriberIds()
+        })
+        .then(function(ids) {
+          if (_.includes(ids, postingUser.id)) {
+            return Promise.resolve(that)
+          }
+          return Promise.reject(new ForbiddenException(
+              "You can't post to a group to which you aren't subscribed"))
+        })
   }
 
   return Group

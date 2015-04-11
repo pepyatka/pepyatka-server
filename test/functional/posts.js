@@ -44,9 +44,9 @@ describe("PostsController", function() {
     })
 
     describe('in a group', function() {
-      var groupName = 'pepyatka-dev';
-      var groupTimelineId
-      var unsubscribedUserAuthToken
+      var groupName = 'pepyatka-dev'
+      var otherUserName = 'yole'
+      var otherUserAuthToken
 
       beforeEach(function(done) {
         var screenName = 'Pepyatka Developers';
@@ -59,8 +59,8 @@ describe("PostsController", function() {
             })
       })
 
-      beforeEach(funcTestHelper.createUser('yole', 'pw', function(token) {
-        unsubscribedUserAuthToken = token
+      beforeEach(funcTestHelper.createUser(otherUserName, 'pw', function(token) {
+        otherUserAuthToken = token
       }))
 
       it('should allow subscribed user to post to group', function(done) {
@@ -83,6 +83,37 @@ describe("PostsController", function() {
                     res.body.posts[0].body.should.eql(body)
                     done()
                   })
+            })
+      })
+
+      it("should not allow a user to post to another user's feed", function(done) {
+        request
+            .post(app.config.host + '/v1/posts')
+            .send({ post: { body: 'Post body' }, feeds: [otherUserName], authToken: authToken })
+            .end(function(err, res) {
+              err.should.not.be.empty
+              err.status.should.eql(403)
+              res.body.err.should.eql("You can't post to another user's feed")
+
+              done()
+            })
+      })
+
+
+      it('should not allow a user to post to a group to which they are not subscribed', function(done) {
+        request
+            .post(app.config.host + '/v1/posts')
+            .send({
+              post: {body: 'Post body'},
+              feeds: [groupName],
+              authToken: otherUserAuthToken
+            })
+            .end(function (err, res) {
+              err.should.not.be.empty
+              err.status.should.eql(403)
+              res.body.err.should.eql("You can't post to a group to which you aren't subscribed")
+
+              done()
             })
       })
     })

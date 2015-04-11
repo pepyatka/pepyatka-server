@@ -12,6 +12,9 @@ var Promise = require('bluebird')
   , _ = require('underscore')
 
 exports.addModel = function(database) {
+  /**
+   * @constructor
+   */
   var Timeline = function(params) {
     Timeline.super_.call(this)
 

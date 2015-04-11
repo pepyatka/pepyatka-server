@@ -2,10 +2,15 @@
 
 var Promise = require('bluebird')
   , models = require('../../../models')
+  , exceptions = require('../../../support/exceptions')
   , PostSerializer = models.PostSerializer
   , FeedFactory = models.FeedFactory
+  , ForbiddenException = exceptions.ForbiddenException
 
 exports.addController = function(app) {
+  /**
+   * @constructor
+   */
   var PostsController = function() {
   }
 
@@ -23,7 +28,11 @@ exports.addController = function(app) {
     }
 
     Promise.map(feeds, function(username) {
-        return FeedFactory.findByUsername(username).then(function(feed) {
+      return FeedFactory.findByUsername(username)
+        .then(function(feed) {
+          return feed.validateCanPost(req.user)
+        })
+        .then(function(feed) {
           return feed.getPostsTimelineId()
         })
       })
@@ -39,7 +48,7 @@ exports.addController = function(app) {
           res.jsonp(json)
         })
       })
-      .catch(function(e) { res.status(422).send({}) })
+      .catch(exceptions.reportError(res))
   }
 
   PostsController.update = function(req, res) {
