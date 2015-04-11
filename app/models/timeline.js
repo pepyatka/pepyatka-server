@@ -47,7 +47,7 @@ exports.addModel = function(database) {
     var currentTime = new Date().getTime()
 
     return new Promise(function(resolve, reject) {
-      Post.findById(postId)
+      Post.getById(postId)
         .then(function(post) { return post.getSubscribedTimelineIds() })
         .then(function(timelineIds) {
           timelineIds = _.union(timelineIds, additionalTimelines)

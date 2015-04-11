@@ -91,7 +91,6 @@ describe("PostsController", function() {
             .post(app.config.host + '/v1/posts')
             .send({ post: { body: 'Post body' }, feeds: [otherUserName], authToken: authToken })
             .end(function(err, res) {
-              err.should.not.be.empty
               err.status.should.eql(403)
               res.body.err.should.eql("You can't post to another user's feed")
 
@@ -173,7 +172,7 @@ describe("PostsController", function() {
         .send({ authToken: authToken })
         .end(function(err, res) {
           err.should.not.be.empty
-          err.status.should.eql(422)
+          err.status.should.eql(404)
           done()
         })
     })
@@ -233,7 +232,7 @@ describe("PostsController", function() {
         .send({ authToken: authToken })
         .end(function(err, res) {
           err.should.not.be.empty
-          err.status.should.eql(422)
+          err.status.should.eql(404)
           done()
         })
     })
@@ -241,9 +240,13 @@ describe("PostsController", function() {
 
   describe('#update()', function() {
     var context = {}
+    var otherUserAuthToken
 
     beforeEach(funcTestHelper.createUserCtx(context, 'Luna', 'password'))
     beforeEach(funcTestHelper.createPost(context, 'Post body'))
+    beforeEach(funcTestHelper.createUser('yole', 'pw', function(token) {
+      otherUserAuthToken = token
+    }))
 
     it('should update post with a valid user', function(done) {
       var newBody = "New body"
@@ -277,6 +280,22 @@ describe("PostsController", function() {
           done()
         })
     })
+
+    it("should not update another user's post", function(done) {
+      var newBody = "New body"
+      request
+          .post(app.config.host + '/v1/posts/' + context.post.id)
+          .send({ post: { body: newBody },
+            authToken: otherUserAuthToken,
+            '_method': 'put'
+          })
+          .end(function(err, res) {
+            err.status.should.eql(403)
+            res.body.err.should.eql("You can't update another user's post")
+
+            done()
+          })
+    })
   })
 
   describe('#show()', function() {
@@ -298,14 +317,30 @@ describe("PostsController", function() {
           done()
         })
     })
+
+    it('should return 404 given an invalid post ID', function(done) {
+      request
+          .get(app.config.host + '/v1/posts/123_no_such_id')
+          .query({ authToken: context.authToken })
+          .end(function(err, res) {
+            err.status.should.eql(404)
+            res.body.err.should.eql("Can't find post")
+
+            done()
+          })
+    })
   })
 
   describe('#destroy()', function() {
     var username = 'Luna'
     var context = {}
+    var otherUserAuthToken
 
     beforeEach(funcTestHelper.createUserCtx(context, username, 'password'))
     beforeEach(funcTestHelper.createPost(context, 'Post body'))
+    beforeEach(funcTestHelper.createUser('yole', 'pw', function(token) {
+      otherUserAuthToken = token
+    }))
 
     it('should destroy valid post', function(done) {
       request
@@ -347,6 +382,21 @@ describe("PostsController", function() {
           err.status.should.eql(401)
           done()
         })
+    })
+
+    it("should not destroy another user's post", function(done) {
+      request
+          .post(app.config.host + '/v1/posts/' + context.post.id)
+          .send({
+            authToken: otherUserAuthToken,
+            '_method': 'delete'
+          })
+          .end(function(err, res) {
+            err.status.should.eql(403)
+            res.body.err.should.eql("You can't delete another user's post")
+
+            done()
+          })
     })
   })
 })

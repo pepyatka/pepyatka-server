@@ -12,6 +12,10 @@ var Promise = require('bluebird')
   , pubSub = models.PubSub
 
 exports.addModel = function(database) {
+  /**
+   * @constructor
+   * @extends AbstractModel
+   */
   var Post = function(params) {
     Post.super_.call(this)
 
@@ -30,6 +34,7 @@ exports.addModel = function(database) {
   Post.className = Post
   Post.namespace = "post"
   Post.findById = Post.super_.findById
+  Post.getById = Post.super_.getById
 
   Object.defineProperty(Post.prototype, 'body', {
     get: function() { return this.body_ },
@@ -74,16 +79,14 @@ exports.addModel = function(database) {
 
       that.validateOnCreate()
         .then(function(post) {
-          return Promise.all([
-            database.hmsetAsync(mkKey(['post', post.id]),
-                                { 'body': post.body,
-                                  'userId': post.userId,
-                                  'createdAt': post.createdAt.toString(),
-                                  'updatedAt': post.updatedAt.toString()
-                                }),
-            models.Timeline.newPost(post.id, that.timelineIds)
-          ])
+          return database.hmsetAsync(mkKey(['post', post.id]),
+                              { 'body': post.body,
+                                'userId': post.userId,
+                                'createdAt': post.createdAt.toString(),
+                                'updatedAt': post.updatedAt.toString()
+                              })
         })
+        .then(function() { return models.Timeline.newPost(that.id, that.timelineIds) })
         .then(function() { return models.Stats.findById(that.userId) })
         .then(function(stats) { return stats.addPost() })
         .then(function(res) { resolve(that) })

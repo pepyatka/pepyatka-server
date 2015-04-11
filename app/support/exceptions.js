@@ -18,3 +18,11 @@ exports.ForbiddenException = function(message) {
   this.message = message || "Forbidden"
   this.status = 403
 }
+
+/**
+ * @constructor
+ */
+exports.NotFoundException = function(message) {
+  this.message = message || "Not found"
+  this.status = 404
+}
