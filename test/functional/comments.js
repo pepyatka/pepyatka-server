@@ -10,35 +10,24 @@ describe("CommentsController", function() {
     var post
       , authToken
 
+    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
+      authToken = token
+    }))
+
     beforeEach(function(done) {
-      var user = {
-        username: 'Luna',
-        password: 'password'
-      }
-
+      var body = 'Post body'
       request
-        .post(app.config.host + '/v1/users')
-        .send({ username: user.username, password: user.password })
+        .post(app.config.host + '/v1/posts')
+        .send({ post: { body: body }, authToken: authToken })
         .end(function(err, res) {
-          res.should.not.be.empty
           res.body.should.not.be.empty
-          res.body.should.have.property('authToken')
-          authToken = res.body.authToken
+          res.body.should.have.property('posts')
+          res.body.posts.should.have.property('body')
+          res.body.posts.body.should.eql(body)
 
-          var body = 'Post body'
-          request
-            .post(app.config.host + '/v1/posts')
-            .send({ post: { body: body }, authToken: authToken })
-            .end(function(err, res) {
-              res.body.should.not.be.empty
-              res.body.should.have.property('posts')
-              res.body.posts.should.have.property('body')
-              res.body.posts.body.should.eql(body)
+          post = res.body.posts
 
-              post = res.body.posts
-
-              done()
-            })
+          done()
         })
     })
 
@@ -83,33 +72,25 @@ describe("CommentsController", function() {
       , comment
       , authToken
 
+    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
+      authToken = token
+    }))
+
     beforeEach(function(done) {
-      var user = {
-        username: 'Luna',
-        password: 'password'
-      }
-
+      var body = 'Post body'
       request
-        .post(app.config.host + '/v1/users')
-        .send({ username: user.username, password: user.password })
+        .post(app.config.host + '/v1/posts')
+        .send({ post: { body: body }, authToken: authToken })
         .end(function(err, res) {
-          authToken = res.body.authToken
+          post = res.body.posts
 
-          var body = 'Post body'
-          request
-            .post(app.config.host + '/v1/posts')
-            .send({ post: { body: body }, authToken: authToken })
-            .end(function(err, res) {
-              post = res.body.posts
+          var body = "Comment"
 
-              var body = "Comment"
+          funcTestHelper.createComment(body, post.id, authToken, function(err, res) {
+            comment = res.body.comments
 
-              funcTestHelper.createComment(body, post.id, authToken, function(err, res) {
-                comment = res.body.comments
-
-                done()
-              })
-            })
+            done()
+          })
         })
     })
 
@@ -148,38 +129,29 @@ describe("CommentsController", function() {
   })
 
   describe('#destroy()', function() {
-    var user
-      , post
+    var username = 'Luna'
+    var post
       , comment
       , authToken
 
+    beforeEach(funcTestHelper.createUser(username, 'password', function(token) {
+      authToken = token
+    }))
     beforeEach(function(done) {
-      user = {
-        username: 'Luna',
-        password: 'password'
-      }
-
+      var body = 'Post body'
       request
-        .post(app.config.host + '/v1/users')
-        .send({ username: user.username, password: user.password })
+        .post(app.config.host + '/v1/posts')
+        .send({ post: { body: body }, authToken: authToken })
         .end(function(err, res) {
-          authToken = res.body.authToken
+          post = res.body.posts
 
-          var body = 'Post body'
-          request
-            .post(app.config.host + '/v1/posts')
-            .send({ post: { body: body }, authToken: authToken })
-            .end(function(err, res) {
-              post = res.body.posts
+          var body = "Comment"
 
-              var body = "Comment"
+          funcTestHelper.createComment(body, post.id, authToken, function(err, res) {
+            comment = res.body.comments
 
-              funcTestHelper.createComment(body, post.id, authToken, function(err, res) {
-                comment = res.body.comments
-
-                done()
-              })
-            })
+            done()
+          })
         })
     })
 
@@ -195,7 +167,7 @@ describe("CommentsController", function() {
           res.status.should.eql(200)
 
           request
-            .get(app.config.host + '/v1/timelines/' + user.username + '/comments')
+            .get(app.config.host + '/v1/timelines/' + username + '/comments')
             .query({ authToken: authToken })
             .end(function(err, res) {
               res.should.not.be.empty
