@@ -35,7 +35,6 @@ describe("GroupsController", function() {
             res.body.should.have.property('groups')
             res.body.groups.should.have.property('username')
             res.body.groups.should.have.property('screenName')
-            res.body.groups.should.have.property('postsTimelineId')
             res.body.groups.username.should.eql(userName)
             res.body.groups.screenName.should.eql(screenName)
             done()

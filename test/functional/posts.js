@@ -55,7 +55,6 @@ describe("PostsController", function() {
             .send({ group: {username: groupName, screenName: screenName},
               authToken: authToken })
             .end(function(err, res) {
-              groupTimelineId = res.body.groups.postsTimelineId
               done()
             })
       })
@@ -69,7 +68,7 @@ describe("PostsController", function() {
 
         request
             .post(app.config.host + '/v1/posts')
-            .send({ post: { body: body }, timelinesIds: [groupTimelineId], authToken: authToken })
+            .send({ post: { body: body }, feeds: [groupName], authToken: authToken })
             .end(function(err, res) {
               res.body.should.not.be.empty
               res.body.should.have.property('posts')

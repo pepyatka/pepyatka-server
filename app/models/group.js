@@ -86,7 +86,6 @@ exports.addModel = function(database) {
                                 }),
             group.addAdministrator(ownerId),
             group.subscribeOwner(ownerId),
-            group.getPostsTimelineId(),
             stats.create()
           ])
         })
