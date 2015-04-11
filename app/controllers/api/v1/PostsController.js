@@ -1,7 +1,9 @@
 "use strict";
 
-var models = require('../../../models')
+var Promise = require('bluebird')
+  , models = require('../../../models')
   , PostSerializer = models.PostSerializer
+  , FeedFactory = models.FeedFactory
 
 exports.addController = function(app) {
   var PostsController = function() {
@@ -11,17 +13,26 @@ exports.addController = function(app) {
     if (!req.user)
       return res.status(401).jsonp({ err: 'Not found' })
 
-    var timelineIds = []
-    if (Array.isArray(req.body.timelinesIds)) {
-      timelineIds = req.body.timelinesIds;
-    } else if (req.body.timelinesIds) {
-      timelineIds = [req.body.timelinesIds];
+    var feeds = []
+    if (Array.isArray(req.body.feeds)) {
+      feeds = req.body.feeds;
+    } else if (req.body.feeds) {
+      feeds = [req.body.feeds];
+    } else {
+      feeds = [req.user.username]
     }
 
-    req.user.newPost({
-      body: req.body.post.body,
-      timelineIds: timelineIds
-    })
+    Promise.map(feeds, function(username) {
+        return FeedFactory.findByUsername(username).then(function(feed) {
+          return feed.getPostsTimelineId()
+        })
+      })
+      .then(function(timelineIds) {
+        return req.user.newPost({
+          body: req.body.post.body,
+          timelineIds: timelineIds
+        })
+      })
       .then(function(newPost) { return newPost.create() })
       .then(function(newPost) {
         new PostSerializer(newPost).toJSON(function(err, json) {
