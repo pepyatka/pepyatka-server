@@ -240,31 +240,17 @@ describe("PostsController", function() {
   })
 
   describe('#update()', function() {
-    var post
-      , authToken
+    var context = {}
 
-    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
-      authToken = token
-    }))
-
-    beforeEach(function(done) {
-      var body = 'Post body'
-      request
-        .post(app.config.host + '/v1/posts')
-        .send({ post: { body: body }, authToken: authToken })
-        .end(function(err, res) {
-          post = res.body.posts
-
-          done()
-        })
-    })
+    beforeEach(funcTestHelper.createUserCtx(context, 'Luna', 'password'))
+    beforeEach(funcTestHelper.createPost(context, 'Post body'))
 
     it('should update post with a valid user', function(done) {
       var newBody = "New body"
       request
-        .post(app.config.host + '/v1/posts/' + post.id)
+        .post(app.config.host + '/v1/posts/' + context.post.id)
         .send({ post: { body: newBody },
-                authToken: authToken,
+                authToken: context.authToken,
                 '_method': 'put'
               })
         .end(function(err, res) {
@@ -280,7 +266,7 @@ describe("PostsController", function() {
     it('should not update post with a invalid user', function(done) {
       var newBody = "New body"
       request
-        .post(app.config.host + '/v1/posts/' + post.id)
+        .post(app.config.host + '/v1/posts/' + context.post.id)
         .send({ post: { body: newBody },
                 '_method': 'put'
               })
@@ -294,34 +280,20 @@ describe("PostsController", function() {
   })
 
   describe('#show()', function() {
-    var post
-      , authToken
+    var context = {}
 
-    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
-      authToken = token
-    }))
-
-    beforeEach(function(done) {
-      var body = 'Post body'
-      request
-        .post(app.config.host + '/v1/posts')
-        .send({ post: { body: body }, authToken: authToken })
-        .end(function(err, res) {
-          post = res.body.posts
-
-          done()
-        })
-    })
+    beforeEach(funcTestHelper.createUserCtx(context, 'Luna', 'password'))
+    beforeEach(funcTestHelper.createPost(context, 'Post body'))
 
     it('should show a post', function(done) {
       request
-        .get(app.config.host + '/v1/posts/' + post.id)
-        .query({ authToken: authToken })
+        .get(app.config.host + '/v1/posts/' + context.post.id)
+        .query({ authToken: context.authToken })
         .end(function(err, res) {
           res.body.should.not.be.empty
           res.body.should.have.property('posts')
           res.body.posts.should.have.property('body')
-          res.body.posts.body.should.eql(post.body)
+          res.body.posts.body.should.eql(context.post.body)
 
           done()
         })
@@ -330,30 +302,16 @@ describe("PostsController", function() {
 
   describe('#destroy()', function() {
     var username = 'Luna'
-    var post
-      , authToken
+    var context = {}
 
-    beforeEach(funcTestHelper.createUser(username, 'password', function(token) {
-      authToken = token
-    }))
-
-    beforeEach(function(done) {
-      var body = 'Post body'
-      request
-        .post(app.config.host + '/v1/posts')
-        .send({ post: { body: body }, authToken: authToken })
-        .end(function(err, res) {
-          post = res.body.posts
-
-          done()
-        })
-    })
+    beforeEach(funcTestHelper.createUserCtx(context, username, 'password'))
+    beforeEach(funcTestHelper.createPost(context, 'Post body'))
 
     it('should destroy valid post', function(done) {
       request
-        .post(app.config.host + '/v1/posts/' + post.id)
+        .post(app.config.host + '/v1/posts/' + context.post.id)
         .send({
-          authToken: authToken,
+          authToken: context.authToken,
           '_method': 'delete'
         })
         .end(function(err, res) {
@@ -362,7 +320,7 @@ describe("PostsController", function() {
 
           request
             .get(app.config.host + '/v1/timelines/' + username)
-            .query({ authToken: authToken })
+            .query({ authToken: context.authToken })
             .end(function(err, res) {
               res.should.not.be.empty
               res.body.should.not.be.empty
@@ -380,7 +338,7 @@ describe("PostsController", function() {
 
     it('should not destroy valid post without user', function(done) {
       request
-        .post(app.config.host + '/v1/posts/' + post.id)
+        .post(app.config.host + '/v1/posts/' + context.post.id)
         .send({
           '_method': 'delete'
         })

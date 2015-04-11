@@ -34,6 +34,28 @@ exports.createUser = function(username, password, callback) {
   }
 }
 
+exports.createUserCtx = function(context, username, password) {
+  return exports.createUser(username, password, function(token) {
+    context.authToken = token
+  })
+}
+
+exports.createPost = function(context, body, callback) {
+  return function(done) {
+    request
+        .post(app.config.host + '/v1/posts')
+        .send({ post: { body: body }, authToken: context.authToken })
+        .end(function(err, res) {
+          context.post = res.body.posts
+          if (callback) {
+            callback(context.post)
+          }
+          done()
+        })
+  };
+}
+
+
 exports.createComment = function(body, postId, authToken, callback) {
   return function(done) {
     var comment = {
