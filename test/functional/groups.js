@@ -46,12 +46,12 @@ describe("GroupsController", function() {
       var screenName = 'Pepyatka Developers';
       request
           .post(app.config.host + '/v1/groups')
-          .send({ group: {username: userName, screenName: screenName, visibility: 'private'},
+          .send({ group: {username: userName, screenName: screenName, isPrivate: 1},
             authToken: authToken })
           .end(function(err, res) {
             res.body.should.not.be.empty
             res.body.should.have.property('groups')
-            res.body.groups.visibility.should.eql('private')
+            res.body.groups.isPrivate.should.eql(1)
             done()
           })
     })

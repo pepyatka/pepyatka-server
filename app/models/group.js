@@ -15,10 +15,10 @@ exports.addModel = function(database) {
     this.screenName = params.screenName
     this.createdAt = params.createdAt
     this.updatedAt = params.updatedAt
-    if (params.hasOwnProperty('visibility')) {
-      this.visibility = params.visibility
+    if (params.hasOwnProperty('isPrivate')) {
+      this.isPrivate = params.isPrivate
     } else {
-      this.visibility = 'public'
+      this.isPrivate = 0
     }
     this.type = "group"
   }
@@ -53,7 +53,6 @@ exports.addModel = function(database) {
       valid = this.username.length > 1
         && this.screenName.length > 1
         && models.FeedFactory.stopList().indexOf(this.username) == -1
-        && (this.visibility == 'public' || this.visibility == 'private')
 
       valid ? resolve(valid) : reject(new Error("Invalid"))
     }.bind(this))
@@ -82,7 +81,7 @@ exports.addModel = function(database) {
                                   'type': group.type,
                                   'createdAt': group.createdAt.toString(),
                                   'updatedAt': group.updatedAt.toString(),
-                                  'visibility': group.visibility
+                                  'isPrivate': group.isPrivate
                                 }),
             group.addAdministrator(ownerId),
             group.subscribeOwner(ownerId),
@@ -106,7 +105,7 @@ exports.addModel = function(database) {
         .then(function(user) {
           database.hmsetAsync(mkKey(['user', that.id]),
                               { 'screenName': that.screenName,
-                                'visibility': that.visibility,
+                                'isPrivate': that.isPrivate,
                                 'updatedAt': that.updatedAt.toString()
                               })
         })
