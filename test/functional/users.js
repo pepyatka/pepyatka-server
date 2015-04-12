@@ -200,6 +200,33 @@ describe("UsersController", function() {
         })
     })
 
+    it('should submit a post to friends river of news', function(done) {
+      var body = "Post body"
+
+      request
+        .post(app.config.host + '/v1/users/' + userA.username + '/subscribe')
+        .send({ authToken: authTokenB })
+        .end(function(err, res) {
+          res.body.should.be.empty
+
+          request
+            .post(app.config.host + '/v1/posts')
+            .send({ post: { body: body }, authToken: authTokenA })
+            .end(function(err, res) {
+              request
+                .get(app.config.host + '/v1/timelines/home')
+                .query({ authToken: authTokenB })
+                .end(function(err, res) {
+                  res.body.should.not.be.empty
+                  res.body.should.have.property('timelines')
+                  res.body.timelines.should.have.property('posts')
+                  res.body.timelines.posts.length.should.eql(2)
+                  done()
+                })
+            })
+        })
+    })
+
     it('should subscribe to a user', function(done) {
       request
         .post(app.config.host + '/v1/users/' + userA.username + '/subscribe')
