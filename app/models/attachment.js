@@ -121,7 +121,7 @@ exports.addModel = function(database) {
   Attachment.prototype.getThumbnailUrl = function() {
     var that = this
     return new Promise(function(resolve, reject) {
-      if (that.noThumbnail) {
+      if (that.noThumbnail === '1') {
         resolve(that.getUrl())
       } else {
         resolve(config.attachments.thumbnails.urlDir + that.getFilename())
@@ -161,7 +161,7 @@ exports.addModel = function(database) {
             // Check if we need to resize
             if (size !== undefined && (size.width > 525 || size.height > 175)) {
               // Looks big enough, needs a resize
-              that.noThumbnail = ''
+              that.noThumbnail = '0'
               gm(originalPath)
                 .resize(525, 175)
                 .write(that.getThumbnailPath(), function (err) {
@@ -173,7 +173,7 @@ exports.addModel = function(database) {
                 })
             } else {
               // Since it's small, just use the same URL as a original image
-              that.noThumbnail = 'true'
+              that.noThumbnail = '1'
               resolve(attachment)
             }
           })
