@@ -48,7 +48,7 @@ exports.addModel = function(database) {
 
     return new Promise(function(resolve, reject) {
       Post.getById(postId)
-        .then(function(post) { return post.getSubscribedTimelineIds() })
+        .then(function(post) { return post.getPostsFriendOfFriendTimelineIds(post.userId) })
         .then(function(timelineIds) {
           timelineIds = _.union(timelineIds, additionalTimelines)
           return Promise.map(timelineIds, function(timelineId) {

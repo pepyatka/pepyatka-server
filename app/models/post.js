@@ -216,7 +216,7 @@ exports.addModel = function(database) {
     })
   }
 
-  Post.prototype.getGenericFriendOfFriendTimelines = function(userId, type) {
+  Post.prototype.getGenericFriendOfFriendTimelineIds = function(userId, type) {
     var that = this
     var timelineIds = []
     var user
@@ -247,6 +247,17 @@ exports.addModel = function(database) {
         .then(function(timelineId) {
           timelineIds.push(timelineId)
           timelineIds = _.uniq(timelineIds)
+          resolve(timelineIds)
+        })
+    })
+  }
+
+  Post.prototype.getGenericFriendOfFriendTimelines = function(userId, type) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getGenericFriendOfFriendTimelineIds(userId, type)
+        .then(function(timelineIds) {
           return Promise.map(timelineIds, function(timelineId) {
             return models.Timeline.findById(timelineId)
           })
@@ -255,6 +266,14 @@ exports.addModel = function(database) {
           resolve(timelines)
         })
     })
+  }
+
+  Post.prototype.getPostsFriendOfFriendTimelineIds = function(userId) {
+    return this.getGenericFriendOfFriendTimelineIds(userId, 'Posts')
+  }
+
+  Post.prototype.getPostsFriendOfFriendTimelines = function(userId) {
+    return this.getGenericFriendOfFriendTimelines(userId, 'Posts')
   }
 
   Post.prototype.getLikesFriendOfFriendTimelines = function(userId) {
