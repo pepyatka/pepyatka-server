@@ -3,8 +3,13 @@
 var Promise = require('bluebird')
   , mkKey = require("../support/models").mkKey
   , _ = require('underscore')
+  , exceptions = require('../support/exceptions')
+  , NotFoundException = exceptions.NotFoundException
 
 exports.addModel = function(database) {
+  /**
+   * @constructor
+   */
   var AbstractModel = function() {
   }
 
@@ -22,6 +27,21 @@ exports.addModel = function(database) {
             resolve(null)
           }
         })
+    })
+  }
+
+  /**
+   * Given the ID of an object, returns a promise resolving to that object,
+   * or a rejected promise if an object of that type with that ID does not exist.
+   */
+  AbstractModel.getById = function(identifier, params) {
+    var that = this
+
+    return this.findById(identifier, params).then(function(result) {
+      if (result != null) {
+        return Promise.resolve(result)
+      }
+      return Promise.reject(new NotFoundException("Can't find " + that.namespace))
     })
   }
 

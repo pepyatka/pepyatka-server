@@ -17,8 +17,8 @@ exports.addController = function(app) {
       username: req.body.group.username,
       screenName: req.body.group.screenName
     })
-    if (req.body.group.hasOwnProperty('visibility')) {
-      newGroup.visibility = req.body.group.visibility
+    if (req.body.group.hasOwnProperty('isPrivate')) {
+      newGroup.isPrivate = req.body.group.isPrivate
     }
 
     newGroup.create(req.user.id)

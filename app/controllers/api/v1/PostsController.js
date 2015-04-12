@@ -2,10 +2,15 @@
 
 var Promise = require('bluebird')
   , models = require('../../../models')
+  , exceptions = require('../../../support/exceptions')
   , PostSerializer = models.PostSerializer
   , FeedFactory = models.FeedFactory
+  , ForbiddenException = exceptions.ForbiddenException
 
 exports.addController = function(app) {
+  /**
+   * @constructor
+   */
   var PostsController = function() {
   }
 
@@ -23,7 +28,11 @@ exports.addController = function(app) {
     }
 
     Promise.map(feeds, function(username) {
-        return FeedFactory.findByUsername(username).then(function(feed) {
+      return FeedFactory.findByUsername(username)
+        .then(function(feed) {
+          return feed.validateCanPost(req.user)
+        })
+        .then(function(feed) {
           return feed.getPostsTimelineId()
         })
       })
@@ -39,7 +48,7 @@ exports.addController = function(app) {
           res.jsonp(json)
         })
       })
-      .catch(function(e) { res.status(422).send({}) })
+      .catch(exceptions.reportError(res))
   }
 
   PostsController.update = function(req, res) {
@@ -48,6 +57,10 @@ exports.addController = function(app) {
 
     models.Post.findById(req.params.postId)
       .then(function(post) {
+        if (post.userId != req.user.id) {
+          return Promise.reject(new ForbiddenException(
+              "You can't update another user's post"))
+        }
         return post.update({
           body: req.body.post.body
         })
@@ -57,67 +70,73 @@ exports.addController = function(app) {
           res.jsonp(json)
         })
       })
-      .catch(function(e) { res.status(422).send({}) })
+      .catch(exceptions.reportError(res))
   }
 
   PostsController.show = function(req, res) {
-    models.Post.findById(req.params.postId)
+    models.Post.getById(req.params.postId)
       .then(function(post) {
         new PostSerializer(post).toJSON(function(err, json) {
           res.jsonp(json)
         })
       })
-      .catch(function(e) { res.status(422).send({}) })
+      .catch(exceptions.reportError(res))
   }
 
   PostsController.like = function(req, res) {
     if (!req.user)
       return res.status(401).jsonp({ err: 'Not found' })
 
-    models.Post.findById(req.params.postId)
+    models.Post.getById(req.params.postId)
       .then(function(post) { return post.addLike(req.user.id) })
       .then(function() { res.status(200).send({}) })
-      .catch(function(e) { res.status(422).send({}) })
+      .catch(exceptions.reportError(res))
   }
 
   PostsController.unlike = function(req, res) {
     if (!req.user)
       return res.status(401).jsonp({ err: 'Not found' })
 
-    models.Post.findById(req.params.postId)
+    models.Post.getById(req.params.postId)
       .then(function(post) { return post.removeLike(req.user.id) })
       .then(function() { res.status(200).send({}) })
-      .catch(function(e) { res.status(422).send({}) })
-  },
+      .catch(exceptions.reportError(res))
+  }
 
   PostsController.destroy = function(req, res) {
     if (!req.user)
       return res.status(401).jsonp({ err: 'Not found' })
 
-    models.Post.findById(req.params.postId)
-      .then(function(post) { return post.destroy() })
+    models.Post.getById(req.params.postId)
+      .then(function(post) {
+          if (post.userId != req.user.id) {
+            return Promise.reject(new ForbiddenException(
+                "You can't delete another user's post"))
+          }
+          return post.destroy()
+        })
       .then(function(status) { res.jsonp({}) })
-      .catch(function(e) { res.status(422).send({}) })
+      .catch(exceptions.reportError(res))
   }
 
   PostsController.hide = function(req, res) {
     if (!req.user)
       return res.status(401).jsonp({ err: 'Not found' })
 
-    models.Post.findById(req.params.postId)
+    models.Post.getById(req.params.postId)
       .then(function(post) { return post.hide(req.user.id) })
       .then(function() { res.jsonp({} )})
-      .catch(function(e) { res.status(422).send({}) })
+      .catch(exceptions.reportError(res))
   }
 
   PostsController.unhide = function(req, res) {
     if (!req.user)
       return res.status(401).jsonp({ err: 'Not found' })
 
-    models.Post.findById(req.params.postId)
+    models.Post.getById(req.params.postId)
       .then(function(post) { return post.unhide(req.user.id) })
       .then(function() { res.jsonp({} )})
-      .catch(function(e) { res.status(422).send({}) })
+      .catch(exceptions.reportError(res))
   }
 
   return PostsController

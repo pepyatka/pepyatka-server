@@ -6,6 +6,8 @@ var Promise = require('bluebird')
   , config = require('../../config/config').load()
   , inherits = require("util").inherits
   , models = require('../models')
+  , exceptions = require('../support/exceptions')
+  , ForbiddenException = exceptions.ForbiddenException
   , AbstractModel = models.AbstractModel
   , FeedFactory = models.FeedFactory
   , Timeline = models.Timeline
@@ -14,6 +16,9 @@ var Promise = require('bluebird')
   , validator = require('validator')
 
 exports.addModel = function(database) {
+  /**
+   * @constructor
+   */
   var User = function(params) {
     User.super_.call(this)
 
@@ -563,6 +568,16 @@ exports.addModel = function(database) {
 
       resolve(new models.Comment(attrs))
     }.bind(this))
+  }
+
+  /**
+   * Checks if the specified user can post to the timeline of this user.
+   */
+  User.prototype.validateCanPost = function(postingUser) {
+    if (postingUser.username != this.username) {
+      return Promise.reject(new ForbiddenException("You can't post to another user's feed"))
+    }
+    return Promise.resolve(this)
   }
 
   return User

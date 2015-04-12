@@ -4,21 +4,28 @@ var Promise = require('bluebird')
   , uuid = require('uuid')
   , inherits = require("util").inherits
   , models = require('../models')
+  , exceptions = require('../support/exceptions')
+  , ForbiddenException = exceptions.ForbiddenException
   , AbstractModel = models.AbstractModel
   , User = models.User
   , mkKey = require("../support/models").mkKey
+  , _ = require('underscore')
 
 exports.addModel = function(database) {
+  /**
+   * @constructor
+   * @extends User
+   */
   var Group = function(params) {
     this.id = params.id
     this.username = params.username
     this.screenName = params.screenName
     this.createdAt = params.createdAt
     this.updatedAt = params.updatedAt
-    if (params.hasOwnProperty('visibility')) {
-      this.visibility = params.visibility
+    if (params.hasOwnProperty('isPrivate')) {
+      this.isPrivate = params.isPrivate
     } else {
-      this.visibility = 'public'
+      this.isPrivate = '0'
     }
     this.type = "group"
   }
@@ -53,7 +60,6 @@ exports.addModel = function(database) {
       valid = this.username.length > 1
         && this.screenName.length > 1
         && models.FeedFactory.stopList().indexOf(this.username) == -1
-        && (this.visibility == 'public' || this.visibility == 'private')
 
       valid ? resolve(valid) : reject(new Error("Invalid"))
     }.bind(this))
@@ -82,7 +88,7 @@ exports.addModel = function(database) {
                                   'type': group.type,
                                   'createdAt': group.createdAt.toString(),
                                   'updatedAt': group.updatedAt.toString(),
-                                  'visibility': group.visibility
+                                  'isPrivate': group.isPrivate
                                 }),
             group.addAdministrator(ownerId),
             group.subscribeOwner(ownerId),
@@ -106,7 +112,7 @@ exports.addModel = function(database) {
         .then(function(user) {
           database.hmsetAsync(mkKey(['user', that.id]),
                               { 'screenName': that.screenName,
-                                'visibility': that.visibility,
+                                'isPrivate': that.isPrivate,
                                 'updatedAt': that.updatedAt.toString()
                               })
         })
@@ -179,6 +185,25 @@ exports.addModel = function(database) {
         .then(function(result) { resolve(result) })
         .catch(function(e) { reject(e) })
     })
+  }
+
+  /**
+   * Checks if the specified user can post to the timeline of this group.
+   */
+  Group.prototype.validateCanPost = function(postingUser) {
+    var that = this
+
+    return this.getPostsTimeline()
+        .then(function(timeline) {
+          return timeline.getSubscriberIds()
+        })
+        .then(function(ids) {
+          if (_.includes(ids, postingUser.id)) {
+            return Promise.resolve(that)
+          }
+          return Promise.reject(new ForbiddenException(
+              "You can't post to a group to which you aren't subscribed"))
+        })
   }
 
   return Group
