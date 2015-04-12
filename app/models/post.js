@@ -388,8 +388,9 @@ exports.addModel = function(database) {
 
   Post.prototype.linkAttachments = function() {
     var that = this
+    var attachments = that.attachments || []
 
-    var attachmentPromises = that.attachments.map(function(attachmentId, index) {
+    var attachmentPromises = attachments.map(function(attachmentId, index) {
       return new Promise(function(resolve, reject) {
         models.Attachment.findById(attachmentId)
           .then(function(attachment) {
