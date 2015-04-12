@@ -1,4 +1,7 @@
-var models = require("../../app/models")
+var models = require('../../app/models')
+  , config = require('../../config/config').load()
+  , fs = require('fs')
+  , mkdirp = require('mkdirp')
 
 describe('Attachment', function() {
   beforeEach(function(done) {
@@ -9,6 +12,8 @@ describe('Attachment', function() {
   describe('#create()', function() {
     var user
       , post
+      , file
+      , fileContents
 
     beforeEach(function(done) {
       user = new models.User({
@@ -16,21 +21,40 @@ describe('Attachment', function() {
         password: 'password'
       })
 
+      // FormData file object
+      file = {
+        size: 43,
+        path: '/tmp/upload_12345678901234567890123456789012',
+        name: 'tiny.gif',
+        type: 'image/gif'
+      }
+
+      // Base64-encoded contents of a tiny GIF file
+      fileContents = 'R0lGODlhAQABAIABAP///wAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+
       var postAttrs = { body: 'Post body' }
 
       user.create()
         .then(function(user) { return user.newPost(postAttrs) })
         .then(function(newPost) { return newPost.create() })
-        .then(function(newPost) {
-          post = newPost
-          done()
+        .then(function(newPost) { post = newPost })
+        .then(function() {
+          // Create directories for attachments
+          mkdirp.sync(config.attachments.fsDir)
+          mkdirp.sync(config.attachments.thumbnails.fsDir)
+        })
+        .then(function() {
+          // "Upload" tiny GIF image
+          var imageBuffer = new Buffer(fileContents, 'base64')
+          fs.writeFile(file.path, imageBuffer, function () {
+            done()
+          })
         })
     })
 
     it('should create an attachment', function(done) {
       var attachment = new models.Attachment({
-        filename: 'filename.jpg',
-        isImage: '1',
+        file: file,
         postId: post.id,
         userId: user.id
       })
@@ -40,56 +64,23 @@ describe('Attachment', function() {
           newAttachment.should.be.an.instanceOf(models.Attachment)
           newAttachment.should.not.be.empty
           newAttachment.should.have.property('id')
-
           return models.Attachment.findById(attachment.id)
         }).then(function(newAttachment) {
           newAttachment.should.be.an.instanceOf(models.Attachment)
           newAttachment.should.not.be.empty
           newAttachment.should.have.property('id')
           newAttachment.id.should.eql(attachment.id)
-        })
-        .then(function() { done() })
-    })
-  })
-
-  describe('#destroy()', function() {
-    var user
-      , post
-      , attachment
-
-    beforeEach(function(done) {
-      user = new models.User({
-        username: 'Luna',
-        password: 'password'
-      })
-
-      var postAttrs = { body: 'Post body' }
-
-      user.create()
-        .then(function(user) { return user.newPost(postAttrs) })
-        .then(function(newPost) { return newPost.create() })
-        .then(function(newPost) {
-          post = newPost
-
-          attachment = new models.Attachment({
-            filename: 'filename.jpg',
-            isImage: '1',
-            postId: post.id,
-            userId: user.id
+          return newAttachment
+        }).then(function(newAttachment) {
+          newAttachment.should.have.a.property('fileExtension')
+          newAttachment.fileExtension.should.be.equal('gif')
+          newAttachment.should.have.a.property('noThumbnail')
+          newAttachment.noThumbnail.should.be.equal('true')
+          newAttachment.getPath().should.be.equal(config.attachments.fsDir + newAttachment.id + '.' + newAttachment.fileExtension)
+          fs.stat(newAttachment.getPath(), function(err, stats) {
+            stats.size.should.be.equal(file.size)
+            done()
           })
-
-          return attachment.create()
-        })
-        .then(function(attachment) {
-          done() })
-    })
-
-    it('should destroy an attachment', function(done) {
-      attachment.destroy()
-        .then(function() { return models.Attachment.findById(attachment.id) })
-        .then(function(attachment) {
-          (attachment === null).should.be.true
-          done()
         })
     })
   })
