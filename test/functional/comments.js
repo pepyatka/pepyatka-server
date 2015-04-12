@@ -71,9 +71,14 @@ describe("CommentsController", function() {
     var post
       , comment
       , authToken
+      , otherUserAuthToken
 
     beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
       authToken = token
+    }))
+
+    beforeEach(funcTestHelper.createUser('yole', 'pw', function(token) {
+      otherUserAuthToken = token
     }))
 
     beforeEach(function(done) {
@@ -126,6 +131,20 @@ describe("CommentsController", function() {
           done()
         })
     })
+
+    it("should not update another user's comment", function(done) {
+      var newBody = "New body"
+      request
+          .post(app.config.host + '/v1/comments/' + comment.id)
+          .send({ comment: { body: newBody },
+            authToken: otherUserAuthToken,
+            '_method': 'put'
+          })
+          .end(function(err, res) {
+            err.status.should.eql(403)
+            done()
+          })
+    })
   })
 
   describe('#destroy()', function() {
@@ -133,10 +152,16 @@ describe("CommentsController", function() {
     var post
       , comment
       , authToken
+      , otherUserAuthToken
 
     beforeEach(funcTestHelper.createUser(username, 'password', function(token) {
       authToken = token
     }))
+
+    beforeEach(funcTestHelper.createUser('yole', 'pw', function(token) {
+      otherUserAuthToken = token
+    }))
+
     beforeEach(function(done) {
       var body = 'Post body'
       request
@@ -195,6 +220,20 @@ describe("CommentsController", function() {
           err.status.should.eql(401)
           done()
         })
+    })
+
+    it("should not destroy another user's comment", function(done) {
+      request
+          .post(app.config.host + '/v1/comments/' + comment.id)
+          .query({ authToken: otherUserAuthToken })
+          .send({
+            '_method': 'delete'
+          })
+          .end(function(err, res) {
+            err.should.not.be.empty
+            err.status.should.eql(403)
+            done()
+          })
     })
   })
 })

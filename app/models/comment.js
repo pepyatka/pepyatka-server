@@ -10,6 +10,10 @@ var Promise = require('bluebird')
   , pubSub = models.PubSub
 
 exports.addModel = function(database) {
+  /**
+   * @constructor
+   * @extends AbstractModel
+   */
   var Comment = function(params) {
     Comment.super_.call(this)
 
@@ -28,6 +32,7 @@ exports.addModel = function(database) {
   Comment.className = Comment
   Comment.namespace = "comment"
   Comment.findById = Comment.super_.findById
+  Comment.getById = Comment.super_.getById
 
   Object.defineProperty(Comment.prototype, 'body', {
     get: function() { return this.body_ },

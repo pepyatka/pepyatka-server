@@ -12,6 +12,9 @@ var Promise = require('bluebird')
   , _ = require('underscore')
 
 exports.addModel = function(database) {
+  /**
+   * @constructor
+   */
   var Timeline = function(params) {
     Timeline.super_.call(this)
 
@@ -44,7 +47,7 @@ exports.addModel = function(database) {
     var currentTime = new Date().getTime()
 
     return new Promise(function(resolve, reject) {
-      Post.findById(postId)
+      Post.getById(postId)
         .then(function(post) { return post.getPostsFriendOfFriendTimelineIds(post.userId) })
         .then(function(timelineIds) {
           timelineIds = _.union(timelineIds, additionalTimelines)
