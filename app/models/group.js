@@ -25,7 +25,7 @@ exports.addModel = function(database) {
     if (params.hasOwnProperty('isPrivate')) {
       this.isPrivate = params.isPrivate
     } else {
-      this.isPrivate = 0
+      this.isPrivate = '0'
     }
     this.type = "group"
   }
