@@ -75,7 +75,7 @@ describe('Attachment', function() {
           newAttachment.should.have.a.property('fileExtension')
           newAttachment.fileExtension.should.be.equal('gif')
           newAttachment.should.have.a.property('noThumbnail')
-          newAttachment.noThumbnail.should.be.equal('true')
+          newAttachment.noThumbnail.should.be.equal('1')
           newAttachment.getPath().should.be.equal(config.attachments.fsDir + newAttachment.id + '.' + newAttachment.fileExtension)
           fs.stat(newAttachment.getPath(), function(err, stats) {
             stats.size.should.be.equal(file.size)
