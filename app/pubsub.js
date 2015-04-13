@@ -278,7 +278,7 @@ exports.init = function(database) {
       switch(channel) {
       case 'post:destroy':
         var data = JSON.parse(msg)
-        var event = { postId: data.postId }
+        var event = { meta: { postId: data.postId } }
 
         io.sockets.in('timeline:' + data.timelineId).emit('post:destroy', event)
         io.sockets.in('post:' + data.postId).emit('post:destroy', event)
