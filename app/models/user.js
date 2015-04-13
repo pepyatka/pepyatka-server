@@ -13,7 +13,7 @@ var Promise = require('bluebird')
   , mkKey = require("../support/models").mkKey
   , _ = require('lodash')
   , validator = require('validator')
-  , bcrypt = require('bcrypt-then')
+  , bcrypt = Promise.promisifyAll(require('bcrypt'))
 
 exports.addModel = function(database) {
   /**
@@ -147,7 +147,7 @@ exports.addModel = function(database) {
   }
 
   User.prototype.validPassword = function(clearPassword) {
-    return bcrypt.compare(clearPassword, this.hashedPassword);
+    return bcrypt.compareAsync(clearPassword, this.hashedPassword);
   }
 
   User.prototype.isValidEmail = function() {
@@ -273,7 +273,7 @@ exports.addModel = function(database) {
       } else if (password !== passwordConfirmation) {
         reject(new Error("Password do not match"))
       } else {
-        bcrypt.hash(password)
+        bcrypt.hashAsync(password, 10)
           .then(function(hashed_password) {
             that.hashedPassword = hashed_password
             return that;
