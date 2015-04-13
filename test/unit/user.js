@@ -216,19 +216,6 @@ describe('User', function() {
         })
     })
 
-    it('should not create empty hashed password', function(done) {
-      var user = new User({
-        username: 'Luna',
-        password: ''
-      })
-
-      user.updateHashedPassword()
-        .catch(function(e) {
-          e.message.should.eql("Password cannot be blank")
-          done()
-        })
-    })
-
     it('should not create two users with the same username', function(done) {
       var userA
         , userB

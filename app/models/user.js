@@ -1,7 +1,6 @@
 "use strict";
 
 var Promise = require('bluebird')
-  , crypto = Promise.promisifyAll(require('crypto'))
   , uuid = require('uuid')
   , config = require('../../config/config').load()
   , inherits = require("util").inherits
@@ -14,6 +13,7 @@ var Promise = require('bluebird')
   , mkKey = require("../support/models").mkKey
   , _ = require('lodash')
   , validator = require('validator')
+  , bcrypt = require('bcrypt-then')
 
 exports.addModel = function(database) {
   /**
@@ -26,9 +26,13 @@ exports.addModel = function(database) {
     this.username = params.username
     this.screenName = params.screenName
     this.email = params.email
-    this.hashedPassword = params.hashedPassword
-    this.salt = params.salt
-    this.password = params.password
+
+    if (!_.isUndefined(params.hashedPassword)) {
+      this.hashedPassword = params.hashedPassword
+    } else if (!_.isUndefined(params.password)) {
+      this.hashedPassword = function() { return params.password; }  // just a hack, for temporary storing unhashed password
+    }
+
     this.isPrivate = params.isPrivate
     this.resetPasswordToken = params.resetPasswordToken
     this.resetPasswordSentAt = params.resetPasswordSentAt
@@ -89,20 +93,6 @@ exports.addModel = function(database) {
     return this.findByAttribute('email', email)
   }
 
-  User.generateSalt = function() {
-    return Promise.resolve(
-      crypto.randomBytesAsync(16)
-        .then(function(buf) { return buf.toString('hex') })
-    )
-  }
-
-  User.hashPassword = function(clearPassword) {
-    return crypto.createHash("sha1").
-      update(config.saltSecret).
-      update(clearPassword).
-      digest("hex")
-  }
-
   User.prototype.newPost = function(attrs) {
     var that = this
     attrs.userId = this.id
@@ -156,32 +146,8 @@ exports.addModel = function(database) {
     )
   }
 
-  User.prototype.updateHashedPassword = function() {
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      if (that.password && that.password.length > 0)
-        that.saltPassword(that.password)
-        .then(function(hashedPassword) { resolve(that) } )
-      else
-        reject(new Error('Password cannot be blank'))
-    })
-  }
-
-  User.prototype.saltPassword = function(clearPassword) {
-    return Promise.resolve(
-      User.generateSalt()
-        .then(function(salt) {
-          this.salt = salt
-          this.hashedPassword = User.hashPassword(salt + User.hashPassword(clearPassword))
-          return this.hashPassword
-        }.bind(this))
-    )
-  }
-
   User.prototype.validPassword = function(clearPassword) {
-    var hashedPassword = User.hashPassword(this.salt + User.hashPassword(clearPassword))
-    return Promise.resolve(hashedPassword == this.hashedPassword)
+    return bcrypt.compare(clearPassword, this.hashedPassword);
   }
 
   User.prototype.isValidEmail = function() {
@@ -230,7 +196,14 @@ exports.addModel = function(database) {
       that.id = uuid.v4()
 
       that.validateOnCreate()
-        .then(function(user) { return user.updateHashedPassword() })
+        .then(function(user) {
+          if (_.isFunction(user.hashedPassword)) {
+            var pwd = user.hashedPassword();
+            return user.updatePassword(pwd, pwd);
+          } else {
+            resolve(user);
+          }
+        })
         .then(function(user) {
           var stats = new models.Stats({
             id: user.id
@@ -246,7 +219,6 @@ exports.addModel = function(database) {
                                   'isPrivate': '0',
                                   'createdAt': user.createdAt.toString(),
                                   'updatedAt': user.updatedAt.toString(),
-                                  'salt': user.salt,
                                   'hashedPassword': user.hashedPassword
                                 }),
             stats.create()
@@ -296,21 +268,24 @@ exports.addModel = function(database) {
     return new Promise(function(resolve, reject) {
       that.updatedAt = new Date().getTime()
 
-      if (password == passwordConfirmation) {
-        that.password = password
-
-        that.updateHashedPassword()
+      if (password.length === 0) {
+        reject(new Error('Password cannot be blank'))
+      } else if (password !== passwordConfirmation) {
+        reject(new Error("Password do not match"))
+      } else {
+        bcrypt.hash(password)
+          .then(function(hashed_password) {
+            that.hashedPassword = hashed_password
+            return that;
+          })
           .then(function(user) {
             database.hmsetAsync(mkKey(['user', user.id]),
-                                { 'updatedAt': user.updatedAt.toString(),
-                                  'salt': user.salt,
-                                  'hashedPassword': user.hashedPassword
-                                })
+              { 'updatedAt': user.updatedAt.toString(),
+                'hashedPassword': user.hashedPassword
+              })
           })
           .then(function(res) { resolve(that) })
           .catch(function(e) { reject(e) })
-      } else {
-        reject(new Error("Password do not match"))
       }
     })
   }
