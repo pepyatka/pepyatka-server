@@ -15,7 +15,7 @@ exports.init = function(database) {
         .then(function(post) { return post.getSubscribedTimelineIds() })
         .then(function(timelineIds) {
           return Promise.map(timelineIds, function(timelineId) {
-            database.publishAsync('newPost',
+            database.publishAsync('post:new',
                                   JSON.stringify({
                                     postId: postId,
                                     timelineId: timelineId
@@ -32,7 +32,7 @@ exports.init = function(database) {
         .then(function(post) { return post.getSubscribedTimelineIds() })
         .then(function(timelineIds) {
           return Promise.map(timelineIds, function(timelineId) {
-            database.publishAsync('destroyPost',
+            database.publishAsync('post:destroy',
                                   JSON.stringify({
                                     postId: postId,
                                     timelineId: timelineId
@@ -49,7 +49,7 @@ exports.init = function(database) {
         .then(function(post) { return post.getSubscribedTimelineIds() })
         .then(function(timelineIds) {
           return Promise.map(timelineIds, function(timelineId) {
-            database.publishAsync('updatePost',
+            database.publishAsync('post:update',
                                   JSON.stringify({
                                     postId: postId,
                                     timelineId: timelineId
@@ -73,7 +73,7 @@ exports.init = function(database) {
         })
         .then(function(timelines) {
           return Promise.map(timelines, function(timeline) {
-            database.publishAsync('newComment',
+            database.publishAsync('comment:new',
                                   JSON.stringify({
                                     timelineId: timeline.id,
                                     commentId: commentId
@@ -81,7 +81,7 @@ exports.init = function(database) {
           })
         })
         .then(function() {
-          return database.publishAsync('newComment',
+          return database.publishAsync('comment:new',
                                        JSON.stringify({
                                          postId: this.post.id,
                                          commentId: commentId
@@ -100,7 +100,7 @@ exports.init = function(database) {
         })
         .then(function(post) {
           this.post = post
-          return database.publishAsync('destroyComment',
+          return database.publishAsync('comment:destroy',
                                 JSON.stringify({
                                   postId: post.id,
                                   commentId: this.comment.id
@@ -119,7 +119,7 @@ exports.init = function(database) {
         })
         .then(function(post) {
           this.post = post
-          return database.publishAsync('updateComment',
+          return database.publishAsync('comment:update',
                                        JSON.stringify({
                                          postId: post.id,
                                          commentId: this.comment.id
@@ -128,7 +128,7 @@ exports.init = function(database) {
         .then(function() { return this.post.getSubscribedTimelineIds() })
         .then(function(timelineIds) {
           return Promise.map(timelineIds, function(timelineId) {
-            database.publishAsync('updateComment',
+            database.publishAsync('comment:update',
                                   JSON.stringify({
                                     timelineId: timelineId,
                                     commentId: commentId
@@ -148,7 +148,7 @@ exports.init = function(database) {
         })
         .then(function(timelines) {
           return Promise.map(timelines, function(timeline) {
-            return database.publishAsync('newLike',
+            return database.publishAsync('like:new',
                                   JSON.stringify({
                                     timelineId: timeline.id,
                                     userId: userId,
@@ -158,7 +158,7 @@ exports.init = function(database) {
           })
         })
         .then(function() {
-          return database.publishAsync('newLike',
+          return database.publishAsync('like:new',
                                        JSON.stringify({
                                          userId: userId,
                                          postId: postId
@@ -177,7 +177,7 @@ exports.init = function(database) {
         })
         .then(function(timelineIds) {
           return Promise.map(timelineIds, function(timelineId) {
-            return database.publishAsync('removeLike',
+            return database.publishAsync('like:remove',
                                   JSON.stringify({
                                     timelineId: timelineId,
                                     userId: userId,
@@ -186,7 +186,7 @@ exports.init = function(database) {
           })
         })
         .then(function() {
-          return database.publishAsync('removeLike',
+          return database.publishAsync('like:remove',
                                        JSON.stringify({
                                          userId: userId,
                                          postId: postId
@@ -201,7 +201,7 @@ exports.init = function(database) {
       models.User.findById(userId).bind({})
         .then(function(user) { return user.getRiverOfNewsTimelineId() })
         .then(function(riverOfNewsId) {
-          return database.publishAsync('hidePost',
+          return database.publishAsync('post:hide',
                                        JSON.stringify({
                                          timelineId: riverOfNewsId,
                                          postId: postId
@@ -216,7 +216,7 @@ exports.init = function(database) {
       models.User.findById(userId).bind({})
         .then(function(user) { return user.getRiverOfNewsTimelineId() })
         .then(function(riverOfNewsId) {
-          return database.publishAsync('unhidePost',
+          return database.publishAsync('post:unhide',
                                        JSON.stringify({
                                          timelineId: riverOfNewsId,
                                          postId: postId
@@ -269,84 +269,84 @@ exports.init = function(database) {
     })
 
     var channels = redis()
-    channels.subscribe('newPost', 'destroyPost', 'updatePost',
-                       'newComment', 'destroyComment', 'updateComment',
-                       'newLike', 'removeLike', 'hidePost', 'unhidePost' )
+    channels.subscribe('post:new', 'post:destroy', 'post:update',
+                       'comment:new', 'comment:destroy', 'comment:update',
+                       'like:new', 'like:remove', 'post:hide', 'post:unhide' )
 
     // TODO: extract to separate functions
     channels.on('message', function(channel, msg) {
       switch(channel) {
-      case 'destroyPost':
+      case 'post:destroy':
         var data = JSON.parse(msg)
-        var event = { postId: data.postId }
+        var event = { meta: { postId: data.postId } }
 
-        io.sockets.in('timeline:' + data.timelineId).emit('destroyPost', event)
-        io.sockets.in('post:' + data.postId).emit('destroyPost', event)
+        io.sockets.in('timeline:' + data.timelineId).emit('post:destroy', event)
+        io.sockets.in('post:' + data.postId).emit('post:destroy', event)
 
         break
 
-      case 'newPost':
+      case 'post:new':
       var data = JSON.parse(msg)
 
         models.Post.findById(data.postId)
           .then(function(post) {
             new models.PostSerializer(post).toJSON(function(err, json) {
-              io.sockets.in('timeline:' + data.timelineId).emit('newPost', { post: json })
+              io.sockets.in('timeline:' + data.timelineId).emit('post:new', json)
             })
           })
 
         break
 
-      case 'updatePost':
+      case 'post:update':
         var data = JSON.parse(msg)
 
         models.Post.findById(data.postId)
           .then(function(post) {
             new models.PostSerializer(post).toJSON(function(err, json) {
-              io.sockets.in('timeline:' + data.timelineId).emit('updatePost', json)
-              io.sockets.in('post:' + data.postId).emit('updatePost', json)
+              io.sockets.in('timeline:' + data.timelineId).emit('post:update', json)
+              io.sockets.in('post:' + data.postId).emit('post:update', json)
             })
           })
 
         break
 
-      case 'newComment':
+      case 'comment:new':
         var data = JSON.parse(msg)
 
         models.Comment.findById(data.commentId)
           .then(function(comment) {
             new models.PubsubCommentSerializer(comment).toJSON(function(err, json) {
               if (data.timelineId) {
-                io.sockets.in('timeline:' + data.timelineId).emit('newComment', json)
+                io.sockets.in('timeline:' + data.timelineId).emit('comment:new', json)
               } else {
-                io.sockets.in('post:' + data.postId).emit('newComment', json)
+                io.sockets.in('post:' + data.postId).emit('comment:new', json)
               }
             })
           })
 
         break
 
-      case 'updateComment':
+      case 'comment:update':
         var data = JSON.parse(msg)
 
         models.Comment.findById(data.commentId)
           .then(function(comment) {
             new models.PubsubCommentSerializer(comment).toJSON(function(err, json) {
               if (data.timelineId) {
-                io.sockets.in('timeline:' + data.timelineId).emit('updateComment', json)
+                io.sockets.in('timeline:' + data.timelineId).emit('comment:update', json)
               } else {
-                io.sockets.in('post:' + data.postId).emit('updateComment', json)
+                io.sockets.in('post:' + data.postId).emit('comment:update', json)
               }
             })
           })
 
         break
 
-      case 'destroyComment':
+      case 'comment:destroy':
         var data = JSON.parse(msg)
         var event = { postId: data.postId, commentId: data.commentId }
 
-        io.sockets.in('post:' + data.postId).emit('destroyComment', event)
+        io.sockets.in('post:' + data.postId).emit('comment:destroy', event)
 
         models.Post.findById(data.postId)
           .then(function(post) {
@@ -354,13 +354,13 @@ exports.init = function(database) {
           })
           .then(function(timelineIds) {
             return Promise.map(timelineIds, function(timelineId) {
-              return io.sockets.in('timeline:' + timelineId).emit('destroyComment', event)
+              return io.sockets.in('timeline:' + timelineId).emit('comment:destroy', event)
             })
           })
 
         break
 
-      case 'newLike':
+      case 'like:new':
         var data = JSON.parse(msg)
 
         models.User.findById(data.userId)
@@ -370,41 +370,41 @@ exports.init = function(database) {
               event.meta = { postId: data.postId }
 
               if (data.timelineId) {
-                io.sockets.in('timeline:' + data.timelineId).emit('newLike', event)
+                io.sockets.in('timeline:' + data.timelineId).emit('like:new', event)
               } else {
-                io.sockets.in('post:' + data.postId).emit('newLike', event)
+                io.sockets.in('post:' + data.postId).emit('like:new', event)
               }
             })
           })
 
         break
 
-      case 'removeLike':
+      case 'like:remove':
         var data = JSON.parse(msg)
         var event = { meta: { userId: data.userId, postId: data.postId } }
 
         if (data.timelineId)
-          io.sockets.in('timeline:' + data.timelineId).emit('removeLike', event)
+          io.sockets.in('timeline:' + data.timelineId).emit('like:remove', event)
         else
-          io.sockets.in('post:' + data.postId).emit('removeLike', event)
+          io.sockets.in('post:' + data.postId).emit('like:remove', event)
 
         break
 
-      case 'hidePost':
+      case 'post:hide':
         // NOTE: posts are hidden only on RiverOfNews timeline so this
         // event won't leak any personal information
         var data = JSON.parse(msg)
         var event = { meta: { postId: data.postId } }
-        io.sockets.in('timeline:' + data.timelineId).emit('hidePost', event)
+        io.sockets.in('timeline:' + data.timelineId).emit('post:hide', event)
 
         break
 
-      case 'unhidePost':
+      case 'post:unhide':
         // NOTE: posts are hidden only on RiverOfNews timeline so this
         // event won't leak any personal information
         var data = JSON.parse(msg)
         var event = { meta: { postId: data.postId } }
-        io.sockets.in('timeline:' + data.timelineId).emit('unhidePost', event)
+        io.sockets.in('timeline:' + data.timelineId).emit('post:unhide', event)
 
         break
       }
