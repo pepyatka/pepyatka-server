@@ -7,7 +7,7 @@ var models = require('../../../models')
   , MyProfileSerializer = models.MyProfileSerializer
   , SubscriberSerializer = models.SubscriberSerializer
   , SubscriptionSerializer = models.SubscriptionSerializer
-  , _ = require('underscore')
+  , _ = require('lodash')
   , Promise = require('bluebird')
   , async = require('async')
 

@@ -2,7 +2,7 @@
 
 var Promise = require('bluebird')
   , async = require('async')
-  , _ = require('underscore')
+  , _ = require('lodash')
   , s = require("underscore.string")
 
 exports.addSerializer = function() {
