@@ -12,7 +12,7 @@ var Promise = require('bluebird')
   , FeedFactory = models.FeedFactory
   , Timeline = models.Timeline
   , mkKey = require("../support/models").mkKey
-  , _ = require('underscore')
+  , _ = require('lodash')
   , validator = require('validator')
 
 exports.addModel = function(database) {
