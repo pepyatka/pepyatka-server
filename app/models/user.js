@@ -147,7 +147,7 @@ exports.addModel = function(database) {
   }
 
   User.prototype.validPassword = function(clearPassword) {
-    return bcrypt.compareAsync(clearPassword, this.hashedPassword);
+    return bcrypt.compareAsync(clearPassword, this.hashedPassword)
   }
 
   User.prototype.isValidEmail = function() {
@@ -198,10 +198,10 @@ exports.addModel = function(database) {
       that.validateOnCreate()
         .then(function(user) {
           if (_.isFunction(user.hashedPassword)) {
-            var pwd = user.hashedPassword();
-            return user.updatePassword(pwd, pwd);
+            var pwd = user.hashedPassword()
+            return user.updatePassword(pwd, pwd)
           } else {
-            resolve(user);
+            resolve(user)
           }
         })
         .then(function(user) {
@@ -274,9 +274,9 @@ exports.addModel = function(database) {
         reject(new Error("Password do not match"))
       } else {
         bcrypt.hashAsync(password, 10)
-          .then(function(hashed_password) {
-            that.hashedPassword = hashed_password
-            return that;
+          .then(function(hashedPassword) {
+            that.hashedPassword = hashedPassword
+            return that
           })
           .then(function(user) {
             database.hmsetAsync(mkKey(['user', user.id]),

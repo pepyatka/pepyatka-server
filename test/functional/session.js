@@ -7,14 +7,14 @@ describe("SessionController", function() {
   beforeEach(funcTestHelper.flushDb())
 
   describe("#create()", function() {
-    var user, user_data;
+    var user, userData;
 
     beforeEach(function(done) {
-      user_data = {
+      userData = {
         username: 'Luna',
         password: 'password'
-      };
-      user = new models.User(user_data)
+      }
+      user = new models.User(userData)
 
       user.create()
         .then(function(newUser) { done() })
@@ -23,7 +23,7 @@ describe("SessionController", function() {
     it("should sign in with a valid user", function(done) {
       request
         .post(app.config.host + '/v1/session')
-        .send({ username: user_data.username, password: user_data.password })
+        .send({ username: userData.username, password: userData.password })
         .end(function(err, res) {
           res.should.not.be.empty
           res.body.should.not.be.empty
@@ -37,7 +37,7 @@ describe("SessionController", function() {
     it("should not sign in with an invalid user", function(done) {
       request
         .post(app.config.host + '/v1/session')
-        .send({ username: 'username', password: user_data.password })
+        .send({ username: 'username', password: userData.password })
         .end(function(err, res) {
           res.should.not.be.empty
           res.body.err.should.not.be.empty
