@@ -291,7 +291,7 @@ exports.init = function(database) {
         models.Post.findById(data.postId)
           .then(function(post) {
             new models.PostSerializer(post).toJSON(function(err, json) {
-              io.sockets.in('timeline:' + data.timelineId).emit('post:new', { post: json })
+              io.sockets.in('timeline:' + data.timelineId).emit('post:new', json)
             })
           })
 
