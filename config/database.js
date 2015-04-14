@@ -7,7 +7,7 @@ var Promise = require('bluebird')
 Promise.promisifyAll(redis.RedisClient.prototype)
 Promise.promisifyAll(redis.Multi.prototype)
 
-var database = redis.createClient()
+var database = redis.createClient(config.redis.port, config.redis.host, {})
 
 exports.selectDatabase = function() {
   return new Promise(function(resolve, reject) {
@@ -17,7 +17,7 @@ exports.selectDatabase = function() {
 }
 
 exports.connect = function() {
-  if (!database) database = redis.createClient()
+  if (!database) database = redis.createClient(config.redis.port, config.redis.host, {})
   return database
 }
 

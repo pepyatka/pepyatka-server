@@ -29,5 +29,10 @@ exports.getConfig = function() {
     transport: stubTransport()
   }
 
+  config.redis = {
+    host: 'localhost',
+    port: 6379
+  }
+
   return config
 }

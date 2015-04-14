@@ -1,6 +1,7 @@
 var Promise = require('bluebird')
   , models = require('./models')
   , async = require('async')
+  , config = require('../config/config').load()
   , redis = require('redis').createClient
 
 exports.init = function(database) {
@@ -230,8 +231,8 @@ exports.init = function(database) {
     var io = require('socket.io')(server)
 
     var adapter = require('socket.io-redis')
-     , redisPub = redis()
-     , redisSub = redis({ detect_buffers: true })
+     , redisPub = redis(config.redis.port, config.redis.host, {})
+     , redisSub = redis(config.redis.port, config.redis.host, { detect_buffers: true })
 
     io.adapter(adapter({
       pubClient: redisPub,
@@ -268,7 +269,7 @@ exports.init = function(database) {
       })
     })
 
-    var channels = redis()
+    var channels = redis(config.redis.port, config.redis.host, {})
     channels.subscribe('post:new', 'post:destroy', 'post:update',
                        'comment:new', 'comment:destroy', 'comment:update',
                        'like:new', 'like:remove', 'post:hide', 'post:unhide' )
