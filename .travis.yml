@@ -1,10 +1,14 @@
+sudo: false
+cache:
+  directories:
+    - node_modules
 language: node_js
 node_js:
-- iojs-v1.2.0
+  - iojs-v1.2.0
 services:
-- redis-server
+  - redis-server
 before_script:
-- sudo apt-get install -qq graphicsmagick
+  - sudo apt-get install -qq graphicsmagick
 notifications:
   slack:
     secure: Cu2y76KVIdl4+uYcv/J595jteBN2U1Q4HCKs90J1PZaIHjz86sWg2y+1EIWLd0UUtw+d15gbLy/xqrrCo+y1pR+5e6Df3duHktxYX1FkBD31sg/9M2RI18hdxPZWZ11M/uF3xMOzD6LepOwXPBXN/rwSjalLydzcjNB2DpCSgIQ=
