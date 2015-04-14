@@ -24,5 +24,9 @@ exports.getConfig = function() {
     }
   }
 
+  config.mailer: {
+    transport: "Stub"
+  }
+
   return config
 }

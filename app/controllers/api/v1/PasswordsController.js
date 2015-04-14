@@ -1,6 +1,7 @@
 "use strict";
 
 var models = require('../../../models')
+  , UserMailer = require('../../../mailers').UserMailer
   , exceptions = require('../../../support/exceptions')
 
 exports.addController = function(app) {
@@ -14,9 +15,16 @@ exports.addController = function(app) {
       return res.jsonp({ err: "Email cannot be blank" })
     }
 
-    models.User.findByEmail(email)
-      .then(function(user) { return user.updateResetPasswordToken() })
-      .then(function(token) { res.jsonp({})} )
+    models.User.findByEmail(email).bind({})
+      .then(function(user) {
+        this.user = user
+        return user.updateResetPasswordToken()
+      })
+      .then(function(token) {
+        UserMailer.resetPassword(this.user, { user: this.user })
+        // send an email with instructions how to reset a password
+        res.jsonp({})
+      })
       .catch(exceptions.reportError(res))
   }
 
