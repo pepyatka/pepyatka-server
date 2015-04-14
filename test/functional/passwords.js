@@ -28,7 +28,9 @@ describe("PasswordsController", function() {
             .post(app.config.host + '/v1/passwords')
             .send({ email: email })
             .end(function(err, res) {
-              res.body.should.be.empty
+              res.body.should.not.be.empty
+              res.body.should.have.property('message')
+              res.body.message.should.eql('We will send a password reset link to ' + email + ' in a moment')
               done()
             })
         })
@@ -77,7 +79,9 @@ describe("PasswordsController", function() {
             .post(app.config.host + '/v1/passwords')
             .send({ email: email })
             .end(function(err, res) {
-              res.body.should.be.empty
+              res.body.should.not.be.empty
+              res.body.should.have.property('message')
+              res.body.message.should.eql('We will send a password reset link to ' + email + ' in a moment')
               done()
             })
         })
