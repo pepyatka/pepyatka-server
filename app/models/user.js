@@ -1,6 +1,7 @@
 "use strict";
 
 var Promise = require('bluebird')
+  , crypto = Promise.promisifyAll(require('crypto'))
   , uuid = require('uuid')
   , config = require('../../config/config').load()
   , inherits = require("util").inherits
