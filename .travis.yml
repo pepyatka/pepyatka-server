@@ -8,7 +8,10 @@ node_js:
 services:
   - redis-server
 before_script:
-  - sudo apt-get install -qq graphicsmagick
+  - wget http://www.imagemagick.org/download/ImageMagick.tar.gz
+  - tar xvzf ImageMagick.tar.gz
+  - cd ImageMagick-6.9.1
+  - ./configure --prefix=$HOME && make && make install
 notifications:
   slack:
     secure: Cu2y76KVIdl4+uYcv/J595jteBN2U1Q4HCKs90J1PZaIHjz86sWg2y+1EIWLd0UUtw+d15gbLy/xqrrCo+y1pR+5e6Df3duHktxYX1FkBD31sg/9M2RI18hdxPZWZ11M/uF3xMOzD6LepOwXPBXN/rwSjalLydzcjNB2DpCSgIQ=
