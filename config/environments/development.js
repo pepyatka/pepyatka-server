@@ -41,5 +41,10 @@ exports.getConfig = function() {
     host: config.origin
   }
 
+  redis: {
+    host: 'localhost',
+    port: 6379
+  }
+
   return config
 }
