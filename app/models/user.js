@@ -22,6 +22,8 @@ exports.addModel = function(database) {
   var User = function(params) {
     User.super_.call(this)
 
+    var password = null
+
     this.id = params.id
     this.username = params.username
     this.screenName = params.screenName
@@ -30,7 +32,7 @@ exports.addModel = function(database) {
     if (!_.isUndefined(params.hashedPassword)) {
       this.hashedPassword = params.hashedPassword
     } else if (!_.isUndefined(params.password)) {
-      this.hashedPassword = function() { return params.password; }  // just a hack, for temporary storing unhashed password
+      password = params.password
     }
 
     this.isPrivate = params.isPrivate
@@ -41,6 +43,17 @@ exports.addModel = function(database) {
     if (parseInt(params.updatedAt, 10))
       this.updatedAt = params.updatedAt
     this.type = "user"
+
+    this.initPassword = function() {
+      if (!_.isNull(password)) {
+        var future = this.updatePassword(password, password)
+        password = null
+
+        return future
+      } else {
+        return Promise.resolve(this)
+      }
+    }
   }
 
   inherits(User, AbstractModel)
@@ -197,12 +210,7 @@ exports.addModel = function(database) {
 
       that.validateOnCreate()
         .then(function(user) {
-          if (_.isFunction(user.hashedPassword)) {
-            var pwd = user.hashedPassword()
-            return user.updatePassword(pwd, pwd)
-          } else {
-            resolve(user)
-          }
+          return user.initPassword()
         })
         .then(function(user) {
           var stats = new models.Stats({
