@@ -132,6 +132,9 @@ exports.addModel = function(database) {
       that.generateResetPasswordToken().bind({})
         .then(function(token) {
           var now = new Date().getTime()
+          var oldToken = that.resetPasswordToken
+
+          that.resetPasswordToken = token
           this.token = token
 
           return Promise.all([
@@ -139,7 +142,7 @@ exports.addModel = function(database) {
                                 { 'resetPasswordToken': token,
                                   'resetPasswordSentAt': now
                                 }),
-            database.delAsync(mkKey(['reset', that.resetPasswordToken, 'uid'])),
+            database.delAsync(mkKey(['reset', oldToken, 'uid'])),
             database.setAsync(mkKey(['reset', token, 'uid']), that.id)
           ])
         })
