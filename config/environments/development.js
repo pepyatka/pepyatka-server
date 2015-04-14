@@ -23,8 +23,6 @@ exports.getConfig = function() {
     origin: 'http://localhost:3333'
   }
 
-  config.host = 'http://localhost:' + config.port
-
   config.attachments = {
     // Make sure that all directories here have a trailing slash
     urlDir: 'http://localhost:3000/attachments/original/',
@@ -40,7 +38,7 @@ exports.getConfig = function() {
     transport: transport,
     fromName: 'Pepyatka',
     fromEmail: 'mail@pepyatka.com',
-    host: config.host
+    host: config.origin
   }
 
   return config
