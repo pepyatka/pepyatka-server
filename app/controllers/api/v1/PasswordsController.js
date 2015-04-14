@@ -22,8 +22,7 @@ exports.addController = function(app) {
       })
       .then(function(token) {
         UserMailer.resetPassword(this.user, { user: this.user })
-        // send an email with instructions how to reset a password
-        res.jsonp({})
+        res.jsonp({ message: 'We will send a password reset link to ' + this.user.email + ' in a moment' })
       })
       .catch(exceptions.reportError(res))
   }
@@ -41,7 +40,7 @@ exports.addController = function(app) {
         return user.updatePassword(req.body.newPassword, req.body.passwordConfirmation)
       })
       .then(function() { this.user.updateResetPasswordToken() })
-      .then(function(user) { res.jsonp({}) })
+      .then(function(user) { res.jsonp({ message: 'Your new password has been saved' }) })
       .catch(exceptions.reportError(res))
   }
 
