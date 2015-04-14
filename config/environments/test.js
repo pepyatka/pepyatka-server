@@ -1,5 +1,7 @@
 "use strict";
 
+var stubTransport = require('nodemailer-stub-transport')
+
 exports.getConfig = function() {
   var config = {
     port: 31337,
@@ -24,7 +26,7 @@ exports.getConfig = function() {
   }
 
   config.mailer = {
-    transport: "Stub"
+    transport: stubTransport()
   }
 
   return config
