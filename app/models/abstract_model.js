@@ -30,6 +30,22 @@ exports.addModel = function(database) {
     })
   }
 
+  AbstractModel.findByAttribute = function(attribute, value) {
+    var that = this
+    value = value.trim().toLowerCase()
+
+    return new Promise(function(resolve, reject) {
+      database.getAsync(mkKey([attribute, value, 'uid']))
+        .then(function(identifier) {
+          if (identifier) {
+            resolve(that.className.findById(identifier))
+          } else {
+            reject(new Error("Record not found"))
+          }
+        })
+    })
+  }
+
   /**
    * Given the ID of an object, returns a promise resolving to that object,
    * or a rejected promise if an object of that type with that ID does not exist.

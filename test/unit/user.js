@@ -265,6 +265,80 @@ describe('User', function() {
     })
   })
 
+  describe('#findByEmail()', function() {
+    it('should find a user by email', function(done) {
+      var user = new User({
+        username: 'Luna',
+        password: 'password',
+        email: 'luna@example.com'
+      })
+
+      user.create()
+        .then(function(user) { return user.update({ email: user.email }) })
+        .then(function(user) {
+          User.findByEmail(user.email)
+            .then(function(newUser) {
+              newUser.should.be.an.instanceOf(User)
+              newUser.should.not.be.empty
+              newUser.should.have.property('id')
+              newUser.id.should.eql(user.id)
+            })
+        })
+        .then(function() { done() })
+    })
+
+    it('should not find a user by invalid email', function(done) {
+      var user = new User({
+        username: 'Luna',
+        password: 'password',
+        email: 'luna@example.com'
+      })
+
+      user.create()
+        .then(function(user) { return user.update({ email: user.email }) })
+        .then(function(user) { return User.findByEmail('noreply@example.com') })
+        .catch(function(e) {
+          expect(e.message).to.equal('Record not found')
+          done()
+        })
+    })
+  })
+
+  describe('#findByResetToken()', function() {
+    it('should find a user by reset token', function(done) {
+      var user = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      user.create()
+        .then(function(user) { return user.updateResetPasswordToken() })
+        .then(function(token) { return User.findByResetToken(token) })
+        .then(function(newUser) {
+          newUser.should.be.an.instanceOf(User)
+          newUser.should.not.be.empty
+          newUser.should.have.property('id')
+          newUser.id.should.eql(user.id)
+        })
+        .then(function() { done() })
+    })
+
+    it('should not find a user by invalid reset token', function(done) {
+      var user = new User({
+        username: 'Luna',
+        password: 'password'
+      })
+
+      user.create()
+        .then(function(user) { return user.updateResetPasswordToken() })
+        .then(function(token) { return User.findByResetToken('token') })
+        .catch(function(e) {
+          expect(e.message).to.equal('Record not found')
+          done()
+        })
+    })
+  })
+
   describe('#findById()', function() {
     it('should not find user with an invalid id', function(done) {
       var identifier = "user:identifier"
@@ -272,8 +346,8 @@ describe('User', function() {
       User.findById(identifier)
         .then(function(user) {
           $should.not.exist(user)
+          done()
         })
-        .then(function() { done() })
     })
 
     it('should find user with a valid id', function(done) {
@@ -284,14 +358,12 @@ describe('User', function() {
 
       user.create()
         .then(function(user) { return user })
-        .then(function(user) {
-          User.findById(user.id)
-            .then(function(newUser) {
-              newUser.should.be.an.instanceOf(User)
-              newUser.should.not.be.empty
-              newUser.should.have.property('id')
-              newUser.id.should.eql(user.id)
-            })
+        .then(function(user) { return User.findById(user.id) })
+        .then(function(newUser) {
+          newUser.should.be.an.instanceOf(User)
+          newUser.should.not.be.empty
+          newUser.should.have.property('id')
+          newUser.id.should.eql(user.id)
         })
         .then(function() { done() })
     })

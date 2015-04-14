@@ -7,3 +7,4 @@ exports.TimelinesController = require('./controllers/api/v1/TimelinesController'
 exports.PostsController = require('./controllers/api/v1/PostsController').addController()
 exports.AttachmentsController = require('./controllers/api/v1/AttachmentsController').addController()
 exports.CommentsController = require('./controllers/api/v1/CommentsController').addController()
+exports.PasswordsController = require('./controllers/api/v1/PasswordsController').addController()

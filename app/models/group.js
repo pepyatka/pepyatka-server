@@ -35,6 +35,7 @@ exports.addModel = function(database) {
   Group.className = Group
   Group.namespace = "user"
   Group.findById = Group.super_.findById
+  Group.findByAttribute = Group.super_.findByAttribute
   Group.findByUsername = Group.super_.findByUsername
 
   Object.defineProperty(Group.prototype, 'username', {

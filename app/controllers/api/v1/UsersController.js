@@ -10,6 +10,7 @@ var models = require('../../../models')
   , _ = require('lodash')
   , Promise = require('bluebird')
   , async = require('async')
+  , exceptions = require('../../../support/exceptions')
 
 exports.addController = function(app) {
   var UsersController = function() {
@@ -127,11 +128,11 @@ exports.addController = function(app) {
     models.User.findById(req.params.userId)
       .then(function(user) { return user.update(attrs) })
       .then(function(user) {
-        new UserSerializer(user).toJSON(function(err, json) {
+        new MyProfileSerializer(user).toJSON(function(err, json) {
           res.jsonp(json)
         })
       })
-      .catch(function(e) { res.status(422).send({}) })
+      .catch(exceptions.reportError(res))
   }
 
   UsersController.updatePassword = function(req, res) {

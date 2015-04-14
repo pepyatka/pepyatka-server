@@ -30,6 +30,8 @@ exports.addModel = function(database) {
     this.salt = params.salt
     this.password = params.password
     this.isPrivate = params.isPrivate
+    this.resetPasswordToken = params.resetPasswordToken
+    this.resetPasswordSentAt = params.resetPasswordSentAt
     if (parseInt(params.createdAt, 10))
       this.createdAt = params.createdAt
     if (parseInt(params.updatedAt, 10))
@@ -42,6 +44,7 @@ exports.addModel = function(database) {
   User.className = User
   User.namespace = "user"
   User.findById = User.super_.findById
+  User.findByAttribute = User.super_.findByAttribute
 
   Object.defineProperty(User.prototype, 'username', {
     get: function() { return this.username_ },
@@ -75,24 +78,21 @@ exports.addModel = function(database) {
   })
 
   User.findByUsername = function(username) {
-    var that = this
-    username = username.trim().toLowerCase()
-    return Promise.resolve(
-      database.getAsync(mkKey(['username', username, 'uid']))
-        .then(function(identifier) {
-          return that.className.findById(identifier)
-        })
-    )
+    return this.findByAttribute('username', username)
+  }
+
+  User.findByResetToken = function(token) {
+    return this.findByAttribute('reset', token)
+  }
+
+  User.findByEmail = function(email) {
+    return this.findByAttribute('email', email)
   }
 
   User.generateSalt = function() {
     return Promise.resolve(
       crypto.randomBytesAsync(16)
-        .then(function(buf) {
-          var token = buf.toString('hex')
-
-          return token
-        })
+        .then(function(buf) { return buf.toString('hex') })
     )
   }
 
@@ -119,6 +119,41 @@ exports.addModel = function(database) {
         resolve(new models.Post(attrs))
       }
     }.bind(this))
+  }
+
+  User.prototype.updateResetPasswordToken = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.generateResetPasswordToken().bind({})
+        .then(function(token) {
+          var now = new Date().getTime()
+          this.token = token
+
+          return Promise.all([
+            database.hmsetAsync(mkKey(['user', that.id]),
+                                { 'resetPasswordToken': token,
+                                  'resetPasswordSentAt': now
+                                }),
+            database.delAsync(mkKey(['reset', that.resetPasswordToken, 'uid'])),
+            database.setAsync(mkKey(['reset', token, 'uid']), that.id)
+          ])
+        })
+        .then(function() {
+          var expireAfter = 60*60*24 // 24 hours
+          database.expireAsync(mkKey(['reset', this.token, 'uid']), expireAfter)
+        })
+        .then(function() {
+          resolve(this.token)
+        })
+    })
+  }
+
+  User.prototype.generateResetPasswordToken = function() {
+    return Promise.resolve(
+      crypto.randomBytesAsync(48)
+        .then(function(buf) { return buf.toString('hex') })
+    )
   }
 
   User.prototype.updateHashedPassword = function() {
@@ -235,12 +270,20 @@ exports.addModel = function(database) {
 
       that.validate()
         .then(function() {
-          database.hmsetAsync(mkKey(['user', that.id]),
-                              { 'screenName': that.screenName,
-                                'email': that.email,
-                                'isPrivate': that.isPrivate,
-                                'updatedAt': that.updatedAt.toString()
-                              })
+          var promises = []
+          promises.push(database.hmsetAsync(mkKey(['user', that.id]),
+                                { 'screenName': that.screenName,
+                                  'email': that.email,
+                                  'isPrivate': that.isPrivate,
+                                  'updatedAt': that.updatedAt.toString()
+                                }))
+
+          // email is optional, so no need to index an empty key
+          if (that.email && that.email.length > 0) {
+            promises.push(database.setAsync(mkKey(['email', that.email, 'uid']), that.id))
+          }
+
+          return Promise.all(promises)
         })
         .then(function() { resolve(that) })
         .catch(function(e) { reject(e) })
@@ -267,7 +310,7 @@ exports.addModel = function(database) {
           .then(function(res) { resolve(that) })
           .catch(function(e) { reject(e) })
       } else {
-        reject(new Error("Invalid"))
+        reject(new Error("Password do not match"))
       }
     })
   }
