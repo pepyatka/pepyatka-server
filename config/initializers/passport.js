@@ -2,6 +2,7 @@
 
 var LocalStrategy = require('passport-local').Strategy
   , models = require('../../app/models')
+  , exceptions = require('../../app/support/exceptions')
 
 exports.init = function(passport) {
   passport.use(new LocalStrategy({
@@ -21,6 +22,7 @@ exports.init = function(passport) {
               return done(null, false, { message: 'Incorrect password.'})
           })
       })
+      .catch(function(e) { done(e, false) })
   }))
 }
 
