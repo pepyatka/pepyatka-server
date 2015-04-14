@@ -38,7 +38,10 @@ exports.getConfig = function() {
   }
 
   config.mailer = {
-    transport: transport
+    transport: transport,
+    fromName: 'Pepyatka',
+    fromEmail: 'mail@pepyatka.com',
+    host: config.host
   }
 
   return config
