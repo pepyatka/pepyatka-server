@@ -9,7 +9,7 @@ var Promise = require('bluebird')
   , AbstractModel = models.AbstractModel
   , User = models.User
   , mkKey = require("../support/models").mkKey
-  , _ = require('underscore')
+  , _ = require('lodash')
 
 exports.addModel = function(database) {
   /**

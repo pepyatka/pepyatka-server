@@ -5,7 +5,6 @@ exports.getConfig = function() {
     port: 31337,
     database: 3,
 
-    saltSecret: 'secret token',
     secret: 'secret',
 
     origin: 'http://localhost:3333'

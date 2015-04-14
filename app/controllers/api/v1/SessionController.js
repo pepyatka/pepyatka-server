@@ -5,7 +5,7 @@ var passport = require('passport')
   , config = require('../../../../config/config').load()
   , models = require('../../../models')
   , UserSerializer = models.UserSerializer
-  , _ = require('underscore')
+  , _ = require('lodash')
 
 exports.addController = function(app) {
   var SessionController = function() {

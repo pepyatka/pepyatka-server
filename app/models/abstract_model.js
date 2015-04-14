@@ -2,7 +2,7 @@
 
 var Promise = require('bluebird')
   , mkKey = require("../support/models").mkKey
-  , _ = require('underscore')
+  , _ = require('lodash')
   , exceptions = require('../support/exceptions')
   , NotFoundException = exceptions.NotFoundException
 
