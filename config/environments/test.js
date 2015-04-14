@@ -1,5 +1,7 @@
 "use strict";
 
+var stubTransport = require('nodemailer-stub-transport')
+
 exports.getConfig = function() {
   var config = {
     port: 31337,
@@ -21,6 +23,10 @@ exports.getConfig = function() {
       urlDir: config.host + '/attachments/thumbnails/',
       fsDir: '/tmp/pepyatka-attachments/thumbnails/'
     }
+  }
+
+  config.mailer = {
+    transport: stubTransport()
   }
 
   return config
