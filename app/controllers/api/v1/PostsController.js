@@ -19,10 +19,11 @@ exports.addController = function(app) {
       return res.status(401).jsonp({ err: 'Not found' })
 
     var feeds = []
-    if (Array.isArray(req.body.feeds)) {
-      feeds = req.body.feeds;
-    } else if (req.body.feeds) {
-      feeds = [req.body.feeds];
+    req.body.meta = req.body.meta || {}
+    if (Array.isArray(req.body.meta.feeds)) {
+      feeds = req.body.meta.feeds
+    } else if (req.body.meta.feeds) {
+      feeds = [req.body.meta.feeds]
     } else {
       feeds = [req.user.username]
     }

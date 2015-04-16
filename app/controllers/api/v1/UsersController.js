@@ -26,7 +26,7 @@ exports.addController = function(app) {
     return newUser.create()
       .then(function(user) {
         var secret = config.secret
-        var authToken = jwt.sign({ userId: user.id }, secret);
+        var authToken = jwt.sign({ userId: user.id }, secret)
 
         new MyProfileSerializer(user).toJSON(function(err, json) {
           return res.jsonp(_.extend(json, { authToken: authToken }))
@@ -44,6 +44,17 @@ exports.addController = function(app) {
     new MyProfileSerializer(req.user).toJSON(function(err, json) {
       return res.jsonp(json)
     })
+  }
+
+  UsersController.show = function(req, res) {
+    var username = req.params.username
+
+    models.FeedFactory.findByUsername(username)
+      .then(function(feed) {
+        new UserSerializer(feed).toJSON(function(err, json) {
+          return res.jsonp(json)
+        })
+      })
   }
 
   UsersController.subscribers = function(req, res) {

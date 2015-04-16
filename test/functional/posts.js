@@ -67,53 +67,53 @@ describe("PostsController", function() {
         var body = 'Post body'
 
         request
-            .post(app.config.host + '/v1/posts')
-            .send({ post: { body: body }, feeds: [groupName], authToken: authToken })
-            .end(function(err, res) {
-              res.body.should.not.be.empty
-              res.body.should.have.property('posts')
-              res.body.posts.should.have.property('body')
-              res.body.posts.body.should.eql(body)
+          .post(app.config.host + '/v1/posts')
+          .send({ post: { body: body }, meta: { feeds: [groupName] }, authToken: authToken })
+          .end(function(err, res) {
+            res.body.should.not.be.empty
+            res.body.should.have.property('posts')
+            res.body.posts.should.have.property('body')
+            res.body.posts.body.should.eql(body)
 
-              request
-                  .get(app.config.host + '/v1/timelines/' + groupName)
-                  .query({authToken: authToken})
-                  .end(function (err, res) {
-                    res.body.posts.length.should.eql(1)
-                    res.body.posts[0].body.should.eql(body)
-                    done()
-                  })
-            })
+            request
+              .get(app.config.host + '/v1/timelines/' + groupName)
+              .query({authToken: authToken})
+              .end(function (err, res) {
+                res.body.posts.length.should.eql(1)
+                res.body.posts[0].body.should.eql(body)
+                done()
+              })
+          })
       })
 
       it("should not allow a user to post to another user's feed", function(done) {
         request
-            .post(app.config.host + '/v1/posts')
-            .send({ post: { body: 'Post body' }, feeds: [otherUserName], authToken: authToken })
-            .end(function(err, res) {
-              err.status.should.eql(403)
-              res.body.err.should.eql("You can't post to another user's feed")
+          .post(app.config.host + '/v1/posts')
+          .send({ post: { body: 'Post body' }, meta: { feeds: [otherUserName] }, authToken: authToken })
+          .end(function(err, res) {
+            err.status.should.eql(403)
+            res.body.err.should.eql("You can't post to another user's feed")
 
-              done()
-            })
+            done()
+          })
       })
 
 
       it('should not allow a user to post to a group to which they are not subscribed', function(done) {
         request
-            .post(app.config.host + '/v1/posts')
-            .send({
-              post: {body: 'Post body'},
-              feeds: [groupName],
-              authToken: otherUserAuthToken
-            })
-            .end(function (err, res) {
-              err.should.not.be.empty
-              err.status.should.eql(403)
-              res.body.err.should.eql("You can't post to a group to which you aren't subscribed")
+          .post(app.config.host + '/v1/posts')
+          .send({
+            post: { body: 'Post body' },
+            meta: { feeds: [groupName] },
+            authToken: otherUserAuthToken
+          })
+          .end(function (err, res) {
+            err.should.not.be.empty
+            err.status.should.eql(403)
+            res.body.err.should.eql("You can't post to a group to which you aren't subscribed")
 
-              done()
-            })
+            done()
+          })
       })
     })
   })
