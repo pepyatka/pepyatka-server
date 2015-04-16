@@ -49,7 +49,7 @@ exports.addController = function(app) {
         return this.group.update(attrs)
       })
       .then(function(group) {
-        new models.UserSerializer(group).toJSON(function(err, json) {
+        new models.GroupSerializer(group).toJSON(function(err, json) {
           res.jsonp(json)
         })
       })
