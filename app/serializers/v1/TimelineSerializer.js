@@ -1,6 +1,5 @@
 var models = require("../../models")
   , Serializer = models.Serializer
-  , SubscriptionSerializer = models.SubscriptionSerializer
   , SubscriberSerializer = models.SubscriberSerializer
   , PostSerializer = models.PostSerializer
   , UserSerializer = models.UserSerializer

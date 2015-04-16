@@ -68,7 +68,7 @@ exports.addModel = function(database) {
           .then(function(res) {
             var valid = res === 0
 
-            valid ? resolve(true) : reject(new Error("Invalid"))
+            valid ? resolve(true) : reject(new Error("Already exists"))
           })
       })
     }

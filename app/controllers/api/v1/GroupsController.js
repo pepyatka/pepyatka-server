@@ -4,6 +4,7 @@ var models = require('../../../models')
   , Group = models.Group
   , User = models.User
   , GroupSerializer = models.GroupSerializer
+  , exceptions = require('../../../support/exceptions')
 
 exports.addController = function(app) {
   var GroupsController = function() {
@@ -22,14 +23,37 @@ exports.addController = function(app) {
     }
 
     newGroup.create(req.user.id)
-        .then(function(group) {
-          new GroupSerializer(group).toJSON(function(err, json) {
-            res.jsonp(json)
-          })
+      .then(function(group) {
+        new GroupSerializer(group).toJSON(function(err, json) {
+          res.jsonp(json)
         })
-        .catch(function(e) {
-          res.status(401).jsonp({ err: 'username ' + newGroup.username + ' already exists', status: 'fail'})
+      })
+      .catch(exceptions.reportError(res))
+  }
+
+  GroupsController.update = function(req, res) {
+    var attrs = {
+      screenName: req.body.user.screenName,
+      isPrivate: req.body.user.isPrivate
+    }
+    models.Group.findById(req.params.userId).bind({})
+      .then(function(group) {
+        this.group = group
+        return group.getAdministratorIds()
+      })
+      .then(function(adminIds) {
+        if (!req.user || adminIds.indexOf(req.user.id) == -1) {
+          return Promise.reject('not an admin')
+        }
+
+        return this.group.update(attrs)
+      })
+      .then(function(group) {
+        new models.GroupSerializer(group).toJSON(function(err, json) {
+          res.jsonp(json)
         })
+      })
+      .catch(exceptions.reportError(res))
   }
 
   GroupsController.changeAdminStatus = function(req, res, newStatus) {

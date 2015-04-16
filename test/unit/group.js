@@ -56,6 +56,25 @@ describe('Group', function() {
           done()
         })
     })
+
+    it('should not create with username that already exists', function(done) {
+      var groupA = new Group({
+        username: 'FriendFeedA',
+        screenName: 'FriendFeedA'
+      })
+
+      var groupB = new Group({
+        username: 'FriendFeedA',
+        screenName: 'FriendFeedB'
+      })
+
+      groupA.create()
+        .then(function() { return groupB.create() })
+        .catch(function(e) {
+          e.message.should.eql("Already exists")
+          done()
+        })
+    })
   })
 
   describe('#update()', function() {

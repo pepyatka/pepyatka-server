@@ -1,7 +1,10 @@
 var Serializer = require("../../models").Serializer
+  , models = require("../../models")
+  , SubscriptionSerializer = models.SubscriptionSerializer
 
 exports.addSerializer = function() {
   return new Serializer('users', {
-    select: ['id', 'username', 'type', 'screenName', 'email', 'statistics']
+    select: ['id', 'username', 'type', 'screenName', 'email', 'statistics', 'subscriptions'],
+    subscriptions: { through: SubscriptionSerializer, embed: true }
   })
 }

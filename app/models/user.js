@@ -107,6 +107,10 @@ exports.addModel = function(database) {
     return this.findByAttribute('email', email)
   }
 
+  User.prototype.isUser = function() {
+    return this.type === "user"
+  }
+
   User.prototype.newPost = function(attrs) {
     var that = this
     attrs.userId = this.id
@@ -115,7 +119,7 @@ exports.addModel = function(database) {
       if (!attrs.timelineIds || !attrs.timelineIds[0]) {
         that.getPostsTimelineId()
           .then(function(timelineId) {
-            attrs.timelineIds = [timelineId];
+            attrs.timelineIds = [timelineId]
 
             resolve(new models.Post(attrs))
           })

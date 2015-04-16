@@ -8,3 +8,4 @@ exports.PostsController = require('./controllers/api/v1/PostsController').addCon
 exports.AttachmentsController = require('./controllers/api/v1/AttachmentsController').addController()
 exports.CommentsController = require('./controllers/api/v1/CommentsController').addController()
 exports.PasswordsController = require('./controllers/api/v1/PasswordsController').addController()
+exports.FeedFactoriesController = require('./controllers/api/v1/FeedFactoriesController').addController()

@@ -233,7 +233,7 @@ describe('User', function() {
       userA.create()
         .then(function(user) { return userB.create() })
         .catch(function(e) {
-          e.message.should.eql("Invalid")
+          e.message.should.eql("Already exists")
           done()
         })
     })
