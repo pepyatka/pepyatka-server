@@ -594,6 +594,8 @@ describe("UsersController", function() {
         .end(function(err, res) {
           err.should.not.be.empty
           err.status.should.eql(422)
+          err.response.error.should.have.property('text')
+          JSON.parse(err.response.error.text).err.should.eql('Passwords do not match')
           done()
         })
     })
@@ -612,6 +614,8 @@ describe("UsersController", function() {
         .end(function(err, res) {
           err.should.not.be.empty
           err.status.should.eql(422)
+          err.response.error.should.have.property('text')
+          JSON.parse(err.response.error.text).err.should.eql('Password cannot be blank')
           done()
         })
     })
@@ -630,6 +634,8 @@ describe("UsersController", function() {
         .end(function(err, res) {
           err.should.not.be.empty
           err.status.should.eql(422)
+          err.response.error.should.have.property('text')
+          JSON.parse(err.response.error.text).err.should.eql('Your old password is not valid')
           done()
         })
     })
