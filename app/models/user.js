@@ -287,7 +287,7 @@ exports.addModel = function(database) {
       if (password.length === 0) {
         reject(new Error('Password cannot be blank'))
       } else if (password !== passwordConfirmation) {
-        reject(new Error("Password do not match"))
+        reject(new Error("Passwords do not match"))
       } else {
         bcrypt.hashAsync(password, 10)
           .then(function(hashedPassword) {

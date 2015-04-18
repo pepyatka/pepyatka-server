@@ -150,15 +150,16 @@ exports.addController = function(app) {
     if (!req.user)
       return res.status(401).jsonp({ err: 'Not found' })
 
-    req.user.validPassword(req.body.currentPassword)
+    var currentPassword = req.body.currentPassword || ''
+    req.user.validPassword(currentPassword)
       .then(function(valid) {
         if (valid)
           return req.user.updatePassword(req.body.password, req.body.passwordConfirmation)
         else
-          return Promise.reject('Invalid')
+          return Promise.reject(new Error('Your old password is not valid'))
       })
-      .then(function(user) { res.jsonp({}) })
-      .catch(function(e) { res.status(422).send({}) })
+      .then(function(user) { res.jsonp({ message: 'Your password has been changed' }) })
+      .catch(exceptions.reportError(res))
   }
 
   return UsersController
