@@ -160,10 +160,14 @@ exports.addSerializer = function() {
           new serializer.strategy[field].through(object).toJSON(f)
         }
       }, function(objects) {
-        if (serializer.strategy[field].embed) {
-          processWithRoot(objects)
+        if (typeof objects != 'undefined' && objects.length > 0) {
+          if (serializer.strategy[field].embed) {
+            processWithRoot(objects)
+          } else {
+            serializer.processMultiObjects(objects, null, serializer.strategy[field].through, root, level, f)
+          }
         } else {
-          serializer.processMultiObjects(objects, null, serializer.strategy[field].through, root, level, f)
+          f(null, null)
         }
       })
     },
@@ -196,7 +200,9 @@ exports.addSerializer = function() {
       level = level || 0
       var jsonAdder = function(field, done) {
         return function(err, res) {
-          json[field] = res
+          if (res != null) {
+            json[field] = res
+          }
           done(err)
         }
       }
