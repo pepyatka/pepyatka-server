@@ -10,7 +10,8 @@ var Promise = require('bluebird')
   , mkKey = require("../support/models").mkKey
   , _ = require('lodash')
   , pubSub = models.PubSub
-  , format = require("util").format
+  , exceptions = require('../support/exceptions')
+  , ForbiddenException = exceptions.ForbiddenException
 
 exports.addModel = function(database) {
   /**
@@ -475,12 +476,14 @@ exports.addModel = function(database) {
       database.sismemberAsync(mkKey(['post', that.id, 'likes']), userId)
         .then(function(result) {
           switch (true) {
-            case result == 0 && action == 'like':
-            case result == 1 && action == 'unlike':
-              resolve(true);
+            case result == 1 && action == 'like':
+              reject(new ForbiddenException("You can't like post that you have already liked"))
+              break;
+            case result == 0 && action == 'unlike':
+              reject(new ForbiddenException("You can't un-like post that you haven't yet liked"))
               break;
             default:
-              reject(new Error(format('%s on post %s by userId %s is not valid', action, that.id, userId)));
+              resolve(that);
               break;
           }
         }).catch(function(e) {
@@ -493,23 +496,19 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      that.validateLikeOrUnlike('like', userId).then(function() {
-        that.getLikesFriendOfFriendTimelines(userId)
-          .then(function(timelines) {
-            return Promise.all([
-              Promise.map(timelines, function(timeline) {
-                return timeline.updatePost(that.id)
-              }),
-              database.saddAsync(mkKey(['post', that.id, 'likes']), userId)
-            ])
-          })
-          .then(function() { return pubSub.newLike(that.id, userId)})
-          .then(function() { return models.Stats.findById(that.userId) })
-          .then(function(stats) { return stats.addLike() })
-          .then(function(res) { resolve(res) })
-      }).catch(function (err) {
-        reject(err);
-      })
+      that.getLikesFriendOfFriendTimelines(userId)
+        .then(function(timelines) {
+          return Promise.all([
+            Promise.map(timelines, function(timeline) {
+              return timeline.updatePost(that.id)
+            }),
+            database.saddAsync(mkKey(['post', that.id, 'likes']), userId)
+          ])
+        })
+        .then(function() { return pubSub.newLike(that.id, userId)})
+        .then(function() { return models.Stats.findById(that.userId) })
+        .then(function(stats) { return stats.addLike() })
+        .then(function(res) { resolve(res) })
     })
   }
 
@@ -517,16 +516,12 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      that.validateLikeOrUnlike('unlike', userId).then(function() {
-        database.sremAsync(mkKey(['post', that.id, 'likes']), userId)
-          .then(function() { return pubSub.removeLike(that.id, userId) })
-          .then(function() { return models.Stats.findById(that.userId) })
-          .then(function(stats) { return stats.removeLike() })
-          .then(function(res) { resolve(res) })
-      }).catch(function(err) {
-        reject(err);
-      });
-    });
+      database.sremAsync(mkKey(['post', that.id, 'likes']), userId)
+        .then(function() { return pubSub.removeLike(that.id, userId) })
+        .then(function() { return models.Stats.findById(that.userId) })
+        .then(function(stats) { return stats.removeLike() })
+        .then(function(res) { resolve(res) })
+    })
   }
 
   Post.prototype.getCreatedBy = function() {

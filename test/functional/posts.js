@@ -144,7 +144,7 @@ describe("PostsController", function() {
         })
     })
 
-    it('should like post with a valid user', function(done) {
+    it('should like post with a valid user not more than 1 time', function(done) {
       request
         .post(app.config.host + '/v1/posts/' + post.id + '/like')
         .send({ authToken: authToken })
@@ -152,7 +152,16 @@ describe("PostsController", function() {
           res.body.should.be.empty
           $should.not.exist(err)
 
-          done()
+          request
+            .post(app.config.host + '/v1/posts/' + post.id + '/like')
+            .send({ authToken: authToken })
+            .end(function(err, res) {
+              err.should.not.be.empty
+              err.status.should.eql(403)
+
+              done()
+            })
+
         })
     })
 
@@ -204,15 +213,32 @@ describe("PostsController", function() {
         })
     })
 
-    it('should unlike post with a valid user', function(done) {
+    it('unlike should fail if post was not yet liked and succeed after it was liked with a valid user', function(done) {
       request
         .post(app.config.host + '/v1/posts/' + post.id + '/unlike')
         .send({ authToken: authToken })
         .end(function(err, res) {
-          res.body.should.be.empty
-          $should.not.exist(err)
 
-          done()
+          err.should.not.be.empty
+          err.status.should.eql(403)
+
+          request
+            .post(app.config.host + '/v1/posts/' + post.id + '/like')
+            .send({ authToken: authToken })
+            .end(function(err, res) {
+              res.body.should.be.empty
+              $should.not.exist(err)
+
+              request
+                .post(app.config.host + '/v1/posts/' + post.id + '/unlike')
+                .send({ authToken: authToken })
+                .end(function(err, res) {
+                  res.body.should.be.empty
+                  $should.not.exist(err)
+
+                  done()
+                })
+            })
         })
     })
 
