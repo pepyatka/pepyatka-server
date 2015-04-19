@@ -80,6 +80,26 @@ describe("UsersController", function() {
         .end(function(err, res) {
           res.should.not.be.empty
           res.body.err.should.not.be.empty
+          err.response.error.should.have.property('text')
+          JSON.parse(err.response.error.text).err.should.eql('Invalid')
+          done()
+        })
+    })
+
+    it('should not create user with empty password', function(done) {
+      var user = {
+        username: 'Luna',
+        password: '',
+      }
+
+      request
+        .post(app.config.host + '/v1/users')
+        .send({ username: user.username, password: user.password, email: user.email })
+        .end(function(err, res) {
+          res.should.not.be.empty
+          res.body.err.should.not.be.empty
+          err.response.error.should.have.property('text')
+          JSON.parse(err.response.error.text).err.should.eql('Password cannot be blank')
           done()
         })
     })
@@ -100,6 +120,8 @@ describe("UsersController", function() {
                 .end(function(err, res) {
                   res.should.not.be.empty
                   res.body.err.should.not.be.empty
+                  err.response.error.should.have.property('text')
+                  JSON.parse(err.response.error.text).err.should.eql('Already exists')
                   done()
                 })
           })
