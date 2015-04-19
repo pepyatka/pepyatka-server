@@ -32,9 +32,7 @@ exports.addController = function(app) {
           return res.jsonp(_.extend(json, { authToken: authToken }))
         })
       })
-      .catch(function(e) {
-        res.status(422).jsonp({ err: 'user ' + newUser.username + ' exists' })
-      })
+      .catch(exceptions.reportError(res))
   }
 
   UsersController.whoami = function(req, res) {
