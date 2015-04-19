@@ -85,12 +85,12 @@ exports.addSerializer = function() {
       }
 
       var node = serializer ? new serializer(objects[0]).name : field
-      async.forEach(objects, function(object, done) {
+      async.eachSeries(objects, function(object, done) {
         // Does not request objects that already has been serialized
         // and they are in root.
-        var inArray = _.filter(root[node], function(item) {
+        var inArray = _.any(root[node], function(item) {
           return item.id == object.id
-        }).length > 0
+        })
 
         if (!inArray) {
           if (serializer) {
