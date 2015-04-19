@@ -203,7 +203,7 @@ describe("CommentsController", function() {
               res.body.timelines.should.have.property('posts')
               res.body.timelines.posts.length.should.eql(1)
               res.body.should.have.property('posts')
-              res.body.posts[0].comments.length.should.eql(0)
+              res.body.posts[0].should.not.have.property('comments')
               done()
             })
         })

@@ -410,8 +410,7 @@ describe("UsersController", function() {
             .end(function(err, res) {
               res.body.should.not.be.empty
               res.body.should.have.property('timelines')
-              res.body.timelines.should.have.property('posts')
-              res.body.timelines.posts.length.should.eql(0)
+              res.body.timelines.should.not.have.property('posts')
               done()
             })
         })
