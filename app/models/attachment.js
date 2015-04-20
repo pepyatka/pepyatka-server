@@ -17,6 +17,9 @@ exports.addModel = function(database) {
 
     this.id = params.id
     this.file = params.file // FormData File object
+    this.fileName = params.fileName // original file name, e.g. 'cute-little-kitten.jpg'
+    this.fileSize = params.fileSize // file size in bytes
+    this.mimeType = params.mimeType // mime type, e.g. 'image/jpeg'
     this.fileExtension = params.fileExtension // jpg|png|gif etc.
     this.noThumbnail = params.noThumbnail // if true, image thumbnail URL == original URL
 
@@ -77,9 +80,13 @@ exports.addModel = function(database) {
       that.validateOnCreate()
         // Save file to FS
         .then(function(attachment) {
+          attachment.fileName = attachment.file.name
+          attachment.fileSize = attachment.file.size
+          attachment.mimeType = attachment.file.type
+
           var supportedExtensions = /\.(jpe?g|png|gif)$/
-          if (attachment.file.name && attachment.file.name.match(supportedExtensions).length !== null) {
-            attachment.fileExtension = attachment.file.name.match(supportedExtensions)[1]
+          if (attachment.fileName && attachment.fileName.match(supportedExtensions).length !== null) {
+            attachment.fileExtension = attachment.fileName.match(supportedExtensions)[1]
           } else {
             attachment.fileExtension = null
           }
@@ -89,7 +96,9 @@ exports.addModel = function(database) {
         // Save record to DB
         .then(function(attachment) {
           var params = {
-            file: JSON.stringify(attachment.file), // TODO: remove?
+            fileName: attachment.fileName,
+            fileSize: attachment.fileSize,
+            mimeType: attachment.mimeType,
             fileExtension: attachment.fileExtension,
             noThumbnail: attachment.noThumbnail,
             userId: attachment.userId,
