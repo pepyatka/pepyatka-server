@@ -134,8 +134,7 @@ exports.addController = function(app) {
       email: req.body.user.email,
       isPrivate: req.body.user.isPrivate
     }
-    models.User.findById(req.params.userId)
-      .then(function(user) { return user.update(attrs) })
+    req.user.update(attrs)
       .then(function(user) {
         new MyProfileSerializer(user).toJSON(function(err, json) {
           res.jsonp(json)
