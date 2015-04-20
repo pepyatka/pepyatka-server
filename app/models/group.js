@@ -22,11 +22,7 @@ exports.addModel = function(database) {
     this.screenName = params.screenName
     this.createdAt = params.createdAt
     this.updatedAt = params.updatedAt
-    if (params.hasOwnProperty('isPrivate')) {
-      this.isPrivate = params.isPrivate
-    } else {
-      this.isPrivate = '0'
-    }
+    this.isPrivate = params.isPrivate
     this.type = "group"
   }
 

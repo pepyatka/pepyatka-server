@@ -16,11 +16,9 @@ exports.addController = function(app) {
 
     var newGroup = new Group({
       username: req.body.group.username,
-      screenName: req.body.group.screenName
+      screenName: req.body.group.screenName,
+      isPrivate: req.body.group.isPrivate
     })
-    if (req.body.group.hasOwnProperty('isPrivate')) {
-      newGroup.isPrivate = req.body.group.isPrivate
-    }
 
     newGroup.create(req.user.id)
       .then(function(group) {

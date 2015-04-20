@@ -91,7 +91,7 @@ exports.addModel = function(database) {
   Object.defineProperty(User.prototype, 'isPrivate', {
     get: function() { return this.isPrivate_ },
     set: function(newValue) {
-      this.isPrivate_ = newValue || "0"
+      this.isPrivate_ = newValue || '0'
     }
   })
 
