@@ -223,10 +223,6 @@ exports.addModel = function(database) {
           return user.initPassword()
         })
         .then(function(user) {
-          var stats = new models.Stats({
-            id: user.id
-          })
-
           return Promise.all([
             database.setAsync(mkKey(['username', user.username, 'uid']), user.id),
             database.hmsetAsync(mkKey(['user', user.id]),
@@ -238,9 +234,15 @@ exports.addModel = function(database) {
                                   'createdAt': user.createdAt.toString(),
                                   'updatedAt': user.updatedAt.toString(),
                                   'hashedPassword': user.hashedPassword
-                                }),
-            stats.create()
+                                })
           ])
+        })
+        .then(function() {
+          var stats = new models.Stats({
+            id: that.id
+          })
+
+          return stats.create()
         })
         .then(function(res) { resolve(that) })
         .catch(function(e) { reject(e) })
