@@ -470,33 +470,19 @@ exports.addModel = function(database) {
     })
   }
 
-  Post.prototype.validateLikeOrUnlike = function(action, userId) {
-    var that = this
-    return new Promise(function(resolve, reject) {
-      database.sismemberAsync(mkKey(['post', that.id, 'likes']), userId)
-        .then(function(result) {
-          switch (true) {
-            case result == 1 && action == 'like':
-              reject(new ForbiddenException("You can't like post that you have already liked"))
-              break;
-            case result == 0 && action == 'unlike':
-              reject(new ForbiddenException("You can't un-like post that you haven't yet liked"))
-              break;
-            default:
-              resolve(that);
-              break;
-          }
-        }).catch(function(e) {
-          reject(new Error("Failed to validate like"));
-        })
-    });
-  }
 
   Post.prototype.addLike = function(userId) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      that.getLikesFriendOfFriendTimelines(userId)
+
+      models.User.findById(userId)
+        .then(function(user) {
+          return user.validateCanLikePost(that.id)
+        })
+        .then(function() {
+          return that.getLikesFriendOfFriendTimelines(userId)
+        })
         .then(function(timelines) {
           return Promise.all([
             Promise.map(timelines, function(timeline) {
@@ -509,6 +495,7 @@ exports.addModel = function(database) {
         .then(function() { return models.Stats.findById(that.userId) })
         .then(function(stats) { return stats.addLike() })
         .then(function(res) { resolve(res) })
+        .catch(function(err) { reject(err) })
     })
   }
 
@@ -516,11 +503,19 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      database.sremAsync(mkKey(['post', that.id, 'likes']), userId)
+
+      models.User.findById(userId)
+        .then(function(user) {
+          return user.validateCanUnLikePost(that.id)
+        })
+        .then(function() {
+          return database.sremAsync(mkKey(['post', that.id, 'likes']), userId)
+        })
         .then(function() { return pubSub.removeLike(that.id, userId) })
         .then(function() { return models.Stats.findById(that.userId) })
         .then(function(stats) { return stats.removeLike() })
         .then(function(res) { resolve(res) })
+        .catch(function(err) { reject(err) })
     })
   }
 

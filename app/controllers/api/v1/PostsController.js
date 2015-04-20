@@ -90,7 +90,6 @@ exports.addController = function(app) {
       return res.status(401).jsonp({ err: 'Not found' })
 
     models.Post.getById(req.params.postId)
-      .then(function(post) { return post.validateLikeOrUnlike('like', req.user.id) })
       .then(function(post) { return post.addLike(req.user.id) })
       .then(function() { res.status(200).send({}) })
       .catch(exceptions.reportError(res))
@@ -101,7 +100,6 @@ exports.addController = function(app) {
       return res.status(401).jsonp({ err: 'Not found' })
 
     models.Post.getById(req.params.postId)
-      .then(function(post) { return post.validateLikeOrUnlike('unlike', req.user.id) })
       .then(function(post) { return post.removeLike(req.user.id) })
       .then(function() { res.status(200).send({}) })
       .catch(exceptions.reportError(res))
