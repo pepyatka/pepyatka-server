@@ -183,7 +183,9 @@ exports.addModel = function(database) {
     return new Promise(function(resolve, reject) {
       var valid
 
-      valid = this.username.length > 1
+      valid = this.username
+        && this.username.length > 1
+        && this.screenName
         && this.screenName.length > 1
         && models.FeedFactory.stopList().indexOf(this.username) == -1
         && this.isValidEmail().value()
