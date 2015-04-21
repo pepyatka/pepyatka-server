@@ -626,5 +626,39 @@ exports.addModel = function(database) {
     return Promise.resolve(this)
   }
 
+  /* checks if user can like some post */
+  User.prototype.validateCanLikePost = function(postId) {
+    return this.validateCanLikeOrUnlikePost('like', postId)
+  }
+
+  User.prototype.validateCanUnLikePost = function(postId) {
+    return this.validateCanLikeOrUnlikePost('unlike', postId)
+  }
+
+  User.prototype.validateCanLikeOrUnlikePost = function(action, postId) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      return database.zscoreAsync(mkKey(['post', postId, 'likes']), that.id)
+        .then(function(result) {
+          switch (true) {
+            case result != null && action == 'like':
+              reject(new ForbiddenException("You can't like post that you have already liked"))
+              break;
+            case result == null && action == 'unlike':
+              reject(new ForbiddenException("You can't un-like post that you haven't yet liked"))
+              break;
+            default:
+              resolve(that);
+              break;
+          }
+        }).catch(function(e) {
+          reject(new Error("Failed to validate like"));
+        })
+    })
+
+  }
+
+
   return User
 }

@@ -127,6 +127,17 @@ exports.addModel = function(database) {
             return comment.destroy()
           })
         })
+        // decrement likes counter for users who liked this post
+        .then(function() {
+          return that.getLikeIds()
+        })
+        .then(function(userIds) {
+          return Promise.map(userIds, function(userId) {
+            return models.Stats.findById(userId).then(function(stats) {
+              return stats.removeLike()
+            })
+          })
+        })
         .then(function() {
           return pubSub.destroyPost(that.id)
         })
@@ -174,12 +185,6 @@ exports.addModel = function(database) {
 
   Post.prototype.getCreatedBy = function() {
     return models.User.findById(this.userId)
-  }
-
-  Post.prototype.getLikes = function() {
-    return Promise.resolve(function() {
-      return []
-    })
   }
 
   Post.prototype.getSubscribedTimelineIds = function() {
@@ -245,7 +250,7 @@ exports.addModel = function(database) {
         .then(function(subscribedTimelineIds) {
           timelineIds = timelineIds.concat(subscribedTimelineIds)
           return user.getRiverOfNewsTimelineId()
-         })
+        })
         .then(function(timelineId) {
           timelineIds.push(timelineId)
           timelineIds = _.uniq(timelineIds)
@@ -472,7 +477,14 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      that.getLikesFriendOfFriendTimelines(userId)
+
+      models.User.findById(userId)
+        .then(function(user) {
+          return user.validateCanLikePost(that.id)
+        })
+        .then(function() {
+          return that.getLikesFriendOfFriendTimelines(userId)
+        })
         .then(function(timelines) {
           var now = new Date().getTime()
 
@@ -484,9 +496,10 @@ exports.addModel = function(database) {
           ])
         })
         .then(function() { return pubSub.newLike(that.id, userId)})
-        .then(function() { return models.Stats.findById(that.userId) })
+        .then(function() { return models.Stats.findById(userId) })
         .then(function(stats) { return stats.addLike() })
         .then(function(res) { resolve(res) })
+        .catch(function(err) { reject(err) })
     })
   }
 
@@ -494,11 +507,19 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      database.zremAsync(mkKey(['post', that.id, 'likes']), userId)
+
+      models.User.findById(userId)
+        .then(function(user) {
+          return user.validateCanUnLikePost(that.id)
+        })
+        .then(function() {
+          return database.zremAsync(mkKey(['post', that.id, 'likes']), userId)
+        })
         .then(function() { return pubSub.removeLike(that.id, userId) })
-        .then(function() { return models.Stats.findById(that.userId) })
+        .then(function() { return models.Stats.findById(userId) })
         .then(function(stats) { return stats.removeLike() })
         .then(function(res) { resolve(res) })
+        .catch(function(err) { reject(err) })
     })
   }
 
