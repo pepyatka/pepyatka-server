@@ -468,6 +468,34 @@ exports.addModel = function(database) {
     })
   }
 
+  Post.prototype.getGroups = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getTimelineIds()
+        .then(function(timelineIds) {
+          return Promise.map(timelineIds, function(timelineId) {
+            return models.Timeline.findById(timelineId)
+          })
+          .filter(function(timeline) {
+            return timeline.name == 'Posts'
+          })
+        })
+        .then(function(timelines) {
+            return Promise.map(timelines, function(timeline) {
+              return models.FeedFactory.findById(timeline.userId)
+            })
+            .filter(function(feed) {
+              return feed.type == 'group'
+            })
+        })
+        .then(function(groups) {
+          that.groups = groups
+          resolve(that.groups)
+        })
+    })
+  }
+
   Post.prototype.addLike = function(userId) {
     var that = this
 
