@@ -32,9 +32,7 @@ exports.addController = function(app) {
           return res.jsonp(_.extend(json, { authToken: authToken }))
         })
       })
-      .catch(function(e) {
-        res.status(422).jsonp({ err: 'user ' + newUser.username + ' exists' })
-      })
+      .catch(exceptions.reportError(res))
   }
 
   UsersController.whoami = function(req, res) {
@@ -136,8 +134,7 @@ exports.addController = function(app) {
       email: req.body.user.email,
       isPrivate: req.body.user.isPrivate
     }
-    models.User.findById(req.params.userId)
-      .then(function(user) { return user.update(attrs) })
+    req.user.update(attrs)
       .then(function(user) {
         new MyProfileSerializer(user).toJSON(function(err, json) {
           res.jsonp(json)

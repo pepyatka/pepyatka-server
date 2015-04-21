@@ -22,11 +22,7 @@ exports.addModel = function(database) {
     this.screenName = params.screenName
     this.createdAt = params.createdAt
     this.updatedAt = params.updatedAt
-    if (params.hasOwnProperty('isPrivate')) {
-      this.isPrivate = params.isPrivate
-    } else {
-      this.isPrivate = '0'
-    }
+    this.isPrivate = params.isPrivate
     this.type = "group"
   }
 
@@ -58,7 +54,9 @@ exports.addModel = function(database) {
     return new Promise(function(resolve, reject) {
       var valid
 
-      valid = this.username.length > 1
+      valid = this.username
+        && this.username.length > 1
+        && this.screenName
         && this.screenName.length > 1
         && models.FeedFactory.stopList().indexOf(this.username) == -1
 
@@ -77,10 +75,6 @@ exports.addModel = function(database) {
 
       that.validateOnCreate()
         .then(function(group) {
-          var stats = new models.Stats({
-            id: group.id
-          })
-
           return Promise.all([
             database.setAsync(mkKey(['username', group.username, 'uid']), group.id),
             database.hmsetAsync(mkKey(['user', group.id]),
@@ -90,9 +84,17 @@ exports.addModel = function(database) {
                                   'createdAt': group.createdAt.toString(),
                                   'updatedAt': group.updatedAt.toString(),
                                   'isPrivate': group.isPrivate
-                                }),
-            group.addAdministrator(ownerId),
-            group.subscribeOwner(ownerId),
+                                })
+          ])
+        })
+        .then(function() {
+          var stats = new models.Stats({
+            id: that.id
+          })
+
+          return Promise.all([
+            that.addAdministrator(ownerId),
+            that.subscribeOwner(ownerId),
             stats.create()
           ])
         })

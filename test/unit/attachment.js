@@ -72,10 +72,21 @@ describe('Attachment', function() {
           newAttachment.id.should.eql(attachment.id)
           return newAttachment
         }).then(function(newAttachment) {
+          newAttachment.should.have.a.property('fileName')
+          newAttachment.fileName.should.be.equal(file.name)
+
+          newAttachment.should.have.a.property('fileSize')
+          newAttachment.fileSize.should.be.equal(file.size.toString())
+
+          newAttachment.should.have.a.property('mimeType')
+          newAttachment.mimeType.should.be.equal(file.type)
+
           newAttachment.should.have.a.property('fileExtension')
-          newAttachment.fileExtension.should.be.equal('gif')
+          newAttachment.fileExtension.should.be.equal(file.name.match(/\.(\w+)$/)[1])
+
           newAttachment.should.have.a.property('noThumbnail')
           newAttachment.noThumbnail.should.be.equal('1')
+
           newAttachment.getPath().should.be.equal(config.attachments.fsDir + newAttachment.id + '.' + newAttachment.fileExtension)
           fs.stat(newAttachment.getPath(), function(err, stats) {
             stats.size.should.be.equal(file.size)

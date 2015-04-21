@@ -91,7 +91,7 @@ exports.addModel = function(database) {
   Object.defineProperty(User.prototype, 'isPrivate', {
     get: function() { return this.isPrivate_ },
     set: function(newValue) {
-      this.isPrivate_ = newValue || "0"
+      this.isPrivate_ = newValue || '0'
     }
   })
 
@@ -183,7 +183,9 @@ exports.addModel = function(database) {
     return new Promise(function(resolve, reject) {
       var valid
 
-      valid = this.username.length > 1
+      valid = this.username
+        && this.username.length > 1
+        && this.screenName
         && this.screenName.length > 1
         && models.FeedFactory.stopList().indexOf(this.username) == -1
         && this.isValidEmail().value()
@@ -221,10 +223,6 @@ exports.addModel = function(database) {
           return user.initPassword()
         })
         .then(function(user) {
-          var stats = new models.Stats({
-            id: user.id
-          })
-
           return Promise.all([
             database.setAsync(mkKey(['username', user.username, 'uid']), user.id),
             database.hmsetAsync(mkKey(['user', user.id]),
@@ -236,9 +234,15 @@ exports.addModel = function(database) {
                                   'createdAt': user.createdAt.toString(),
                                   'updatedAt': user.updatedAt.toString(),
                                   'hashedPassword': user.hashedPassword
-                                }),
-            stats.create()
+                                })
           ])
+        })
+        .then(function() {
+          var stats = new models.Stats({
+            id: that.id
+          })
+
+          return stats.create()
         })
         .then(function(res) { resolve(that) })
         .catch(function(e) { reject(e) })

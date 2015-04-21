@@ -85,12 +85,12 @@ exports.addSerializer = function() {
       }
 
       var node = serializer ? new serializer(objects[0]).name : field
-      async.forEach(objects, function(object, done) {
+      async.eachSeries(objects, function(object, done) {
         // Does not request objects that already has been serialized
         // and they are in root.
-        var inArray = _.filter(root[node], function(item) {
+        var inArray = _.any(root[node], function(item) {
           return item.id == object.id
-        }).length > 0
+        })
 
         if (!inArray) {
           if (serializer) {
@@ -160,10 +160,14 @@ exports.addSerializer = function() {
           new serializer.strategy[field].through(object).toJSON(f)
         }
       }, function(objects) {
-        if (serializer.strategy[field].embed) {
-          processWithRoot(objects)
+        if (typeof objects != 'undefined' && objects.length > 0) {
+          if (serializer.strategy[field].embed) {
+            processWithRoot(objects)
+          } else {
+            serializer.processMultiObjects(objects, null, serializer.strategy[field].through, root, level, f)
+          }
         } else {
-          serializer.processMultiObjects(objects, null, serializer.strategy[field].through, root, level, f)
+          f(null, null)
         }
       })
     },
@@ -196,7 +200,9 @@ exports.addSerializer = function() {
       level = level || 0
       var jsonAdder = function(field, done) {
         return function(err, res) {
-          json[field] = res
+          if (res != null) {
+            json[field] = res
+          }
           done(err)
         }
       }

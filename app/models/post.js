@@ -448,7 +448,7 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      database.smembersAsync(mkKey(['post', that.id, 'likes']))
+      database.zrevrangeAsync(mkKey(['post', that.id, 'likes']), 0, -1)
         .then(function(likeIds) {
           that.likeIds = likeIds
           resolve(likeIds)
@@ -486,11 +486,13 @@ exports.addModel = function(database) {
           return that.getLikesFriendOfFriendTimelines(userId)
         })
         .then(function(timelines) {
+          var now = new Date().getTime()
+
           return Promise.all([
             Promise.map(timelines, function(timeline) {
               return timeline.updatePost(that.id)
             }),
-            database.saddAsync(mkKey(['post', that.id, 'likes']), userId)
+            database.zaddAsync(mkKey(['post', that.id, 'likes']), now, userId)
           ])
         })
         .then(function() { return pubSub.newLike(that.id, userId)})
@@ -505,13 +507,14 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
+      database.zremAsync(mkKey(['post', that.id, 'likes']), userId)
 
       models.User.findById(userId)
         .then(function(user) {
           return user.validateCanUnLikePost(that.id)
         })
         .then(function() {
-          return database.sremAsync(mkKey(['post', that.id, 'likes']), userId)
+          return database.zremAsync(mkKey(['post', that.id, 'likes']), userId)
         })
         .then(function() { return pubSub.removeLike(that.id, userId) })
         .then(function() { return models.Stats.findById(userId) })
