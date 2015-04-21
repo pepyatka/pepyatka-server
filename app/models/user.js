@@ -639,13 +639,13 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      database.sismemberAsync(mkKey(['post', postId, 'likes']), that.id)
+      return database.zscoreAsync(mkKey(['post', postId, 'likes']), that.id)
         .then(function(result) {
           switch (true) {
-            case result == 1 && action == 'like':
+            case result != null && action == 'like':
               reject(new ForbiddenException("You can't like post that you have already liked"))
               break;
-            case result == 0 && action == 'unlike':
+            case result == null && action == 'unlike':
               reject(new ForbiddenException("You can't un-like post that you haven't yet liked"))
               break;
             default:

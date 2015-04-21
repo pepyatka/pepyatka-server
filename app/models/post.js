@@ -507,7 +507,6 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      database.zremAsync(mkKey(['post', that.id, 'likes']), userId)
 
       models.User.findById(userId)
         .then(function(user) {

@@ -158,7 +158,8 @@ describe("PostsController", function() {
             .end(function(err, res) {
               err.should.not.be.empty
               err.status.should.eql(403)
-
+              err.response.error.should.have.property('text')
+              JSON.parse(err.response.error.text).err.should.eql("You can't like post that you have already liked")
               done()
             })
 
@@ -221,6 +222,8 @@ describe("PostsController", function() {
 
           err.should.not.be.empty
           err.status.should.eql(403)
+          err.response.error.should.have.property('text')
+          JSON.parse(err.response.error.text).err.should.eql("You can't un-like post that you haven't yet liked")
 
           request
             .post(app.config.host + '/v1/posts/' + post.id + '/like')
