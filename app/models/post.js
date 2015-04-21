@@ -10,8 +10,6 @@ var Promise = require('bluebird')
   , mkKey = require("../support/models").mkKey
   , _ = require('lodash')
   , pubSub = models.PubSub
-  , exceptions = require('../support/exceptions')
-  , ForbiddenException = exceptions.ForbiddenException
 
 exports.addModel = function(database) {
   /**
@@ -129,6 +127,17 @@ exports.addModel = function(database) {
             return comment.destroy()
           })
         })
+        // decrement likes counter for users who liked this post
+        .then(function() {
+          return that.getLikeIds()
+        })
+        .then(function(userIds) {
+          return Promise.map(userIds, function(userId) {
+            return models.Stats.findById(userId).then(function(stats) {
+              return stats.removeLike()
+            })
+          })
+        })
         .then(function() {
           return pubSub.destroyPost(that.id)
         })
@@ -176,12 +185,6 @@ exports.addModel = function(database) {
 
   Post.prototype.getCreatedBy = function() {
     return models.User.findById(this.userId)
-  }
-
-  Post.prototype.getLikes = function() {
-    return Promise.resolve(function() {
-      return []
-    })
   }
 
   Post.prototype.getSubscribedTimelineIds = function() {
@@ -470,7 +473,6 @@ exports.addModel = function(database) {
     })
   }
 
-
   Post.prototype.addLike = function(userId) {
     var that = this
 
@@ -492,7 +494,7 @@ exports.addModel = function(database) {
           ])
         })
         .then(function() { return pubSub.newLike(that.id, userId)})
-        .then(function() { return models.Stats.findById(that.userId) })
+        .then(function() { return models.Stats.findById(userId) })
         .then(function(stats) { return stats.addLike() })
         .then(function(res) { resolve(res) })
         .catch(function(err) { reject(err) })
@@ -512,7 +514,7 @@ exports.addModel = function(database) {
           return database.sremAsync(mkKey(['post', that.id, 'likes']), userId)
         })
         .then(function() { return pubSub.removeLike(that.id, userId) })
-        .then(function() { return models.Stats.findById(that.userId) })
+        .then(function() { return models.Stats.findById(userId) })
         .then(function(stats) { return stats.removeLike() })
         .then(function(res) { resolve(res) })
         .catch(function(err) { reject(err) })
