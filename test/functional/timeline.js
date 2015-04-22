@@ -164,6 +164,31 @@ describe("TimelinesController", function() {
           done()
         })
     })
+
+    it('should return empty likes timeline after un-like', function(done) {
+      request
+        .post(app.config.host + '/v1/posts/' + post.id + '/unlike')
+        .send({ authToken: authToken })
+        .end(function(req, res) {
+          request
+            .get(app.config.host + '/v1/timelines/' + username + '/likes')
+            .query({ authToken: authToken })
+            .end(function(err, res) {
+
+              console.warn(res)
+
+              res.should.not.be.empty
+              res.body.should.not.be.empty
+              res.body.should.have.property('timelines')
+              res.body.timelines.should.have.property('name')
+              res.body.timelines.name.should.eql('Likes')
+              res.body.timelines.should.not.have.property('posts')
+              res.body.should.not.have.property('posts')
+              done()
+            })
+        })
+    })
+
   })
 
   describe('#comments()', function() {
