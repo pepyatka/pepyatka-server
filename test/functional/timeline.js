@@ -174,9 +174,6 @@ describe("TimelinesController", function() {
             .get(app.config.host + '/v1/timelines/' + username + '/likes')
             .query({ authToken: authToken })
             .end(function(err, res) {
-
-              console.warn(res)
-
               res.should.not.be.empty
               res.body.should.not.be.empty
               res.body.should.have.property('timelines')
