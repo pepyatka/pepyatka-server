@@ -27,6 +27,7 @@ exports.getConfig = function() {
     // Make sure that all directories here have a trailing slash
     urlDir: 'http://localhost:3000/attachments/original/',
     fsDir: './public/files/original/',
+    fileSizeLimit: '10mb',
 
     thumbnails: {
       urlDir: 'http://localhost:3000/attachments/thumbnails/',
