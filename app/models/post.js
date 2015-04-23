@@ -504,24 +504,26 @@ exports.addModel = function(database) {
   }
 
   Post.prototype.removeLike = function(userId) {
-    var that = this,
-      currentUser = null
+    var that = this
 
     return new Promise(function(resolve, reject) {
 
-      models.User.findById(userId)
+      models.User.findById(userId).bind({})
         .then(function(user) {
-          currentUser = user
-          return currentUser.validateCanUnLikePost(that.id)
+          this.user = user
+          return this.user.validateCanUnLikePost(that.id)
         })
         .then(function() {
           return database.zremAsync(mkKey(['post', that.id, 'likes']), userId)
         })
         .then(function() {
-          return currentUser.getLikesTimelineId()
+          return this.user.getLikesTimelineId()
         })
         .then(function(timelineId) {
-          return database.zremAsync(mkKey(['timeline', timelineId, 'posts']), that.id)
+          Promise.all([
+            database.zremAsync(mkKey(['timeline', timelineId, 'posts']), that.id),
+            database.sremAsync(mkKey(['post', that.id, 'timelines']), timelineId)
+          ])
         })
         .then(function() { return pubSub.removeLike(that.id, userId) })
         .then(function() { return models.Stats.findById(userId) })
