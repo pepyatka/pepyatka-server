@@ -225,14 +225,17 @@ describe('Comment', function() {
         .then(function(res) { done() })
     })
 
-    it('should destroy comment', function(done) {
-      post.getComments()
-        .then(function(comments) { return comments[0].destroy() })
+    it('should destroy comment', function(done, reject) {
+      post.getComments().bind({})
+        .then(function(comments) { this.comment = comments[0]; return this.comment.destroy() })
+        .then(function() { return Comment.findById(this.comment.id) })
+        .then(function(oldComment) { (oldComment===null).should.be.true } )
         .then(function() { return post.getComments() })
         .then(function(comments) {
           comments.should.be.empty
         })
         .then(function() { done() })
+        .catch(function(err) { done(err) })
     })
   })
 })
