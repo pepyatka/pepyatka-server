@@ -32,8 +32,8 @@ exports.addModel = function(database) {
 
     if (!_.isUndefined(params.hashedPassword)) {
       this.hashedPassword = params.hashedPassword
-    } else if (!_.isUndefined(params.password)) {
-      password = params.password
+    } else {
+      password = params.password || ''
     }
 
     this.isPrivate = params.isPrivate

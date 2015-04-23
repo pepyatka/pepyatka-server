@@ -67,6 +67,22 @@ describe("UsersController", function() {
         })
     })
 
+    it('should not create user without password', function(done) {
+      var user = {
+        username: 'Luna'
+      }
+
+      request
+        .post(app.config.host + '/v1/users')
+        .send({ username: user.username, password: user.password })
+        .end(function(err, res) {
+          res.should.not.be.empty
+          res.body.err.should.not.be.empty
+          res.body.err.should.eql('Password cannot be blank')
+          done()
+        })
+    })
+
     it('should not create user with invalid email', function(done) {
       var user = {
         username: 'Luna',
