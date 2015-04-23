@@ -28,8 +28,8 @@ var selectEnvironment = function(app) {
 }
 
 exports.init = function(app) {
-  app.use(bodyParser.json())
-  app.use(bodyParser.urlencoded({ extended: false}))
+  app.use(bodyParser.json({limit: config.attachments.fileSizeLimit}))
+  app.use(bodyParser.urlencoded({limit: config.attachments.fileSizeLimit, extended: true}))
   app.use(passport.initialize())
   app.use(origin.init)
   app.use(methodOverride(function(req, res) {
