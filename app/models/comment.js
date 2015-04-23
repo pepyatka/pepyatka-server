@@ -125,7 +125,7 @@ exports.addModel = function(database) {
 
     return new Promise(function(resolve, reject) {
       pubSub.destroyComment(that.id)
-        .then(function(res) { return database.delAsync(mkKey(['comment:', that.id])) })
+        .then(function(res) { return database.delAsync(mkKey(['comment', that.id])) })
         .then(function(res) {
           return database.lremAsync(mkKey(['post', that.postId, 'comments']), 1, that.id)
         })
