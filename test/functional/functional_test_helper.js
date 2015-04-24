@@ -55,7 +55,6 @@ exports.createPost = function(context, body, callback) {
   };
 }
 
-
 exports.createComment = function(body, postId, authToken, callback) {
   return function(done) {
     var comment = {
@@ -69,5 +68,36 @@ exports.createComment = function(body, postId, authToken, callback) {
       .end(function(err, res) {
         done(err, res)
       })
+  }(callback)
+}
+
+exports.removeComment = function(commentId, authToken, callback) {
+  return function(done) {
+
+    request
+      .post(app.config.host + '/v1/comments/' + commentId)
+      .send({
+        authToken: authToken,
+        '_method': 'delete'
+      })
+      .end(function(err, res) {
+        done(err, res)
+      })
+  }(callback)
+}
+
+exports.getTimeline = function(timelinePath, authToken, callback) {
+  return function(done) {
+    var sendParams = {};
+    if (authToken) {
+      sendParams.authToken = authToken
+    }
+    request
+      .get(app.config.host + timelinePath)
+      .query(sendParams)
+      .end(function(err, res) {
+        done(err, res)
+      })
+
   }(callback)
 }

@@ -15,10 +15,7 @@ describe("TimelinesController", function() {
     }))
 
     it('should return empty River Of News', function(done) {
-      request
-        .get(app.config.host + '/v1/timelines/home')
-        .query({ authToken: authToken })
-        .end(function(err, res) {
+      funcTestHelper.getTimeline('/v1/timelines/home', authToken, function(err, res) {
           res.should.not.be.empty
           res.body.should.not.be.empty
           res.body.should.have.property('timelines')
@@ -31,9 +28,7 @@ describe("TimelinesController", function() {
     })
 
     it('should not return River Of News for unauthenticated user', function(done) {
-      request
-        .get(app.config.host + '/v1/timelines/home')
-        .end(function(err, res) {
+      funcTestHelper.getTimeline('/v1/timelines/home', null, function(err, res) {
           err.should.not.be.empty
           err.status.should.eql(401)
           done()
@@ -52,10 +47,7 @@ describe("TimelinesController", function() {
           res.body.posts.should.have.property('body')
           res.body.posts.body.should.eql(body)
 
-          request
-            .get(app.config.host + '/v1/timelines/home')
-            .query({ authToken: authToken })
-            .end(function(err, res) {
+          funcTestHelper.getTimeline('/v1/timelines/home', authToken, function(err, res) {
               res.should.not.be.empty
               res.body.should.not.be.empty
               res.body.should.have.property('timelines')
@@ -100,10 +92,7 @@ describe("TimelinesController", function() {
     })
 
     it('should return posts timeline', function(done) {
-      request
-        .get(app.config.host + '/v1/timelines/' + username)
-        .query({ authToken: authToken })
-        .end(function(err, res) {
+      funcTestHelper.getTimeline('/v1/timelines/' + username, authToken, function(err, res) {
           res.should.not.be.empty
           res.body.should.not.be.empty
           res.body.should.have.property('timelines')
@@ -147,10 +136,7 @@ describe("TimelinesController", function() {
     })
 
     it('should return likes timeline', function(done) {
-      request
-        .get(app.config.host + '/v1/timelines/' + username + '/likes')
-        .query({ authToken: authToken })
-        .end(function(err, res) {
+      funcTestHelper.getTimeline('/v1/timelines/' + username + '/likes', authToken, function(err, res) {
           res.should.not.be.empty
           res.body.should.not.be.empty
           res.body.should.have.property('timelines')
@@ -170,10 +156,7 @@ describe("TimelinesController", function() {
         .post(app.config.host + '/v1/posts/' + post.id + '/unlike')
         .send({ authToken: authToken })
         .end(function(req, res) {
-          request
-            .get(app.config.host + '/v1/timelines/' + username + '/likes')
-            .query({ authToken: authToken })
-            .end(function(err, res) {
+          funcTestHelper.getTimeline('/v1/timelines/' + username + '/likes', authToken, function(err, res) {
               res.should.not.be.empty
               res.body.should.not.be.empty
               res.body.should.have.property('timelines')
@@ -194,6 +177,7 @@ describe("TimelinesController", function() {
       , user
       , post
       , comment
+      , comment2
 
     beforeEach(funcTestHelper.createUser(username, 'password', function(token) {
       authToken = token
@@ -213,16 +197,18 @@ describe("TimelinesController", function() {
           funcTestHelper.createComment(body, post.id, authToken, function(err, res) {
             comment = res.body.comments
 
-            done()
+            funcTestHelper.createComment(body, post.id, authToken, function(err, res) {
+              comment2 = res.body.comments
+
+              done()
+            })
+
           })
         })
     })
 
     it('should return comments timeline', function(done) {
-      request
-        .get(app.config.host + '/v1/timelines/' + username + '/comments')
-        .query({ authToken: authToken })
-        .end(function(err, res) {
+      funcTestHelper.getTimeline('/v1/timelines/' + username + '/comments', authToken, function(err, res) {
           res.should.not.be.empty
           res.body.should.not.be.empty
           res.body.should.have.property('timelines')
@@ -236,5 +222,51 @@ describe("TimelinesController", function() {
           done()
         })
     })
+
+
+    it('should clear comments timeline only after all comments are deleted', function(done) {
+
+      funcTestHelper.removeComment(comment.id, authToken, function(err, res) {
+        res.body.should.be.empty
+        res.status.should.eql(200)
+
+        funcTestHelper.getTimeline('/v1/timelines/' + username + '/comments', authToken, function(err, res) {
+          res.should.not.be.empty
+          res.body.should.not.be.empty
+          res.body.should.have.property('timelines')
+          res.body.timelines.should.have.property('name')
+          res.body.timelines.name.should.eql('Comments')
+          res.body.timelines.should.have.property('posts')
+          res.body.timelines.posts.length.should.eql(1)
+          res.body.should.have.property('posts')
+          res.body.posts.length.should.eql(1)
+          res.body.posts[0].body.should.eql(post.body)
+
+          // now remove 2nd comment
+          funcTestHelper.removeComment(comment2.id, authToken, function(err, res) {
+            res.body.should.be.empty
+            res.status.should.eql(200)
+
+            funcTestHelper.getTimeline('/v1/timelines/' + username + '/comments', authToken, function(err, res) {
+              res.should.not.be.empty
+              res.body.should.not.be.empty
+              res.body.should.have.property('timelines')
+              res.body.timelines.should.have.property('name')
+              res.body.timelines.name.should.eql('Comments')
+              res.body.timelines.should.not.have.property('posts')
+              res.body.should.not.have.property('posts')
+
+              done()
+            })
+
+
+          })
+
+        })
+
+      })
+
+    })
+
   })
 })
