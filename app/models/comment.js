@@ -6,8 +6,10 @@ var Promise = require('bluebird')
   , models = require('../models')
   , AbstractModel = models.AbstractModel
   , Post = models.Post
+  , User = models.User
   , mkKey = require("../support/models").mkKey
   , pubSub = models.PubSub
+  , _ = require('lodash')
 
 exports.addModel = function(database) {
   /**
@@ -128,6 +130,26 @@ exports.addModel = function(database) {
         .then(function(res) { return database.delAsync(mkKey(['comment', that.id])) })
         .then(function(res) {
           return database.lremAsync(mkKey(['post', that.postId, 'comments']), 1, that.id)
+        })
+
+        // look for comment from this user in this post
+        // if this is was the last one remove this post from user's comments timeline
+        .then(function() { return Post.findById(that.postId) })
+        .then(function(post) { return post.getComments() })
+        .then(function(comments) {
+          if (_.any(comments, 'userId', that.userId)) {
+            return Promise.resolve(true);
+          }
+
+          return User.findById(that.userId)
+            .then(function(user) { return user.getCommentsTimelineId() })
+            .then(function(timelineId) {
+                return Promise.all([
+                  database.zremAsync(mkKey(['timeline', timelineId, 'posts']), that.postId),
+                  database.sremAsync(mkKey(['post', that.postId, 'timelines']), timelineId)
+                ]);
+            })
+
         })
         .then(function() { return models.Stats.findById(that.userId) })
         .then(function(stats) { return stats.removeComment() })

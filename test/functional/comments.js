@@ -181,32 +181,21 @@ describe("CommentsController", function() {
     })
 
     it('should destroy valid comment', function(done) {
-      request
-        .post(app.config.host + '/v1/comments/' + comment.id)
-        .send({
-          authToken: authToken,
-          '_method': 'delete'
-        })
-        .end(function(err, res) {
-          res.body.should.be.empty
-          res.status.should.eql(200)
+      funcTestHelper.removeComment(comment.id, authToken, function(err, res) {
+        res.body.should.be.empty
+        res.status.should.eql(200)
 
-          request
-            .get(app.config.host + '/v1/timelines/' + username + '/comments')
-            .query({ authToken: authToken })
-            .end(function(err, res) {
-              res.should.not.be.empty
-              res.body.should.not.be.empty
-              res.body.should.have.property('timelines')
-              res.body.timelines.should.have.property('name')
-              res.body.timelines.name.should.eql('Comments')
-              res.body.timelines.should.have.property('posts')
-              res.body.timelines.posts.length.should.eql(1)
-              res.body.should.have.property('posts')
-              res.body.posts[0].should.not.have.property('comments')
-              done()
-            })
-        })
+        request
+          .get(app.config.host + '/v1/posts/'+post.id)
+          .query({ authToken: authToken })
+          .end(function(err, res) {
+            res.should.not.be.empty
+            res.body.should.not.be.empty
+            res.body.should.have.property('posts')
+            res.body.posts.should.not.have.property('comments')
+            done()
+          })
+      })
     })
 
     it('should not destroy valid comment without user', function(done) {
