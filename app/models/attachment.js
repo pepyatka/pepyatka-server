@@ -12,6 +12,9 @@ var Promise = require('bluebird')
   , mkKey = require('../support/models').mkKey
 
 exports.addModel = function(database) {
+  /**
+   * @constructor
+   */
   var Attachment = function(params) {
     Attachment.super_.call(this)
 
@@ -164,7 +167,11 @@ exports.addModel = function(database) {
       var tmpPath = that.file.path
       var originalPath = that.getPath()
 
-      fs.rename(tmpPath, originalPath, function() {
+      fs.rename(tmpPath, originalPath, function(err) {
+        if (err) {
+          reject(err)
+          return
+        }
         if ('image') { // TODO: support for various media types
           gm(originalPath).size(function (err, size) {
             // Check if we need to resize
