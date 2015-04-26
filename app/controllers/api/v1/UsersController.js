@@ -11,8 +11,12 @@ var models = require('../../../models')
   , Promise = require('bluebird')
   , async = require('async')
   , exceptions = require('../../../support/exceptions')
+  , formidable = require('formidable')
 
 exports.addController = function(app) {
+  /**
+   * @constructor
+   */
   var UsersController = function() {
   }
 
@@ -157,6 +161,23 @@ exports.addController = function(app) {
       })
       .then(function(user) { res.jsonp({ message: 'Your password has been changed' }) })
       .catch(exceptions.reportError(res))
+  }
+
+  UsersController.updateProfilePicture = function(req, res) {
+    if (!req.user)
+      return res.status(401).jsonp({ err: 'Not found' })
+
+    var form = new formidable.IncomingForm()
+
+    form.on('file', function(inputName, file) {
+      req.user.updateProfilePicture(file)
+        .then(function() {
+          res.jsonp({ message: 'Your profile picture has been updated' })
+        })
+        .catch(exceptions.reportError(res))
+    })
+
+    form.parse(req)
   }
 
   return UsersController

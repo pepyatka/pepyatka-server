@@ -3,6 +3,8 @@ var request = require('superagent')
   , models = require('../../app/models')
   , async = require('async')
   , funcTestHelper = require('./functional_test_helper')
+  , mkdirp = require('mkdirp')
+  , config = require('../../config/config').load()
 
 describe("UsersController", function() {
   beforeEach(funcTestHelper.flushDb())
@@ -689,6 +691,40 @@ describe("UsersController", function() {
           err.should.not.be.empty
           err.status.should.eql(401)
           done()
+        })
+    })
+  })
+
+  describe('#updateProfilePicture', function() {
+    var authToken
+      , user
+
+    beforeEach(funcTestHelper.createUser('Luna', 'password', function (token, luna) {
+      authToken = token
+      user = luna
+    }))
+
+    beforeEach(function(done){
+      mkdirp.sync(config.profilePictures.fsDir)
+      done()
+    })
+
+    it('should update the profile picture', function(done) {
+      request
+        .post(app.config.host + '/v1/users/updateProfilePicture')
+        .set('X-Authentication-Token', authToken)
+        .attach('file', 'public/files/bed93525-571d-4bde-9acb-9501bda68b19.gif')
+        .end(function(err, res) {
+          res.should.not.be.empty
+          res.body.should.not.be.empty
+          request
+            .get(app.config.host + '/v1/users/whoami')
+            .query({ authToken: authToken })
+            .end(function(err, res) {
+              res.should.not.be.empty
+              res.body.users.profilePictureLargeUrl.should.not.be.empty
+              done()
+            })
         })
     })
   })
