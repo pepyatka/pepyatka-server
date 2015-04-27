@@ -186,12 +186,19 @@ exports.addModel = function(database) {
     return Promise.resolve(valid)
   }
 
+  User.prototype.isValidUsername = function() {
+    var valid = this.username
+        && this.username.length > 1
+        && this.username.indexOf("/") == -1
+
+    return Promise.resolve(valid)
+  }
+
   User.prototype.validate = function() {
     return new Promise(function(resolve, reject) {
       var valid
 
-      valid = this.username
-        && this.username.length > 1
+      valid = this.isValidUsername().value()
         && this.screenName
         && this.screenName.length > 1
         && models.FeedFactory.stopList().indexOf(this.username) == -1

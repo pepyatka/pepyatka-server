@@ -69,6 +69,23 @@ describe("UsersController", function() {
         })
     })
 
+    it('should not create user with slash in her username', function(done) {
+      var user = {
+        username: 'Lu/na',
+        password: 'password'
+      }
+
+      request
+        .post(app.config.host + '/v1/users')
+        .send({ username: user.username, password: user.password })
+        .end(function(err, res) {
+          res.should.not.be.empty
+          res.body.err.should.not.be.empty
+          res.body.err.should.eql('Invalid')
+          done()
+        })
+    })
+
     it('should not create user without password', function(done) {
       var user = {
         username: 'Luna'
