@@ -713,7 +713,7 @@ describe("UsersController", function() {
       request
         .post(app.config.host + '/v1/users/updateProfilePicture')
         .set('X-Authentication-Token', authToken)
-        .attach('file', 'public/files/bed93525-571d-4bde-9acb-9501bda68b19.gif')
+        .attach('file', 'test/fixtures/default-userpic-75.gif')
         .end(function(err, res) {
           res.should.not.be.empty
           res.body.should.not.be.empty
