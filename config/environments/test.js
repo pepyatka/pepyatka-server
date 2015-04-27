@@ -25,6 +25,11 @@ exports.getConfig = function() {
     }
   }
 
+  config.profilePictures = {
+    urlDir: config.host + '/profile-pictures/',
+    fsDir: '/tmp/pepyatka-profile-pictures/'
+  }
+
   config.mailer = {
     transport: stubTransport()
   }

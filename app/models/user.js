@@ -15,6 +15,7 @@ var Promise = require('bluebird')
   , _ = require('lodash')
   , validator = require('validator')
   , bcrypt = Promise.promisifyAll(require('bcrypt'))
+  , gm = Promise.promisifyAll(require('gm'))
 
 exports.addModel = function(database) {
   /**
@@ -45,6 +46,8 @@ exports.addModel = function(database) {
       this.updatedAt = params.updatedAt
     this.type = "user"
 
+    this.profilePictureUuid = params.profilePictureUuid || ''
+
     this.initPassword = function() {
       if (!_.isNull(password)) {
         var future = this.updatePassword(password, password)
@@ -63,6 +66,10 @@ exports.addModel = function(database) {
   User.namespace = "user"
   User.findById = User.super_.findById
   User.findByAttribute = User.super_.findByAttribute
+
+  User.PROFILE_PICTURE_SIZE_LARGE = 75
+  User.PROFILE_PICTURE_SIZE_MEDIUM = 50
+  User.PROFILE_PICTURE_SIZE_SMALL = 25
 
   Object.defineProperty(User.prototype, 'username', {
     get: function() { return this.username_ },
@@ -614,6 +621,72 @@ exports.addModel = function(database) {
 
       resolve(new models.Attachment(attrs))
     }.bind(this))
+  }
+
+  User.prototype.updateProfilePicture = function(file) {
+    var that = this
+
+    var image = Promise.promisifyAll(gm(file.path))
+    return image.sizeAsync()
+        .bind({})
+        .then(function(originalSize) {
+          var newUuid = uuid.v4()
+          this.profilePictureUid = newUuid
+          return Promise.map([User.PROFILE_PICTURE_SIZE_LARGE,
+                              User.PROFILE_PICTURE_SIZE_MEDIUM,
+                              User.PROFILE_PICTURE_SIZE_SMALL], function (size) {
+            return that.saveProfilePictureWithSize(file.path, newUuid, originalSize, size)
+          })
+        })
+        .then(function() {
+          that.updatedAt = new Date().getTime()
+          that.profilePictureUuid = this.profilePictureUid
+          return database.hmsetAsync(mkKey(['user', that.id]),
+            {
+              'profilePictureUuid': that.profilePictureUuid,
+              'updatedAt': that.updatedAt.toString()
+            });
+        })
+  }
+
+  User.prototype.saveProfilePictureWithSize = function(path, uuid, originalSize, size) {
+    var image = Promise.promisifyAll(gm(path))
+    var origWidth = originalSize.width
+    var origHeight = originalSize.height
+    if (origWidth > origHeight) {
+      var dx = origWidth - origHeight
+      image = image.crop(origHeight, origHeight, dx / 2, 0)
+    } else if (origHeight > origWidth) {
+      var dy = origHeight - origWidth
+      image = image.crop(origWidth, origWidth, 0, dy / 2)
+    }
+    image = image.resize(size, size)
+    var destPath = this.getProfilePicturePath(uuid, size)
+    return image.writeAsync(destPath)
+  }
+
+  User.prototype.getProfilePicturePath = function(uuid, size) {
+    return config.profilePictures.fsDir + this.getProfilePictureFilename(uuid, size)
+  }
+
+  User.prototype.getProfilePictureFilename = function(uuid, size) {
+    return uuid + "_" + size + ".jpg"
+  }
+
+  User.prototype.getProfilePictureLargeUrl = function() {
+    if (_.isEmpty(this.profilePictureUuid)) {
+      return Promise.resolve('')
+    }
+    return Promise.resolve(config.profilePictures.urlDir + this.getProfilePictureFilename(
+        this.profilePictureUuid, User.PROFILE_PICTURE_SIZE_LARGE))
+  }
+
+  User.prototype.getProfilePictureMediumUrl = function() {
+    if (_.isEmpty(this.profilePictureUuid)) {
+      return Promise.resolve('')
+    }
+    return Promise.resolve(config.profilePictures.urlDir + this.getProfilePictureFilename(
+      this.profilePictureUuid, User.PROFILE_PICTURE_SIZE_MEDIUM))
   }
 
   /**

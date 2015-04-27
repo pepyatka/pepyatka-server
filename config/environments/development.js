@@ -35,6 +35,11 @@ exports.getConfig = function() {
     }
   }
 
+  config.profilePictures = {
+    urlDir: 'http://localhost:3000/files/profilePictures/',
+    fsDir: './public/files/profilePictures/'
+  }
+
   config.mailer = {
     transport: transport,
     fromName: 'Pepyatka',
