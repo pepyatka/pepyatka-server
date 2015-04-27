@@ -17,7 +17,15 @@ exports.addModel = function(database) {
   FeedFactory.stopList = function() {
     return ['anonymous',
             'public',
-            'about']
+            'about',
+            'signin',
+            'logout',
+            'signup',
+            'filter',
+            'settings',
+            'account',
+            'groups',
+            '404']
   }
 
   FeedFactory.findById = function(identifier) {
