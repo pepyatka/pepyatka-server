@@ -41,6 +41,21 @@ describe("SessionController", function() {
         .end(function(err, res) {
           res.should.not.be.empty
           res.body.err.should.not.be.empty
+          res.body.should.have.property('err')
+          res.body.err.should.equal('We could not find the nickname you provided.')
+          done()
+        })
+    })
+
+    it("should not sign in with an invalid password", function(done) {
+      request
+        .post(app.config.host + '/v1/session')
+        .send({ username: userData.username, password: 'wrong' })
+        .end(function(err, res) {
+          res.should.not.be.empty
+          res.body.err.should.not.be.empty
+          res.body.should.have.property('err')
+          res.body.err.should.equal('The password you provided does not match the password in our system.')
           done()
         })
     })

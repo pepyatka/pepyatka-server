@@ -12,9 +12,10 @@ exports.addController = function(app) {
   }
 
   SessionController.create = function(req, res) {
-    passport.authenticate('local', function(err, user) {
-      if (err || !user)
-        return res.status(401).jsonp({ err: 'The password you provided does not match the password in our system'})
+    passport.authenticate('local', function(err, user, msg) {
+      if (err) {
+        return res.status(401).jsonp({ err: err.message })
+      }
 
       var secret = config.secret
       var authToken = jwt.sign({ userId: user.id }, secret)
