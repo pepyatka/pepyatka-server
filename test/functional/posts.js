@@ -360,6 +360,58 @@ describe("PostsController", function() {
     })
   })
 
+  describe('#hide()', function() {
+    var username = 'Luna'
+    var context = {}
+
+    beforeEach(funcTestHelper.createUserCtx(context, username, 'password'))
+    beforeEach(funcTestHelper.createPost(context, 'Post body'))
+
+    it("should hide and unhide post", function(done) {
+      request
+        .post(app.config.host + '/v1/posts/' + context.post.id + '/hide')
+        .send({
+          authToken: context.authToken,
+        })
+        .end(function(err, res) {
+          funcTestHelper.getTimeline('/v1/timelines/home', context.authToken, function(err, res) {
+            res.should.not.be.empty
+            res.body.should.not.be.empty
+            res.body.should.have.property('timelines')
+            res.body.timelines.should.have.property('name')
+            res.body.timelines.name.should.eql('RiverOfNews')
+            res.body.timelines.should.have.property('posts')
+            res.body.should.have.property('posts')
+            res.body.posts.length.should.eql(1)
+            var post = res.body.posts[0]
+            post.should.have.property('isHidden')
+            post.isHidden.should.eql(true)
+
+            request
+              .post(app.config.host + '/v1/posts/' + context.post.id + '/unhide')
+              .send({
+                authToken: context.authToken,
+              })
+              .end(function(err, res) {
+                funcTestHelper.getTimeline('/v1/timelines/home', context.authToken, function(err, res) {
+                  res.should.not.be.empty
+                  res.body.should.not.be.empty
+                  res.body.should.have.property('timelines')
+                  res.body.timelines.should.have.property('name')
+                  res.body.timelines.name.should.eql('RiverOfNews')
+                  res.body.timelines.should.have.property('posts')
+                  res.body.should.have.property('posts')
+                  res.body.posts.length.should.eql(1)
+                  var post = res.body.posts[0]
+                  post.should.not.have.property('isHidden')
+                  done()
+                })
+              })
+          })
+        })
+    })
+  })
+
   describe('#destroy()', function() {
     var username = 'Luna'
     var context = {}

@@ -300,7 +300,7 @@ exports.addModel = function(database) {
           this.user = user
           return pubSub.hidePost(user.id, that.id)
         })
-        .then(function() { return user.getHidesTimelineId() })
+        .then(function() { return this.user.getHidesTimelineId() })
         .then(function(timelineId) {
           this.timelineId = timelineId
           return this.user.getRiverOfNewsTimelineId()
