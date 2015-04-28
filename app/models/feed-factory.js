@@ -25,6 +25,11 @@ exports.addModel = function(database) {
             'settings',
             'account',
             'groups',
+            'friends',
+            'list',
+            'search',
+            'summary',
+            'share',
             '404']
   }
 
