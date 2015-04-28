@@ -191,6 +191,8 @@ exports.addModel = function(database) {
         && this.username.length > 1
         && this.username.indexOf("/") == -1
         && this.username.indexOf("\\") == -1
+        && this.username.indexOf("?") == -1
+        && this.username.indexOf("%") == -1
         && models.FeedFactory.stopList().indexOf(this.username) == -1
 
     return Promise.resolve(valid)
