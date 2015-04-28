@@ -190,6 +190,7 @@ exports.addModel = function(database) {
     var valid = this.username
         && this.username.length > 1
         && this.username.indexOf("/") == -1
+        && this.username.indexOf("\\") == -1
 
     return Promise.resolve(valid)
   }
