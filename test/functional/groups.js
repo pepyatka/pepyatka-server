@@ -70,6 +70,22 @@ describe("GroupsController", function() {
           })
     })
 
+    it('should not create a group with slash in its name', function(done) {
+      var userName = 'Lu/na';
+      var screenName = 'Pepyatka Developers';
+      request
+          .post(app.config.host + '/v1/groups')
+          .send({ group: {username: userName, screenName: screenName},
+            authToken: authToken })
+          .end(function(err, res) {
+            err.should.not.be.empty
+            err.status.should.eql(422)
+            err.response.error.should.have.property('text')
+            JSON.parse(err.response.error.text).err.should.eql('Invalid')
+            done()
+          })
+    })
+
     it('should not create a group with an empty username', function(done) {
       var userName = '';
       var screenName = '';
