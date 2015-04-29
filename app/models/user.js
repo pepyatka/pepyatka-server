@@ -709,6 +709,34 @@ exports.addModel = function(database) {
     return Promise.resolve(this)
   }
 
+  User.prototype.validateCanSubscribe = function(timelineId) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getSubscriptionIds()
+        .then(function(timelineIds) {
+          if (_.includes(timelineIds, timelineId)) {
+          reject(new ForbiddenException("You already subscribed to that user"))
+        }
+        resolve(timelineId)
+      })
+    })
+  }
+
+  User.prototype.validateCanUnsubscribe = function(timelineId) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getSubscriptionIds()
+        .then(function(timelineIds) {
+          if (!_.includes(timelineIds, timelineId)) {
+            return reject(new ForbiddenException("You are not subscribed to that user"))
+          }
+          return resolve(timelineId)
+        })
+    })
+  }
+
   /* checks if user can like some post */
   User.prototype.validateCanLikePost = function(postId) {
     return this.validateCanLikeOrUnlikePost('like', postId)

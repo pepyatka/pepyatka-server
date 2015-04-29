@@ -299,7 +299,18 @@ describe("UsersController", function() {
               res.body.should.have.property('timelines')
               res.body.timelines.should.have.property('posts')
               res.body.timelines.posts.length.should.eql(1)
-              done()
+
+              request
+                .post(app.config.host + '/v1/users/' + userA.username + '/subscribe')
+                .send({ authToken: authTokenB })
+                .end(function(err, res) {
+                  err.should.not.be.empty
+                  err.status.should.eql(403)
+                  err.response.error.should.have.property('text')
+                  JSON.parse(err.response.error.text).err.should.eql("You already subscribed to that user")
+
+                  done()
+                })
             })
         })
     })
@@ -446,7 +457,18 @@ describe("UsersController", function() {
               res.body.should.not.be.empty
               res.body.should.have.property('timelines')
               res.body.timelines.should.not.have.property('posts')
-              done()
+
+              request
+                .post(app.config.host + '/v1/users/' + userA.username + '/unsubscribe')
+                .send({ authToken: authTokenB })
+                .end(function(err, res) {
+                  err.should.not.be.empty
+                  err.status.should.eql(403)
+                  err.response.error.should.have.property('text')
+                  JSON.parse(err.response.error.text).err.should.eql("You are not subscribed to that user")
+
+                  done()
+                })
             })
         })
     })
@@ -457,7 +479,7 @@ describe("UsersController", function() {
         .send({ authToken: authTokenA })
         .end(function(err, res) {
           err.should.not.be.empty
-          err.status.should.eql(422)
+          err.status.should.eql(403)
           done()
         })
     })

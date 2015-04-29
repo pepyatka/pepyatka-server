@@ -112,9 +112,12 @@ exports.addController = function(app) {
     var username = req.params.username
     models.User.findByUsername(username)
       .then(function(user) { return user.getPostsTimelineId() })
+      .then(function(timelineId) {
+        return req.user.validateCanSubscribe(timelineId)
+      })
       .then(function(timelineId) { return req.user.subscribeTo(timelineId) })
       .then(function(status) { res.jsonp({}) })
-      .catch(function(e) { res.status(422).send({}) })
+      .catch(exceptions.reportError(res))
   }
 
   UsersController.unsubscribe = function(req, res) {
@@ -124,9 +127,12 @@ exports.addController = function(app) {
     var username = req.params.username
     models.User.findByUsername(username)
       .then(function(user) { return user.getPostsTimelineId() })
+      .then(function(timelineId) {
+        return req.user.validateCanUnsubscribe(timelineId)
+      })
       .then(function(timelineId) { return req.user.unsubscribeTo(timelineId) })
       .then(function(status) { res.jsonp({}) })
-      .catch(function(e) { res.status(422).send({}) })
+      .catch(exceptions.reportError(res))
   }
 
   UsersController.update = function(req, res) {
