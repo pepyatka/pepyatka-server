@@ -223,6 +223,24 @@ exports.addModel = function(database) {
     })
   }
 
+  Post.prototype.getSubscriptionIds = Post.prototype.getTimelineIds
+  Post.prototype.getSubscriptions = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getSubscriptionIds()
+        .then(function(userIds) {
+          return Promise.map(userIds, function(userId) {
+            return models.Timeline.findById(userId)
+          })
+        })
+        .then(function(subscriptions) {
+          that.subscriptions = subscriptions
+          resolve(that.subscriptions)
+        })
+    })
+  }
+
   Post.prototype.getGenericFriendOfFriendTimelineIds = function(userId, type) {
     var that = this
     var timelineIds = []
