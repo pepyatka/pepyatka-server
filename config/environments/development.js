@@ -20,7 +20,10 @@ exports.getConfig = function() {
 
     secret: 'secret',
 
-    origin: 'http://localhost:3333'
+    origin: 'http://localhost:3333',
+
+    serviceName: 'Pepyatka',
+    appRoot: '.'
   }
 
   config.attachments = {
@@ -44,7 +47,9 @@ exports.getConfig = function() {
     transport: transport,
     fromName: 'Pepyatka',
     fromEmail: 'mail@pepyatka.com',
-    host: config.origin
+    host: config.origin,
+    resetPasswordMailSubject: 'Pepyatka password reset',
+    mailFooter: 'Happy Pepyatking,\nepicmonkey'
   }
 
   config.redis = {
