@@ -40,7 +40,7 @@ exports.addModel = function(database) {
           if (identifier) {
             resolve(that.className.findById(identifier))
           } else {
-            reject(new Error("Record not found"))
+            reject(new NotFoundException("Record not found"))
           }
         })
     })

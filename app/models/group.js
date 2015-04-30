@@ -31,6 +31,7 @@ exports.addModel = function(database) {
   Group.className = Group
   Group.namespace = "user"
   Group.findById = Group.super_.findById
+  Group.getById = Group.super_.getById
   Group.findByAttribute = Group.super_.findByAttribute
   Group.findByUsername = Group.super_.findByUsername
 
@@ -205,6 +206,27 @@ exports.addModel = function(database) {
           return Promise.reject(new ForbiddenException(
               "You can't post to a group to which you aren't subscribed"))
         })
+  }
+
+  /**
+   * Checks if the specified user can update the settings of this group
+   * (i.e. is an admin in the group).
+   */
+  Group.prototype.validateCanUpdate = function(updatingUser) {
+    var that = this
+
+    if (!updatingUser) {
+      return Promise.reject(new ForbiddenException(
+        "You need to log in before you can manage groups"))
+    }
+
+    return this.getAdministratorIds().then(function(adminIds) {
+      if (_.includes(adminIds, updatingUser.id)) {
+        return Promise.resolve(that)
+      }
+      return Promise.reject(new ForbiddenException(
+        "You aren't an administrator of this group"))
+    })
   }
 
   return Group

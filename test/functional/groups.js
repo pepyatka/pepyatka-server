@@ -166,7 +166,7 @@ describe("GroupsController", function() {
           .post(app.config.host + '/v1/groups/pepyatka-dev/subscribers/yole/admin')
           .end(function(err, res) {
             err.should.not.be.empty
-            err.status.should.eql(401)
+            err.status.should.eql(403)
             done()
           })
     })
@@ -176,7 +176,7 @@ describe("GroupsController", function() {
           .post(app.config.host + '/v1/groups/foobar/subscribers/yole/admin')
           .end(function(err, res) {
             err.should.not.be.empty
-            err.status.should.eql(401)
+            err.status.should.eql(404)
             done()
           })
     })
