@@ -639,6 +639,9 @@ exports.addModel = function(database) {
     var image = Promise.promisifyAll(gm(file.path))
     return image.sizeAsync()
         .bind({})
+        .catch(function(err) {
+          return Promise.reject(new exceptions.BadRequestException("Not an image file"))
+        })
         .then(function(originalSize) {
           var newUuid = uuid.v4()
           this.profilePictureUid = newUuid
