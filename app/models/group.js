@@ -24,6 +24,7 @@ exports.addModel = function(database) {
     this.updatedAt = params.updatedAt
     this.isPrivate = params.isPrivate
     this.type = "group"
+    this.profilePictureUuid = params.profilePictureUuid || ''
   }
 
   inherits(Group, User)
