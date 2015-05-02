@@ -766,5 +766,17 @@ describe("UsersController", function() {
             })
         })
     })
+
+    it('should report an error if the profile picture is not an image', function(done) {
+      request
+        .post(app.config.host + '/v1/users/updateProfilePicture')
+        .set('X-Authentication-Token', authToken)
+        .attach('file', 'README.md')
+        .end(function(err, res) {
+          res.status.should.eql(400)
+          res.body.err.should.eql("Not an image file")
+          done()
+        })
+    })
   })
 })

@@ -1,7 +1,9 @@
 var request = require('superagent')
-    , app = require('../../index')
-    , models = require('../../app/models')
-    , funcTestHelper = require('./functional_test_helper')
+  , app = require('../../index')
+  , models = require('../../app/models')
+  , funcTestHelper = require('./functional_test_helper')
+  , mkdirp = require('mkdirp')
+  , config = require('../../config/config').load()
 
 describe("GroupsController", function() {
   beforeEach(funcTestHelper.flushDb())
@@ -166,7 +168,7 @@ describe("GroupsController", function() {
           .post(app.config.host + '/v1/groups/pepyatka-dev/subscribers/yole/admin')
           .end(function(err, res) {
             err.should.not.be.empty
-            err.status.should.eql(401)
+            err.status.should.eql(403)
             done()
           })
     })
@@ -176,7 +178,7 @@ describe("GroupsController", function() {
           .post(app.config.host + '/v1/groups/foobar/subscribers/yole/admin')
           .end(function(err, res) {
             err.should.not.be.empty
-            err.status.should.eql(401)
+            err.status.should.eql(404)
             done()
           })
     })
@@ -232,6 +234,46 @@ describe("GroupsController", function() {
           })
     })
   })
+
+  describe('#updateProfilePicture', function() {
+    var authToken
+
+    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
+      authToken = token
+    }))
+
+    beforeEach(function(done){
+      mkdirp.sync(config.profilePictures.fsDir)
+      done()
+    })
+
+    beforeEach(function(done) {
+      request
+        .post(app.config.host + '/v1/groups')
+        .send({ group: {username: 'pepyatka-dev', screenName: 'Pepyatka Developers'},
+          authToken: authToken })
+        .end(function(err, res) {
+          done()
+        })
+    })
+
+    it('should update the profile picture', function(done) {
+      request
+        .post(app.config.host + '/v1/groups/pepyatka-dev/updateProfilePicture')
+        .set('X-Authentication-Token', authToken)
+        .attach('file', 'test/fixtures/default-userpic-75.gif')
+        .end(function(err, res) {
+          res.status.should.eql(200)
+          res.body.should.not.be.empty
+          request
+            .get(app.config.host + '/v1/users/pepyatka-dev')
+            .query({ authToken: authToken })
+            .end(function(err, res) {
+              res.should.not.be.empty
+              res.body.users.profilePictureLargeUrl.should.not.be.empty
+              done()
+            })
+        })
+    })
+  })
 })
-
-

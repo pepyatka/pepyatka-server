@@ -14,6 +14,14 @@ exports.reportError = function(res) {
 /**
  * @constructor
  */
+exports.BadRequestException = function(message) {
+  this.message = message || "Bad Request"
+  this.status = 400
+}
+
+/**
+ * @constructor
+ */
 exports.ForbiddenException = function(message) {
   this.message = message || "Forbidden"
   this.status = 403
