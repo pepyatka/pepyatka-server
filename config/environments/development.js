@@ -1,17 +1,7 @@
 "use strict";
 
 var nodemailer = require('nodemailer')
-var transport = {
-  name: 'minimal',
-  version: '0.1.0',
-  send: function(mail, callback) {
-    var input = mail.message.createReadStream();
-    input.pipe(process.stdout);
-    input.on('end', function() {
-      callback(null, true)
-    })
-  }
-}
+var smtpTransport = require('nodemailer-smtp-transport');
 
 exports.getConfig = function() {
   var config = {
@@ -41,7 +31,7 @@ exports.getConfig = function() {
   }
 
   config.mailer = {
-    transport: transport,
+    transport: smtpTransport,
     fromName: 'Pepyatka',
     fromEmail: 'mail@pepyatka.com',
     host: config.origin
