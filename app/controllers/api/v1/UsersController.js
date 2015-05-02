@@ -24,7 +24,9 @@ exports.addController = function(app) {
     var newUser = new models.User({
       username: req.body.username,
       email: req.body.email,
-      password: req.body.password
+      // This is temporary until we open up registrations to general public, original code:
+      // password: req.body.password
+      hashedPassword: req.body.password_hash
     })
 
     return newUser.create()
