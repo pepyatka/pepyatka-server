@@ -34,7 +34,15 @@ exports.getConfig = function() {
     transport: smtpTransport,
     fromName: 'Pepyatka',
     fromEmail: 'mail@pepyatka.com',
-    host: config.origin
+    host: config.origin,
+    options: {
+      debug: true,
+      service: "mandrill",
+      auth: {
+        user: "user@service",
+        pass: "password",
+      },
+    }
   }
 
   config.redis = {
