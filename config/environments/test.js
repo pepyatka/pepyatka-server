@@ -9,7 +9,10 @@ exports.getConfig = function() {
 
     secret: 'secret',
 
-    origin: 'http://localhost:3333'
+    origin: 'http://localhost:3333',
+
+    acceptHashedPasswordsOnly: false
+
   }
 
   config.host = 'http://localhost:' + config.port
