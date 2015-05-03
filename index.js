@@ -13,8 +13,10 @@ environment.init(app)
     var pubsub = require('./app/pubsub').init().listen(server, app)
     var routes = require('./app/routes')(app)
 
-    server.listen(app.get('port'), function() {
-      app.logger.info("Express server listening on port " + app.get('port'));
-      app.logger.info("Server is running on " + (process.env.NODE_ENV || "development") + " mode")
+    var port = (process.env.PEPYATKA_SERVER_PORT || app.get('port'))
+
+    server.listen(port, function() {
+      app.logger.info("Express server is listening on port " + port);
+      app.logger.info("Server is running in " + (process.env.NODE_ENV || "development") + " mode")
     })
   })
