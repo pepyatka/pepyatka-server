@@ -22,7 +22,9 @@ exports.getConfig = function() {
 
     origin: 'http://localhost:3333',
 
-    appRoot: '.'
+    appRoot: '.',
+
+    acceptHashedPasswordsOnly: false
   }
 
   config.attachments = {
