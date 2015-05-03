@@ -25,10 +25,9 @@ exports.addController = function(app) {
       username: req.body.username,
       email: req.body.email
     }
-    if (config.acceptHashedPasswordsOnly) {
-      params.hashedPassword = req.body.password_hash
-    }
-    else {
+
+    params.hashedPassword = req.body.password_hash
+    if (!config.acceptHashedPasswordsOnly) {
       params.password = req.body.password
     }
 
