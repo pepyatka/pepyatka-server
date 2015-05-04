@@ -8,9 +8,11 @@ describe("PostsController", function() {
 
   describe('#create()', function() {
     var authToken
+      , username
 
-    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
+    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token, user) {
       authToken = token
+      username = user.username
     }))
 
     it('should create a post with a valid user', function(done) {
@@ -81,7 +83,77 @@ describe("PostsController", function() {
               .end(function (err, res) {
                 res.body.posts.length.should.eql(1)
                 res.body.posts[0].body.should.eql(body)
-                done()
+
+                // Verify that the post didn't appear in the user's own timeline
+                request
+                  .get(app.config.host + '/v1/timelines/' + username)
+                  .query({ authToken: context.authToken })
+                  .end(function(err, res) {
+                    res.should.not.be.empty
+                    res.body.should.not.be.empty
+                    res.body.should.have.property('timelines')
+                    res.body.timelines.should.have.property('name')
+                    res.body.timelines.name.should.eql('Posts')
+                    res.body.timelines.should.not.have.property('posts')
+                    res.body.should.not.have.property('posts')
+
+                    done()
+                  })
+              })
+          })
+      })
+
+      it("should cross-post between a group and a user's feed", function(done) {
+        var body = 'Post body'
+
+        request
+          .post(app.config.host + '/v1/posts')
+          .send({ post: { body: body }, meta: { feeds: [groupName, username] }, authToken: authToken })
+          .end(function(err, res) {
+            res.body.should.not.be.empty
+            res.body.should.have.property('posts')
+            res.body.posts.should.have.property('body')
+            res.body.posts.body.should.eql(body)
+
+            request
+              .get(app.config.host + '/v1/timelines/' + groupName)
+              .query({authToken: authToken})
+              .end(function (err, res) {
+                res.body.posts.length.should.eql(1)
+                res.body.posts[0].body.should.eql(body)
+
+                // Verify that the post didn't appear in the user's own timeline
+                request
+                  .get(app.config.host + '/v1/timelines/' + username)
+                  .query({ authToken: context.authToken })
+                  .end(function(err, res) {
+                    res.body.posts.length.should.eql(1)
+                    res.body.posts[0].body.should.eql(body)
+
+                    done()
+                  })
+              })
+          })
+      })
+
+      it("should show post to group in the timeline of the subscribing user", function(done) {
+        request
+          .post(app.config.host + '/v1/users/' + groupName + '/subscribe')
+          .send({ authToken: otherUserAuthToken })
+          .end(function(err, res) {
+            res.status.should.eql(200)
+            var body = 'Post body'
+
+            request
+              .post(app.config.host + '/v1/posts')
+              .send({ post: { body: body }, meta: { feeds: [groupName] }, authToken: authToken })
+              .end(function(err, res) {
+                res.status.should.eql(200)
+                funcTestHelper.getTimeline('/v1/timelines/home', otherUserAuthToken, function(err, res) {
+                  res.body.posts.length.should.eql(1)
+                  res.body.posts[0].body.should.eql(body)
+                  done()
+                })
               })
           })
       })
