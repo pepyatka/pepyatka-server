@@ -42,26 +42,36 @@ exports.addModel = function(database) {
     }
   })
 
-  Timeline.newPost = function(postId, additionalTimelines) {
+  /**
+   * Adds the specified post to all timelines where it needs to appear
+   * (the timelines of the feeds to which it is posted, the River of News
+   * timeline of the posting user and the River of News timelines of all
+   * subscribers of the feeds to which it is posted).
+   */
+  Timeline.publishPost = function(post) {
     var that = this
     var currentTime = new Date().getTime()
 
-    return new Promise(function(resolve, reject) {
-      Post.getById(postId)
-        .then(function(post) { return post.getPostsFriendOfFriendTimelineIds(post.userId) })
-        .then(function(timelineIds) {
-          timelineIds = _.union(timelineIds, additionalTimelines)
-          return Promise.map(timelineIds, function(timelineId) {
-            return Promise.all([
-              database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), currentTime, postId),
-              database.hsetAsync(mkKey(['post', postId]), 'updatedAt', currentTime),
-              database.saddAsync(mkKey(['post', postId, 'timelines']), timelineId)
-            ])
-          })
-        })
-        .then(function() { return pubSub.newPost(postId) })
-        .then(function() { resolve(that) })
+    return Promise.map(post.timelineIds, function(timelineId) {
+      return Timeline.findById(timelineId)
     })
+      .then(function(timelines) {
+        return Promise.map(timelines, function(timeline) {
+          return timeline.getSubscribedTimelineIds()
+        })
+      })
+      .then(function(allSubscribedTimelineIds) {
+        var allTimelines = _.uniq(
+          _.union(post.timelineIds, _.flatten(allSubscribedTimelineIds)))
+        return Promise.map(allTimelines, function(timelineId) {
+          return Promise.all([
+            database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), currentTime, post.id),
+            database.hsetAsync(mkKey(['post', post.id]), 'updatedAt', currentTime),
+            database.saddAsync(mkKey(['post', post.id, 'timelines']), timelineId)
+          ])
+        })
+      })
+      .then(function() { return pubSub.newPost(post.id) })
   }
 
   Timeline.prototype.validate = function() {
@@ -211,23 +221,30 @@ exports.addModel = function(database) {
     return models.FeedFactory.findById(this.userId)
   }
 
-  Timeline.prototype.getSubscriberIds = function() {
+  /**
+   * Returns the IDs of users subscribed to this timeline, as a promise.
+   */
+  Timeline.prototype.getSubscriberIds = function(includeSelf) {
     var that = this
 
     return new Promise(function(resolve, reject) {
       database.zrevrangeAsync(mkKey(['timeline', that.id, 'subscribers']), 0, -1)
         .then(function(userIds) {
+          // A user is always subscribed to their own posts timeline.
+          if (includeSelf && that.name == 'Posts') {
+            userIds = _.uniq(userIds.concat([that.userId]))
+          }
           that.subscriberIds = userIds
           resolve(userIds)
         })
     })
   }
 
-  Timeline.prototype.getSubscribers = function() {
+  Timeline.prototype.getSubscribers = function(includeSelf) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      that.getSubscriberIds()
+      that.getSubscriberIds(includeSelf)
         .then(function(userIds) {
           return Promise.map(userIds, function(userId) {
             return models.User.findById(userId)
@@ -237,6 +254,16 @@ exports.addModel = function(database) {
           that.subscribers = subscribers
           resolve(that.subscribers)
         })
+    })
+  }
+
+  /**
+   * Returns the list of the 'River of News' timelines of all subscribers to this
+   * timeline.
+   */
+  Timeline.prototype.getSubscribedTimelineIds = function() {
+    return this.getSubscribers(true).map(function(subscriber) {
+      return subscriber.getRiverOfNewsTimelineId()
     })
   }
 

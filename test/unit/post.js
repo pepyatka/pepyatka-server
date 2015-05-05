@@ -48,7 +48,8 @@ describe('Post', function() {
   })
 
   describe('#create()', function() {
-    var user
+    var user,
+      timelineId
 
     beforeEach(function(done) {
       user = new User({
@@ -57,13 +58,20 @@ describe('Post', function() {
       })
 
       user.create()
-        .then(function(user) { done() })
+        .then(function(user) {
+          return user.getPostsTimelineId()
+        })
+        .then(function(postsTimelineId) {
+          timelineId = postsTimelineId
+          done()
+        })
     })
 
     it('should create without error', function(done) {
       var post = new Post({
         body: 'Post body',
-        userId: user.id
+        userId: user.id,
+        timelineIds: [timelineId]
       })
 
       post.create()
@@ -88,7 +96,8 @@ describe('Post', function() {
       var body = '   Post body    '
       var post = new Post({
         body: body,
-        userId: user.id
+        userId: user.id,
+        timelineIds: [timelineId]
       })
 
       post.create()
@@ -106,7 +115,8 @@ describe('Post', function() {
     it('should save valid post to users timeline', function(done) {
       var post = new Post({
         body: 'Post',
-        userId: user.id
+        userId: user.id,
+        timelineIds: [timelineId]
       })
 
       post.create()
@@ -130,7 +140,8 @@ describe('Post', function() {
     it('should return valid post from users timeline', function(done) {
       var post = new Post({
         body: 'Post',
-        userId: user.id
+        userId: user.id,
+        timelineIds: [timelineId]
       })
 
       post.create()
@@ -151,7 +162,8 @@ describe('Post', function() {
     it('should not create with empty body', function(done) {
       var post = new Post({
         body: '',
-        userId: user.id
+        userId: user.id,
+        timelineIds: [timelineId]
       })
 
       post.create()
@@ -163,7 +175,8 @@ describe('Post', function() {
   })
 
   describe('#findById()', function() {
-    var user
+    var user,
+      timelineId
 
     beforeEach(function(done) {
       user = new User({
@@ -172,13 +185,20 @@ describe('Post', function() {
       })
 
       user.create()
-        .then(function(user) { done() })
+        .then(function() {
+          return user.getPostsTimelineId()
+        })
+        .then(function(postsTimelineId) {
+          timelineId = postsTimelineId
+          done()
+        })
     })
 
     it('should find post with a valid id', function(done) {
       var post = new Post({
         body: 'Post body',
-        userId: user.id
+        userId: user.id,
+        timelineIds: [timelineId]
       })
 
       post.create()
@@ -486,6 +506,7 @@ describe('Post', function() {
 
   describe('#destroy()', function() {
     var user
+      , timelineId
 
     beforeEach(function(done) {
       user = new User({
@@ -494,13 +515,20 @@ describe('Post', function() {
       })
 
       user.create()
-        .then(function(user) { done() })
+        .then(function() {
+          return user.getPostsTimelineId()
+        })
+        .then(function(postsTimelineId) {
+          timelineId = postsTimelineId
+          done()
+        })
     })
 
     it('should create without error', function(done) {
       var post = new Post({
         body: 'Post body',
-        userId: user.id
+        userId: user.id ,
+        timelineIds: [timelineId]
       })
 
       post.create()

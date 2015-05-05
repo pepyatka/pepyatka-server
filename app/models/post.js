@@ -87,7 +87,7 @@ exports.addModel = function(database) {
                                 'updatedAt': post.updatedAt.toString()
                               })
         })
-        .then(function() { return models.Timeline.newPost(that.id, that.timelineIds) })
+        .then(function() { return models.Timeline.publishPost(that) })
         .then(function() { return that.linkAttachments() })
         .then(function() { return models.Stats.findById(that.userId) })
         .then(function(stats) { return stats.addPost() })

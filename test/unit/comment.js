@@ -70,9 +70,13 @@ describe('Comment', function() {
 
       user.create()
         .then(function(user) {
+          return user.getPostsTimelineId();
+        })
+        .then(function(postsTimelineId) {
           post = new Post({
             body: 'Post body',
-            userId: user.id
+            userId: user.id,
+            timelineIds: [postsTimelineId]
           })
 
           return post.create()
@@ -153,9 +157,13 @@ describe('Comment', function() {
 
       user.create()
         .then(function(user) {
+          return user.getPostsTimelineId();
+        })
+        .then(function(postsTimelineId) {
           post = new Post({
             body: 'Post body',
-            userId: user.id
+            userId: user.id,
+            timelineIds: [postsTimelineId]
           })
 
           return post.create()
