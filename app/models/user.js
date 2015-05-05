@@ -674,6 +674,7 @@ exports.addModel = function(database) {
       image = image.crop(origWidth, origWidth, 0, dy / 2)
     }
     image = image.resize(size, size)
+    image = image.quality(95)
     var destPath = this.getProfilePicturePath(uuid, size)
     return image.writeAsync(destPath)
   }
