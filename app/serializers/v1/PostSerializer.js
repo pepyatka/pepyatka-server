@@ -1,7 +1,6 @@
 var models = require("../../models")
   , Serializer = models.Serializer
   , UserSerializer = models.UserSerializer
-  , SubscriptionSerializer = models.SubscriptionSerializer
   , AttachmentSerializer = models.AttachmentSerializer
   , CommentSerializer = models.CommentSerializer
 
@@ -11,7 +10,6 @@ exports.addSerializer = function() {
     attachments: { through: AttachmentSerializer, embed: true },
     createdBy: { through: UserSerializer, embed: true },
     comments: { through: CommentSerializer, embed: true },
-    likes: { through: UserSerializer, embed: true },
-    subscriptions: { through: SubscriptionSerializer, embed: true }
+    likes: { through: UserSerializer, embed: true }
   })
 }
