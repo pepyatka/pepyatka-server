@@ -39,6 +39,16 @@ var findUser = function(req, res, next) {
 module.exports = function(app) {
   app.use(require('express').static(__dirname + '/../public'))
 
+  app.use(function(req, res, next) {
+    if (config.redis.analyze_performance && req.method != "OPTIONS") {
+      models.database.reset_statistics()
+      req.on("end", function() {
+        models.database.report_statistics(req.originalUrl, app.logger)
+      })
+    }
+    next()
+  })
+
   app.options('/*', function(req, res) { res.status(200).send({}) })
 
   SessionRoute.addRoutes(app)
