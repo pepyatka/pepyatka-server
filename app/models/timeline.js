@@ -127,10 +127,6 @@ exports.addModel = function(database) {
     })
   }
 
-  Timeline.prototype.getUser = function() {
-    return FeedFactory.findById(this.userId)
-  }
-
   Timeline.prototype.getPostIds = function(offset, limit) {
     var that = this
 
