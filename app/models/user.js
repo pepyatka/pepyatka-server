@@ -225,6 +225,17 @@ exports.addModel = function(database) {
     })
   }
 
+  //
+  // Create database index from email to uid
+  //
+  User.prototype.createEmailIndex = function() {
+    // email is optional, so no need to index an empty key
+    if (this.email && this.email.length > 0) {
+      return database.setAsync(mkKey(['email', this.email, 'uid']), this.id)
+    }
+    return new Promise.resolve(true)
+  }
+
   User.prototype.create = function() {
     var that = this
 
@@ -251,8 +262,9 @@ exports.addModel = function(database) {
                                   'createdAt': user.createdAt.toString(),
                                   'updatedAt': user.updatedAt.toString(),
                                   'hashedPassword': user.hashedPassword
-                                })
-          ])
+                                }),
+            user.createEmailIndex()
+            ])
         })
         .then(function() {
           var stats = new models.Stats({
@@ -279,20 +291,15 @@ exports.addModel = function(database) {
 
       that.validate()
         .then(function() {
-          var promises = []
-          promises.push(database.hmsetAsync(mkKey(['user', that.id]),
+          return Promise.all([
+            database.hmsetAsync(mkKey(['user', that.id]),
                                 { 'screenName': that.screenName,
                                   'email': that.email,
                                   'isPrivate': that.isPrivate,
                                   'updatedAt': that.updatedAt.toString()
-                                }))
-
-          // email is optional, so no need to index an empty key
-          if (that.email && that.email.length > 0) {
-            promises.push(database.setAsync(mkKey(['email', that.email, 'uid']), that.id))
-          }
-
-          return Promise.all(promises)
+                                }),
+            that.createEmailIndex()
+          ])
         })
         .then(function() { resolve(that) })
         .catch(function(e) { reject(e) })
