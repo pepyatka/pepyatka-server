@@ -76,7 +76,7 @@ exports.addController = function(app) {
   }
 
   PostsController.show = function(req, res) {
-    models.Post.getById(req.params.postId)
+    models.Post.getById(req.params.postId, { maxComments: req.query.maxComments })
       .then(function(post) {
         new PostSerializer(post).toJSON(function(err, json) {
           res.jsonp(json)

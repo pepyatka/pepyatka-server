@@ -28,6 +28,10 @@ exports.addModel = function(database) {
       this.createdAt = params.createdAt
     if (parseInt(params.updatedAt, 10))
       this.updatedAt = params.updatedAt
+    if (params.maxComments != 'all')
+      this.maxComments = parseInt(params.maxComments, 10) || 2
+    else
+      this.maxComments = params.maxComments
   }
 
   inherits(Post, AbstractModel)
@@ -380,14 +384,46 @@ exports.addModel = function(database) {
     })
   }
 
+  Post.prototype.getOmittedComments = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      database.llenAsync(mkKey(['post', that.id, 'comments']))
+        .then(function(length) {
+          if (length > that.maxComments && length > 3) {
+            that.omittedComments = length - that.maxComments
+            return resolve(that.omittedComments)
+          }
+
+          return resolve(null)
+        })
+    })
+  }
+
   Post.prototype.getCommentIds = function() {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      database.lrangeAsync(mkKey(['post', that.id, 'comments']), 0, -1)
-        .then(function(commentIds) {
-          that.commentIds = commentIds
-          resolve(commentIds)
+      database.llenAsync(mkKey(['post', that.id, 'comments']))
+        .then(function(length) {
+          if (length > that.maxComments && length > 3) {
+            database.lrangeAsync(mkKey(['post', that.id, 'comments']), 0, that.maxComments - 2)
+              .then(function(commentIds) {
+                that.commentIds = commentIds
+                return database.lrangeAsync(mkKey(['post', that.id, 'comments']), -1, -1)
+              })
+              .then(function(commentIds) {
+                that.omittedComments = length - that.maxComments
+                that.commentIds = that.commentIds.concat(commentIds)
+                resolve(that.commentIds)
+              })
+          } else {
+            database.lrangeAsync(mkKey(['post', that.id, 'comments']), 0, -1)
+              .then(function(commentIds) {
+                that.commentIds = commentIds
+                resolve(commentIds)
+              })
+          }
         })
     })
   }
