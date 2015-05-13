@@ -390,7 +390,7 @@ exports.addModel = function(database) {
     return new Promise(function(resolve, reject) {
       database.llenAsync(mkKey(['post', that.id, 'comments']))
         .then(function(length) {
-          if (length > that.maxComments && length > 3) {
+          if (length > that.maxComments && length > 3 && that.maxComments != 'all') {
             that.omittedComments = length - that.maxComments
             return resolve(that.omittedComments)
           }
@@ -406,7 +406,7 @@ exports.addModel = function(database) {
     return new Promise(function(resolve, reject) {
       database.llenAsync(mkKey(['post', that.id, 'comments']))
         .then(function(length) {
-          if (length > that.maxComments && length > 3) {
+          if (length > that.maxComments && length > 3 && that.maxComments != 'all') {
             database.lrangeAsync(mkKey(['post', that.id, 'comments']), 0, that.maxComments - 2)
               .then(function(commentIds) {
                 that.commentIds = commentIds
