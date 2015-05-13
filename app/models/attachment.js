@@ -87,9 +87,9 @@ exports.addModel = function(database) {
           attachment.fileSize = attachment.file.size
           attachment.mimeType = attachment.file.type
 
-          var supportedExtensions = /\.(jpe?g|png|gif)$/
+          var supportedExtensions = /\.(jpe?g|png|gif)$/i
           if (attachment.fileName && attachment.fileName.match(supportedExtensions).length !== null) {
-            attachment.fileExtension = attachment.fileName.match(supportedExtensions)[1]
+            attachment.fileExtension = attachment.fileName.match(supportedExtensions)[1].toLowerCase()
           } else {
             attachment.fileExtension = null
           }
