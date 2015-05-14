@@ -395,7 +395,7 @@ exports.addModel = function(database) {
             return resolve(that.omittedComments)
           }
 
-          return resolve(null)
+          return resolve(0)
         })
     })
   }
