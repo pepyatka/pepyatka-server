@@ -32,6 +32,10 @@ exports.addModel = function(database) {
       this.maxComments = parseInt(params.maxComments, 10) || 2
     else
       this.maxComments = params.maxComments
+    if (params.maxLikes != 'all')
+      this.maxLikes = parseInt(params.maxLikes, 10) || 3
+    else
+      this.maxLikes = params.maxLikes
   }
 
   inherits(Post, AbstractModel)
@@ -502,10 +506,38 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      database.zrevrangeAsync(mkKey(['post', that.id, 'likes']), 0, -1)
-        .then(function(likeIds) {
-          that.likeIds = likeIds
-          resolve(likeIds)
+      database.zcountAsync(mkKey(['post', that.id, 'likes']), '-inf', '+inf')
+        .then(function(length) {
+          if (length > that.maxLikes && that.maxLikes != 'all') {
+            database.zrevrangeAsync(mkKey(['post', that.id, 'likes']), 0, that.maxLikes - 1)
+              .then(function(likeIds) {
+                that.likeIds = likeIds
+                that.omittedLikes = length - that.maxLikes
+                resolve(that.likeIds)
+              })
+          } else {
+            database.zrevrangeAsync(mkKey(['post', that.id, 'likes']), 0, -1)
+              .then(function(likeIds) {
+                that.likeIds = likeIds
+                resolve(likeIds)
+              })
+          }
+        })
+    })
+  }
+
+  Post.prototype.getOmittedLikes = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      database.zcountAsync(mkKey(['post', that.id, 'likes']), '-inf', '+inf')
+        .then(function(length) {
+          if (length > that.maxLikes && that.maxLikes != 'all') {
+            that.omittedLikes = length - that.maxLikes
+            return resolve(that.omittedLikes)
+          }
+
+          return resolve(0)
         })
     })
   }
