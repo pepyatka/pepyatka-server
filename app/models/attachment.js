@@ -180,6 +180,7 @@ exports.addModel = function(database) {
               that.noThumbnail = '0'
               gm(originalPath)
                 .resize(525, 175)
+                .autoOrient()
                 .quality(95)
                 .write(that.getThumbnailPath(), function (err) {
                   if (err) {
