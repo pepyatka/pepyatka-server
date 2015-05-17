@@ -27,6 +27,7 @@ exports.addModel = function(database) {
       this.updatedAt = params.updatedAt
     this.offset = parseInt(params.offset, 10) || 0
     this.limit = parseInt(params.limit, 10) || 25
+    this.currentUser = params.currentUser
   }
 
   inherits(Timeline, AbstractModel)
@@ -156,7 +157,7 @@ exports.addModel = function(database) {
       that.getPostIds(offset, limit)
         .then(function(postIds) {
           return Promise.map(postIds, function(postId) {
-            return Post.findById(postId)
+            return Post.findById(postId, { currentUser: that.currentUser })
           })
         })
         .then(function(posts) {

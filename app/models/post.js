@@ -24,6 +24,7 @@ exports.addModel = function(database) {
     this.attachments = params.attachments
     this.userId = params.userId
     this.timelineIds = params.timelineIds
+    this.currentUser = params.currentUser
     if (parseInt(params.createdAt, 10))
       this.createdAt = params.createdAt
     if (parseInt(params.updatedAt, 10))
@@ -509,9 +510,22 @@ exports.addModel = function(database) {
       database.zcardAsync(mkKey(['post', that.id, 'likes']))
         .then(function(length) {
           if (length > that.maxLikes && that.maxLikes != 'all') {
-            database.zrevrangeAsync(mkKey(['post', that.id, 'likes']), 0, that.maxLikes - 1)
+            database.zscoreAsync(mkKey['post', that.id, 'likes'], that.currentUser)
+              .then(function(score) {
+                var items = that.maxLikes - 1
+                if (score >= 0) {
+                  that.likeIds = [that.currentUser]
+                  items = items - 1
+                } else {
+                  that.likeIds = []
+                }
+                return items
+              })
+              .then(function(items) {
+                return database.zrevrangeAsync(mkKey(['post', that.id, 'likes']), 0, items)
+              })
               .then(function(likeIds) {
-                that.likeIds = likeIds
+                that.likeIds = that.likeIds.concat(likeIds)
                 that.omittedLikes = length - that.maxLikes
                 resolve(that.likeIds)
               })

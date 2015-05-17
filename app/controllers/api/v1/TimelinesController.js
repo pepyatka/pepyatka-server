@@ -15,9 +15,11 @@ exports.addController = function(app) {
 
     user.getRiverOfNewsTimeline({
       offset: req.query.offset,
-      limit: req.query.limit
+      limit: req.query.limit,
+      currentUser: user.id
     })
       .then(function(timeline) {
+        console.log(timeline)
         new TimelineSerializer(timeline).toJSON(function(err, json) {
           res.jsonp(json)
         })
@@ -31,7 +33,8 @@ exports.addController = function(app) {
     models.User.findByUsername(username)
       .then(function(user) { return user.getPostsTimeline({
         offset: req.query.offset,
-        limit: req.query.limit
+        limit: req.query.limit,
+        currentUser: req.user ? req.user.id : null
       })}).then(function(timeline) {
         new TimelineSerializer(timeline).toJSON(function(err, json) {
           res.jsonp(json)
@@ -46,7 +49,8 @@ exports.addController = function(app) {
     models.User.findByUsername(username)
       .then(function(user) { return user.getLikesTimeline({
         offset: req.query.offset,
-        limit: req.query.limit
+        limit: req.query.limit,
+        currentUser: req.user ? req.user.id : null
       })})
       .then(function(timeline) {
         new TimelineSerializer(timeline).toJSON(function(err, json) {
@@ -63,7 +67,8 @@ exports.addController = function(app) {
     models.User.findByUsername(username)
       .then(function(user) { return user.getCommentsTimeline({
         offset: req.query.offset,
-        limit: req.query.limit
+        limit: req.query.limit,
+        currentUser: req.user ? req.user.id : null
       })})
       .then(function(timeline) {
         new TimelineSerializer(timeline).toJSON(function(err, json) {
@@ -81,7 +86,8 @@ exports.addController = function(app) {
 
     user.getMyDiscussionsTimeline({
       offset: req.query.offset,
-      limit: req.query.limit
+      limit: req.query.limit,
+      currentUser: req.user ? req.user.id : null
     })
       .then(function(timeline) {
         new TimelineSerializer(timeline).toJSON(function(err, json) {
