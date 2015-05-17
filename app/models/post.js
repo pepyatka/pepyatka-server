@@ -506,7 +506,7 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      database.zcountAsync(mkKey(['post', that.id, 'likes']), '-inf', '+inf')
+      database.zcardAsync(mkKey(['post', that.id, 'likes']))
         .then(function(length) {
           if (length > that.maxLikes && that.maxLikes != 'all') {
             database.zrevrangeAsync(mkKey(['post', that.id, 'likes']), 0, that.maxLikes - 1)
@@ -530,7 +530,7 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      database.zcountAsync(mkKey(['post', that.id, 'likes']), '-inf', '+inf')
+      database.zcardAsync(mkKey(['post', that.id, 'likes']))
         .then(function(length) {
           if (length > that.maxLikes && that.maxLikes != 'all') {
             that.omittedLikes = length - that.maxLikes
