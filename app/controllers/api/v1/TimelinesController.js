@@ -19,7 +19,6 @@ exports.addController = function(app) {
       currentUser: user.id
     })
       .then(function(timeline) {
-        console.log(timeline)
         new TimelineSerializer(timeline).toJSON(function(err, json) {
           res.jsonp(json)
         })
