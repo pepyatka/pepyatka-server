@@ -532,8 +532,17 @@ exports.addModel = function(database) {
           } else {
             database.zrevrangeAsync(mkKey(['post', that.id, 'likes']), 0, -1)
               .then(function(likeIds) {
+                var to = 0
+                var from = _.findIndex(likeIds, function(user) { return user == that.currentUser })
+
+                if (from > 0) {
+                  console.log(from)
+                  console.log(likeIds)
+                  likeIds.splice(to, 0, likeIds.splice(from, 1)[0])
+                }
                 that.likeIds = likeIds
-                resolve(likeIds)
+
+                resolve(that.likeIds)
               })
           }
         })

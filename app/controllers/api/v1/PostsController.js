@@ -78,13 +78,10 @@ exports.addController = function(app) {
   PostsController.show = function(req, res) {
     models.Post.getById(req.params.postId, {
       maxComments: req.query.maxComments,
-      maxLikes: req.query.maxLikes
+      maxLikes: req.query.maxLikes,
+      currentUser: req.user ? req.user.id : null
     })
       .then(function(post) {
-        // put currentUser to the first place in likes
-        if (req.user)
-          post.currentUser = req.user.id
-
         new PostSerializer(post).toJSON(function(err, json) {
           res.jsonp(json)
         })
