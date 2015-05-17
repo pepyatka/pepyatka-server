@@ -49,7 +49,8 @@ exports.getConfig = function() {
     fromName: 'Pepyatka',
     fromEmail: 'mail@pepyatka.com',
     resetPasswordMailSubject: 'Pepyatka password reset',
-    host: config.origin
+    host: config.origin,
+    options: {}
   }
 
   config.redis = {

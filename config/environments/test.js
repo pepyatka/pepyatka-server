@@ -11,6 +11,8 @@ exports.getConfig = function() {
 
     origin: 'http://localhost:3333',
 
+    appRoot: '.',
+
     acceptHashedPasswordsOnly: false
 
   }
@@ -34,7 +36,8 @@ exports.getConfig = function() {
   }
 
   config.mailer = {
-    transport: stubTransport()
+    transport: stubTransport,
+    options: {}
   }
 
   config.redis = {
