@@ -520,8 +520,6 @@ exports.addModel = function(database) {
                 that.omittedLikes = length - that.maxLikes
 
                 if (this.includeUser) {
-                  console.log(that.likeIds)
-                  console.log(that.currentUser)
                   that.likeIds = that.likeIds.sort(function(a, b) {
                     if (a == that.currentUser) return -1
                     if (b == that.currentUser) return 1
