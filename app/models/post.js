@@ -510,23 +510,24 @@ exports.addModel = function(database) {
       database.zcardAsync(mkKey(['post', that.id, 'likes']))
         .then(function(length) {
           if (length > that.maxLikes && that.maxLikes != 'all') {
-            database.zscoreAsync(mkKey['post', that.id, 'likes'], that.currentUser)
-              .then(function(score) {
-                var items = that.maxLikes - 1
-                if (score >= 0) {
-                  that.likeIds = [that.currentUser]
-                  items = items - 1
-                } else {
-                  that.likeIds = []
-                }
-                return items
-              })
-              .then(function(items) {
-                return database.zrevrangeAsync(mkKey(['post', that.id, 'likes']), 0, items)
+            database.zscoreAsync(mkKey['post', that.id, 'likes'], that.currentUser).bind({})
+              .then(function(score) { this.includeUser = score >= 0 })
+              .then(function() {
+                return database.zrevrangeAsync(mkKey(['post', that.id, 'likes']), 0, that.maxLikes)
               })
               .then(function(likeIds) {
-                that.likeIds = that.likeIds.concat(likeIds)
+                that.likeIds = likeIds
                 that.omittedLikes = length - that.maxLikes
+
+                if (this.includeUser) {
+                  console.log(that.likeIds)
+                  console.log(that.currentUser)
+                  that.likeIds = that.likeIds.sort(function(a, b) {
+                    if (a == that.currentUser) return -1
+                    if (b == that.currentUser) return 1
+                  }).slice(0, -1)
+                }
+
                 resolve(that.likeIds)
               })
           } else {
