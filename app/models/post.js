@@ -96,13 +96,22 @@ exports.addModel = function(database) {
                                 'updatedAt': post.updatedAt.toString()
                               })
         })
-        .then(function() { return models.Timeline.publishPost(that) })
-        .then(function() { return that.linkAttachments() })
+        .then(function() {
+          return Promise.all([
+            models.Timeline.publishPost(that),
+            that.linkAttachments(),
+            that.savePostedTo()
+          ])
+        })
         .then(function() { return models.Stats.findById(that.userId) })
         .then(function(stats) { return stats.addPost() })
         .then(function(res) { resolve(that) })
         .catch(function(e) { reject(e) })
     })
+  }
+
+  Post.prototype.savePostedTo = function() {
+    return database.saddAsync(mkKey(['post', this.id, 'to']), this.timelineIds)
   }
 
   Post.prototype.update = function(params) {
@@ -232,20 +241,31 @@ exports.addModel = function(database) {
     })
   }
 
-  Post.prototype.getSubscriptionIds = Post.prototype.getTimelineIds
-  Post.prototype.getSubscriptions = function() {
+  Post.prototype.getPostedToIds = function() {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      that.getSubscriptionIds()
-        .then(function(userIds) {
-          return Promise.map(userIds, function(userId) {
-            return models.Timeline.findById(userId)
+      database.smembersAsync(mkKey(['post', that.id, 'to']))
+        .then(function(timelineIds) {
+          that.timelineIds = timelineIds || []
+          resolve(that.timelineIds)
+        })
+    })
+  }
+
+  Post.prototype.getPostedTo = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getPostedToIds()
+        .then(function(timelineIds) {
+          return Promise.map(timelineIds, function(timelineId) {
+            return models.Timeline.findById(timelineId)
           })
         })
-        .then(function(subscriptions) {
-          that.subscriptions = subscriptions
-          resolve(that.subscriptions)
+        .then(function(timelines) {
+          that.postedTo = timelines
+          resolve(that.timelines)
         })
     })
   }
