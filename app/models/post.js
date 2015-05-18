@@ -509,7 +509,7 @@ exports.addModel = function(database) {
     return new Promise(function(resolve, reject) {
       database.zcardAsync(mkKey(['post', that.id, 'likes']))
         .then(function(length) {
-          if (length > that.maxLikes && that.maxLikes != 'all') {
+          if (length > (that.maxLikes + 1) && that.maxLikes != 'all') {
             database.zscoreAsync(mkKey['post', that.id, 'likes'], that.currentUser)
               .then(function(score) {
                 var items = that.maxLikes - 1
@@ -553,7 +553,7 @@ exports.addModel = function(database) {
     return new Promise(function(resolve, reject) {
       database.zcardAsync(mkKey(['post', that.id, 'likes']))
         .then(function(length) {
-          if (length > that.maxLikes && that.maxLikes != 'all') {
+          if (length > (that.maxLikes + 1) && that.maxLikes != 'all') {
             that.omittedLikes = length - that.maxLikes
             return resolve(that.omittedLikes)
           }
