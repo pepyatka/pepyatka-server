@@ -34,7 +34,7 @@ exports.addModel = function(database) {
     else
       this.maxComments = params.maxComments
     if (params.maxLikes != 'all')
-      this.maxLikes = parseInt(params.maxLikes, 10) || 3
+      this.maxLikes = parseInt(params.maxLikes, 10) || 4
     else
       this.maxLikes = params.maxLikes
   }
