@@ -329,13 +329,9 @@ exports.addModel = function(database) {
         })
         .then(function() { return this.user.getHidesTimelineId() })
         .then(function(timelineId) {
-          this.timelineId = timelineId
-          return this.user.getRiverOfNewsTimelineId()
-        })
-        .then(function(riverOfNewsId) {
           return Promise.all([
-            database.zaddAsync(mkKey(['timeline', this.timelineId, 'posts']), that.createdAt, that.id),
-            database.saddAsync(mkKey(['post', that.id, 'timelines']), this.timelineId)
+            database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), that.updatedAt, that.id),
+            database.saddAsync(mkKey(['post', that.id, 'timelines']), timelineId)
           ])
         })
         .then(function(res) { resolve(res) })
@@ -353,13 +349,9 @@ exports.addModel = function(database) {
         })
         .then(function() { return this.user.getHidesTimelineId() })
         .then(function(timelineId) {
-          this.timelineId = timelineId
-          return this.user.getRiverOfNewsTimelineId()
-        })
-        .then(function(riverOfNewsId) {
           return Promise.all([
-            database.zremAsync(mkKey(['timeline', this.timelineId, 'posts']), that.id),
-            database.sremAsync(mkKey(['post', that.id, 'timelines']), this.timelineId)
+            database.zremAsync(mkKey(['timeline', timelineId, 'posts']), that.id),
+            database.sremAsync(mkKey(['post', that.id, 'timelines']), timelineId)
           ])
         })
         .then(function(res) { resolve(res) })

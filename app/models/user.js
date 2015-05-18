@@ -431,20 +431,24 @@ exports.addModel = function(database) {
         })
         .then(function(riverOfNewsTimeline) {
           this.riverOfNewsTimeline = riverOfNewsTimeline
+          return this.riverOfNewsTimeline.getPosts(this.riverOfNewsTimeline.offset,
+                                                   this.riverOfNewsTimeline.limit)
+          })
+        .then(function(posts) {
+          this.posts = posts
           return models.Timeline.findById(this.hidesTimelineId)
         })
-        // NOTE: this is better get done with zrangebyscore where min
-        // is 25th post and max is 1st post.
         .then(function(hidesTimeline) {
-          return hidesTimeline.getPostIds(0, 30)
+          if (this.posts.length > 0)
+            return hidesTimeline.getPostIdsByScore(this.posts[0].updatedAt,
+                                                   this.posts[this.posts.length-1].updatedAt)
+          else
+            return []
         })
         .then(function(hiddenPostIds) {
           this.hiddenPostIds = hiddenPostIds
-          return this.riverOfNewsTimeline.getPosts(this.riverOfNewsTimeline.offset,
-                                                   this.riverOfNewsTimeline.limit)
-        })
-        .then(function(posts) {
-          return Promise.map(posts, function(post) {
+
+          return Promise.map(this.posts, function(post) {
             if (this.hiddenPostIds.indexOf(post.id) >= 0) {
               post.isHidden = true
             }

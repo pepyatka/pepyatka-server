@@ -145,6 +145,18 @@ exports.addModel = function(database) {
     })
   }
 
+  Timeline.prototype.getPostIdsByScore = function(min, max) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      database.zrevrangebyscoreAsync(mkKey(['timeline', that.id, 'posts']), min, max)
+        .then(function(postIds) {
+          that.postIds = postIds
+          resolve(that.postIds)
+        })
+    })
+  }
+
   Timeline.prototype.getPosts = function(offset, limit) {
     var that = this
 
