@@ -122,7 +122,11 @@ exports.addController = function(app) {
         return req.user.validateCanSubscribe(timelineId)
       })
       .then(function(timelineId) { return req.user.subscribeTo(timelineId) })
-      .then(function(status) { res.jsonp({}) })
+      .then(function(status) {
+        new MyProfileSerializer(req.user).toJSON(function(err, json) {
+          res.jsonp(json)
+        })
+      })
       .catch(exceptions.reportError(res))
   }
 
@@ -137,7 +141,11 @@ exports.addController = function(app) {
         return req.user.validateCanUnsubscribe(timelineId)
       })
       .then(function(timelineId) { return req.user.unsubscribeTo(timelineId) })
-      .then(function(status) { res.jsonp({}) })
+      .then(function(status) {
+        new MyProfileSerializer(req.user).toJSON(function(err, json) {
+          res.jsonp(json)
+        })
+      })
       .catch(exceptions.reportError(res))
   }
 
