@@ -264,7 +264,10 @@ describe("UsersController", function() {
         .post(app.config.host + '/v1/users/' + userA.username + '/subscribe')
         .send({ authToken: authTokenB })
         .end(function(err, res) {
-          res.body.should.be.empty
+          res.body.should.not.be.empty
+          res.body.should.have.property('users')
+          res.body.users.should.have.property('username')
+          res.body.users.username.should.eql(userB.username.toLowerCase())
 
           request
             .post(app.config.host + '/v1/posts')
@@ -289,7 +292,10 @@ describe("UsersController", function() {
         .post(app.config.host + '/v1/users/' + userA.username + '/subscribe')
         .send({ authToken: authTokenB })
         .end(function(err, res) {
-          res.body.should.be.empty
+          res.body.should.not.be.empty
+          res.body.should.have.property('users')
+          res.body.users.should.have.property('username')
+          res.body.users.username.should.eql(userB.username.toLowerCase())
 
           request
             .get(app.config.host + '/v1/timelines/home')
