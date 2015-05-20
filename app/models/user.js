@@ -16,6 +16,7 @@ var Promise = require('bluebird')
   , validator = require('validator')
   , bcrypt = Promise.promisifyAll(require('bcrypt'))
   , gm = Promise.promisifyAll(require('gm'))
+  , GraphemeBreaker = require('grapheme-breaker')
 
 exports.addModel = function(database) {
   /**
@@ -198,13 +199,27 @@ exports.addModel = function(database) {
     return Promise.resolve(valid)
   }
 
+  User.prototype.isValidScreenName = function() {
+    var valid
+
+    if (!this.screenName) {
+      valid = false
+    } else {
+      var len = GraphemeBreaker.countBreaks(this.screenName)
+
+      valid = len >= 3
+          && len <= 25
+    }
+
+    return Promise.resolve(valid)
+  }
+
   User.prototype.validate = function() {
     return new Promise(function(resolve, reject) {
       var valid
 
       valid = this.isValidUsername().value()
-        && this.screenName
-        && this.screenName.length > 1
+        && this.isValidScreenName().value()
         && this.isValidEmail().value()
 
       valid ? resolve(true) : reject(new Error("Invalid"))
