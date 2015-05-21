@@ -5,8 +5,11 @@
   "homepage": "http://pepyatka.com",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">= 0.12.0"
+  },
   "scripts": {
-    "start": "iojs index",
+    "start": "node index",
     "test": "./node_modules/jake/bin/cli.js test"
   },
   "repository": {
