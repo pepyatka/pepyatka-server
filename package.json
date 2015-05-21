@@ -43,7 +43,8 @@
     "nodemailer-smtp-transport": "1.0.2",
     "nodemailer-stub-transport": "1.0.0",
     "ejs": "2.3.1",
-    "bcrypt": "0.8.2"
+    "bcrypt": "0.8.2",
+    "grapheme-breaker": "0.2.0"
   },
   "devDependencies": {
     "mkdirp": "0.5.0"

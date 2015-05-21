@@ -57,8 +57,7 @@ exports.addModel = function(database) {
       var valid
 
       valid = this.isValidUsername().value()
-        && this.screenName
-        && this.screenName.length > 1
+        && this.isValidScreenName().value()
 
       valid ? resolve(valid) : reject(new Error("Invalid"))
     }.bind(this))
