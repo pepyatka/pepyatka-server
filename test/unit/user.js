@@ -177,6 +177,35 @@ describe('User', function() {
         .then(function() { done() })
     })
 
+    it('should create with an email address', function(done) {
+      var user = new User({
+        username: 'Luna',
+        email: 'luna@example.com',
+        password: 'password'
+      })
+
+      user.create()
+        .then(function(user) {
+          user.should.be.an.instanceOf(User)
+          user.should.not.be.empty
+          user.should.have.property('id')
+
+          return user
+        })
+        .then(User.findById(user.id))
+        .then(function(newUser) {
+          newUser.should.be.an.instanceOf(User)
+          newUser.should.not.be.empty
+          newUser.should.have.property('id')
+          newUser.id.should.eql(user.id)
+          newUser.should.have.property('type')
+          newUser.type.should.eql('user')
+          newUser.should.have.property('email')
+          newUser.email.should.eql(user.email)
+        })
+        .then(function() { done() })
+    })
+
     it('should ignore whitespaces in username', function(done) {
       var username = ' Luna  '
         , user = new User({
