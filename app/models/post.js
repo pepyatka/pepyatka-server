@@ -525,20 +525,25 @@ exports.addModel = function(database) {
             database.zscoreAsync(mkKey['post', that.id, 'likes'], that.currentUser).bind({})
               .then(function(score) { this.includeUser = score >= 0 })
               .then(function() {
-                return database.zrevrangeAsync(mkKey(['post', that.id, 'likes']), 0, that.maxLikes)
+                return database.zrevrangeAsync(mkKey(['post', that.id, 'likes']), 0, that.maxLikes - 1)
               })
               .then(function(likeIds) {
                 that.likeIds = likeIds
                 that.omittedLikes = length - that.maxLikes
 
                 if (this.includeUser) {
-                  that.likeIds = that.likeIds.sort(function(a, b) {
-                    if (a == that.currentUser) return -1
-                    if (b == that.currentUser) return 1
-                  }).slice(0, -1)
+                  if (likeIds.indexOf(that.currentUser) == -1) {
+                    that.likeIds = [that.currentUser].concat(that.likeIds)
+                    that.omittedLikes = that.omittedLikes + 1
+                  } else {
+                    that.likeIds = that.likeIds.sort(function(a, b) {
+                      if (a == that.currentUser) return -1
+                      if (b == that.currentUser) return 1
+                    })
+                  }
                 }
 
-                resolve(that.likeIds)
+                resolve(that.likeIds.slice(0, that.maxLikes - 1))
               })
           } else {
             database.zrevrangeAsync(mkKey(['post', that.id, 'likes']), 0, -1)
@@ -565,11 +570,23 @@ exports.addModel = function(database) {
       database.zcardAsync(mkKey(['post', that.id, 'likes']))
         .then(function(length) {
           if (length > that.maxLikes && that.maxLikes != 'all') {
-            that.omittedLikes = length - that.maxLikes
-            return resolve(that.omittedLikes)
-          }
+            database.zscoreAsync(mkKey['post', that.id, 'likes'], that.currentUser).bind({})
+              .then(function(score) { this.includeUser = score >= 0 })
+              .then(function() {
+                return database.zrevrangeAsync(mkKey(['post', that.id, 'likes']), 0, that.maxLikes - 1)
+              })
+              .then(function(likeIds) {
+                that.omittedLikes = length - that.maxLikes
 
-          return resolve(0)
+                if (this.includeUser && likeIds.indexOf(that.currentUser) == -1) {
+                  that.omittedLikes = that.omittedLikes + 1
+                }
+
+                resolve(that.omittedLikes)
+              })
+          } else {
+            resolve(0)
+          }
         })
     })
   }
