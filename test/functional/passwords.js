@@ -9,8 +9,9 @@ describe("PasswordsController", function() {
   describe("#create()", function() {
     var authToken
       , luna
+      , oldEmail = 'test@example.com'
 
-    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token, luna) {
+    beforeEach(funcTestHelper.createUser('Luna', 'password', { 'email': oldEmail }, function(token, luna) {
       authToken = token
       user = luna
     }))
@@ -33,6 +34,18 @@ describe("PasswordsController", function() {
               res.body.message.should.eql('We will send a password reset link to ' + email + ' in a moment')
               done()
             })
+        })
+    })
+
+    it('should generate resetToken by email for a new user', function(done) {
+      request
+        .post(app.config.host + '/v1/passwords')
+        .send({ email: oldEmail })
+        .end(function(err, res) {
+          res.body.should.not.be.empty
+          res.body.should.have.property('message')
+          res.body.message.should.eql('We will send a password reset link to ' + oldEmail + ' in a moment')
+          done()
         })
     })
 

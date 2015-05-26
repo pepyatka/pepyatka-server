@@ -12,25 +12,31 @@ exports.flushDb = function() {
   }
 }
 
-exports.createUser = function(username, password, callback) {
+exports.createUser = function(username, password, attributes, callback) {
   return function(done) {
+    if (typeof attributes === 'function') {
+      callback = attributes
+      attributes = {}
+    }
+
     var user = {
       username: username,
       password: password
     }
+    if (attributes.email)
+      user.email = attributes.email
 
     request
-        .post(app.config.host + '/v1/users')
-        .send({ username: user.username, password: user.password })
-        .end(function(err, res) {
-          if (callback) {
-            var luna = res.body.users
-            luna.password = user.password
-            callback(res.body.authToken, luna)
-          }
-          done()
-        })
-
+      .post(app.config.host + '/v1/users')
+      .send(user)
+      .end(function(err, res) {
+        if (callback) {
+          var luna = res.body.users
+          luna.password = user.password
+          callback(res.body.authToken, luna)
+        }
+        done()
+      })
   }
 }
 
