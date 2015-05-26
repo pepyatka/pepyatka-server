@@ -522,7 +522,7 @@ exports.addModel = function(database) {
       database.zcardAsync(mkKey(['post', that.id, 'likes']))
         .then(function(length) {
           if (length > that.maxLikes && that.maxLikes != 'all') {
-            database.zscoreAsync(mkKey['post', that.id, 'likes'], that.currentUser).bind({})
+            database.zscoreAsync(mkKey(['post', that.id, 'likes']), that.currentUser).bind({})
               .then(function(score) { this.includeUser = score && score >= 0 })
               .then(function() {
                 return database.zrevrangeAsync(mkKey(['post', that.id, 'likes']), 0, that.maxLikes - 1)
