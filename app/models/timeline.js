@@ -26,7 +26,7 @@ exports.addModel = function(database) {
     if (parseInt(params.updatedAt, 10))
       this.updatedAt = params.updatedAt
     this.offset = parseInt(params.offset, 10) || 0
-    this.limit = parseInt(params.limit, 10) || 25
+    this.limit = parseInt(params.limit, 10) || 30
     this.currentUser = params.currentUser
   }
 
