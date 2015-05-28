@@ -533,8 +533,7 @@ exports.addModel = function(database) {
 
                 if (this.includeUser) {
                   if (likeIds.indexOf(that.currentUser) == -1) {
-                    that.likeIds = [that.currentUser].concat(that.likeIds)
-                    that.omittedLikes = that.omittedLikes + 1
+                    that.likeIds = [that.currentUser].concat(that.likeIds.slice(0, -1))
                   } else {
                     that.likeIds = that.likeIds.sort(function(a, b) {
                       if (a == that.currentUser) return -1
@@ -577,11 +576,6 @@ exports.addModel = function(database) {
               })
               .then(function(likeIds) {
                 that.omittedLikes = length - that.maxLikes
-
-                if (this.includeUser && likeIds.indexOf(that.currentUser) == -1) {
-                  that.omittedLikes = that.omittedLikes + 1
-                }
-
                 resolve(that.omittedLikes)
               })
           } else {
