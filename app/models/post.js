@@ -543,7 +543,7 @@ exports.addModel = function(database) {
                   }
                 }
 
-                resolve(that.likeIds.slice(0, that.maxLikes - 1))
+                resolve(that.likeIds.slice(0, that.maxLikes))
               })
           } else {
             database.zrevrangeAsync(mkKey(['post', that.id, 'likes']), 0, -1)
