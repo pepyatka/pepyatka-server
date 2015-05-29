@@ -349,6 +349,12 @@ exports.addModel = function(database) {
     })
   }
 
+  User.prototype.getAdministratorIds = function() {
+    return new Promise(function(resolve, reject) {
+      resolve([])
+    })
+  }
+
   User.prototype.getMyDiscussionsTimeline = function(params) {
     var that = this
 
@@ -363,7 +369,7 @@ exports.addModel = function(database) {
           commentsId = cId
           likesId = lId
         })
-        .then(function() { return models.Timeline.findById(that.id) })
+        .then(function() { return models.Timeline.findById(that.id, params) })
         .then(function(timeline) {
           if (!timeline) {
             timeline = new models.Timeline({
