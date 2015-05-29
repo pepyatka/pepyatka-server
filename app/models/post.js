@@ -265,7 +265,7 @@ exports.addModel = function(database) {
         })
         .then(function(timelines) {
           that.postedTo = timelines
-          resolve(that.timelines)
+          resolve(timelines)
         })
     })
   }
