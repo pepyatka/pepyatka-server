@@ -150,10 +150,59 @@ describe("PostsController", function() {
               .end(function(err, res) {
                 res.status.should.eql(200)
                 funcTestHelper.getTimeline('/v1/timelines/home', otherUserAuthToken, function(err, res) {
+                  res.body.should.have.property('posts')
                   res.body.posts.length.should.eql(1)
                   res.body.posts[0].body.should.eql(body)
                   done()
                 })
+              })
+          })
+      })
+
+      it("should not show post to group in the timeline of another user", function(done) {
+        request
+          .post(app.config.host + '/v1/users/' + username + '/subscribe')
+          .send({ authToken: otherUserAuthToken })
+          .end(function(err, res) {
+            res.status.should.eql(200)
+            var body = 'Post body'
+
+            request
+              .post(app.config.host + '/v1/posts')
+              .send({ post: { body: body }, meta: { feeds: [groupName] }, authToken: authToken })
+              .end(function(err, res) {
+                res.status.should.eql(200)
+                funcTestHelper.getTimeline('/v1/timelines/home', otherUserAuthToken, function(err, res) {
+                  res.body.should.not.have.property('posts')
+                  done()
+                })
+              })
+          })
+      })
+
+      it("should not show liked post to group in the timeline of another user", function(done) {
+        request
+          .post(app.config.host + '/v1/users/' + username + '/subscribe')
+          .send({ authToken: otherUserAuthToken })
+          .end(function(err, res) {
+            res.status.should.eql(200)
+            var body = 'Post body'
+
+            request
+              .post(app.config.host + '/v1/posts')
+              .send({ post: { body: body }, meta: { feeds: [groupName] }, authToken: authToken })
+              .end(function(err, res) {
+                res.status.should.eql(200)
+                var post = res.body.posts
+                request
+                  .post(app.config.host + '/v1/posts/' + post.id + '/like')
+                  .send({ authToken: authToken })
+                  .end(function(err, res) {
+                    funcTestHelper.getTimeline('/v1/timelines/home', otherUserAuthToken, function(err, res) {
+                      res.body.should.not.have.property('posts')
+                      done()
+                    })
+                  })
               })
           })
       })

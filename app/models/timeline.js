@@ -53,6 +53,9 @@ exports.addModel = function(database) {
     var that = this
     var currentTime = new Date().getTime()
 
+    // We can use post.timelineIds here instead of post.getPostedToIds
+    // because we are about to create that post and have just received
+    // a request from user, so postedToIds == timelineIds here
     return Promise.map(post.timelineIds, function(timelineId) {
       return Timeline.findById(timelineId)
     })

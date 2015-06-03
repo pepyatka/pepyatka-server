@@ -273,7 +273,7 @@ exports.addModel = function(database) {
   Post.prototype.getGenericFriendOfFriendTimelineIds = function(userId, type) {
     var that = this
     var timelineIds = []
-    var user
+    var user, feeds
 
     return new Promise(function(resolve, reject) {
       models.User.findById(userId)
@@ -286,9 +286,26 @@ exports.addModel = function(database) {
           return timeline.getSubscribers()
         })
         .then(function(users) {
-          return Promise.map(users, function(user) {
-            return user.getRiverOfNewsTimelineId()
-          })
+          feeds = users
+          return that.getPostedToIds()
+            .then(function(postedToIds) {
+              return Promise.map(postedToIds, function(timelineId) {
+                return models.Timeline.findById(timelineId)
+                  .then(function(timeline) { return timeline.getUser() })
+                  .then(function(user) { return user.isUser() })
+              })
+            })
+        })
+        .then(function(users) {
+          // Adds the specified post to River of News if and only if
+          // that post has been published to user's Post timeline,
+          // otherwise this post will stay in group(s) timelines
+          if (_.any(users, _.identity, true))
+            return Promise.map(feeds, function(user) {
+              return user.getRiverOfNewsTimelineId()
+            })
+          else
+            return []
         })
         .then(function(subscribedTimelineIds) {
           timelineIds = timelineIds.concat(subscribedTimelineIds)
