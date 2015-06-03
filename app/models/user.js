@@ -66,6 +66,7 @@ exports.addModel = function(database) {
   User.className = User
   User.namespace = "user"
   User.findById = User.super_.findById
+  User.getById = User.super_.getById
   User.findByAttribute = User.super_.findByAttribute
 
   User.PROFILE_PICTURE_SIZE_LARGE = 75

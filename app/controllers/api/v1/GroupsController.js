@@ -41,7 +41,7 @@ exports.addController = function(app) {
     models.Group.getById(req.params.userId).bind({})
       .then(function(group) {
         this.group = group
-        return group.validateCanUpdate()
+        return group.validateCanUpdate(req.user)
       })
       .then(function() {
         return this.group.update(attrs)

@@ -193,6 +193,46 @@ describe("GroupsController", function() {
     })
   })
 
+  describe('#update', function() {
+    var authToken
+      , group
+
+    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
+      authToken = token
+    }))
+
+    beforeEach(function(done) {
+      request
+          .post(app.config.host + '/v1/groups')
+          .send({ group: {username: 'pepyatka-dev', screenName: 'Pepyatka Developers'},
+            authToken: authToken
+          })
+          .end(function(err, res) {
+            group = res.body.groups
+            done()
+          })
+    })
+
+    it('should update group settings', function(done) {
+      var screenName = 'mokum-dev'
+
+      request
+        .post(app.config.host + '/v1/users/' + group.id)
+        .send({ authToken: authToken,
+                user: { screenName: screenName },
+                '_method': 'put' })
+        .end(function(err, res) {
+          res.should.not.be.empty
+          res.body.should.not.be.empty
+          res.body.should.have.property('groups')
+          res.body.groups.should.have.property('id')
+          res.body.groups.should.have.property('screenName')
+          res.body.groups.screenName.should.eql(screenName)
+          done()
+        })
+    })
+  })
+
   describe('#unadmin', function() {
     var authTokenAdmin, authTokenNonAdmin
 
