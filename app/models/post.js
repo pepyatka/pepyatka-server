@@ -636,7 +636,8 @@ exports.addModel = function(database) {
 
           return Promise.all([
             Promise.map(timelines, function(timeline) {
-              return timeline.updatePost(that.id)
+              // For the time being like does not bump post
+              // return timeline.updatePost(that.id)
             }),
             database.zaddAsync(mkKey(['post', that.id, 'likes']), now, userId)
           ])
