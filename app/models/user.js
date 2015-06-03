@@ -390,7 +390,7 @@ exports.addModel = function(database) {
             mkKey(['timeline', likesId, 'posts']),
             'AGGREGATE', 'MAX')
         })
-        .then(function(res) { resolve(models.Timeline.findById(that.id)) })
+        .then(function(res) { resolve(models.Timeline.findById(that.id, params)) })
     })
   }
 
