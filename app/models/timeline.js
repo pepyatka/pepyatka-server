@@ -279,12 +279,19 @@ exports.addModel = function(database) {
     })
   }
 
-  Timeline.prototype.updatePost = function(postId) {
+  Timeline.prototype.updatePost = function(postId, action) {
     var currentTime = new Date().getTime()
     var that = this
 
     return new Promise(function(resolve, reject) {
-      database.zaddAsync(mkKey(['timeline', that.id, 'posts']), currentTime, postId)
+      database.zscoreAsync(mkKey(['timeline', that.id, 'posts']), postId)
+        .then(function(score) {
+          // For the time being like does not bump post
+          if (action === "like" && score != null)
+            return
+
+          return database.zaddAsync(mkKey(['timeline', that.id, 'posts']), currentTime, postId)
+        })
         .then(function(res) { return database.saddAsync(mkKey(['post', postId, 'timelines']), that.id) })
         .then(function(res) { return database.hsetAsync(mkKey(['post', postId]), 'updatedAt', currentTime) })
         .then(function(res) { resolve(res) })
