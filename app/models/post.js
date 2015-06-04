@@ -205,17 +205,19 @@ exports.addModel = function(database) {
     return models.User.findById(this.userId)
   }
 
-  Post.prototype.getSubscribedTimelineIds = function() {
+  Post.prototype.getSubscribedTimelineIds = function(groupOnly) {
     var that = this
     var timelineIds
+    if (typeof groupOnly === 'undefined')
+      groupOnly = false
 
     return new Promise(function(resolve, reject) {
       FeedFactory.findById(that.userId)
         .then(function(feed) {
-          return Promise.all([
-            feed.getRiverOfNewsTimelineId(),
-            feed.getPostsTimelineId(),
-          ])
+          var feeds = [feed.getRiverOfNewsTimelineId()]
+          if (!groupOnly)
+            feeds.push(feed.getPostsTimelineId())
+          return Promise.all(feeds)
         })
         .then(function(newTimelineIds) {
           timelineIds = newTimelineIds
@@ -273,7 +275,7 @@ exports.addModel = function(database) {
   Post.prototype.getGenericFriendOfFriendTimelineIds = function(userId, type) {
     var that = this
     var timelineIds = []
-    var user, feeds
+    var user, feeds, groupOnly
 
     return new Promise(function(resolve, reject) {
       models.User.findById(userId)
@@ -300,16 +302,19 @@ exports.addModel = function(database) {
           // Adds the specified post to River of News if and only if
           // that post has been published to user's Post timeline,
           // otherwise this post will stay in group(s) timelines
-          if (_.any(users, _.identity, true))
+          if (_.any(users, _.identity, true)) {
+            groupOnly = false
             return Promise.map(feeds, function(user) {
               return user.getRiverOfNewsTimelineId()
             })
-          else
+          } else {
+            groupOnly = true
             return []
+          }
         })
         .then(function(subscribedTimelineIds) {
           timelineIds = timelineIds.concat(subscribedTimelineIds)
-          return that.getSubscribedTimelineIds()
+          return that.getSubscribedTimelineIds(groupOnly)
         })
         .then(function(subscribedTimelineIds) {
           timelineIds = timelineIds.concat(subscribedTimelineIds)
