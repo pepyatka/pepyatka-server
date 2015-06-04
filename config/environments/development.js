@@ -24,6 +24,25 @@ exports.getConfig = function() {
     acceptHashedPasswordsOnly: false
   }
 
+  config.application = {
+    // Pepyatka won't allow users to use the following usernames, they
+    // are reserved for internal pages.
+    //
+    // To load this list from <PEPYATKA_HOME>/banlist.txt (one
+    // username per line) file use the following snippet:
+    //
+    // var fs = require('fs')
+    // var array = fs.readFileSync('banlist.txt').toString()
+    //               .split("\n").filter(function(n) { return n != '' })
+    // config.application {
+    //   USERNAME_STOP_LIST = array
+    // }
+    USERNAME_STOP_LIST: ['anonymous', 'public', 'about', 'signin', 'logout',
+                         'signup', 'filter', 'settings', 'account', 'groups',
+                         'friends', 'list', 'search', 'summary', 'share','404',
+                         'iphone']
+  }
+
   config.attachments = {
     // Make sure that all directories here have a trailing slash
     urlDir: 'http://localhost:3000/attachments/original/',
