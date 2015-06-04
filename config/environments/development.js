@@ -55,7 +55,8 @@ exports.getConfig = function() {
 
   config.redis = {
     host: 'localhost',
-    port: 6379
+    port: 6379,
+    analyze_performance: true
   }
 
   return config
