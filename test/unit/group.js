@@ -130,6 +130,42 @@ describe('Group', function() {
     })
   })
 
+  describe('#isValidUsername()', function() {
+    var valid = ['luna', '12345', 'hello1234', 'save-our-snobs']
+    valid.forEach(function(username) {
+      it('should allow username ' + username, function(done) {
+
+        var group = new Group({
+          username: username
+        })
+
+        group.create()
+          .then(function(group) { return group.isValidEmail() })
+          .then(function(valid) {
+            valid.should.eql(true)
+          })
+          .then(function() { done() })
+      })
+    })
+
+    var invalid = ['lu', '-12345', 'luna-', 'hel--lo', 'абизьян']
+    invalid.forEach(function(username) {
+      it('should not allow invalid username ' + username, function(done) {
+
+        var group = new Group({
+          username: username
+        })
+
+        group.create()
+          .then(function(group) { return group.isValidEmail() })
+          .catch(function(e) {
+            e.message.should.eql("Invalid")
+            done()
+          })
+      })
+    })
+  })
+
   describe('addAdministrator', function() {
     var group
 
