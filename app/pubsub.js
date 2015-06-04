@@ -234,6 +234,9 @@ exports.init = function(database) {
      , redisPub = redis(config.redis.port, config.redis.host, {})
      , redisSub = redis(config.redis.port, config.redis.host, { detect_buffers: true })
 
+    redisPub.on('error', function(err) { console.log(err) })
+    redisSub.on('error', function(err) { console.log(err) })
+
     io.adapter(adapter({
       pubClient: redisPub,
       subClient: redisSub
@@ -270,6 +273,7 @@ exports.init = function(database) {
     })
 
     var channels = redis(config.redis.port, config.redis.host, {})
+    channels.on('error', function(err) { console.log(err) })
     channels.subscribe('post:new', 'post:destroy', 'post:update',
                        'comment:new', 'comment:destroy', 'comment:update',
                        'like:new', 'like:remove', 'post:hide', 'post:unhide' )

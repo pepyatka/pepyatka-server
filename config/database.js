@@ -9,6 +9,18 @@ Promise.promisifyAll(redis.Multi.prototype)
 
 var database = redis.createClient(config.redis.port, config.redis.host, {})
 
+database.on('connect'     , log('connect'))
+database.on('ready'       , log('ready'))
+database.on('reconnecting', log('reconnecting'))
+database.on('error'       , log('error'))
+database.on('end'         , log('end'))
+
+function log(type) {
+  return function() {
+    console.log(type, arguments)
+  }
+}
+
 exports.selectDatabase = function() {
   return new Promise(function(resolve, reject) {
     database.selectAsync(config.database)
@@ -17,8 +29,11 @@ exports.selectDatabase = function() {
 }
 
 exports.connect = function() {
-  if (!database) database = redis.createClient(config.redis.port, config.redis.host, {})
   return database
+}
+
+exports.redis = function() {
+  return redis
 }
 
 exports.disconnect = function() {
