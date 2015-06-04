@@ -42,7 +42,8 @@ describe('User', function() {
   })
 
   describe('#isValidUsername()', function() {
-    var valid = ['luna', '12345', 'hello1234']
+    var valid = ['luna', '12345', 'hello1234',
+                 ' group', 'group '] // automatically trims
     valid.forEach(function(username) {
       it('should allow username ' + username, function(done) {
 
@@ -61,7 +62,8 @@ describe('User', function() {
       })
     })
 
-    var invalid = ['lu', '-12345', 'luna-', 'hel--lo', 'save-our-snobs', 'абизьян']
+    var invalid = ['lu', '-12345', 'luna-', 'hel--lo', 'save-our-snobs', 'абизьян',
+                   'gr oup']
     invalid.forEach(function(username) {
       it('should not allow invalid username ' + username, function(done) {
 
