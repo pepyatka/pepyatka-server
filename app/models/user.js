@@ -188,11 +188,11 @@ exports.addModel = function(database) {
     return Promise.resolve(valid)
   }
 
-  User.prototype.isValidUsername = function() {
+  User.prototype.isValidUsername = function(skip_stoplist) {
     var valid = this.username
         && this.username.length > 1
         && this.username.match(/^[A-Za-z0-9]+$/)
-        && models.FeedFactory.stopList().indexOf(this.username) == -1
+        && models.FeedFactory.stopList(skip_stoplist).indexOf(this.username) == -1
 
     return Promise.resolve(valid)
   }
@@ -212,11 +212,11 @@ exports.addModel = function(database) {
     return Promise.resolve(valid)
   }
 
-  User.prototype.validate = function() {
+  User.prototype.validate = function(skip_stoplist) {
     return new Promise(function(resolve, reject) {
       var valid
 
-      valid = this.isValidUsername().value()
+      valid = this.isValidUsername(skip_stoplist).value()
         && this.isValidScreenName().value()
         && this.isValidEmail().value()
 
@@ -224,11 +224,11 @@ exports.addModel = function(database) {
     }.bind(this))
   }
 
-  User.prototype.validateOnCreate = function() {
+  User.prototype.validateOnCreate = function(skip_stoplist) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      Promise.join(that.validate(),
+      Promise.join(that.validate(skip_stoplist),
                    that.validateUniquness(mkKey(['username', that.username, 'uid'])),
                    that.validateUniquness(mkKey(['user', that.id])),
                    function(valid, usernameIsUnique, idIsUnique) {
@@ -249,7 +249,7 @@ exports.addModel = function(database) {
     return new Promise.resolve(true)
   }
 
-  User.prototype.create = function() {
+  User.prototype.create = function(skip_stoplist) {
     var that = this
 
     return new Promise(function(resolve, reject) {
@@ -259,7 +259,7 @@ exports.addModel = function(database) {
 
       that.id = uuid.v4()
 
-      that.validateOnCreate()
+      that.validateOnCreate(skip_stoplist)
         .then(function(user) {
           return user.initPassword()
         })
