@@ -302,7 +302,7 @@ exports.addModel = function(database) {
         that.email = params.email
       that.isPrivate = params.isPrivate
 
-      that.validate()
+      that.validate(true)
         .then(function() {
           return Promise.all([
             database.hmsetAsync(mkKey(['user', that.id]),
