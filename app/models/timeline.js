@@ -243,7 +243,7 @@ exports.addModel = function(database) {
       database.zrevrangeAsync(mkKey(['timeline', that.id, 'subscribers']), 0, -1)
         .then(function(userIds) {
           // A user is always subscribed to their own posts timeline.
-          if (includeSelf && that.name == 'Posts') {
+          if (includeSelf && that.isPosts()) {
             userIds = _.uniq(userIds.concat([that.userId]))
           }
           that.subscriberIds = userIds
@@ -277,6 +277,26 @@ exports.addModel = function(database) {
     return this.getSubscribers(true).map(function(subscriber) {
       return subscriber.getRiverOfNewsTimelineId()
     })
+  }
+
+  Timeline.prototype.isRiverOfNews = function() {
+    return this.name === "RiverOfNews"
+  }
+
+  Timeline.prototype.isPosts = function() {
+    return this.name === "Posts"
+  }
+
+  Timeline.prototype.isLikes = function() {
+    return this.name === "Likes"
+  }
+
+  Timeline.prototype.isComments = function() {
+    return this.name === "Comments"
+  }
+
+  Timeline.prototype.isHides = function() {
+    return this.name === "Hides"
   }
 
   Timeline.prototype.updatePost = function(postId, action) {

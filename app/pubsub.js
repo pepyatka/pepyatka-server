@@ -73,12 +73,17 @@ exports.init = function(database) {
           return post.getCommentsFriendOfFriendTimelines(this.comment.userId)
         })
         .then(function(timelines) {
+          var that = this
           return Promise.map(timelines, function(timeline) {
-            database.publishAsync('comment:new',
-                                  JSON.stringify({
-                                    timelineId: timeline.id,
-                                    commentId: commentId
-                                  }))
+            that.post.isHiddenIn(timeline.id)
+              .then(function(isHidden) {
+                if (!isHidden)
+                  database.publishAsync('comment:new',
+                                        JSON.stringify({
+                                          timelineId: timeline.id,
+                                          commentId: commentId
+                                        }))
+              })
           })
         })
         .then(function() {
@@ -148,14 +153,18 @@ exports.init = function(database) {
           return post.getLikesFriendOfFriendTimelines(userId)
         })
         .then(function(timelines) {
+          var that = this
           return Promise.map(timelines, function(timeline) {
-            return database.publishAsync('like:new',
-                                  JSON.stringify({
-                                    timelineId: timeline.id,
-                                    userId: userId,
-                                    postId: postId
-                                  }))
-
+            that.post.isHiddenIn(timeline.id)
+              .then(function(isHidden) {
+                if (!isHidden)
+                  return database.publishAsync('like:new',
+                                               JSON.stringify({
+                                                 timelineId: timeline.id,
+                                                 userId: userId,
+                                                 postId: postId
+                                               }))
+              })
           })
         })
         .then(function() {

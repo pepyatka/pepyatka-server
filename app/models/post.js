@@ -688,5 +688,26 @@ exports.addModel = function(database) {
     return models.FeedFactory.findById(this.userId)
   }
 
+  Post.prototype.isHiddenIn = function(timelineId) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      models.Timeline.findById(timelineId).bind({})
+        .then(function(timeline) {
+          if (!(timeline.isRiverOfNews() || timeline.isHides()))
+            resolve(false)
+
+          return timeline.getUser()
+        })
+        .then(function(user) { return user.getHidesTimelineId() })
+        .then(function(timelineId) {
+          return database.zscoreAsync(mkKey(['timeline', timelineId, 'posts']), that.id)
+        })
+        .then(function(score) { resolve(score && score >= 0) })
+    })
+  }
+
+
+
   return Post
 }
