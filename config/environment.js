@@ -18,7 +18,10 @@ var selectEnvironment = function(app) {
   return new Promise(function(resolve, reject) {
     var logger = new (winston.Logger)({
       transports: [
-        new (winston.transports.Console)({ 'timestamp':true })
+        new (winston.transports.Console)({
+          'timestamp': true,
+          'level': config.logLevel || 'debug'
+        })
       ]
     })
     app.logger = logger
