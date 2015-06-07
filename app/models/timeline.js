@@ -304,7 +304,7 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      database.zscoreAsync(mkKey(['timeline', that.id, 'posts']), postId)
+      database.zscoreAsync(mkKey(['timeline', that.id, 'posts']), postId).bind({})
         .then(function(score) {
           // For the time being like does not bump post
           if (action === "like" && score != null)
@@ -314,7 +314,29 @@ exports.addModel = function(database) {
         })
         .then(function(res) { return database.saddAsync(mkKey(['post', postId, 'timelines']), that.id) })
         .then(function(res) { return database.hsetAsync(mkKey(['post', postId]), 'updatedAt', currentTime) })
-        .then(function(res) { resolve(res) })
+        .then(function(post) { return that.getUser() })
+        .then(function(feed) {
+          this.feed = feed
+          return feed.isUser()
+        })
+        .then(function(isUser) {
+          if (!isUser) {
+            // update group lastActivity for all subscribers
+            var updatedAt = new Date().getTime()
+            var self = this
+            that.getSubscriberIds()
+              .then(function(userIds) {
+                return Promise.map(userIds, function(userId) {
+                  return database.zaddAsync(mkKey(['user', userId, 'subscriptions']), updatedAt, that.id)
+                })
+              })
+              .then(function() {
+                return database.hmsetAsync(mkKey(['user', self.feed.id]),
+                                    { 'updatedAt': updatedAt.toString() })
+              })
+          }
+        })
+        .then(function() { resolve() })
     })
   }
 
