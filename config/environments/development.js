@@ -21,7 +21,9 @@ exports.getConfig = function() {
     secret: 'secret',
     origin: 'http://localhost:3333',
     appRoot: '.',
-    acceptHashedPasswordsOnly: false
+    acceptHashedPasswordsOnly: false,
+
+    logLevel: 'warn'
   }
 
   var defaultStopList = ['anonymous', 'public', 'about', 'signin', 'logout',

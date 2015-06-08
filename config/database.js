@@ -9,6 +9,7 @@ Promise.promisifyAll(redis.Multi.prototype)
 
 var database = redis.createClient(config.redis.port, config.redis.host, {})
 
+// TODO: move to app.logger
 database.on('connect'     , log('connect'))
 database.on('ready'       , log('ready'))
 database.on('reconnecting', log('reconnecting'))
