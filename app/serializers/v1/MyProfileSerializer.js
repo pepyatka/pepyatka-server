@@ -4,8 +4,9 @@ var Serializer = require("../../models").Serializer
 
 exports.addSerializer = function() {
   return new Serializer('users', {
-    select: ['id', 'username', 'type', 'screenName', 'email', 'statistics', 'subscriptions',
-      'profilePictureLargeUrl', 'profilePictureMediumUrl'],
+    select: ['id', 'username', 'type', 'screenName', 'email', 'statistics',
+             'subscriptions', 'profilePictureLargeUrl', 'profilePictureMediumUrl',
+             'banIds'],
     subscriptions: { through: SubscriptionSerializer, embed: true }
   })
 }

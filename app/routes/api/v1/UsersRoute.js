@@ -10,6 +10,8 @@ exports.addRoutes = function(app) {
   app.put( '/v1/users/updatePassword',          UsersController.updatePassword)
   app.post('/v1/users/updateProfilePicture',    UsersController.updateProfilePicture)
   app.put( '/v1/users/:userId',                 FeedFactoriesController.update)
+  app.post('/v1/users/:username/ban',           UsersController.ban)
+  app.post('/v1/users/:username/unban',         UsersController.unban)
   app.post('/v1/users/:username/subscribe',     UsersController.subscribe)
   app.post('/v1/users/:username/unsubscribe',   UsersController.unsubscribe)
   app.get( '/v1/users/:username/subscribers',   UsersController.subscribers)
