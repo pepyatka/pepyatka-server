@@ -20,7 +20,7 @@ exports.getConfig = function() {
 
     secret: 'secret',
 
-    origin: 'http://localhost:3333',
+    origin: '*',
 
     appRoot: '.',
 
@@ -29,18 +29,18 @@ exports.getConfig = function() {
 
   config.attachments = {
     // Make sure that all directories here have a trailing slash
-    urlDir: 'http://localhost:3000/attachments/original/',
+    urlDir: 'https://freefeed.net/attachments/original/',
     fsDir: './public/files/original/',
     fileSizeLimit: '10mb',
 
     thumbnails: {
-      urlDir: 'http://localhost:3000/attachments/thumbnails/',
+      urlDir: 'https:/freefeed.net/attachments/thumbnails/',
       fsDir: './public/files/thumbnails/'
     }
   }
 
   config.profilePictures = {
-    urlDir: 'http://localhost:3000/files/profilePictures/',
+    urlDir: 'http://freefeed.net/files/profilePictures/',
     fsDir: './public/files/profilePictures/'
   }
 
