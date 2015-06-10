@@ -1,15 +1,17 @@
 "use strict";
 
 var nodemailer = require('nodemailer')
-var transport = {
-  name: 'minimal',
-  version: '0.1.0',
-  send: function(mail, callback) {
-    var input = mail.message.createReadStream();
-    input.pipe(process.stdout);
-    input.on('end', function() {
-      callback(null, true)
-    })
+var transport = function() {
+  return {
+    name: 'minimal',
+    version: '0.1.0',
+    send: function(mail, callback) {
+      var input = mail.message.createReadStream();
+      input.pipe(process.stdout);
+      input.on('end', function() {
+        callback(null, true)
+      })
+    }
   }
 }
 
