@@ -44,6 +44,26 @@ describe('Group', function() {
         .then(function() { done() })
     })
 
+    it('should create with null screenName', function(done) {
+      var group = new Group({
+        username: 'username',
+        screenName: null
+      })
+
+      group.create()
+        .then(function(newGroup) {
+          newGroup.should.be.an.instanceOf(Group)
+          newGroup.should.not.be.empty
+          newGroup.should.have.property('id')
+          newGroup.id.should.eql(group.id)
+          newGroup.should.have.property('type')
+          newGroup.type.should.eql('group')
+          group.should.have.property('screenName')
+          newGroup.screenName.should.eql(group.username)
+        })
+        .then(function() { done() })
+    })
+
     it('should not create with tiny screenName', function(done) {
       var group = new Group({
         username: 'FriendFeed',
