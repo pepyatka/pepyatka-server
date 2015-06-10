@@ -179,6 +179,8 @@ exports.addModel = function(database) {
                     })
                 })
               }),
+            // delete posted to key
+            database.delAsync(mkKey(['post', that.id, 'to'])),
             // delete likes
             database.delAsync(mkKey(['post', that.id, 'likes'])),
             // delete post
