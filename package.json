@@ -25,6 +25,7 @@
     "bluebird": "2.9.12",
     "jake": "8.0.11",
     "lodash": "3.6.0",
+    "long-stack-traces": "0.1.2",
     "underscore.string": "3.0.3",
     "passport": "0.2.1",
     "passport-local": "1.0.0",

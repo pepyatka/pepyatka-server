@@ -1,5 +1,13 @@
 "use strict";
 
+require("long-stack-traces");
+
+process.on('uncaughtException', function (err) {
+  console.log("DRAGONZ!")
+  console.log(err)
+  console.log(err.stack)
+})
+
 var express = require('express')
   , app = express()
   , environment = require('./config/environment')
