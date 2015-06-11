@@ -47,7 +47,7 @@ exports.addModel = function(database) {
   Object.defineProperty(Group.prototype, 'screenName', {
     get: function() { return this.screenName_ },
     set: function(newValue) {
-      if (typeof newValue != 'undefined')
+      if (_.isString(newValue))
         this.screenName_ = newValue.trim()
     }
   })
