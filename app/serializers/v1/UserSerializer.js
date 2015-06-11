@@ -5,6 +5,7 @@ var models = require("../../models")
 exports.addSerializer = function() {
   return new Serializer('users', {
     select: ['id', 'username', 'type', 'screenName', 'statistics',
-      'profilePictureLargeUrl', 'profilePictureMediumUrl', 'administratorIds']
+             'profilePictureLargeUrl', 'profilePictureMediumUrl', 'administratorIds',
+             'updatedAt']
   })
 }

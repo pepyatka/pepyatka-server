@@ -31,6 +31,49 @@ describe("CommentsController", function() {
         })
     })
 
+    describe('in a group', function() {
+      var groupName = 'pepyatka-dev'
+
+      beforeEach(function(done) {
+        var screenName = 'Pepyatka Developers';
+        request
+            .post(app.config.host + '/v1/groups')
+            .send({ group: {username: groupName, screenName: screenName},
+              authToken: authToken })
+            .end(function(err, res) {
+              done()
+            })
+      })
+
+      it("should not update group's last activity", function(done) {
+        var body = 'Post body'
+
+        request
+          .post(app.config.host + '/v1/posts')
+          .send({ post: { body: body }, meta: { feeds: [groupName] }, authToken: authToken })
+          .end(function(err, res) {
+            res.status.should.eql(200)
+            var postB = res.body.posts
+            funcTestHelper.getTimeline('/v1/users/' + groupName, authToken, function(err, res) {
+              res.status.should.eql(200)
+              var lastUpdatedAt = res.body.users.updatedAt
+
+              funcTestHelper.createComment(body, postB.id, authToken, function(err, res) {
+                res.status.should.eql(200)
+                funcTestHelper.getTimeline('/v1/users/' + groupName, authToken, function(err, res) {
+                  res.status.should.eql(200)
+                  res.body.should.have.property('users')
+                  res.body.users.should.have.property('updatedAt')
+                  lastUpdatedAt.should.be.lt(res.body.users.updatedAt)
+
+                  done()
+                })
+              })
+            })
+          })
+      })
+    })
+
     it('should create a comment with a valid user', function(done) {
       var body = "Comment"
 

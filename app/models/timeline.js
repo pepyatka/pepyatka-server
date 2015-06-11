@@ -61,7 +61,9 @@ exports.addModel = function(database) {
     })
       .then(function(timelines) {
         return Promise.map(timelines, function(timeline) {
-          return timeline.getSubscribedTimelineIds()
+          return timeline.getUser()
+            .then(function(user) { return user.updateLastActivityAt() })
+            .then(function() { return timeline.getSubscribedTimelineIds() })
         })
       })
       .then(function(allSubscribedTimelineIds) {
@@ -316,25 +318,11 @@ exports.addModel = function(database) {
         .then(function(res) { return database.hsetAsync(mkKey(['post', postId]), 'updatedAt', currentTime) })
         .then(function(post) { return that.getUser() })
         .then(function(feed) {
-          this.feed = feed
-          return feed.isUser()
-        })
-        .then(function(isUser) {
-          if (!isUser) {
-            // update group lastActivity for all subscribers
-            var updatedAt = new Date().getTime()
-            var self = this
-            that.getSubscriberIds()
-              .then(function(userIds) {
-                return Promise.map(userIds, function(userId) {
-                  return database.zaddAsync(mkKey(['user', userId, 'subscriptions']), updatedAt, that.id)
-                })
-              })
-              .then(function() {
-                return database.hmsetAsync(mkKey(['user', self.feed.id]),
-                                    { 'updatedAt': updatedAt.toString() })
-              })
-          }
+          // does not update lastActivity on like
+          if (action === 'like')
+            return null
+          else
+            return feed.updateLastActivityAt()
         })
         .then(function() { resolve() })
     })
