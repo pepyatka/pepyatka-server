@@ -20,7 +20,8 @@ var selectEnvironment = function(app) {
       transports: [
         new (winston.transports.Console)({
           'timestamp': true,
-          'level': config.logLevel || 'debug'
+          'level': config.logLevel || 'debug',
+          handleExceptions: true
         })
       ]
     })
