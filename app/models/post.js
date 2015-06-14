@@ -471,16 +471,26 @@ exports.addModel = function(database) {
 
   Post.prototype.getComments = function() {
     var that = this
+    var banIds
 
     return new Promise(function(resolve, reject) {
-      that.getCommentIds()
+      that.getCreatedBy()
+        .then(function(user) { return user.getBanIds() })
+        .then(function(feedIds) {
+          banIds = feedIds
+          return that.getCommentIds()
+        })
         .then(function(commentIds) {
           return Promise.map(commentIds, function(commentId) {
             return models.Comment.findById(commentId)
+              .then(function(comment) {
+                return banIds.indexOf(comment.userId) >= 0 ? null : comment
+              })
           })
         })
         .then(function(comments) {
-          that.comments = comments
+          // filter null comments
+          that.comments = comments.filter(Boolean)
           resolve(that.comments)
         })
     })

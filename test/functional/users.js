@@ -864,7 +864,35 @@ describe("UsersController", function() {
         })
     })
 
-    it('should ban user', function(done) {
+    it('should ban user comments', function(done) {
+      var body = 'Post'
+      request
+        .post(app.config.host + '/v1/posts')
+        .send({ post: { body: body }, authToken: marsToken })
+        .end(function(err, res) {
+          res.body.should.not.be.empty
+          funcTestHelper.createComment(body, res.body.posts.id, context.authToken, function(err, res) {
+            res.body.should.not.be.empty
+
+            request
+              .post(app.config.host + '/v1/users/' + banUsername + '/ban')
+              .send({ authToken: marsToken })
+              .end(function(err, res) {
+                res.body.should.not.be.empty
+                funcTestHelper.getTimeline('/v1/timelines/home', marsToken, function(err, res) {
+                  res.body.should.not.be.empty
+                  res.body.should.have.property('posts')
+                  res.body.posts.length.should.eql(1)
+                  var post = res.body.posts[0]
+                  post.should.not.have.property('comments')
+                  done()
+                })
+              })
+          })
+        })
+    })
+
+    it('should ban user posts', function(done) {
       request
         .post(app.config.host + '/v1/posts/' + context.post.id + '/like')
         .send({ authToken: zeusToken })

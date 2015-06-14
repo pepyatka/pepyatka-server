@@ -457,20 +457,28 @@ exports.addModel = function(database) {
         })
         .then(function(riverOfNewsTimeline) {
           this.riverOfNewsTimeline = riverOfNewsTimeline
+          return that.getBanIds()
+        })
+        .then(function(banIds) {
+          this.banIds = banIds
           return this.riverOfNewsTimeline.getPosts(this.riverOfNewsTimeline.offset,
                                                    this.riverOfNewsTimeline.limit)
         })
         .then(function(posts) {
-          // we check posts individually for the time being because
-          // timestamp in timelines could be mistiming (several ms),
-          // we need to refactor Timeline.prototype.updatePost method first
+          var self = this
           return Promise.map(posts, function(post) {
+            // we check posts individually for the time being because
+            // timestamp in timelines could be mistiming (several ms),
+            // we need to refactor Timeline.prototype.updatePost method first
             return database.zscoreAsync(mkKey(['timeline', this.hidesTimelineId, 'posts']), post.id)
               .then(function(score) {
                 if (score && score >= 0) {
                   post.isHidden = true
                 }
                 return post
+              })
+              .then(function(post) {
+                return self.banIds.indexOf(post.userId) >= 0 ? null : post
               })
           }.bind(this))
         })
