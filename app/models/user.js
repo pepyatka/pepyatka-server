@@ -459,29 +459,23 @@ exports.addModel = function(database) {
           this.riverOfNewsTimeline = riverOfNewsTimeline
           return this.riverOfNewsTimeline.getPosts(this.riverOfNewsTimeline.offset,
                                                    this.riverOfNewsTimeline.limit)
-          })
+        })
         .then(function(posts) {
-          this.posts = posts
-          return models.Timeline.findById(this.hidesTimelineId)
-        })
-        .then(function(hidesTimeline) {
-          if (this.posts.length > 0)
-            return hidesTimeline.getPostIdsByScore(this.posts[0].updatedAt,
-                                                   this.posts[this.posts.length-1].updatedAt)
-          else
-            return []
-        })
-        .then(function(hiddenPostIds) {
-          this.hiddenPostIds = hiddenPostIds
-
-          return Promise.map(this.posts, function(post) {
-            if (this.hiddenPostIds.indexOf(post.id) >= 0) {
-              post.isHidden = true
-            }
-            return post
+          // we check posts individually for the time being because
+          // timestamp in timelines could be mistiming (several ms),
+          // we need to refactor Timeline.prototype.updatePost method first
+          return Promise.map(posts, function(post) {
+            return database.zscoreAsync(mkKey(['timeline', this.hidesTimelineId, 'posts']), post.id)
+              .then(function(score) {
+                if (score && score >= 0) {
+                  post.isHidden = true
+                }
+                return post
+              })
           }.bind(this))
         })
         .then(function(posts) {
+          this.riverOfNewsTimeline.posts = posts
           resolve(this.riverOfNewsTimeline)
         })
     })
