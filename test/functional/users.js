@@ -871,7 +871,8 @@ describe("UsersController", function() {
         .send({ post: { body: body }, authToken: marsToken })
         .end(function(err, res) {
           res.body.should.not.be.empty
-          funcTestHelper.createComment(body, res.body.posts.id, context.authToken, function(err, res) {
+          var postId = res.body.posts.id
+          funcTestHelper.createComment(body, postId, context.authToken, function(err, res) {
             res.body.should.not.be.empty
 
             request
@@ -885,10 +886,62 @@ describe("UsersController", function() {
                   res.body.posts.length.should.eql(1)
                   var post = res.body.posts[0]
                   post.should.not.have.property('comments')
-                  done()
+
+                  request
+                    .get(app.config.host + '/v1/posts/' + postId)
+                    .query({ authToken: context.authToken })
+                    .end(function(err, res) {
+                      res.body.should.not.be.empty
+                      res.body.should.have.property('posts')
+                      res.body.posts.should.have.property('comments')
+                      res.body.posts.comments.length.should.eql(1)
+                      done()
+                    })
                 })
               })
           })
+        })
+    })
+
+    it('should ban user likes', function(done) {
+      var body = 'Post'
+      request
+        .post(app.config.host + '/v1/posts')
+        .send({ post: { body: body }, authToken: marsToken })
+        .end(function(err, res) {
+          res.body.should.not.be.empty
+          var postId = res.body.posts.id
+
+          request
+            .post(app.config.host + '/v1/posts/' + postId + '/like')
+            .send({ authToken: context.authToken })
+            .end(function(err, res) {
+              $should.not.exist(err)
+              request
+                .post(app.config.host + '/v1/users/' + banUsername + '/ban')
+                .send({ authToken: marsToken })
+                .end(function(err, res) {
+                  res.body.should.not.be.empty
+                  funcTestHelper.getTimeline('/v1/timelines/home', marsToken, function(err, res) {
+                    res.body.should.not.be.empty
+                    res.body.should.have.property('posts')
+                    res.body.posts.length.should.eql(1)
+                    var post = res.body.posts[0]
+                    post.should.not.have.property('likes')
+
+                    request
+                      .get(app.config.host + '/v1/posts/' + postId)
+                      .query({ authToken: context.authToken })
+                      .end(function(err, res) {
+                        res.body.should.not.be.empty
+                        res.body.should.have.property('posts')
+                        res.body.posts.should.have.property('likes')
+                        res.body.posts.likes.length.should.eql(1)
+                        done()
+                      })
+                  })
+                })
+            })
         })
     })
 
@@ -911,6 +964,7 @@ describe("UsersController", function() {
                   res.body.should.not.be.empty
                   res.body.should.have.property('posts')
                   res.body.posts.length.should.eql(0)
+
                   done()
                 })
               })
