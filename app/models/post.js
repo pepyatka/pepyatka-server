@@ -474,8 +474,8 @@ exports.addModel = function(database) {
     var banIds
 
     return new Promise(function(resolve, reject) {
-      that.getCreatedBy()
-        .then(function(user) { return user.getBanIds() })
+      models.User.findById(that.currentUser)
+        .then(function(user) { return user ? user.getBanIds() : [] })
         .then(function(feedIds) {
           banIds = feedIds
           return that.getCommentIds()
@@ -621,16 +621,23 @@ exports.addModel = function(database) {
 
   Post.prototype.getLikes = function() {
     var that = this
+    var banIds
 
     return new Promise(function(resolve, reject) {
-      that.getLikeIds()
+      models.User.findById(that.currentUser)
+        .then(function(user) { return user ? user.getBanIds() : [] })
+        .then(function(feedIds) {
+          banIds = feedIds
+          return that.getLikeIds()
+        })
         .then(function(userIds) {
           return Promise.map(userIds, function(userId) {
-            return models.User.findById(userId)
+            return banIds.indexOf(userId) >= 0 ? null : models.User.findById(userId)
           })
         })
         .then(function(users) {
-          that.likes = users
+          // filter null comments
+          that.likes = users.filter(Boolean)
           resolve(that.likes)
         })
     })
