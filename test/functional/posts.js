@@ -139,20 +139,26 @@ describe("PostsController", function() {
       it("should update group's last activity", function(done) {
         var body = 'Post body'
 
-        request
-          .post(app.config.host + '/v1/posts')
-          .send({ post: { body: body }, meta: { feeds: [groupName] }, authToken: authToken })
-          .end(function(err, res) {
-            var lastUpdatedAt = res.body.posts.createdAt
-            res.status.should.eql(200)
-            funcTestHelper.getTimeline('/v1/users/' + groupName, authToken, function(err, res) {
-              res.body.should.have.property('users')
-              res.body.users.should.have.property('updatedAt')
-              lastUpdatedAt.should.be.lt(res.body.users.updatedAt)
+        funcTestHelper.getTimeline('/v1/users/' + groupName, authToken, function(err, res) {
+          var oldGroupTimestamp = res.body.users.updatedAt;
 
-              done()
+          request
+            .post(app.config.host + '/v1/posts')
+            .send({post: {body: body}, meta: {feeds: [groupName]}, authToken: authToken})
+            .end(function (err, res) {
+              var postTimestamp = res.body.posts.createdAt
+              res.status.should.eql(200)
+
+              funcTestHelper.getTimeline('/v1/users/' + groupName, authToken, function (err, res) {
+                var groupTimestamp = res.body.users.updatedAt;
+
+                groupTimestamp.should.be.gt(oldGroupTimestamp)
+                groupTimestamp.should.be.gte(postTimestamp)
+
+                done()
+              })
             })
-          })
+        })
       })
 
       it("should show post to group in the timeline of the subscribing user", function(done) {
