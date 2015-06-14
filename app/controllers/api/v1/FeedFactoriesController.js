@@ -1,20 +1,20 @@
 "use strict";
 
-var models = require('../../../models')
-  , controllers = require('../../../controllers')
-  , exceptions = require('../../../support/exceptions')
+import {FeedFactory} from '../../../models'
+import {UsersController, GroupsController} from '../../../controllers'
+import exceptions from '../../../support/exceptions'
 
 exports.addController = function(app) {
-  var FeedFactoriesController = function() {
-  }
-
-  FeedFactoriesController.update = function(req, res) {
-    models.FeedFactory.findById(req.params.userId)
-      .then(function(feed) {
-        var controller = feed.isUser() ? controllers.UsersController : controllers.GroupsController
+  class FeedFactoriesController {
+    static async update(req, res) {
+      try {
+        var feed = await FeedFactory.findById(req.params.userId)
+        var controller = feed.isUser() ? UsersController : GroupsController
         controller.update(req, res)
-      })
-      .catch(exceptions.reportError(res))
+      } catch (e) {
+        exceptions.reportError(res)(e)
+      }
+    }
   }
 
   return FeedFactoriesController
