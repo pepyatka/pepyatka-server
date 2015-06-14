@@ -457,20 +457,28 @@ exports.addModel = function(database) {
         })
         .then(function(riverOfNewsTimeline) {
           this.riverOfNewsTimeline = riverOfNewsTimeline
+          return that.getBanIds()
+        })
+        .then(function(banIds) {
+          this.banIds = banIds
           return this.riverOfNewsTimeline.getPosts(this.riverOfNewsTimeline.offset,
                                                    this.riverOfNewsTimeline.limit)
         })
         .then(function(posts) {
-          // we check posts individually for the time being because
-          // timestamp in timelines could be mistiming (several ms),
-          // we need to refactor Timeline.prototype.updatePost method first
+          var self = this
           return Promise.map(posts, function(post) {
+            // we check posts individually for the time being because
+            // timestamp in timelines could be mistiming (several ms),
+            // we need to refactor Timeline.prototype.updatePost method first
             return database.zscoreAsync(mkKey(['timeline', this.hidesTimelineId, 'posts']), post.id)
               .then(function(score) {
                 if (score && score >= 0) {
                   post.isHidden = true
                 }
                 return post
+              })
+              .then(function(post) {
+                return self.banIds.indexOf(post.userId) >= 0 ? null : post
               })
           }.bind(this))
         })
@@ -559,6 +567,57 @@ exports.addModel = function(database) {
         .then(function(subscriptions) {
           that.subscriptions = subscriptions
           resolve(that.subscriptions)
+        })
+    })
+  }
+
+  User.prototype.getBanIds = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      database.zrevrangeAsync(mkKey(['user', that.id, 'bans']), 0, -1)
+        .then(function(userIds) { resolve(userIds) })
+    })
+  }
+
+  User.prototype.getBans = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getBanIds()
+        .then(function(userIds) {
+          return Promise.map(userIds, function(userId) {
+            return models.findById(userId)
+          })
+        })
+        .then(function(users) { resolve(users) })
+    })
+  }
+
+  User.prototype.ban = function(username) {
+    var currentTime = new Date().getTime()
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      models.User.findByUsername(username)
+        .then(function(user) {
+          return database.zaddAsync(mkKey(['user', that.id, 'bans']), currentTime, user.id)
+        })
+        .then(function(res) { resolve(res) })
+    })
+  }
+
+  User.prototype.unban = function(username) {
+    var currentTime = new Date().getTime()
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      models.User.findByUsername(username)
+        .then(function(user) {
+          return database.zremAsync(mkKey(['user', that.id, 'bans']), user.id)
+        })
+        .then(function(res) {
+          resolve(res)
         })
     })
   }

@@ -136,6 +136,30 @@ exports.addController = function(app) {
       .catch(function(e) { res.status(422).send({}) })
   }
 
+  UsersController.ban = function(req, res) {
+    if (!req.user)
+      return res.status(401).jsonp({ err: 'Not found' })
+
+    var username = req.params.username
+    req.user.ban(username)
+      .then(function(status) {
+        res.jsonp({ status: status })
+      })
+      .catch(exceptions.reportError(res))
+  }
+
+  UsersController.unban = function(req, res) {
+    if (!req.user)
+      return res.status(401).jsonp({ err: 'Not found' })
+
+    var username = req.params.username
+    req.user.unban(username)
+      .then(function(status) {
+        res.jsonp({ status: status })
+      })
+      .catch(exceptions.reportError(res))
+  }
+
   UsersController.subscribe = function(req, res) {
     if (!req.user)
       return res.status(401).jsonp({ err: 'Not found' })

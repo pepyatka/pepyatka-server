@@ -1,3 +1,4 @@
 --require ./test/testHelper
 --recursive
 --timeout 5000
+--colors

@@ -178,7 +178,7 @@ exports.addModel = function(database) {
           })
         })
         .then(function(posts) {
-          that.posts = posts
+          that.posts = posts.filter(Boolean)
           resolve(that.posts)
         })
     })

@@ -1,29 +1,30 @@
 "use strict";
 
-var passport = require('passport')
-  , jwt = require('jsonwebtoken')
-  , config = require('../../../../config/config').load()
-  , models = require('../../../models')
-  , UserSerializer = models.UserSerializer
-  , _ = require('lodash')
+import passport from "passport"
+import jwt from "jsonwebtoken"
+import _ from "lodash"
+
+import config_loader from "../../../../config/config"
+import {UserSerializer} from "../../../models"
+
+var config = config_loader.load()
 
 exports.addController = function(app) {
-  var SessionController = function() {
-  }
+  class SessionController {
+    static create(req, res) {
+      passport.authenticate('local', function(err, user, msg) {
+        if (err) {
+          return res.status(401).jsonp({ err: err.message })
+        }
 
-  SessionController.create = function(req, res) {
-    passport.authenticate('local', function(err, user, msg) {
-      if (err) {
-        return res.status(401).jsonp({ err: err.message })
-      }
+        var secret = config.secret
+        var authToken = jwt.sign({ userId: user.id }, secret)
 
-      var secret = config.secret
-      var authToken = jwt.sign({ userId: user.id }, secret)
-
-      new UserSerializer(user).toJSON(function(err, json) {
-        return res.jsonp(_.extend(json, { authToken: authToken }))
-      })
-    })(req, res)
+        new UserSerializer(user).toJSON(function(err, json) {
+          return res.jsonp(_.extend(json, { authToken: authToken }))
+        })
+      })(req, res)
+    }
   }
 
   return SessionController

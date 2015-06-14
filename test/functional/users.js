@@ -835,4 +835,141 @@ describe("UsersController", function() {
         })
     })
   })
+
+  describe('#ban()', function() {
+    var context = {}
+    var username = 'zeus'
+    var banUsername = 'luna'
+    var marsToken
+    var zeusToken
+
+    beforeEach(funcTestHelper.createUserCtx(context, banUsername, 'password'))
+    beforeEach(funcTestHelper.createPost(context, 'Post body'))
+
+    beforeEach(funcTestHelper.createUser('mars', 'pw', function(token) {
+      marsToken = token
+    }))
+
+    beforeEach(funcTestHelper.createUser('zeus', 'pw', function(token) {
+      zeusToken = token
+    }))
+
+    beforeEach(function(done) {
+      request
+        .post(app.config.host + '/v1/users/' + username + '/subscribe')
+        .send({ authToken: marsToken })
+        .end(function(err, res) {
+          res.body.should.not.be.empty
+          done()
+        })
+    })
+
+    it('should ban user comments', function(done) {
+      var body = 'Post'
+      request
+        .post(app.config.host + '/v1/posts')
+        .send({ post: { body: body }, authToken: marsToken })
+        .end(function(err, res) {
+          res.body.should.not.be.empty
+          var postId = res.body.posts.id
+          funcTestHelper.createComment(body, postId, context.authToken, function(err, res) {
+            res.body.should.not.be.empty
+
+            request
+              .post(app.config.host + '/v1/users/' + banUsername + '/ban')
+              .send({ authToken: marsToken })
+              .end(function(err, res) {
+                res.body.should.not.be.empty
+                funcTestHelper.getTimeline('/v1/timelines/home', marsToken, function(err, res) {
+                  res.body.should.not.be.empty
+                  res.body.should.have.property('posts')
+                  res.body.posts.length.should.eql(1)
+                  var post = res.body.posts[0]
+                  post.should.not.have.property('comments')
+
+                  request
+                    .get(app.config.host + '/v1/posts/' + postId)
+                    .query({ authToken: context.authToken })
+                    .end(function(err, res) {
+                      res.body.should.not.be.empty
+                      res.body.should.have.property('posts')
+                      res.body.posts.should.have.property('comments')
+                      res.body.posts.comments.length.should.eql(1)
+                      done()
+                    })
+                })
+              })
+          })
+        })
+    })
+
+    it('should ban user likes', function(done) {
+      var body = 'Post'
+      request
+        .post(app.config.host + '/v1/posts')
+        .send({ post: { body: body }, authToken: marsToken })
+        .end(function(err, res) {
+          res.body.should.not.be.empty
+          var postId = res.body.posts.id
+
+          request
+            .post(app.config.host + '/v1/posts/' + postId + '/like')
+            .send({ authToken: context.authToken })
+            .end(function(err, res) {
+              $should.not.exist(err)
+              request
+                .post(app.config.host + '/v1/users/' + banUsername + '/ban')
+                .send({ authToken: marsToken })
+                .end(function(err, res) {
+                  res.body.should.not.be.empty
+                  funcTestHelper.getTimeline('/v1/timelines/home', marsToken, function(err, res) {
+                    res.body.should.not.be.empty
+                    res.body.should.have.property('posts')
+                    res.body.posts.length.should.eql(1)
+                    var post = res.body.posts[0]
+                    post.should.not.have.property('likes')
+
+                    request
+                      .get(app.config.host + '/v1/posts/' + postId)
+                      .query({ authToken: context.authToken })
+                      .end(function(err, res) {
+                        res.body.should.not.be.empty
+                        res.body.should.have.property('posts')
+                        res.body.posts.should.have.property('likes')
+                        res.body.posts.likes.length.should.eql(1)
+                        done()
+                      })
+                  })
+                })
+            })
+        })
+    })
+
+    it('should ban user posts', function(done) {
+      request
+        .post(app.config.host + '/v1/posts/' + context.post.id + '/like')
+        .send({ authToken: zeusToken })
+        .end(function(err, res) {
+          funcTestHelper.getTimeline('/v1/timelines/home', context.authToken, function(err, res) {
+            res.body.should.not.be.empty
+            res.body.should.have.property('posts')
+            res.body.posts.length.should.eql(1)
+
+            request
+              .post(app.config.host + '/v1/users/' + banUsername + '/ban')
+              .send({ authToken: marsToken })
+              .end(function(err, res) {
+                res.body.should.not.be.empty
+                funcTestHelper.getTimeline('/v1/timelines/home', marsToken, function(err, res) {
+                  res.body.should.not.be.empty
+                  res.body.should.have.property('posts')
+                  res.body.posts.length.should.eql(0)
+
+                  done()
+                })
+              })
+          })
+        })
+    })
+  })
 })
