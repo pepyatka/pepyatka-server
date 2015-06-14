@@ -1,0 +1,35 @@
+#!/usr/bin/env node
+
+process.env.NODE_ENV = "console"
+
+var express = require('express')
+  , app = express()
+  , environment = require('../config/environment')
+  , http = require('http')
+  , server = http.createServer(app)
+
+module.exports = {}
+
+environment.init(app)
+  .then(function(app) {
+    var pubsub = require('../app/pubsub').init().listen(server, app)
+    var routes = require('../app/routes')(app)
+
+    var port = (process.env.PEPYATKA_SERVER_PORT || app.get('port'))
+
+    server.listen(port, function() {
+      var repl = require("repl")
+
+      var replServer = repl.start({
+        prompt: "Pepyatka > "
+      })
+
+      replServer.on('exit', function () {
+        console.log('See ya!')
+        process.exit()
+      })
+
+      replServer.context.app = app
+      replServer.context.models = require('../app/models')
+    })
+  })
