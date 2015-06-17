@@ -17,11 +17,14 @@ exports.getConfig = function() {
 
   config.host = 'http://localhost:' + config.port
 
+  var defaultStopList = ['anonymous', 'public', 'about', 'signin', 'logout',
+    'signup', 'filter', 'settings', 'account', 'groups',
+    'friends', 'list', 'search', 'summary', 'share', '404',
+    'iphone'];
+
   config.application = {
-    USERNAME_STOP_LIST: ['anonymous', 'public', 'about', 'signin', 'logout',
-                         'signup', 'filter', 'settings', 'account', 'groups',
-                         'friends', 'list', 'search', 'summary', 'share','404',
-                         'iphone']
+    DEFAULT_STOP_LIST: defaultStopList,
+    USERNAME_STOP_LIST: defaultStopList
   }
 
   config.attachments = {
