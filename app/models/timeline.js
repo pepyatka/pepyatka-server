@@ -254,31 +254,22 @@ exports.addModel = function(database) {
     })
   }
 
-  Timeline.prototype.getSubscribers = function(includeSelf) {
-    var that = this
+  Timeline.prototype.getSubscribers = async function(includeSelf) {
+    var userIds = await this.getSubscriberIds(includeSelf)
+    var promises = userIds.map((userId) => models.User.findById(userId))
 
-    return new Promise(function(resolve, reject) {
-      that.getSubscriberIds(includeSelf)
-        .then(function(userIds) {
-          return Promise.map(userIds, function(userId) {
-            return models.User.findById(userId)
-          })
-        })
-        .then(function(subscribers) {
-          that.subscribers = subscribers
-          resolve(that.subscribers)
-        })
-    })
+    this.subscribers = await* promises
+
+    return this.subscribers
   }
 
   /**
    * Returns the list of the 'River of News' timelines of all subscribers to this
    * timeline.
    */
-  Timeline.prototype.getSubscribedTimelineIds = function() {
-    return this.getSubscribers(true).map(function(subscriber) {
-      return subscriber.getRiverOfNewsTimelineId()
-    })
+  Timeline.prototype.getSubscribedTimelineIds = async function() {
+    var subscribers = await this.getSubscribers(true);
+    return subscribers.map((subscriber) => subscriber.getRiverOfNewsTimelineId())
   }
 
   Timeline.prototype.isRiverOfNews = function() {
