@@ -65,26 +65,34 @@ exports.addController = function(app) {
       })
   }
 
-  UsersController.subscribers = function(req, res) {
+  UsersController.subscribers = async function(req, res) {
     var username = req.params.username
+      , user
 
-    models.User.findByUsername(username)
-      .then(function(user) { return user.getPostsTimeline() })
-      .then(function(timeline) { return timeline.getSubscribers() })
-      .then(function(subscribers) {
-        async.map(subscribers, function(subscriber, callback) {
-          new SubscriberSerializer(subscriber).toJSON(function(err, json) {
-            callback(err, json)
-          })
-        }, function(err, json) {
-          json = _.reduce(json, function(memo, obj) {
-            memo.subscribers.push(obj.subscribers)
-            return memo
-          }, { subscribers: []})
-          res.jsonp(json)
-        })
+    try {
+      user = await models.User.findByUsername(username)
+    } catch (e) {
+      res.status(404).send({})
+      return
+    }
+
+    try {
+      var timeline = await user.getPostsTimeline()
+      var subscribers = await timeline.getSubscribers()
+
+      var jsonPromises = subscribers.map(function(subscriber){
+        return new SubscriberSerializer(subscriber).promiseToJSON()
       })
-      .catch(function(e) { res.status(422).send({}) })
+
+      var json = _.reduce(jsonPromises, async function (memo, obj) {
+        memo.subscribers.push((await obj).subscribers)
+        return memo
+      }, { subscribers: []})
+
+      res.jsonp(await json)
+    } catch (e) {
+      res.status(422).send({})
+    }
   }
 
   UsersController.subscriptions = function(req, res) {
