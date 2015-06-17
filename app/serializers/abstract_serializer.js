@@ -222,5 +222,7 @@ exports.addSerializer = function() {
     }
   }
 
+  AbstractSerializer.prototype.promiseToJSON = Promise.promisify(AbstractSerializer.prototype.toJSON)
+
   return AbstractSerializer
 }
