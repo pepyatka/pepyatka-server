@@ -95,28 +95,37 @@ exports.addController = function(app) {
     }
   }
 
-  UsersController.subscriptions = function(req, res) {
+  UsersController.subscriptions = async function(req, res) {
     var username = req.params.username
+      , user
 
-    models.User.findByUsername(username)
-      .then(function(user) { return user.getSubscriptions() })
-      .then(function(subscriptions) {
-        async.map(subscriptions, function(subscription, callback) {
-          new SubscriptionSerializer(subscription).toJSON(function(err, json) {
-            callback(err, json)
-          })
-        }, function(err, json) {
-          json = _.reduce(json, function(memo, obj) {
-            memo.subscriptions.push(obj.subscriptions)
-            var user = obj.subscribers[0]
-            memo.subscribers[user.id] = user
-            return memo
-          }, { subscriptions: [], subscribers: {} })
-          json.subscribers = _.values(json.subscribers)
-          res.jsonp(json)
+    try {
+      user = await models.User.findByUsername(username)
+    } catch (e) {
+      res.status(404).send({})
+      return
+    }
+
+    try {
+      var subscriptions = await user.getSubscriptions()
+
+      async.map(subscriptions, function(subscription, callback) {
+        new SubscriptionSerializer(subscription).toJSON(function(err, json) {
+          callback(err, json)
         })
+      }, function(err, json) {
+        json = _.reduce(json, function(memo, obj) {
+          memo.subscriptions.push(obj.subscriptions)
+          var user = obj.subscribers[0]
+          memo.subscribers[user.id] = user
+          return memo
+        }, { subscriptions: [], subscribers: {} })
+        json.subscribers = _.values(json.subscribers)
+        res.jsonp(json)
       })
-      .catch(function(e) { res.status(422).send({}) })
+    } catch (e) {
+      res.status(422).send({})
+    }
   }
 
   UsersController.ban = function(req, res) {
