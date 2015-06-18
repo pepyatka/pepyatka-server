@@ -542,16 +542,10 @@ exports.addModel = function(database) {
     ])
   }
 
-  User.prototype.getSubscriptionIds = function() {
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      database.zrevrangeAsync(mkKey(['user', that.id, 'subscriptions']), 0, -1)
-        .then(function(userIds) {
-          that.subscriptionsIds = userIds
-          resolve(userIds)
-        })
-    })
+  User.prototype.getSubscriptionIds = async function() {
+    var userIds = await database.zrevrangeAsync(mkKey(['user', this.id, 'subscriptions']), 0, -1)
+    this.subscriptionsIds = userIds
+    return userIds
   }
 
   User.prototype.getSubscriptions = function() {
