@@ -84,8 +84,12 @@ exports.addController = function(app) {
         return new SubscriberSerializer(subscriber).promiseToJSON()
       })
 
-      var json = _.reduce(jsonPromises, async function (memo, obj) {
-        memo.subscribers.push((await obj).subscribers)
+      var json = _.reduce(jsonPromises, async function (memoPromise, jsonPromise) {
+        var obj = await jsonPromise
+        var memo = await memoPromise
+
+        memo.subscribers.push(obj.subscribers)
+
         return memo
       }, { subscribers: []})
 
@@ -108,23 +112,26 @@ exports.addController = function(app) {
 
     try {
       var subscriptions = await user.getSubscriptions()
+      var jsonPromises = subscriptions.map((subscription) => new SubscriptionSerializer(subscription).promiseToJSON())
 
-      async.map(subscriptions, function(subscription, callback) {
-        new SubscriptionSerializer(subscription).toJSON(function(err, json) {
-          callback(err, json)
-        })
-      }, function(err, json) {
-        json = _.reduce(json, function(memo, obj) {
-          memo.subscriptions.push(obj.subscriptions)
-          var user = obj.subscribers[0]
-          memo.subscribers[user.id] = user
-          return memo
-        }, { subscriptions: [], subscribers: {} })
-        json.subscribers = _.values(json.subscribers)
-        res.jsonp(json)
-      })
+      var reducedJsonPromise = _.reduce(jsonPromises, async function(memoPromise, jsonPromise) {
+        var obj = await jsonPromise
+        var memo = await memoPromise
+
+        var user = obj.subscribers[0]
+
+        memo.subscriptions.push(obj.subscriptions)
+        memo.subscribers[user.id] = user
+
+        return memo
+      }, { subscriptions: [], subscribers: {} })
+
+      var json = await reducedJsonPromise
+      json.subscribers = _.values(json.subscribers)
+
+      res.jsonp(json)
     } catch (e) {
-      res.status(422).send({})
+      res.status(422).send({message: e.toString()})
     }
   }
 
