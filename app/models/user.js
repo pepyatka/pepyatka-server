@@ -582,7 +582,7 @@ exports.addModel = function(database) {
   User.prototype.ban = async function(username) {
     var currentTime = new Date().getTime()
     var user = await models.User.findByUsername(username)
-    return await database.zaddAsync(mkKey(['user', this.id, 'bans']), currentTime, user.id)
+    return database.zaddAsync(mkKey(['user', this.id, 'bans']), currentTime, user.id)
   }
 
   User.prototype.unban = async function(username) {
