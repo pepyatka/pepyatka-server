@@ -319,32 +319,26 @@ exports.addModel = function(database) {
     })
   }
 
-  User.prototype.updatePassword = function(password, passwordConfirmation) {
-    var that = this
+  User.prototype.updatePassword = async function(password, passwordConfirmation) {
+    this.updatedAt = new Date().getTime()
+    if (password.length === 0) {
+      throw new Error('Password cannot be blank')
+    } else if (password !== passwordConfirmation) {
+      throw new Error("Passwords do not match")
+    }
 
-    return new Promise(function(resolve, reject) {
-      that.updatedAt = new Date().getTime()
+    try {
+      this.hashedPassword = await bcrypt.hashAsync(password, 10)
 
-      if (password.length === 0) {
-        reject(new Error('Password cannot be blank'))
-      } else if (password !== passwordConfirmation) {
-        reject(new Error("Passwords do not match"))
-      } else {
-        bcrypt.hashAsync(password, 10)
-          .then(function(hashedPassword) {
-            that.hashedPassword = hashedPassword
-            return that
-          })
-          .then(function(user) {
-            database.hmsetAsync(mkKey(['user', user.id]),
-              { 'updatedAt': user.updatedAt.toString(),
-                'hashedPassword': user.hashedPassword
-              })
-          })
-          .then(function(res) { resolve(that) })
-          .catch(function(e) { reject(e) })
-      }
-    })
+      await database.hmsetAsync(mkKey(['user', this.id]),
+        { 'updatedAt': this.updatedAt.toString(),
+          'hashedPassword': this.hashedPassword
+        })
+
+      return this
+    } catch(e) {
+      throw e //? hmmm?
+    }
   }
 
   User.prototype.getAdministratorIds = function() {
