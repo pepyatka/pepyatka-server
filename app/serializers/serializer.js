@@ -1,7 +1,7 @@
 "use strict";
 
-var AbstractSerializer = require("../models").AbstractSerializer
-var inherits = require("util").inherits
+import {AbstractSerializer} from '../models'
+import {inherits} from 'util'
 
 exports.addSerializer = function() {
   var Serializer = function(name, strategy) {

@@ -1,17 +1,13 @@
 "use strict";
 
-var models = require('../../../models')
-  , jwt = require('jsonwebtoken')
-  , config = require('../../../../config/config').load()
-  , UserSerializer = models.UserSerializer
-  , MyProfileSerializer = models.MyProfileSerializer
-  , SubscriberSerializer = models.SubscriberSerializer
-  , SubscriptionSerializer = models.SubscriptionSerializer
-  , _ = require('lodash')
-  , Promise = require('bluebird')
-  , async = require('async')
-  , exceptions = require('../../../support/exceptions')
-  , formidable = require('formidable')
+import models, {UserSerializer, MyProfileSerializer, SubscriberSerializer, SubscriptionSerializer} from '../../../models'
+import jwt from 'jsonwebtoken'
+import _ from 'lodash'
+import exceptions from '../../../support/exceptions'
+import formidable from 'formidable'
+import config_loader from '../../../../config/config'
+
+var config = config_loader.load()
 
 exports.addController = function(app) {
   /**
@@ -109,8 +105,12 @@ exports.addController = function(app) {
         return new SubscriberSerializer(subscriber).promiseToJSON()
       })
 
-      var json = _.reduce(jsonPromises, async function (memo, obj) {
-        memo.subscribers.push((await obj).subscribers)
+      var json = _.reduce(jsonPromises, async function (memoPromise, jsonPromise) {
+        var obj = await jsonPromise
+        var memo = await memoPromise
+
+        memo.subscribers.push(obj.subscribers)
+
         return memo
       }, { subscribers: []})
 
@@ -120,40 +120,53 @@ exports.addController = function(app) {
     }
   }
 
-  UsersController.subscriptions = function(req, res) {
+  UsersController.subscriptions = async function(req, res) {
     var username = req.params.username
+      , user
 
-    models.User.findByUsername(username)
-      .then(function(user) { return user.getSubscriptions() })
-      .then(function(subscriptions) {
-        async.map(subscriptions, function(subscription, callback) {
-          new SubscriptionSerializer(subscription).toJSON(function(err, json) {
-            callback(err, json)
-          })
-        }, function(err, json) {
-          json = _.reduce(json, function(memo, obj) {
-            memo.subscriptions.push(obj.subscriptions)
-            var user = obj.subscribers[0]
-            memo.subscribers[user.id] = user
-            return memo
-          }, { subscriptions: [], subscribers: {} })
-          json.subscribers = _.values(json.subscribers)
-          res.jsonp(json)
-        })
-      })
-      .catch(function(e) { res.status(422).send({}) })
+    try {
+      user = await models.User.findByUsername(username)
+    } catch (e) {
+      res.status(404).send({})
+      return
+    }
+
+    try {
+      var subscriptions = await user.getSubscriptions()
+      var jsonPromises = subscriptions.map((subscription) => new SubscriptionSerializer(subscription).promiseToJSON())
+
+      var reducedJsonPromise = _.reduce(jsonPromises, async function(memoPromise, jsonPromise) {
+        var obj = await jsonPromise
+        var memo = await memoPromise
+
+        var user = obj.subscribers[0]
+
+        memo.subscriptions.push(obj.subscriptions)
+        memo.subscribers[user.id] = user
+
+        return memo
+      }, { subscriptions: [], subscribers: {} })
+
+      var json = await reducedJsonPromise
+      json.subscribers = _.values(json.subscribers)
+
+      res.jsonp(json)
+    } catch (e) {
+      res.status(422).send({message: e.toString()})
+    }
   }
 
-  UsersController.ban = function(req, res) {
+  UsersController.ban = async function(req, res) {
     if (!req.user)
       return res.status(401).jsonp({ err: 'Not found' })
 
     var username = req.params.username
-    req.user.ban(username)
-      .then(function(status) {
-        res.jsonp({ status: status })
-      })
-      .catch(exceptions.reportError(res))
+    try {
+      var status = await req.user.ban(req.params.username)
+      return res.jsonp({ status: status })
+    } catch(e) {
+      exceptions.reportError(res)(e)
+    }
   }
 
   UsersController.unban = function(req, res) {

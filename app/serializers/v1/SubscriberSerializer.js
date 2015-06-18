@@ -1,4 +1,4 @@
-var Serializer = require("../../models").Serializer
+import {Serializer} from '../../models'
 
 exports.addSerializer = function() {
   return new Serializer("subscribers", {

@@ -542,33 +542,18 @@ exports.addModel = function(database) {
     ])
   }
 
-  User.prototype.getSubscriptionIds = function() {
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      database.zrevrangeAsync(mkKey(['user', that.id, 'subscriptions']), 0, -1)
-        .then(function(userIds) {
-          that.subscriptionsIds = userIds
-          resolve(userIds)
-        })
-    })
+  User.prototype.getSubscriptionIds = async function() {
+    this.subscriptionsIds = await database.zrevrangeAsync(mkKey(['user', this.id, 'subscriptions']), 0, -1)
+    return this.subscriptionsIds
   }
 
-  User.prototype.getSubscriptions = function() {
-    var that = this
+  User.prototype.getSubscriptions = async function() {
+    var userIds = await this.getSubscriptionIds()
 
-    return new Promise(function(resolve, reject) {
-      that.getSubscriptionIds()
-        .then(function(userIds) {
-          return Promise.map(userIds, function(userId) {
-            return models.Timeline.findById(userId)
-          })
-        })
-        .then(function(subscriptions) {
-          that.subscriptions = subscriptions
-          resolve(that.subscriptions)
-        })
-    })
+    var subscriptionPromises = userIds.map((userId) => models.Timeline.findById(userId))
+    this.subscriptions = await* subscriptionPromises
+
+    return this.subscriptions
   }
 
   User.prototype.getBanIds = function() {
@@ -594,17 +579,10 @@ exports.addModel = function(database) {
     })
   }
 
-  User.prototype.ban = function(username) {
+  User.prototype.ban = async function(username) {
     var currentTime = new Date().getTime()
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      models.User.findByUsername(username)
-        .then(function(user) {
-          return database.zaddAsync(mkKey(['user', that.id, 'bans']), currentTime, user.id)
-        })
-        .then(function(res) { resolve(res) })
-    })
+    var user = await models.User.findByUsername(username)
+    return await database.zaddAsync(mkKey(['user', this.id, 'bans']), currentTime, user.id)
   }
 
   User.prototype.unban = function(username) {
