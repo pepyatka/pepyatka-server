@@ -1,17 +1,13 @@
 "use strict";
 
-var models = require('../../../models')
-  , jwt = require('jsonwebtoken')
-  , config = require('../../../../config/config').load()
-  , UserSerializer = models.UserSerializer
-  , MyProfileSerializer = models.MyProfileSerializer
-  , SubscriberSerializer = models.SubscriberSerializer
-  , SubscriptionSerializer = models.SubscriptionSerializer
-  , _ = require('lodash')
-  , Promise = require('bluebird')
-  , async = require('async')
-  , exceptions = require('../../../support/exceptions')
-  , formidable = require('formidable')
+import models, {UserSerializer, MyProfileSerializer, SubscriberSerializer, SubscriptionSerializer} from '../../../models'
+import jwt from 'jsonwebtoken'
+import _ from 'lodash'
+import exceptions from '../../../support/exceptions'
+import formidable from 'formidable'
+import config_loader from '../../../../config/config'
+
+var config = config_loader.load()
 
 exports.addController = function(app) {
   /**
