@@ -579,17 +579,10 @@ exports.addModel = function(database) {
     })
   }
 
-  User.prototype.ban = function(username) {
+  User.prototype.ban = async function(username) {
     var currentTime = new Date().getTime()
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      models.User.findByUsername(username)
-        .then(function(user) {
-          return database.zaddAsync(mkKey(['user', that.id, 'bans']), currentTime, user.id)
-        })
-        .then(function(res) { resolve(res) })
-    })
+    var user = await models.User.findByUsername(username)
+    return await database.zaddAsync(mkKey(['user', this.id, 'bans']), currentTime, user.id)
   }
 
   User.prototype.unban = function(username) {
