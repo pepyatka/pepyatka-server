@@ -627,7 +627,7 @@ exports.addModel = function(database) {
     })
   }
 
-  User.prototype.unsubscribeTo = function(timelineId) {
+  User.prototype.unsubscribeFrom = function(timelineId) {
     var currentTime = new Date().getTime()
     var that = this
     var timeline
