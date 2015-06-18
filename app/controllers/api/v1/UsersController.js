@@ -212,12 +212,13 @@ exports.addController = function(app) {
 
       var form = new formidable.IncomingForm()
 
-      form.on('file', function(inputName, file) {
-        req.user.updateProfilePicture(file)
-          .then(function() {
-            res.jsonp({ message: 'Your profile picture has been updated' })
-          })
-          .catch(exceptions.reportError(res))
+      form.on('file', async function(inputName, file) {
+        try {
+          await req.user.updateProfilePicture(file)
+          res.jsonp({ message: 'Your profile picture has been updated' })
+        } catch (e) {
+          exceptions.reportError(res)(e)
+        }
       })
 
       form.parse(req)
