@@ -548,21 +548,13 @@ exports.addModel = function(database) {
     return userIds
   }
 
-  User.prototype.getSubscriptions = function() {
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      that.getSubscriptionIds()
-        .then(function(userIds) {
-          return Promise.map(userIds, function(userId) {
-            return models.Timeline.findById(userId)
-          })
-        })
-        .then(function(subscriptions) {
-          that.subscriptions = subscriptions
-          resolve(that.subscriptions)
-        })
+  User.prototype.getSubscriptions = async function() {
+    var userIds = await this.getSubscriptionIds()
+    var subscriptions = userIds.map(async function (userId) {
+      return models.Timeline.findById(userId)
     })
+    this.subscriptions = await* subscriptions
+    return this.subscriptions
   }
 
   User.prototype.getBanIds = function() {
