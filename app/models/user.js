@@ -585,19 +585,9 @@ exports.addModel = function(database) {
     return await database.zaddAsync(mkKey(['user', this.id, 'bans']), currentTime, user.id)
   }
 
-  User.prototype.unban = function(username) {
-    var currentTime = new Date().getTime()
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      models.User.findByUsername(username)
-        .then(function(user) {
-          return database.zremAsync(mkKey(['user', that.id, 'bans']), user.id)
-        })
-        .then(function(res) {
-          resolve(res)
-        })
-    })
+  User.prototype.unban = async function(username) {
+    var user = await models.User.findByUsername(username)
+    return database.zremAsync(mkKey(['user', this.id, 'bans']), user.id)
   }
 
   User.prototype.subscribeTo = function(timelineId) {
