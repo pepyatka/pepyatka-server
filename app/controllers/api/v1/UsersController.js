@@ -131,16 +131,17 @@ exports.addController = function(app) {
     }
   }
 
-  UsersController.ban = function(req, res) {
+  UsersController.ban = async function(req, res) {
     if (!req.user)
       return res.status(401).jsonp({ err: 'Not found' })
 
     var username = req.params.username
-    req.user.ban(username)
-      .then(function(status) {
-        res.jsonp({ status: status })
-      })
-      .catch(exceptions.reportError(res))
+    try {
+      var status = await req.user.ban(req.params.username)
+      return res.jsonp({ status: status })
+    } catch(e) {
+      exceptions.reportError(res)(e)
+    }
   }
 
   UsersController.unban = function(req, res) {
