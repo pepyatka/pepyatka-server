@@ -542,33 +542,19 @@ exports.addModel = function(database) {
     ])
   }
 
-  User.prototype.getSubscriptionIds = function() {
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      database.zrevrangeAsync(mkKey(['user', that.id, 'subscriptions']), 0, -1)
-        .then(function(userIds) {
-          that.subscriptionsIds = userIds
-          resolve(userIds)
-        })
-    })
+  User.prototype.getSubscriptionIds = async function() {
+    var userIds = await database.zrevrangeAsync(mkKey(['user', this.id, 'subscriptions']), 0, -1)
+    this.subscriptionsIds = userIds
+    return userIds
   }
 
-  User.prototype.getSubscriptions = function() {
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      that.getSubscriptionIds()
-        .then(function(userIds) {
-          return Promise.map(userIds, function(userId) {
-            return models.Timeline.findById(userId)
-          })
-        })
-        .then(function(subscriptions) {
-          that.subscriptions = subscriptions
-          resolve(that.subscriptions)
-        })
+  User.prototype.getSubscriptions = async function() {
+    var userIds = await this.getSubscriptionIds()
+    var subscriptions = userIds.map(async function (userId) {
+      return models.Timeline.findById(userId)
     })
+    this.subscriptions = await* subscriptions
+    return this.subscriptions
   }
 
   User.prototype.getBanIds = function() {
