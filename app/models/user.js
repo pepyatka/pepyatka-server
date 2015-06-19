@@ -319,32 +319,26 @@ exports.addModel = function(database) {
     })
   }
 
-  User.prototype.updatePassword = function(password, passwordConfirmation) {
-    var that = this
+  User.prototype.updatePassword = async function(password, passwordConfirmation) {
+    this.updatedAt = new Date().getTime()
+    if (password.length === 0) {
+      throw new Error('Password cannot be blank')
+    } else if (password !== passwordConfirmation) {
+      throw new Error("Passwords do not match")
+    }
 
-    return new Promise(function(resolve, reject) {
-      that.updatedAt = new Date().getTime()
+    try {
+      this.hashedPassword = await bcrypt.hashAsync(password, 10)
 
-      if (password.length === 0) {
-        reject(new Error('Password cannot be blank'))
-      } else if (password !== passwordConfirmation) {
-        reject(new Error("Passwords do not match"))
-      } else {
-        bcrypt.hashAsync(password, 10)
-          .then(function(hashedPassword) {
-            that.hashedPassword = hashedPassword
-            return that
-          })
-          .then(function(user) {
-            database.hmsetAsync(mkKey(['user', user.id]),
-              { 'updatedAt': user.updatedAt.toString(),
-                'hashedPassword': user.hashedPassword
-              })
-          })
-          .then(function(res) { resolve(that) })
-          .catch(function(e) { reject(e) })
-      }
-    })
+      await database.hmsetAsync(mkKey(['user', this.id]),
+        { 'updatedAt': this.updatedAt.toString(),
+          'hashedPassword': this.hashedPassword
+        })
+
+      return this
+    } catch(e) {
+      throw e //? hmmm?
+    }
   }
 
   User.prototype.getAdministratorIds = function() {
@@ -547,10 +541,13 @@ exports.addModel = function(database) {
     return this.subscriptionsIds
   }
 
+  /**
+   * @return {Timeline[]}
+   */
   User.prototype.getSubscriptions = async function() {
-    var userIds = await this.getSubscriptionIds()
+    var timelineIds = await this.getSubscriptionIds()
 
-    var subscriptionPromises = userIds.map((userId) => models.Timeline.findById(userId))
+    var subscriptionPromises = timelineIds.map((timelineId) => models.Timeline.findById(timelineId))
     this.subscriptions = await* subscriptionPromises
 
     return this.subscriptions
@@ -582,22 +579,12 @@ exports.addModel = function(database) {
   User.prototype.ban = async function(username) {
     var currentTime = new Date().getTime()
     var user = await models.User.findByUsername(username)
-    return await database.zaddAsync(mkKey(['user', this.id, 'bans']), currentTime, user.id)
+    return database.zaddAsync(mkKey(['user', this.id, 'bans']), currentTime, user.id)
   }
 
-  User.prototype.unban = function(username) {
-    var currentTime = new Date().getTime()
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      models.User.findByUsername(username)
-        .then(function(user) {
-          return database.zremAsync(mkKey(['user', that.id, 'bans']), user.id)
-        })
-        .then(function(res) {
-          resolve(res)
-        })
-    })
+  User.prototype.unban = async function(username) {
+    var user = await models.User.findByUsername(username)
+    return database.zremAsync(mkKey(['user', this.id, 'bans']), user.id)
   }
 
   User.prototype.subscribeTo = function(timelineId) {
@@ -637,7 +624,7 @@ exports.addModel = function(database) {
     })
   }
 
-  User.prototype.unsubscribeTo = function(timelineId) {
+  User.prototype.unsubscribeFrom = function(timelineId) {
     var currentTime = new Date().getTime()
     var that = this
     var timeline
@@ -837,16 +824,20 @@ exports.addModel = function(database) {
 
   User.prototype.updateLastActivityAt = function() {
     var that = this
+    var timelineId
 
     return new Promise(function(resolve, reject) {
       if (!that.isUser()) {
         // update group lastActivity for all subscribers
         var updatedAt = new Date().getTime()
         that.getPostsTimeline()
-          .then(function(timeline) { return timeline.getSubscriberIds() })
+          .then(function(timeline) {
+            timelineId = timeline.id
+            return timeline.getSubscriberIds()
+          })
           .then(function(userIds) {
             return Promise.map(userIds, function(userId) {
-              return database.zaddAsync(mkKey(['user', userId, 'subscriptions']), updatedAt, that.id)
+              return database.zaddAsync(mkKey(['user', userId, 'subscriptions']), updatedAt, timelineId)
             })
           })
           .then(function() {
