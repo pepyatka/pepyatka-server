@@ -9,6 +9,7 @@ describe("PasswordsController", function() {
   describe("#create()", function() {
     var authToken
       , luna
+      , user
       , oldEmail = 'test@example.com'
 
     beforeEach(funcTestHelper.createUser('Luna', 'password', { 'email': oldEmail }, function(token, luna) {
@@ -72,6 +73,7 @@ describe("PasswordsController", function() {
 
   describe('#update()', function() {
     var authToken
+      , user
       , luna
 
     beforeEach(funcTestHelper.createUser('Luna', 'password', function(token, luna) {
