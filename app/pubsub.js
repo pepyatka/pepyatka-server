@@ -3,6 +3,7 @@ var Promise = require('bluebird')
   , async = require('async')
   , config = require('../config/config').load()
   , redis = require('redis').createClient
+import _ from 'lodash'
 
 exports.init = function(database) {
   "use strict";
@@ -240,8 +241,8 @@ exports.init = function(database) {
     var io = require('socket.io')(server)
 
     var adapter = require('socket.io-redis')
-     , redisPub = redis(config.redis.port, config.redis.host, {})
-     , redisSub = redis(config.redis.port, config.redis.host, { detect_buffers: true })
+     , redisPub = redis(config.redis.port, config.redis.host, config.redis.options)
+     , redisSub = redis(config.redis.port, config.redis.host, _.extend(config.redis.options, { detect_buffers: true }))
 
     redisPub.on('error', function(err) { console.log(err) })
     redisSub.on('error', function(err) { console.log(err) })

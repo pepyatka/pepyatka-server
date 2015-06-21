@@ -7,7 +7,7 @@ var Promise = require('bluebird')
 Promise.promisifyAll(redis.RedisClient.prototype)
 Promise.promisifyAll(redis.Multi.prototype)
 
-var database = redis.createClient(config.redis.port, config.redis.host, {})
+var database = redis.createClient(config.redis.port, config.redis.host, config.redis.options)
 
 // TODO: move to app.logger
 database.on('connect'     , log('connect'))
