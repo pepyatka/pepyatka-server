@@ -61,7 +61,9 @@ exports.addModel = function(database) {
     })
       .then(function(timelines) {
         return Promise.map(timelines, function(timeline) {
-          return timeline.getSubscribedTimelineIds()
+          return timeline.getUser()
+            .then(function(user) { return user.updateLastActivityAt() })
+            .then(function() { return timeline.getSubscribedTimelineIds() })
         })
       })
       .then(function(allSubscribedTimelineIds) {
@@ -176,7 +178,7 @@ exports.addModel = function(database) {
           })
         })
         .then(function(posts) {
-          that.posts = posts
+          that.posts = posts.filter(Boolean)
           resolve(that.posts)
         })
     })
@@ -252,31 +254,22 @@ exports.addModel = function(database) {
     })
   }
 
-  Timeline.prototype.getSubscribers = function(includeSelf) {
-    var that = this
+  Timeline.prototype.getSubscribers = async function(includeSelf) {
+    var userIds = await this.getSubscriberIds(includeSelf)
+    var promises = userIds.map((userId) => models.User.findById(userId))
 
-    return new Promise(function(resolve, reject) {
-      that.getSubscriberIds(includeSelf)
-        .then(function(userIds) {
-          return Promise.map(userIds, function(userId) {
-            return models.User.findById(userId)
-          })
-        })
-        .then(function(subscribers) {
-          that.subscribers = subscribers
-          resolve(that.subscribers)
-        })
-    })
+    this.subscribers = await* promises
+
+    return this.subscribers
   }
 
   /**
    * Returns the list of the 'River of News' timelines of all subscribers to this
    * timeline.
    */
-  Timeline.prototype.getSubscribedTimelineIds = function() {
-    return this.getSubscribers(true).map(function(subscriber) {
-      return subscriber.getRiverOfNewsTimelineId()
-    })
+  Timeline.prototype.getSubscribedTimelineIds = async function() {
+    var subscribers = await this.getSubscribers(true);
+    return subscribers.map((subscriber) => subscriber.getRiverOfNewsTimelineId())
   }
 
   Timeline.prototype.isRiverOfNews = function() {
@@ -316,25 +309,11 @@ exports.addModel = function(database) {
         .then(function(res) { return database.hsetAsync(mkKey(['post', postId]), 'updatedAt', currentTime) })
         .then(function(post) { return that.getUser() })
         .then(function(feed) {
-          this.feed = feed
-          return feed.isUser()
-        })
-        .then(function(isUser) {
-          if (!isUser) {
-            // update group lastActivity for all subscribers
-            var updatedAt = new Date().getTime()
-            var self = this
-            that.getSubscriberIds()
-              .then(function(userIds) {
-                return Promise.map(userIds, function(userId) {
-                  return database.zaddAsync(mkKey(['user', userId, 'subscriptions']), updatedAt, that.id)
-                })
-              })
-              .then(function() {
-                return database.hmsetAsync(mkKey(['user', self.feed.id]),
-                                    { 'updatedAt': updatedAt.toString() })
-              })
-          }
+          // does not update lastActivity on like
+          if (action === 'like')
+            return null
+          else
+            return feed.updateLastActivityAt()
         })
         .then(function() { resolve() })
     })

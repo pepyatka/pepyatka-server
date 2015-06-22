@@ -1,227 +1,228 @@
 "use strict";
 
-var models = require('../../../models')
-  , jwt = require('jsonwebtoken')
-  , config = require('../../../../config/config').load()
-  , UserSerializer = models.UserSerializer
-  , MyProfileSerializer = models.MyProfileSerializer
-  , SubscriberSerializer = models.SubscriberSerializer
-  , SubscriptionSerializer = models.SubscriptionSerializer
-  , _ = require('lodash')
-  , Promise = require('bluebird')
-  , async = require('async')
-  , exceptions = require('../../../support/exceptions')
-  , formidable = require('formidable')
+import models, {UserSerializer, MyProfileSerializer, SubscriberSerializer, SubscriptionSerializer} from '../../../models'
+import jwt from 'jsonwebtoken'
+import _ from 'lodash'
+import exceptions from '../../../support/exceptions'
+import formidable from 'formidable'
+import config_loader from '../../../../config/config'
+
+var config = config_loader.load()
 
 exports.addController = function(app) {
-  /**
-   * @constructor
-   */
-  var UsersController = function() {
-  }
+  class UsersController {
+    static async create(req, res) {
+      var params = {
+        username: req.body.username,
+        email: req.body.email
+      }
 
-  UsersController.create = function(req, res) {
-    var params = {
-      username: req.body.username,
-      email: req.body.email
-    }
+      params.hashedPassword = req.body.password_hash
+      if (!config.acceptHashedPasswordsOnly) {
+        params.password = req.body.password
+      }
 
-    params.hashedPassword = req.body.password_hash
-    if (!config.acceptHashedPasswordsOnly) {
-      params.password = req.body.password
-    }
-
-    var newUser = new models.User(params)
-
-    return newUser.create()
-      .then(function(user) {
+      try {
+        var newUser = new models.User(params)
+        var user = await newUser.create()
         var secret = config.secret
         var authToken = jwt.sign({ userId: user.id }, secret)
 
-        new MyProfileSerializer(user).toJSON(function(err, json) {
-          return res.jsonp(_.extend(json, { authToken: authToken }))
-        })
-      })
-      .catch(exceptions.reportError(res))
-  }
-
-  UsersController.whoami = function(req, res) {
-    if (!req.user)
-      return res.status(401).jsonp({ err: 'Not found' })
-
-    new MyProfileSerializer(req.user).toJSON(function(err, json) {
-      return res.jsonp(json)
-    })
-  }
-
-  UsersController.show = function(req, res) {
-    var username = req.params.username
-
-    models.FeedFactory.findByUsername(username)
-      .then(function(feed) {
-        new UserSerializer(feed).toJSON(function(err, json) {
-          return res.jsonp(json)
-        })
-      })
-  }
-
-  UsersController.subscribers = function(req, res) {
-    var username = req.params.username
-
-    models.User.findByUsername(username)
-      .then(function(user) { return user.getPostsTimeline() })
-      .then(function(timeline) { return timeline.getSubscribers() })
-      .then(function(subscribers) {
-        async.map(subscribers, function(subscriber, callback) {
-          new SubscriberSerializer(subscriber).toJSON(function(err, json) {
-            callback(err, json)
-          })
-        }, function(err, json) {
-          json = _.reduce(json, function(memo, obj) {
-            memo.subscribers.push(obj.subscribers)
-            return memo
-          }, { subscribers: []})
-          res.jsonp(json)
-        })
-      })
-      .catch(function(e) { res.status(422).send({}) })
-  }
-
-  UsersController.subscriptions = function(req, res) {
-    var username = req.params.username
-
-    models.User.findByUsername(username)
-      .then(function(user) { return user.getSubscriptions() })
-      .then(function(subscriptions) {
-        async.map(subscriptions, function(subscription, callback) {
-          new SubscriptionSerializer(subscription).toJSON(function(err, json) {
-            callback(err, json)
-          })
-        }, function(err, json) {
-          json = _.reduce(json, function(memo, obj) {
-            memo.subscriptions.push(obj.subscriptions)
-            var user = obj.subscribers[0]
-            memo.subscribers[user.id] = user
-            return memo
-          }, { subscriptions: [], subscribers: {} })
-          json.subscribers = _.values(json.subscribers)
-          res.jsonp(json)
-        })
-      })
-      .catch(function(e) { res.status(422).send({}) })
-  }
-
-  UsersController.ban = function(req, res) {
-    if (!req.user)
-      return res.status(401).jsonp({ err: 'Not found' })
-
-    var username = req.params.username
-    req.user.ban(username)
-      .then(function(status) {
-        res.jsonp({ status: status })
-      })
-      .catch(exceptions.reportError(res))
-  }
-
-  UsersController.unban = function(req, res) {
-    if (!req.user)
-      return res.status(401).jsonp({ err: 'Not found' })
-
-    var username = req.params.username
-    req.user.unban(username)
-      .then(function(status) {
-        res.jsonp({ status: status })
-      })
-      .catch(exceptions.reportError(res))
-  }
-
-  UsersController.subscribe = function(req, res) {
-    if (!req.user)
-      return res.status(401).jsonp({ err: 'Not found' })
-
-    var username = req.params.username
-    models.User.findByUsername(username)
-      .then(function(user) { return user.getPostsTimelineId() })
-      .then(function(timelineId) {
-        return req.user.validateCanSubscribe(timelineId)
-      })
-      .then(function(timelineId) { return req.user.subscribeTo(timelineId) })
-      .then(function(status) {
-        new MyProfileSerializer(req.user).toJSON(function(err, json) {
-          res.jsonp(json)
-        })
-      })
-      .catch(exceptions.reportError(res))
-  }
-
-  UsersController.unsubscribe = function(req, res) {
-    if (!req.user)
-      return res.status(401).jsonp({ err: 'Not found' })
-
-    var username = req.params.username
-    models.User.findByUsername(username)
-      .then(function(user) { return user.getPostsTimelineId() })
-      .then(function(timelineId) {
-        return req.user.validateCanUnsubscribe(timelineId)
-      })
-      .then(function(timelineId) { return req.user.unsubscribeTo(timelineId) })
-      .then(function(status) {
-        new MyProfileSerializer(req.user).toJSON(function(err, json) {
-          res.jsonp(json)
-        })
-      })
-      .catch(exceptions.reportError(res))
-  }
-
-  UsersController.update = function(req, res) {
-    if (!req.user || req.user.id != req.params.userId)
-      return res.status(401).jsonp({ err: 'Not found' })
-
-    var attrs = {
-      screenName: req.body.user.screenName,
-      email: req.body.user.email,
-      isPrivate: req.body.user.isPrivate
+        var json = await new MyProfileSerializer(user).promiseToJSON()
+        res.jsonp(_.extend(json, { authToken: authToken }))
+      } catch(e) {
+        exceptions.reportError(res)(e)
+      }
     }
-    req.user.update(attrs)
-      .then(function(user) {
-        new MyProfileSerializer(user).toJSON(function(err, json) {
-          res.jsonp(json)
-        })
-      })
-      .catch(exceptions.reportError(res))
-  }
 
-  UsersController.updatePassword = function(req, res) {
-    if (!req.user)
-      return res.status(401).jsonp({ err: 'Not found' })
+    static async whoami(req, res) {
+      if (!req.user)
+        return res.status(401).jsonp({ err: 'Not found' })
 
-    var currentPassword = req.body.currentPassword || ''
-    req.user.validPassword(currentPassword)
-      .then(function(valid) {
-        if (valid)
-          return req.user.updatePassword(req.body.password, req.body.passwordConfirmation)
-        else
-          return Promise.reject(new Error('Your old password is not valid'))
-      })
-      .then(function(user) { res.jsonp({ message: 'Your password has been changed' }) })
-      .catch(exceptions.reportError(res))
-  }
+      var json = await new MyProfileSerializer(req.user).promiseToJSON()
+      res.jsonp(json)
+    }
 
-  UsersController.updateProfilePicture = function(req, res) {
-    if (!req.user)
-      return res.status(401).jsonp({ err: 'Not found' })
+    static async show(req, res) {
+      var feed = await models.FeedFactory.findByUsername(req.params.username)
+      var json = await new UserSerializer(feed).promiseToJSON()
+      res.jsonp(json)
+    }
 
-    var form = new formidable.IncomingForm()
+    static async subscribers(req, res) {
+      var username = req.params.username
+        , user
 
-    form.on('file', function(inputName, file) {
-      req.user.updateProfilePicture(file)
-        .then(function() {
+      try {
+        user = await models.User.findByUsername(username)
+      } catch (e) {
+        return res.status(404).send({})
+      }
+
+      try {
+        var timeline = await user.getPostsTimeline()
+        var subscribers = await timeline.getSubscribers()
+        var jsonPromises = subscribers.map((subscriber) => new SubscriberSerializer(subscriber).promiseToJSON())
+
+        var json = _.reduce(jsonPromises, async function (memoPromise, jsonPromise) {
+          var obj = await jsonPromise
+          var memo = await memoPromise
+
+          memo.subscribers.push(obj.subscribers)
+
+          return memo
+        }, { subscribers: [] })
+
+        res.jsonp(await json)
+      } catch (e) {
+        res.status(422).send({})
+      }
+    }
+
+    static async subscriptions(req, res) {
+      var username = req.params.username
+        , user
+
+      try {
+        user = await models.User.findByUsername(username)
+      } catch (e) {
+        return res.status(404).send({})
+      }
+
+      try {
+        var subscriptions = await user.getSubscriptions()
+        var jsonPromises = subscriptions.map((subscription) => new SubscriptionSerializer(subscription).promiseToJSON())
+
+        var reducedJsonPromise = _.reduce(jsonPromises, async function(memoPromise, jsonPromise) {
+          var obj = await jsonPromise
+          var memo = await memoPromise
+
+          var user = obj.subscribers[0]
+
+          memo.subscriptions.push(obj.subscriptions)
+          memo.subscribers[user.id] = user
+
+          return memo
+        }, { subscriptions: [], subscribers: {} })
+
+        var json = await reducedJsonPromise
+        json.subscribers = _.values(json.subscribers)
+
+        res.jsonp(json)
+      } catch (e) {
+        res.status(422).send({message: e.toString()})
+      }
+    }
+
+    static async ban(req, res) {
+      if (!req.user)
+        return res.status(401).jsonp({ err: 'Not found' })
+
+      try {
+        var status = await req.user.ban(req.params.username)
+        return res.jsonp({ status: status })
+      } catch(e) {
+        exceptions.reportError(res)(e)
+      }
+    }
+
+    static async unban(req, res) {
+      if (!req.user)
+        return res.status(401).jsonp({ err: 'Not found' })
+
+      try {
+        var status = await req.user.unban(req.params.username)
+        return res.jsonp({ status: status })
+      } catch(e) {
+        exceptions.reportError(res)(e)
+      }
+    }
+
+    static async subscribe(req, res) {
+      if (!req.user)
+        return res.status(401).jsonp({ err: 'Not found' })
+
+      try {
+        var user = await models.User.findByUsername(req.params.username)
+        var timelineId = await user.getPostsTimelineId()
+        await req.user.validateCanSubscribe(timelineId)
+        await req.user.subscribeTo(timelineId)
+
+        var json = await new MyProfileSerializer(req.user).promiseToJSON()
+        res.jsonp(json)
+      } catch(e) {
+        exceptions.reportError(res)(e)
+      }
+    }
+
+    static async unsubscribe(req, res) {
+      if (!req.user)
+        return res.status(401).jsonp({ err: 'Not found' })
+
+      try {
+        var user = await models.User.findByUsername(req.params.username)
+        var timelineId = await user.getPostsTimelineId()
+        await req.user.validateCanUnsubscribe(timelineId)
+        await req.user.unsubscribeFrom(timelineId)
+
+        var json = await new MyProfileSerializer(req.user).promiseToJSON()
+        res.jsonp(json)
+      } catch(e) {
+        exceptions.reportError(res)(e)
+      }
+   }
+
+    static async update(req, res) {
+      if (!req.user || req.user.id != req.params.userId)
+        return res.status(401).jsonp({ err: 'Not found' })
+
+      var attrs = {
+        screenName: req.body.user.screenName,
+        email: req.body.user.email,
+        isPrivate: req.body.user.isPrivate
+      }
+      try {
+        var user = await req.user.update(attrs)
+        var json = await new MyProfileSerializer(user).promiseToJSON()
+        res.jsonp(json)
+      } catch(e) {
+        exceptions.reportError(res)(e)
+      }
+    }
+
+    static async updatePassword(req, res) {
+      if (!req.user)
+        return res.status(401).jsonp({ err: 'Not found' })
+
+      var currentPassword = req.body.currentPassword || ''
+      try {
+        var valid = await req.user.validPassword(currentPassword)
+        if (!valid)
+          throw new Error('Your old password is not valid')
+        await req.user.updatePassword(req.body.password, req.body.passwordConfirmation)
+        return res.jsonp({ message: 'Your password has been changed' })
+      } catch(e) {
+        exceptions.reportError(res)(e)
+      }
+    }
+
+    static async updateProfilePicture(req, res) {
+      if (!req.user)
+        return res.status(401).jsonp({ err: 'Not found' })
+
+      var form = new formidable.IncomingForm()
+
+      form.on('file', async function(inputName, file) {
+        try {
+          await req.user.updateProfilePicture(file)
           res.jsonp({ message: 'Your profile picture has been updated' })
-        })
-        .catch(exceptions.reportError(res))
-    })
+        } catch (e) {
+          exceptions.reportError(res)(e)
+        }
+      })
 
-    form.parse(req)
+      form.parse(req)
+    }
   }
 
   return UsersController

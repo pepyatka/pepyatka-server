@@ -3,6 +3,7 @@ var Promise = require('bluebird')
   , async = require('async')
   , config = require('../config/config').load()
   , redis = require('redis').createClient
+import _ from 'lodash'
 
 exports.init = function(database) {
   "use strict";
@@ -75,9 +76,13 @@ exports.init = function(database) {
         .then(function(timelines) {
           var that = this
           return Promise.map(timelines, function(timeline) {
-            that.post.isHiddenIn(timeline.id)
+            that.post.isBannedFor(timeline.userId).bind({})
+              .then(function(isBanned) {
+                this.isBanned = isBanned
+                return that.post.isHiddenIn(timeline.id)
+              })
               .then(function(isHidden) {
-                if (!isHidden)
+                if (!isHidden && !this.isBanned)
                   database.publishAsync('comment:new',
                                         JSON.stringify({
                                           timelineId: timeline.id,
@@ -155,9 +160,13 @@ exports.init = function(database) {
         .then(function(timelines) {
           var that = this
           return Promise.map(timelines, function(timeline) {
-            that.post.isHiddenIn(timeline.id)
+            that.post.isBannedFor(timeline.userId).bind({})
+              .then(function(isBanned) {
+                this.isBanned = isBanned
+                return that.post.isHiddenIn(timeline.id)
+              })
               .then(function(isHidden) {
-                if (!isHidden)
+                if (!isHidden && !this.isBanned)
                   return database.publishAsync('like:new',
                                                JSON.stringify({
                                                  timelineId: timeline.id,
@@ -240,8 +249,8 @@ exports.init = function(database) {
     var io = require('socket.io')(server)
 
     var adapter = require('socket.io-redis')
-     , redisPub = redis(config.redis.port, config.redis.host, {})
-     , redisSub = redis(config.redis.port, config.redis.host, { detect_buffers: true })
+     , redisPub = redis(config.redis.port, config.redis.host, config.redis.options)
+     , redisSub = redis(config.redis.port, config.redis.host, _.extend(config.redis.options, { detect_buffers: true }))
 
     redisPub.on('error', function(err) { console.log(err) })
     redisSub.on('error', function(err) { console.log(err) })

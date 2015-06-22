@@ -319,32 +319,26 @@ exports.addModel = function(database) {
     })
   }
 
-  User.prototype.updatePassword = function(password, passwordConfirmation) {
-    var that = this
+  User.prototype.updatePassword = async function(password, passwordConfirmation) {
+    this.updatedAt = new Date().getTime()
+    if (password.length === 0) {
+      throw new Error('Password cannot be blank')
+    } else if (password !== passwordConfirmation) {
+      throw new Error("Passwords do not match")
+    }
 
-    return new Promise(function(resolve, reject) {
-      that.updatedAt = new Date().getTime()
+    try {
+      this.hashedPassword = await bcrypt.hashAsync(password, 10)
 
-      if (password.length === 0) {
-        reject(new Error('Password cannot be blank'))
-      } else if (password !== passwordConfirmation) {
-        reject(new Error("Passwords do not match"))
-      } else {
-        bcrypt.hashAsync(password, 10)
-          .then(function(hashedPassword) {
-            that.hashedPassword = hashedPassword
-            return that
-          })
-          .then(function(user) {
-            database.hmsetAsync(mkKey(['user', user.id]),
-              { 'updatedAt': user.updatedAt.toString(),
-                'hashedPassword': user.hashedPassword
-              })
-          })
-          .then(function(res) { resolve(that) })
-          .catch(function(e) { reject(e) })
-      }
-    })
+      await database.hmsetAsync(mkKey(['user', this.id]),
+        { 'updatedAt': this.updatedAt.toString(),
+          'hashedPassword': this.hashedPassword
+        })
+
+      return this
+    } catch(e) {
+      throw e //? hmmm?
+    }
   }
 
   User.prototype.getAdministratorIds = function() {
@@ -457,31 +451,33 @@ exports.addModel = function(database) {
         })
         .then(function(riverOfNewsTimeline) {
           this.riverOfNewsTimeline = riverOfNewsTimeline
+          return that.getBanIds()
+        })
+        .then(function(banIds) {
+          this.banIds = banIds
           return this.riverOfNewsTimeline.getPosts(this.riverOfNewsTimeline.offset,
                                                    this.riverOfNewsTimeline.limit)
-          })
+        })
         .then(function(posts) {
-          this.posts = posts
-          return models.Timeline.findById(this.hidesTimelineId)
-        })
-        .then(function(hidesTimeline) {
-          if (this.posts.length > 0)
-            return hidesTimeline.getPostIdsByScore(this.posts[0].updatedAt,
-                                                   this.posts[this.posts.length-1].updatedAt)
-          else
-            return []
-        })
-        .then(function(hiddenPostIds) {
-          this.hiddenPostIds = hiddenPostIds
-
-          return Promise.map(this.posts, function(post) {
-            if (this.hiddenPostIds.indexOf(post.id) >= 0) {
-              post.isHidden = true
-            }
-            return post
+          var self = this
+          return Promise.map(posts, function(post) {
+            // we check posts individually for the time being because
+            // timestamp in timelines could be mistiming (several ms),
+            // we need to refactor Timeline.prototype.updatePost method first
+            return database.zscoreAsync(mkKey(['timeline', this.hidesTimelineId, 'posts']), post.id)
+              .then(function(score) {
+                if (score && score >= 0) {
+                  post.isHidden = true
+                }
+                return post
+              })
+              .then(function(post) {
+                return self.banIds.indexOf(post.userId) >= 0 ? null : post
+              })
           }.bind(this))
         })
         .then(function(posts) {
+          this.riverOfNewsTimeline.posts = posts
           resolve(this.riverOfNewsTimeline)
         })
     })
@@ -540,33 +536,21 @@ exports.addModel = function(database) {
     ])
   }
 
-  User.prototype.getSubscriptionIds = function() {
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      database.zrevrangeAsync(mkKey(['user', that.id, 'subscriptions']), 0, -1)
-        .then(function(userIds) {
-          that.subscriptionsIds = userIds
-          resolve(userIds)
-        })
-    })
+  User.prototype.getSubscriptionIds = async function() {
+    this.subscriptionsIds = await database.zrevrangeAsync(mkKey(['user', this.id, 'subscriptions']), 0, -1)
+    return this.subscriptionsIds
   }
 
-  User.prototype.getSubscriptions = function() {
-    var that = this
+  /**
+   * @return {Timeline[]}
+   */
+  User.prototype.getSubscriptions = async function() {
+    var timelineIds = await this.getSubscriptionIds()
 
-    return new Promise(function(resolve, reject) {
-      that.getSubscriptionIds()
-        .then(function(userIds) {
-          return Promise.map(userIds, function(userId) {
-            return models.Timeline.findById(userId)
-          })
-        })
-        .then(function(subscriptions) {
-          that.subscriptions = subscriptions
-          resolve(that.subscriptions)
-        })
-    })
+    var subscriptionPromises = timelineIds.map((timelineId) => models.Timeline.findById(timelineId))
+    this.subscriptions = await* subscriptionPromises
+
+    return this.subscriptions
   }
 
   User.prototype.getBanIds = function() {
@@ -592,32 +576,15 @@ exports.addModel = function(database) {
     })
   }
 
-  User.prototype.ban = function(username) {
+  User.prototype.ban = async function(username) {
     var currentTime = new Date().getTime()
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      models.User.findByUsername(username)
-        .then(function(user) {
-          return database.zaddAsync(mkKey(['user', that.id, 'bans']), currentTime, user.id)
-        })
-        .then(function(res) { resolve(res) })
-    })
+    var user = await models.User.findByUsername(username)
+    return database.zaddAsync(mkKey(['user', this.id, 'bans']), currentTime, user.id)
   }
 
-  User.prototype.unban = function(username) {
-    var currentTime = new Date().getTime()
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      models.User.findByUsername(username)
-        .then(function(user) {
-          return database.zremAsync(mkKey(['user', that.id, 'bans']), user.id)
-        })
-        .then(function(res) {
-          resolve(res)
-        })
-    })
+  User.prototype.unban = async function(username) {
+    var user = await models.User.findByUsername(username)
+    return database.zremAsync(mkKey(['user', this.id, 'bans']), user.id)
   }
 
   User.prototype.subscribeTo = function(timelineId) {
@@ -657,7 +624,7 @@ exports.addModel = function(database) {
     })
   }
 
-  User.prototype.unsubscribeTo = function(timelineId) {
+  User.prototype.unsubscribeFrom = function(timelineId) {
     var currentTime = new Date().getTime()
     var that = this
     var timeline
@@ -796,15 +763,26 @@ exports.addModel = function(database) {
 
   User.prototype.validateCanSubscribe = function(timelineId) {
     var that = this
+    var _timeline
 
     return new Promise(function(resolve, reject) {
       that.getSubscriptionIds()
         .then(function(timelineIds) {
           if (_.includes(timelineIds, timelineId)) {
-          reject(new ForbiddenException("You already subscribed to that user"))
-        }
-        resolve(timelineId)
-      })
+            reject(new ForbiddenException("You already subscribed to that user"))
+          }
+          return models.Timeline.findById(timelineId)
+        })
+        .then(function(timeline) {
+          _timeline = timeline
+          return that.getBanIds()
+        })
+        .then(function(banIds) {
+          if (banIds.indexOf(_timeline.userId) >= 0) {
+            reject(new ForbiddenException("You cannot subscribe to a banned user"))
+          }
+          resolve(timelineId)
+        })
     })
   }
 
@@ -855,6 +833,34 @@ exports.addModel = function(database) {
 
   }
 
+  User.prototype.updateLastActivityAt = function() {
+    var that = this
+    var timelineId
+
+    return new Promise(function(resolve, reject) {
+      if (!that.isUser()) {
+        // update group lastActivity for all subscribers
+        var updatedAt = new Date().getTime()
+        that.getPostsTimeline()
+          .then(function(timeline) {
+            timelineId = timeline.id
+            return timeline.getSubscriberIds()
+          })
+          .then(function(userIds) {
+            return Promise.map(userIds, function(userId) {
+              return database.zaddAsync(mkKey(['user', userId, 'subscriptions']), updatedAt, timelineId)
+            })
+          })
+          .then(function() {
+            return database.hmsetAsync(mkKey(['user', that.id]),
+                                       { 'updatedAt': updatedAt.toString() })
+          })
+          .then(function() { resolve() })
+      } else {
+        resolve()
+      }
+    })
+  }
 
   return User
 }

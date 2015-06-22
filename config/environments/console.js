@@ -17,13 +17,11 @@ var transport = function() {
 
 exports.getConfig = function() {
   var config = {
-    port: 3000,
+    port: 1337,
     database: 2,
 
     secret: 'secret',
-
-    origin: '*',
-
+    origin: 'http://localhost:3333',
     appRoot: '.',
     acceptHashedPasswordsOnly: false,
 
@@ -51,18 +49,18 @@ exports.getConfig = function() {
 
   config.attachments = {
     // Make sure that all directories here have a trailing slash
-    urlDir: 'https://freefeed.net/attachments/original/',
+    urlDir: 'http://localhost:3000/attachments/original/',
     fsDir: './public/files/original/',
     fileSizeLimit: '10mb',
 
     thumbnails: {
-      urlDir: 'https://freefeed.net/attachments/thumbnails/',
+      urlDir: 'http://localhost:3000/attachments/thumbnails/',
       fsDir: './public/files/thumbnails/'
     }
   }
 
   config.profilePictures = {
-    urlDir: 'https://freefeed.net/files/profilePictures/',
+    urlDir: 'http://localhost:3000/files/profilePictures/',
     fsDir: './public/files/profilePictures/'
   }
 
@@ -78,11 +76,7 @@ exports.getConfig = function() {
   config.redis = {
     host: 'localhost',
     port: 6379,
-    options: {
-      retry_max_delay: 2000, //ms
-      connect_timeout: 5000, //ms
-      max_attempts: 2, //times
-    }
+    options: {}
   }
 
   return config

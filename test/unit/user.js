@@ -324,25 +324,24 @@ describe('User', function() {
   })
 
   describe('#findByEmail()', function() {
-    it('should find a user by email', function(done) {
+    it('should find a user by email', async function(done) {
       var user = new User({
         username: 'Luna',
         password: 'password',
         email: 'luna@example.com'
       })
 
-      user.create()
-        .then(function(user) { return user.update({ email: user.email }) })
-        .then(function(user) {
-          User.findByEmail(user.email)
-            .then(function(newUser) {
-              newUser.should.be.an.instanceOf(User)
-              newUser.should.not.be.empty
-              newUser.should.have.property('id')
-              newUser.id.should.eql(user.id)
-            })
-        })
-        .then(function() { done() })
+      await user.create()
+      await user.update({ email: user.email })
+
+      var newUser = await User.findByEmail(user.email)
+
+      newUser.should.be.an.instanceOf(User)
+      newUser.should.not.be.empty
+      newUser.should.have.property('id')
+      newUser.id.should.eql(user.id)
+
+      done();
     })
 
     it('should not find a user by invalid email', function(done) {
@@ -765,7 +764,7 @@ describe('User', function() {
     })
   })
 
-  describe('#unsubscribeTo()', function() {
+  describe('#unsubscribeFrom()', function() {
     var userA
       , userB
 
@@ -785,7 +784,7 @@ describe('User', function() {
         .then(function(user) { done() })
     })
 
-    it('should unsubscribe to timeline', function(done) {
+    it('should unsubscribe from timeline', function(done) {
       var attrs = {
         body: 'Post body'
       }
@@ -798,7 +797,7 @@ describe('User', function() {
           identifier = timelineId
           return userA.subscribeTo(timelineId)
         })
-        .then(function(timelineId) { return userA.unsubscribeTo(identifier) })
+        .then(function(timelineId) { return userA.unsubscribeFrom(identifier) })
         .then(function() { return userA.getRiverOfNewsTimeline() })
         .then(function(timeline) { return timeline.getPosts() })
         .then(function(posts) {

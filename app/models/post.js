@@ -179,6 +179,8 @@ exports.addModel = function(database) {
                     })
                 })
               }),
+            // delete posted to key
+            database.delAsync(mkKey(['post', that.id, 'to'])),
             // delete likes
             database.delAsync(mkKey(['post', that.id, 'likes'])),
             // delete post
@@ -469,16 +471,26 @@ exports.addModel = function(database) {
 
   Post.prototype.getComments = function() {
     var that = this
+    var banIds
 
     return new Promise(function(resolve, reject) {
-      that.getCommentIds()
+      models.User.findById(that.currentUser)
+        .then(function(user) { return user ? user.getBanIds() : [] })
+        .then(function(feedIds) {
+          banIds = feedIds
+          return that.getCommentIds()
+        })
         .then(function(commentIds) {
           return Promise.map(commentIds, function(commentId) {
             return models.Comment.findById(commentId)
+              .then(function(comment) {
+                return banIds.indexOf(comment.userId) >= 0 ? null : comment
+              })
           })
         })
         .then(function(comments) {
-          that.comments = comments
+          // filter null comments
+          that.comments = comments.filter(Boolean)
           resolve(that.comments)
         })
     })
@@ -609,16 +621,23 @@ exports.addModel = function(database) {
 
   Post.prototype.getLikes = function() {
     var that = this
+    var banIds
 
     return new Promise(function(resolve, reject) {
-      that.getLikeIds()
+      models.User.findById(that.currentUser)
+        .then(function(user) { return user ? user.getBanIds() : [] })
+        .then(function(feedIds) {
+          banIds = feedIds
+          return that.getLikeIds()
+        })
         .then(function(userIds) {
           return Promise.map(userIds, function(userId) {
-            return models.User.findById(userId)
+            return banIds.indexOf(userId) >= 0 ? null : models.User.findById(userId)
           })
         })
         .then(function(users) {
-          that.likes = users
+          // filter null comments
+          that.likes = users.filter(Boolean)
           resolve(that.likes)
         })
     })
@@ -686,6 +705,17 @@ exports.addModel = function(database) {
 
   Post.prototype.getCreatedBy = function() {
     return models.FeedFactory.findById(this.userId)
+  }
+
+  Post.prototype.isBannedFor = function(userId) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      models.User.findById(userId)
+        .then(function(user) { return user.getBanIds() })
+        .then(function(banIds) { return banIds.indexOf(that.userId) })
+        .then(function(index) { resolve(index >= 0) })
+    })
   }
 
   Post.prototype.isHiddenIn = function(timelineId) {

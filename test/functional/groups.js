@@ -130,6 +130,11 @@ describe("GroupsController", function() {
                 .get(app.config.host + '/v1/users/Luna/subscriptions')
                 .query({authToken: authToken})
                 .end(function(err, res) {
+                  res.status.should.not.eql(404)
+                  res.status.should.not.eql(422)
+                  res.body.should.not.be.empty
+                  res.body.should.have.property('subscribers')
+                  res.body.should.have.property('subscriptions')
                   var subIds = res.body.subscriptions.map(function(sub) { return sub.user })
                   subIds.should.contain(newGroupId)
                   var users = res.body.subscribers

@@ -7,18 +7,25 @@ var Promise = require('bluebird')
 Promise.promisifyAll(redis.RedisClient.prototype)
 Promise.promisifyAll(redis.Multi.prototype)
 
-var database = redis.createClient(config.redis.port, config.redis.host, {})
+var database = redis.createClient(config.redis.port, config.redis.host, config.redis.options)
 
 // TODO: move to app.logger
 database.on('connect'     , log('connect'))
 database.on('ready'       , log('ready'))
 database.on('reconnecting', log('reconnecting'))
-database.on('error'       , log('error'))
+database.on('error'       , logAndQuit('error'))
 database.on('end'         , log('end'))
 
 function log(type) {
   return function() {
     console.log(type, arguments)
+  }
+}
+
+function logAndQuit(type) {
+  return function() {
+    console.log(type, arguments)
+    process.exit(1)
   }
 }
 

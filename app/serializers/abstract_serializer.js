@@ -1,9 +1,9 @@
 "use strict";
 
-var Promise = require('bluebird')
-  , async = require('async')
-  , _ = require('lodash')
-  , s = require("underscore.string")
+import Promise from 'bluebird'
+import _ from 'lodash'
+import async from 'async'
+import s from 'underscore.string'
 
 exports.addSerializer = function() {
   var AbstractSerializer = function(object, strategy) {
@@ -221,6 +221,8 @@ exports.addSerializer = function() {
       })
     }
   }
+
+  AbstractSerializer.prototype.promiseToJSON = Promise.promisify(AbstractSerializer.prototype.toJSON)
 
   return AbstractSerializer
 }

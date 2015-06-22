@@ -1,5 +1,9 @@
 "use strict";
 
+require("babel/register")({
+  stage: 1
+})
+
 var express = require('express')
   , app = express()
   , environment = require('./config/environment')
