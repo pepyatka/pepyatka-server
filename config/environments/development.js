@@ -75,7 +75,12 @@ exports.getConfig = function() {
 
   config.redis = {
     host: 'localhost',
-    port: 6379
+    port: 6379,
+    options: {
+      retry_max_delay: 2000, //ms
+      connect_timeout: 5000, //ms
+      max_attempts: 2, //times
+    }
   }
 
   return config
