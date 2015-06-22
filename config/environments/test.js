@@ -8,16 +8,21 @@ exports.getConfig = function() {
     database: 3,
 
     secret: 'secret',
-
     origin: 'http://localhost:3333',
-
     appRoot: '.',
+    acceptHashedPasswordsOnly: false,
 
-    acceptHashedPasswordsOnly: false
-
+    logLevel: 'warn'
   }
 
   config.host = 'http://localhost:' + config.port
+
+  config.application = {
+    USERNAME_STOP_LIST: ['anonymous', 'public', 'about', 'signin', 'logout',
+                         'signup', 'filter', 'settings', 'account', 'groups',
+                         'friends', 'list', 'search', 'summary', 'share','404',
+                         'iphone']
+  }
 
   config.attachments = {
     // Make sure that all directories here have a trailing slash

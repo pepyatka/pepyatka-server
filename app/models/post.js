@@ -205,17 +205,19 @@ exports.addModel = function(database) {
     return models.User.findById(this.userId)
   }
 
-  Post.prototype.getSubscribedTimelineIds = function() {
+  Post.prototype.getSubscribedTimelineIds = function(groupOnly) {
     var that = this
     var timelineIds
+    if (typeof groupOnly === 'undefined')
+      groupOnly = false
 
     return new Promise(function(resolve, reject) {
       FeedFactory.findById(that.userId)
         .then(function(feed) {
-          return Promise.all([
-            feed.getRiverOfNewsTimelineId(),
-            feed.getPostsTimelineId(),
-          ])
+          var feeds = [feed.getRiverOfNewsTimelineId()]
+          if (!groupOnly)
+            feeds.push(feed.getPostsTimelineId())
+          return Promise.all(feeds)
         })
         .then(function(newTimelineIds) {
           timelineIds = newTimelineIds
@@ -273,7 +275,7 @@ exports.addModel = function(database) {
   Post.prototype.getGenericFriendOfFriendTimelineIds = function(userId, type) {
     var that = this
     var timelineIds = []
-    var user
+    var user, feeds, groupOnly
 
     return new Promise(function(resolve, reject) {
       models.User.findById(userId)
@@ -286,13 +288,33 @@ exports.addModel = function(database) {
           return timeline.getSubscribers()
         })
         .then(function(users) {
-          return Promise.map(users, function(user) {
-            return user.getRiverOfNewsTimelineId()
-          })
+          feeds = users
+          return that.getPostedToIds()
+            .then(function(postedToIds) {
+              return Promise.map(postedToIds, function(timelineId) {
+                return models.Timeline.findById(timelineId)
+                  .then(function(timeline) { return timeline.getUser() })
+                  .then(function(user) { return user.isUser() })
+              })
+            })
+        })
+        .then(function(users) {
+          // Adds the specified post to River of News if and only if
+          // that post has been published to user's Post timeline,
+          // otherwise this post will stay in group(s) timelines
+          if (_.any(users, _.identity, true)) {
+            groupOnly = false
+            return Promise.map(feeds, function(user) {
+              return user.getRiverOfNewsTimelineId()
+            })
+          } else {
+            groupOnly = true
+            return []
+          }
         })
         .then(function(subscribedTimelineIds) {
           timelineIds = timelineIds.concat(subscribedTimelineIds)
-          return that.getSubscribedTimelineIds()
+          return that.getSubscribedTimelineIds(groupOnly)
         })
         .then(function(subscribedTimelineIds) {
           timelineIds = timelineIds.concat(subscribedTimelineIds)
@@ -619,7 +641,7 @@ exports.addModel = function(database) {
 
           return Promise.all([
             Promise.map(timelines, function(timeline) {
-              return timeline.updatePost(that.id)
+              return timeline.updatePost(that.id, 'like')
             }),
             database.zaddAsync(mkKey(['post', that.id, 'likes']), now, userId)
           ])
@@ -665,6 +687,27 @@ exports.addModel = function(database) {
   Post.prototype.getCreatedBy = function() {
     return models.FeedFactory.findById(this.userId)
   }
+
+  Post.prototype.isHiddenIn = function(timelineId) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      models.Timeline.findById(timelineId).bind({})
+        .then(function(timeline) {
+          if (!(timeline.isRiverOfNews() || timeline.isHides()))
+            resolve(false)
+
+          return timeline.getUser()
+        })
+        .then(function(user) { return user.getHidesTimelineId() })
+        .then(function(timelineId) {
+          return database.zscoreAsync(mkKey(['timeline', timelineId, 'posts']), that.id)
+        })
+        .then(function(score) { resolve(score && score >= 0) })
+    })
+  }
+
+
 
   return Post
 }

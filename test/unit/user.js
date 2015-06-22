@@ -41,6 +41,48 @@ describe('User', function() {
     })
   })
 
+  describe('#isValidUsername()', function() {
+    var valid = ['luna', '12345', 'hello1234',
+                 ' group', 'group '] // automatically trims
+    valid.forEach(function(username) {
+      it('should allow username ' + username, function(done) {
+
+        var user = new User({
+          username: username,
+          password: 'password',
+          email: 'user@example.com'
+        })
+
+        user.create()
+          .then(function(user) { return user.isValidEmail() })
+          .then(function(valid) {
+            valid.should.eql(true)
+          })
+          .then(function() { done() })
+      })
+    })
+
+    var invalid = ['lu', '-12345', 'luna-', 'hel--lo', 'save-our-snobs', 'абизьян',
+                   'gr oup']
+    invalid.forEach(function(username) {
+      it('should not allow invalid username ' + username, function(done) {
+
+        var user = new User({
+          username: username,
+          password: 'password',
+          email: 'user@example.com'
+        })
+
+        user.create()
+          .then(function(user) { return user.isValidEmail() })
+          .catch(function(e) {
+            e.message.should.eql("Invalid")
+            done()
+          })
+      })
+    })
+  })
+
   describe('#validEmail()', function() {
     // @todo Provide fixtures to validate various email formats
     it('should validate syntactically correct email', function(done) {

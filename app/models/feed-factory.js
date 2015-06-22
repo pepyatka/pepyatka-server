@@ -7,6 +7,7 @@ var Promise = require('bluebird')
   , User = models.User
   , Group = models.Group
   , mkKey = require("../support/models").mkKey
+  , config = require('../../config/config').load()
 
 exports.addModel = function(database) {
   var FeedFactory = function() {
@@ -15,22 +16,7 @@ exports.addModel = function(database) {
   inherits(FeedFactory, AbstractModel)
 
   FeedFactory.stopList = function() {
-    return ['anonymous',
-            'public',
-            'about',
-            'signin',
-            'logout',
-            'signup',
-            'filter',
-            'settings',
-            'account',
-            'groups',
-            'friends',
-            'list',
-            'search',
-            'summary',
-            'share',
-            '404']
+    return config.application.USERNAME_STOP_LIST
   }
 
   FeedFactory.findById = function(identifier) {

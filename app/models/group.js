@@ -52,6 +52,15 @@ exports.addModel = function(database) {
     }
   })
 
+  Group.prototype.isValidUsername = function() {
+    var valid = this.username
+        && this.username.length > 1
+        && this.username.match(/^[A-Za-z0-9]+(-[a-zA-Z0-9]+)*$/)
+        && models.FeedFactory.stopList().indexOf(this.username) == -1
+
+    return Promise.resolve(valid)
+  }
+
   Group.prototype.validate = function() {
     return new Promise(function(resolve, reject) {
       var valid

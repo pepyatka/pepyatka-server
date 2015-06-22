@@ -53,6 +53,9 @@ exports.addModel = function(database) {
     var that = this
     var currentTime = new Date().getTime()
 
+    // We can use post.timelineIds here instead of post.getPostedToIds
+    // because we are about to create that post and have just received
+    // a request from user, so postedToIds == timelineIds here
     return Promise.map(post.timelineIds, function(timelineId) {
       return Timeline.findById(timelineId)
     })
@@ -240,7 +243,7 @@ exports.addModel = function(database) {
       database.zrevrangeAsync(mkKey(['timeline', that.id, 'subscribers']), 0, -1)
         .then(function(userIds) {
           // A user is always subscribed to their own posts timeline.
-          if (includeSelf && that.name == 'Posts') {
+          if (includeSelf && that.isPosts()) {
             userIds = _.uniq(userIds.concat([that.userId]))
           }
           that.subscriberIds = userIds
@@ -276,15 +279,64 @@ exports.addModel = function(database) {
     })
   }
 
-  Timeline.prototype.updatePost = function(postId) {
+  Timeline.prototype.isRiverOfNews = function() {
+    return this.name === "RiverOfNews"
+  }
+
+  Timeline.prototype.isPosts = function() {
+    return this.name === "Posts"
+  }
+
+  Timeline.prototype.isLikes = function() {
+    return this.name === "Likes"
+  }
+
+  Timeline.prototype.isComments = function() {
+    return this.name === "Comments"
+  }
+
+  Timeline.prototype.isHides = function() {
+    return this.name === "Hides"
+  }
+
+  Timeline.prototype.updatePost = function(postId, action) {
     var currentTime = new Date().getTime()
     var that = this
 
     return new Promise(function(resolve, reject) {
-      database.zaddAsync(mkKey(['timeline', that.id, 'posts']), currentTime, postId)
+      database.zscoreAsync(mkKey(['timeline', that.id, 'posts']), postId).bind({})
+        .then(function(score) {
+          // For the time being like does not bump post
+          if (action === "like" && score != null)
+            return
+
+          return database.zaddAsync(mkKey(['timeline', that.id, 'posts']), currentTime, postId)
+        })
         .then(function(res) { return database.saddAsync(mkKey(['post', postId, 'timelines']), that.id) })
         .then(function(res) { return database.hsetAsync(mkKey(['post', postId]), 'updatedAt', currentTime) })
-        .then(function(res) { resolve(res) })
+        .then(function(post) { return that.getUser() })
+        .then(function(feed) {
+          this.feed = feed
+          return feed.isUser()
+        })
+        .then(function(isUser) {
+          if (!isUser) {
+            // update group lastActivity for all subscribers
+            var updatedAt = new Date().getTime()
+            var self = this
+            that.getSubscriberIds()
+              .then(function(userIds) {
+                return Promise.map(userIds, function(userId) {
+                  return database.zaddAsync(mkKey(['user', userId, 'subscriptions']), updatedAt, that.id)
+                })
+              })
+              .then(function() {
+                return database.hmsetAsync(mkKey(['user', self.feed.id]),
+                                    { 'updatedAt': updatedAt.toString() })
+              })
+          }
+        })
+        .then(function() { resolve() })
     })
   }
 

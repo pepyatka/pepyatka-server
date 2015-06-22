@@ -23,8 +23,28 @@ exports.getConfig = function() {
     origin: '*',
 
     appRoot: '.',
+    acceptHashedPasswordsOnly: false,
 
-    acceptHashedPasswordsOnly: false
+    logLevel: 'warn'
+  }
+
+  config.application = {
+    // Pepyatka won't allow users to use the following usernames, they
+    // are reserved for internal pages.
+    //
+    // To load this list from <PEPYATKA_HOME>/banlist.txt (one
+    // username per line) file use the following snippet:
+    //
+    // var fs = require('fs')
+    // var array = fs.readFileSync('banlist.txt').toString()
+    //               .split("\n").filter(function(n) { return n != '' })
+    // config.application {
+    //   USERNAME_STOP_LIST = array
+    // }
+    USERNAME_STOP_LIST: ['anonymous', 'public', 'about', 'signin', 'logout',
+                         'signup', 'filter', 'settings', 'account', 'groups',
+                         'friends', 'list', 'search', 'summary', 'share','404',
+                         'iphone']
   }
 
   config.attachments = {
@@ -34,13 +54,13 @@ exports.getConfig = function() {
     fileSizeLimit: '10mb',
 
     thumbnails: {
-      urlDir: 'https:/freefeed.net/attachments/thumbnails/',
+      urlDir: 'https://freefeed.net/attachments/thumbnails/',
       fsDir: './public/files/thumbnails/'
     }
   }
 
   config.profilePictures = {
-    urlDir: 'http://freefeed.net/files/profilePictures/',
+    urlDir: 'https://freefeed.net/files/profilePictures/',
     fsDir: './public/files/profilePictures/'
   }
 

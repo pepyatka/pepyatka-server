@@ -16,7 +16,15 @@ var Promise = require('bluebird')
 
 var selectEnvironment = function(app) {
   return new Promise(function(resolve, reject) {
-    app.logger = winston
+    var logger = new (winston.Logger)({
+      transports: [
+        new (winston.transports.Console)({
+          'timestamp': true,
+          'level': config.logLevel || 'debug'
+        })
+      ]
+    })
+    app.logger = logger
     app.config = config
 
     app.set('redisdb', config.database)
