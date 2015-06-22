@@ -13,12 +13,19 @@ var database = redis.createClient(config.redis.port, config.redis.host, {})
 database.on('connect'     , log('connect'))
 database.on('ready'       , log('ready'))
 database.on('reconnecting', log('reconnecting'))
-database.on('error'       , log('error'))
+database.on('error'       , logAndQuit('error'))
 database.on('end'         , log('end'))
 
 function log(type) {
   return function() {
     console.log(type, arguments)
+  }
+}
+
+function logAndQuit(type) {
+  return function() {
+    console.log(type, arguments)
+    process.exit(1)
   }
 }
 
