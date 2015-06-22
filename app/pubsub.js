@@ -3,7 +3,7 @@ var Promise = require('bluebird')
   , async = require('async')
   , config = require('../config/config').load()
   , redis = require('redis').createClient
-import _ from 'lodash'
+  , _ = require('lodash')
 
 exports.init = function(database) {
   "use strict";
