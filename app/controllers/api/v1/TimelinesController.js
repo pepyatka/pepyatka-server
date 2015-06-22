@@ -2,6 +2,7 @@
 
 var models = require('../../../models')
   , TimelineSerializer = models.TimelineSerializer
+  , exceptions = require('../../../support/exceptions')
 
 exports.addController = function(app) {
   var TimelineController = function() {
@@ -39,7 +40,7 @@ exports.addController = function(app) {
           res.jsonp(json)
         })
       })
-      .catch(function(e) { res.status(401).send({}) })
+      .catch(function(e) { exceptions.reportError(res)(e) })
   }
 
   TimelineController.likes = function(req, res) {
