@@ -763,15 +763,26 @@ exports.addModel = function(database) {
 
   User.prototype.validateCanSubscribe = function(timelineId) {
     var that = this
+    var _timeline
 
     return new Promise(function(resolve, reject) {
       that.getSubscriptionIds()
         .then(function(timelineIds) {
           if (_.includes(timelineIds, timelineId)) {
-          reject(new ForbiddenException("You already subscribed to that user"))
-        }
-        resolve(timelineId)
-      })
+            reject(new ForbiddenException("You already subscribed to that user"))
+          }
+          return models.Timeline.findById(timelineId)
+        })
+        .then(function(timeline) {
+          _timeline = timeline
+          return that.getBanIds()
+        })
+        .then(function(banIds) {
+          if (banIds.indexOf(_timeline.userId) >= 0) {
+            reject(new ForbiddenException("You cannot subscribe to a banned user"))
+          }
+          resolve(timelineId)
+        })
     })
   }
 

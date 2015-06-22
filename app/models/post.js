@@ -707,6 +707,17 @@ exports.addModel = function(database) {
     return models.FeedFactory.findById(this.userId)
   }
 
+  Post.prototype.isBannedFor = function(userId) {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      models.User.findById(userId)
+        .then(function(user) { return user.getBanIds() })
+        .then(function(banIds) { return banIds.indexOf(that.userId) })
+        .then(function(index) { resolve(index >= 0) })
+    })
+  }
+
   Post.prototype.isHiddenIn = function(timelineId) {
     var that = this
 
