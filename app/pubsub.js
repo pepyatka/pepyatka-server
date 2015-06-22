@@ -76,9 +76,13 @@ exports.init = function(database) {
         .then(function(timelines) {
           var that = this
           return Promise.map(timelines, function(timeline) {
-            that.post.isHiddenIn(timeline.id)
+            that.post.isBannedFor(timeline.userId).bind({})
+              .then(function(isBanned) {
+                this.isBanned = isBanned
+                return that.post.isHiddenIn(timeline.id)
+              })
               .then(function(isHidden) {
-                if (!isHidden)
+                if (!isHidden && !this.isBanned)
                   database.publishAsync('comment:new',
                                         JSON.stringify({
                                           timelineId: timeline.id,
@@ -156,9 +160,13 @@ exports.init = function(database) {
         .then(function(timelines) {
           var that = this
           return Promise.map(timelines, function(timeline) {
-            that.post.isHiddenIn(timeline.id)
+            that.post.isBannedFor(timeline.userId).bind({})
+              .then(function(isBanned) {
+                this.isBanned = isBanned
+                return that.post.isHiddenIn(timeline.id)
+              })
               .then(function(isHidden) {
-                if (!isHidden)
+                if (!isHidden && !this.isBanned)
                   return database.publishAsync('like:new',
                                                JSON.stringify({
                                                  timelineId: timeline.id,
