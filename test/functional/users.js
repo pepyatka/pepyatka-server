@@ -961,7 +961,6 @@ describe("UsersController", function() {
                       authToken: context.authToken })
               .end(function(err, res) {
                 res.body.should.not.be.empty
-                console.log(res.body)
                 res.body.should.have.property('posts')
                 res.body.posts.should.have.property('body')
 
@@ -973,7 +972,7 @@ describe("UsersController", function() {
       it('should ban user posts', function(done) {
         request
           .post(app.config.host + '/v1/users/' + banUsername + '/ban')
-          .send({ authToken: context.authToken })
+          .send({ authToken: marsToken })
           .end(function(err, res) {
             res.body.should.not.be.empty
             funcTestHelper.getTimeline('/v1/timelines/' + groupUserName, marsToken, function(err, res) {
