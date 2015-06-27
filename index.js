@@ -4,6 +4,8 @@ require("babel/register")({
   stage: 1
 })
 
+require("console-stamp")(console, 'yyyy/mm/dd HH:MM:ss.l')
+
 var express = require('express')
   , app = express()
   , environment = require('./config/environment')

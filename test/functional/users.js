@@ -945,6 +945,46 @@ describe("UsersController", function() {
         })
     })
 
+    describe('in groups', function() {
+      var groupUserName = 'pepyatka-dev'
+
+      beforeEach(function(done) {
+        request
+          .post(app.config.host + '/v1/groups')
+          .send({ group: { username: groupUserName },
+                  authToken: context.authToken })
+          .end(function(err, res) {
+            res.body.should.not.be.empty
+            request
+              .post(app.config.host + '/v1/posts')
+              .send({ post: { body: 'post body' }, meta: { feeds: [groupUserName] },
+                      authToken: context.authToken })
+              .end(function(err, res) {
+                res.body.should.not.be.empty
+                res.body.should.have.property('posts')
+                res.body.posts.should.have.property('body')
+
+                done()
+              })
+          })
+      })
+
+      it('should ban user posts', function(done) {
+        request
+          .post(app.config.host + '/v1/users/' + banUsername + '/ban')
+          .send({ authToken: marsToken })
+          .end(function(err, res) {
+            res.body.should.not.be.empty
+            funcTestHelper.getTimeline('/v1/timelines/' + groupUserName, marsToken, function(err, res) {
+              res.body.should.not.be.empty
+              res.body.should.not.have.property('posts')
+
+              done()
+            })
+         })
+      })
+    })
+
     it('should ban user posts', function(done) {
       request
         .post(app.config.host + '/v1/posts/' + context.post.id + '/like')
