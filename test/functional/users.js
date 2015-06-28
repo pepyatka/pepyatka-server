@@ -857,6 +857,38 @@ describe("UsersController", function() {
         })
     })
 
+    // Zeus bans Mars, Mars should become unsubscribed from Zeus.
+    it('should unsubscribe the user', function(done) {
+      request
+        .get(app.config.host + '/v1/users/' + username + '/subscriptions')
+        .query({ authToken: marsContext.authToken })
+        .end(function(err, res) { // Mars has subcriptions to Zeus
+          res.body.should.not.be.empty
+          res.body.should.have.property('subscriptions')
+          var types = ['Comments', 'Likes', 'Posts']
+          async.reduce(res.body.subscriptions, true, function(memo, user, callback) {
+            callback(null, memo && (types.indexOf(user.name) >= 0))
+          }, function(err, contains) {
+            contains.should.eql(true)
+          })
+          request
+            .post(app.config.host + '/v1/users/' + banUsername + '/ban')
+            .send({ authToken: zeusContext.authToken })
+            .end(function(err, res) {
+              res.body.should.not.be.empty
+              request
+                .get(app.config.host + '/v1/users/' + username + '/subscriptions')
+                .query({ authToken: marsContext.authToken })
+                .end(function(err, res) { // Mars now has NO subcriptions to Zeus
+                  res.body.should.not.be.empty
+                  res.body.should.have.property('subscriptions')
+                  res.body.subscriptions.length.should.eql(0)
+                  done()
+                })
+            })
+        })
+    })
+
     // Zeus writes a post, Mars comments, Zeus bans Mars and should see no comments
     it('should ban user comments', function(done) {
       var body = 'Post'
