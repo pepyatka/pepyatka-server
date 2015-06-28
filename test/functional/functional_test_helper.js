@@ -61,6 +61,16 @@ exports.createPost = function(context, body, callback) {
   };
 }
 
+exports.createPostForTest = function(context, body, callback) {
+  request
+      .post(app.config.host + '/v1/posts')
+      .send({ post: { body: body }, authToken: context.authToken })
+      .end(function(err, res) {
+        context.post = res.body.posts
+        callback(err, res)
+      })
+}
+
 exports.createComment = function(body, postId, authToken, callback) {
   return function(done) {
     var comment = {
