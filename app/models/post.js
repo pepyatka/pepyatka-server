@@ -98,11 +98,11 @@ exports.addModel = function(database) {
         })
         .then(function() {
           return Promise.all([
-            models.Timeline.publishPost(that),
             that.linkAttachments(),
             that.savePostedTo()
           ])
         })
+        .then(function() { return models.Timeline.publishPost(that) })
         .then(function() { return models.Stats.findById(that.userId) })
         .then(function(stats) { return stats.addPost() })
         .then(function(res) { resolve(that) })
