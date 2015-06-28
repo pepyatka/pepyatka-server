@@ -85,9 +85,15 @@ exports.addController = function(app) {
 
       var author = await models.User.findById(post.userId)
       var banIds = await author.getBanIds()
-
       if (banIds.indexOf(post.currentUser) >= 0)
         throw new ForbiddenException("This user has prevented you from seeing their posts")
+
+      var you = await models.User.findById(post.currentUser)
+      if (you) {
+        var yourBanIds = await you.getBanIds()
+        if (yourBanIds.indexOf(author.id) >= 0)
+          throw new ForbiddenException("You have blocked this user and do not want to see their posts")
+      }
 
       var json = new PostSerializer(post).promiseToJSON()
 
