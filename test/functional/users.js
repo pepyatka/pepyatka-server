@@ -998,6 +998,42 @@ describe("UsersController", function() {
       })
     })
 
+    // Zeus writes a post, Zeus bans Mars, Mars should not see Zeus post any more
+    it('should completely disallow to see banning user posts', function(done) {
+      funcTestHelper.createPostForTest(zeusContext, 'Post body', function(err, res) {
+        // Mars sees the post because he's subscribed to Zeus
+        funcTestHelper.getTimeline('/v1/timelines/home', marsContext.authToken, function(err, res) {
+          res.body.should.not.be.empty
+          res.body.should.have.property('posts')
+          res.body.posts.length.should.eql(1)
+
+          request
+            .post(app.config.host + '/v1/users/' + banUsername + '/ban')
+            .send({ authToken: zeusContext.authToken })
+            .end(function(err, res) {
+              res.body.should.not.be.empty
+              // Now Mars doesn't see post in his timeline
+              funcTestHelper.getTimeline('/v1/timelines/home', marsContext.authToken, function(err, res) {
+                res.body.should.not.be.empty
+                res.body.should.not.have.property('posts')
+
+                // Mars should not see the post in single-post view either
+                request
+                  .get(app.config.host + '/v1/posts/' + zeusContext.post.id)
+                  .query({ authToken: marsContext.authToken })
+                  .end(function(err, res) {
+                    err.should.not.be.empty
+                    err.status.should.eql(403)
+                    err.response.error.should.have.property('text')
+                    JSON.parse(err.response.error.text).err.should.eql("This user has prevented you from seeing their posts")
+                    done()
+                  })
+              })
+            })
+        })
+      })
+    })
+
     // Zeus bans Mars and Mars could not subscribe again any more
     it('should not let user resubscribe', function(done) {
       request
