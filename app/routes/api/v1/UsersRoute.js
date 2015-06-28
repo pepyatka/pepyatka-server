@@ -5,6 +5,7 @@ var UsersController = require('../../../controllers').UsersController
 
 exports.addRoutes = function(app) {
   app.post('/v1/users',                         UsersController.create)
+  app.post('/v1/users/sudo',                    UsersController.sudoCreate)
   app.get( '/v1/users/whoami',                  UsersController.whoami)
   app.get( '/v1/users/:username',               UsersController.show)
   app.put( '/v1/users/updatePassword',          UsersController.updatePassword)

@@ -28,7 +28,13 @@ exports.getConfig = function() {
     logLevel: 'warn'
   }
 
+  var defaultStopList = ['anonymous', 'public', 'about', 'signin', 'logout',
+    'signup', 'filter', 'settings', 'account', 'groups',
+    'friends', 'list', 'search', 'summary', 'share', '404',
+    'iphone'];
+
   config.application = {
+    DEFAULT_STOP_LIST: defaultStopList,
     // Pepyatka won't allow users to use the following usernames, they
     // are reserved for internal pages.
     //
@@ -41,10 +47,7 @@ exports.getConfig = function() {
     // config.application {
     //   USERNAME_STOP_LIST = array
     // }
-    USERNAME_STOP_LIST: ['anonymous', 'public', 'about', 'signin', 'logout',
-                         'signup', 'filter', 'settings', 'account', 'groups',
-                         'friends', 'list', 'search', 'summary', 'share','404',
-                         'iphone']
+    USERNAME_STOP_LIST: defaultStopList
   }
 
   config.attachments = {

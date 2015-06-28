@@ -24,7 +24,31 @@ exports.addController = function(app) {
 
       try {
         var newUser = new models.User(params)
-        var user = await newUser.create()
+        var user = await newUser.create(false)
+        var secret = config.secret
+        var authToken = jwt.sign({ userId: user.id }, secret)
+
+        var json = await new MyProfileSerializer(user).promiseToJSON()
+        res.jsonp(_.extend(json, { authToken: authToken }))
+      } catch(e) {
+        exceptions.reportError(res)(e)
+      }
+    }
+
+    static async sudoCreate(req, res) {
+      var params = {
+        username: req.body.username,
+        email: req.body.email
+      }
+
+      params.hashedPassword = req.body.password_hash
+      if (!config.acceptHashedPasswordsOnly) {
+        params.password = req.body.password
+      }
+
+      try {
+        var newUser = new models.User(params)
+        var user = await newUser.create(true)
         var secret = config.secret
         var authToken = jwt.sign({ userId: user.id }, secret)
 

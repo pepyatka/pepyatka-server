@@ -15,8 +15,11 @@ exports.addModel = function(database) {
 
   inherits(FeedFactory, AbstractModel)
 
-  FeedFactory.stopList = function() {
-    return config.application.USERNAME_STOP_LIST
+  FeedFactory.stopList = function(default_stop_list) {
+    if (default_stop_list)
+      return config.application.DEFAULT_STOP_LIST
+    else
+      return config.application.USERNAME_STOP_LIST
   }
 
   FeedFactory.findById = function(identifier) {

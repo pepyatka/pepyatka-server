@@ -314,7 +314,7 @@ describe("UsersController", function() {
                   err.should.not.be.empty
                   err.status.should.eql(403)
                   err.response.error.should.have.property('text')
-                  JSON.parse(err.response.error.text).err.should.eql("You already subscribed to that user")
+                  JSON.parse(err.response.error.text).err.should.eql("You are already subscribed to that user")
 
                   done()
                 })
@@ -837,64 +837,90 @@ describe("UsersController", function() {
   })
 
   describe('#ban()', function() {
-    var context = {}
+    // Zeus bans Mars, as usual
+    var marsContext = {}
+    var zeusContext = {}
     var username = 'zeus'
-    var banUsername = 'luna'
-    var marsToken
-    var zeusToken
+    var banUsername = 'mars'
 
-    beforeEach(funcTestHelper.createUserCtx(context, banUsername, 'password'))
-    beforeEach(funcTestHelper.createPost(context, 'Post body'))
+    beforeEach(funcTestHelper.createUserCtx(marsContext, banUsername, 'pw'))
+    beforeEach(funcTestHelper.createUserCtx(zeusContext, username, 'pw'))
 
-    beforeEach(funcTestHelper.createUser('mars', 'pw', function(token) {
-      marsToken = token
-    }))
-
-    beforeEach(funcTestHelper.createUser('zeus', 'pw', function(token) {
-      zeusToken = token
-    }))
-
+    // Mars is subscribed to Zeus
     beforeEach(function(done) {
       request
         .post(app.config.host + '/v1/users/' + username + '/subscribe')
-        .send({ authToken: marsToken })
+        .send({ authToken: marsContext.authToken })
         .end(function(err, res) {
           res.body.should.not.be.empty
           done()
         })
     })
 
+    // Zeus bans Mars, Mars should become unsubscribed from Zeus.
+    it('should unsubscribe the user', function(done) {
+      request
+        .get(app.config.host + '/v1/users/' + username + '/subscriptions')
+        .query({ authToken: marsContext.authToken })
+        .end(function(err, res) { // Mars has subcriptions to Zeus
+          res.body.should.not.be.empty
+          res.body.should.have.property('subscriptions')
+          var types = ['Comments', 'Likes', 'Posts']
+          async.reduce(res.body.subscriptions, true, function(memo, user, callback) {
+            callback(null, memo && (types.indexOf(user.name) >= 0))
+          }, function(err, contains) {
+            contains.should.eql(true)
+          })
+          request
+            .post(app.config.host + '/v1/users/' + banUsername + '/ban')
+            .send({ authToken: zeusContext.authToken })
+            .end(function(err, res) {
+              res.body.should.not.be.empty
+              request
+                .get(app.config.host + '/v1/users/' + username + '/subscriptions')
+                .query({ authToken: marsContext.authToken })
+                .end(function(err, res) { // Mars now has NO subcriptions to Zeus
+                  res.body.should.not.be.empty
+                  res.body.should.have.property('subscriptions')
+                  res.body.subscriptions.length.should.eql(0)
+                  done()
+                })
+            })
+        })
+    })
+
+    // Zeus writes a post, Mars comments, Zeus bans Mars and should see no comments
     it('should ban user comments', function(done) {
       var body = 'Post'
       request
         .post(app.config.host + '/v1/posts')
-        .send({ post: { body: body }, authToken: marsToken })
+        .send({ post: { body: body }, authToken: zeusContext.authToken })
         .end(function(err, res) {
           res.body.should.not.be.empty
           var postId = res.body.posts.id
-          funcTestHelper.createComment(body, postId, context.authToken, function(err, res) {
+          funcTestHelper.createComment(body, postId, marsContext.authToken, function(err, res) {
             res.body.should.not.be.empty
 
             request
               .post(app.config.host + '/v1/users/' + banUsername + '/ban')
-              .send({ authToken: marsToken })
+              .send({ authToken: zeusContext.authToken })
               .end(function(err, res) {
                 res.body.should.not.be.empty
-                funcTestHelper.getTimeline('/v1/timelines/home', marsToken, function(err, res) {
+                funcTestHelper.getTimeline('/v1/timelines/home', zeusContext.authToken, function(err, res) {
                   res.body.should.not.be.empty
                   res.body.should.have.property('posts')
                   res.body.posts.length.should.eql(1)
                   var post = res.body.posts[0]
                   post.should.not.have.property('comments')
 
+                  // Zeus should not see comments in single-post view either
                   request
                     .get(app.config.host + '/v1/posts/' + postId)
-                    .query({ authToken: context.authToken })
+                    .query({ authToken: zeusContext.authToken })
                     .end(function(err, res) {
                       res.body.should.not.be.empty
                       res.body.should.have.property('posts')
-                      res.body.posts.should.have.property('comments')
-                      res.body.posts.comments.length.should.eql(1)
+                      res.body.posts.should.not.have.property('comments')
                       done()
                     })
                 })
@@ -903,40 +929,36 @@ describe("UsersController", function() {
         })
     })
 
+    // Zeus writes a post, Mars likes it, Zeus bans Mars and should not see like
     it('should ban user likes', function(done) {
-      var body = 'Post'
-      request
-        .post(app.config.host + '/v1/posts')
-        .send({ post: { body: body }, authToken: marsToken })
-        .end(function(err, res) {
+      funcTestHelper.createPostForTest(zeusContext, 'Post body', function(err, res) {
           res.body.should.not.be.empty
-          var postId = res.body.posts.id
 
           request
-            .post(app.config.host + '/v1/posts/' + postId + '/like')
-            .send({ authToken: context.authToken })
+            .post(app.config.host + '/v1/posts/' + zeusContext.post.id + '/like')
+            .send({ authToken: marsContext.authToken })
             .end(function(err, res) {
               $should.not.exist(err)
               request
                 .post(app.config.host + '/v1/users/' + banUsername + '/ban')
-                .send({ authToken: marsToken })
+                .send({ authToken: zeusContext.authToken })
                 .end(function(err, res) {
                   res.body.should.not.be.empty
-                  funcTestHelper.getTimeline('/v1/timelines/home', marsToken, function(err, res) {
+                  funcTestHelper.getTimeline('/v1/timelines/home', zeusContext.authToken, function(err, res) {
                     res.body.should.not.be.empty
                     res.body.should.have.property('posts')
                     res.body.posts.length.should.eql(1)
                     var post = res.body.posts[0]
                     post.should.not.have.property('likes')
 
+                    // Zeus should not see likes in single-post view either
                     request
-                      .get(app.config.host + '/v1/posts/' + postId)
-                      .query({ authToken: context.authToken })
+                      .get(app.config.host + '/v1/posts/' + zeusContext.post.id)
+                      .query({ authToken: zeusContext.authToken })
                       .end(function(err, res) {
                         res.body.should.not.be.empty
                         res.body.should.have.property('posts')
-                        res.body.posts.should.have.property('likes')
-                        res.body.posts.likes.length.should.eql(1)
+                        res.body.posts.should.not.have.property('likes')
                         done()
                       })
                   })
@@ -945,20 +967,74 @@ describe("UsersController", function() {
         })
     })
 
+    // Mars writes a post, Zeus likes post, Zeus bans Mars and should not see the post any more
+    it('should ban user posts', function(done) {
+      funcTestHelper.createPostForTest(marsContext, 'Post body', function(err, res) {
+        request
+          .post(app.config.host + '/v1/posts/' + marsContext.post.id + '/like')
+          .send({ authToken: zeusContext.authToken })
+          .end(function(err, res) {
+            // Now Zeus should see this post in his timeline
+            funcTestHelper.getTimeline('/v1/timelines/home', zeusContext.authToken, function(err, res) {
+              res.body.should.not.be.empty
+              res.body.should.have.property('posts')
+              res.body.posts.length.should.eql(1)
+
+              request
+                .post(app.config.host + '/v1/users/' + banUsername + '/ban')
+                .send({ authToken: zeusContext.authToken })
+                .end(function(err, res) {
+                  res.body.should.not.be.empty
+                  funcTestHelper.getTimeline('/v1/timelines/home', zeusContext.authToken, function(err, res) {
+                    res.body.should.not.be.empty
+                    res.body.should.have.property('posts')
+                    res.body.posts.length.should.eql(0)
+
+                    done()
+                  })
+                })
+            })
+        })
+      })
+    })
+
+    // Zeus bans Mars and Mars could not subscribe again any more
+    it('should not let user resubscribe', function(done) {
+      request
+        .post(app.config.host + '/v1/users/' + banUsername + '/ban')
+        .send({ authToken: zeusContext.authToken })
+        .end(function(err, res) {
+          res.body.should.not.be.empty
+
+          request
+            .post(app.config.host + '/v1/users/' + username + '/subscribe')
+            .send({ authToken: marsContext.authToken })
+            .end(function(err, res) {
+              err.should.not.be.empty
+              err.status.should.eql(403)
+              err.response.error.should.have.property('text')
+              JSON.parse(err.response.error.text).err.should.eql("This user prevented your from subscribing to them")
+              done()
+            })
+        })
+    })
+
+    // Same fun inside groups
     describe('in groups', function() {
       var groupUserName = 'pepyatka-dev'
 
+      // Mars creates a group, Mars posts to it...
       beforeEach(function(done) {
         request
           .post(app.config.host + '/v1/groups')
           .send({ group: { username: groupUserName },
-                  authToken: context.authToken })
+                  authToken: marsContext.authToken })
           .end(function(err, res) {
             res.body.should.not.be.empty
             request
               .post(app.config.host + '/v1/posts')
               .send({ post: { body: 'post body' }, meta: { feeds: [groupUserName] },
-                      authToken: context.authToken })
+                      authToken: marsContext.authToken })
               .end(function(err, res) {
                 res.body.should.not.be.empty
                 res.body.should.have.property('posts')
@@ -969,47 +1045,21 @@ describe("UsersController", function() {
           })
       })
 
-      it('should ban user posts', function(done) {
+      // ... Zeus bans Mars and should no longer see the post in this group
+      it('should ban user posts to group', function(done) {
         request
           .post(app.config.host + '/v1/users/' + banUsername + '/ban')
-          .send({ authToken: marsToken })
+          .send({ authToken: zeusContext.authToken })
           .end(function(err, res) {
             res.body.should.not.be.empty
-            funcTestHelper.getTimeline('/v1/timelines/' + groupUserName, marsToken, function(err, res) {
+            funcTestHelper.getTimeline('/v1/timelines/' + groupUserName, zeusContext.authToken, function(err, res) {
               res.body.should.not.be.empty
               res.body.should.not.have.property('posts')
 
               done()
             })
-         })
-      })
-    })
-
-    it('should ban user posts', function(done) {
-      request
-        .post(app.config.host + '/v1/posts/' + context.post.id + '/like')
-        .send({ authToken: zeusToken })
-        .end(function(err, res) {
-          funcTestHelper.getTimeline('/v1/timelines/home', context.authToken, function(err, res) {
-            res.body.should.not.be.empty
-            res.body.should.have.property('posts')
-            res.body.posts.length.should.eql(1)
-
-            request
-              .post(app.config.host + '/v1/users/' + banUsername + '/ban')
-              .send({ authToken: marsToken })
-              .end(function(err, res) {
-                res.body.should.not.be.empty
-                funcTestHelper.getTimeline('/v1/timelines/home', marsToken, function(err, res) {
-                  res.body.should.not.be.empty
-                  res.body.should.have.property('posts')
-                  res.body.posts.length.should.eql(0)
-
-                  done()
-                })
-              })
           })
-        })
+      })
     })
   })
 })
