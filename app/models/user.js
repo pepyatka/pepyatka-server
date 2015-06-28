@@ -415,6 +415,7 @@ exports.addModel = function(database) {
     var that = this
     var p_timeline
     var p_banIds
+    var p_userId = (params && params.currentUser) ? params.currentUser : null
 
     return new Promise(function(resolve, reject) {
       that["get" + name + "TimelineId"](params)
@@ -436,7 +437,12 @@ exports.addModel = function(database) {
         })
         .then(function(posts) {
           return Promise.map(posts, function(post) {
-            return p_banIds.indexOf(post.userId) >= 0 ? null : post
+            var p_post = post
+            return models.User.findById(post.userId).then(function(user) {
+              return user.getBanIds()
+            }).then(function(reverseBanIds) {
+              return (p_banIds.indexOf(p_post.userId) >= 0) || (reverseBanIds.indexOf(p_userId) >= 0) ? null : post
+            })
           })
         })
         .then(function(posts) {
