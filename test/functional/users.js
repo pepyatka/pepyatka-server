@@ -314,7 +314,7 @@ describe("UsersController", function() {
                   err.should.not.be.empty
                   err.status.should.eql(403)
                   err.response.error.should.have.property('text')
-                  JSON.parse(err.response.error.text).err.should.eql("You already subscribed to that user")
+                  JSON.parse(err.response.error.text).err.should.eql("You are already subscribed to that user")
 
                   done()
                 })
@@ -996,6 +996,27 @@ describe("UsersController", function() {
             })
         })
       })
+    })
+
+    // Zeus bans Mars and Mars could not subscribe again any more
+    it('should not let user resubscribe', function(done) {
+      request
+        .post(app.config.host + '/v1/users/' + banUsername + '/ban')
+        .send({ authToken: zeusContext.authToken })
+        .end(function(err, res) {
+          res.body.should.not.be.empty
+
+          request
+            .post(app.config.host + '/v1/users/' + username + '/subscribe')
+            .send({ authToken: marsContext.authToken })
+            .end(function(err, res) {
+              err.should.not.be.empty
+              err.status.should.eql(403)
+              err.response.error.should.have.property('text')
+              JSON.parse(err.response.error.text).err.should.eql("This user prevented your from subscribing to them")
+              done()
+            })
+        })
     })
 
     // Same fun inside groups
