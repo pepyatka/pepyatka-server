@@ -75,18 +75,23 @@ exports.addController = function(app) {
       .catch(exceptions.reportError(res))
   }
 
-  PostsController.show = function(req, res) {
-    models.Post.getById(req.params.postId, {
-      maxComments: req.query.maxComments,
-      maxLikes: req.query.maxLikes,
-      currentUser: req.user ? req.user.id : null
-    })
-      .then(function(post) {
-        new PostSerializer(post).toJSON(function(err, json) {
-          res.jsonp(json)
-        })
+  PostsController.show = async function(req, res) {
+    try {
+      var post = await models.Post.getById(req.params.postId, {
+        maxComments: req.query.maxComments,
+        maxLikes: req.query.maxLikes,
+        currentUser: req.user ? req.user.id : null
       })
-      .catch(exceptions.reportError(res))
+      var author = await models.User.findById(post.userId)
+      var banIds = await author.getBanIds()
+      if (banIds.indexOf(post.currentUser) >= 0)
+        throw new ForbiddenException("This user has prevented you from seeing their posts")
+      new PostSerializer(post).toJSON(function(err, json) {
+        res.jsonp(json)
+      })
+    } catch(e) {
+      exceptions.reportError(res)(e)
+    }
   }
 
   PostsController.like = function(req, res) {
