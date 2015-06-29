@@ -164,6 +164,8 @@ exports.addModel = function(database) {
 
   Timeline.prototype.getPosts = function(offset, limit) {
     var that = this
+    var p_post
+    var p_banIds
 
     if (!offset || !limit) {
       offset = this.offset
@@ -171,10 +173,28 @@ exports.addModel = function(database) {
     }
 
     return new Promise(function(resolve, reject) {
-      that.getPostIds(offset, limit)
+      that.getPostIds(offset, limit).bind({})
         .then(function(postIds) {
           return Promise.map(postIds, function(postId) {
             return Post.findById(postId, { currentUser: that.currentUser })
+          })
+        })
+        .then(function(posts) {
+          this.posts = posts
+          return that.currentUser ? models.User.findById(that.currentUser) : null
+        })
+        .then(function(user) {
+          return user ? user.getBanIds() : []
+        })
+        .then(function(banIds) {
+          p_banIds = banIds
+          return Promise.map(this.posts, function(post) {
+            p_post = post
+            return models.User.findById(post.userId).then(function(user) {
+              return user.getBanIds()
+            }).then(function(reverseBanIds) {
+              return (p_banIds.indexOf(p_post.userId) >= 0) || (reverseBanIds.indexOf(that.currentUser) >= 0) ? null : p_post
+            })
           })
         })
         .then(function(posts) {

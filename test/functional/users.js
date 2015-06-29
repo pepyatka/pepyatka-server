@@ -987,9 +987,7 @@ describe("UsersController", function() {
                   res.body.should.not.be.empty
                   funcTestHelper.getTimeline('/v1/timelines/home', zeusContext.authToken, function(err, res) {
                     res.body.should.not.be.empty
-                    res.body.should.have.property('posts')
-                    res.body.posts.length.should.eql(0)
-
+                    res.body.should.not.have.property('posts')
                     done()
                   })
                 })
