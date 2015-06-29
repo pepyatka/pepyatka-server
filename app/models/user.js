@@ -414,39 +414,16 @@ exports.addModel = function(database) {
   User.prototype.getGenericTimeline = function(name, params) {
     var that = this
     var p_timeline
-    var p_banIds
-    var p_userId = (params && params.currentUser) ? params.currentUser : null
 
     return new Promise(function(resolve, reject) {
       that["get" + name + "TimelineId"](params)
         .then(function(timelineId) { return models.Timeline.findById(timelineId, params) })
         .then(function(timeline) {
           p_timeline = timeline
-
-          return params && params.currentUser
-            ? models.User.findById(params.currentUser)
-            : null
-        })
-        .then(function(user) {
-          return user ? user.getBanIds() : []
-        })
-        .then(function(banIds) {
-          p_banIds = banIds
-          return p_timeline.getPosts(p_timeline.offset,
-                                     p_timeline.limit)
+          return timeline.getPosts(timeline.offset, timeline.limit)
         })
         .then(function(posts) {
-          return Promise.map(posts, function(post) {
-            var p_post = post
-            return models.User.findById(post.userId).then(function(user) {
-              return user.getBanIds()
-            }).then(function(reverseBanIds) {
-              return (p_banIds.indexOf(p_post.userId) >= 0) || (reverseBanIds.indexOf(p_userId) >= 0) ? null : post
-            })
-          })
-        })
-        .then(function(posts) {
-          p_timeline.posts = posts.filter(Boolean)
+          p_timeline.posts = posts.filter(Boolean) // @fixme already filtered in getPosts
           resolve(p_timeline)
         })
     })
