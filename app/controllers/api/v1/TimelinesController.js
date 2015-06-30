@@ -27,6 +27,22 @@ exports.addController = function(app) {
       .catch(function(e) { res.status(422).send({}) })
   }
 
+  TimelineController.directs = function(req, res) {
+    var user = req.user
+
+    user.getDirectsTimeline({
+      offset: req.query.offset,
+      limit: req.query.limit,
+      currentUser: req.user ? req.user.id : null
+    })
+      .then(function(timeline) {
+        new TimelineSerializer(timeline).toJSON(function(err, json) {
+          res.jsonp(json)
+        })
+      })
+      .catch(function(e) { exceptions.reportError(res)(e) })
+  }
+
   TimelineController.posts = function(req, res) {
     var username = req.params.username
 

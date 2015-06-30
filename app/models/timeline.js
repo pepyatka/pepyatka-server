@@ -307,6 +307,10 @@ exports.addModel = function(database) {
     return this.name === "Comments"
   }
 
+  Timeline.prototype.isDirects = function() {
+    return this.name === "Directs"
+  }
+
   Timeline.prototype.isHides = function() {
     return this.name === "Hides"
   }

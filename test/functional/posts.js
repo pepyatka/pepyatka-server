@@ -45,6 +45,143 @@ describe("PostsController", function() {
         })
     })
 
+    describe('private feed', function() {
+      var authTokenB
+        , usernameB
+
+      beforeEach(funcTestHelper.createUser('mars', 'password', function(token, user) {
+        authTokenB = token
+        usernameB = user.username
+      }))
+
+      it('should not be able to send private message if friends are not mutual', function(done) {
+        var body = 'body'
+
+        request
+          .post(app.config.host + '/v1/posts')
+          .send({ post: { body: body }, meta: { feeds: [usernameB] }, authToken: authToken })
+          .end(function(err, res) {
+            err.should.not.be.empty
+            err.status.should.eql(403)
+            err.response.error.should.have.property('text')
+            JSON.parse(err.response.error.text).err.should.eql("You can't send private messages to friends that are not mutual")
+            done()
+          })
+      })
+
+      describe('for mutual friends', function() {
+        beforeEach(function(done) {
+          request
+            .post(app.config.host + '/v1/users/' + username + '/subscribe')
+            .send({ authToken: authTokenB })
+            .end(function(err, res) {
+              request
+                .post(app.config.host + '/v1/users/' + usernameB + '/subscribe')
+                .send({ authToken: authToken })
+                .end(function(err, res) {
+                  done()
+                })
+            })
+        })
+
+        it('should be able to send private message', function(done) {
+          var body = 'body'
+
+          request
+            .post(app.config.host + '/v1/posts')
+            .send({ post: { body: body }, meta: { feeds: [usernameB] }, authToken: authToken })
+            .end(function(err, res) {
+              res.body.should.not.be.empty
+              res.body.should.have.property('posts')
+              res.body.posts.should.have.property('body')
+              res.body.posts.body.should.eql(body)
+              done()
+            })
+        })
+
+        it('should send private message that cannot be read by anyone else', function(done) {
+          var body = 'body'
+            , post
+
+          request
+            .post(app.config.host + '/v1/posts')
+            .send({ post: { body: body }, meta: { feeds: [usernameB] }, authToken: authToken })
+            .end(function(err, res) {
+              post = res.body.posts
+
+              var authTokenC
+                , usernameC
+
+              request
+                .post(app.config.host + '/v1/users')
+                .send({
+                  username: 'zeus',
+                  password: 'password'
+                })
+                .end(function(err, res) {
+                  authTokenC = res.body.users.token
+                  usernameC = res.body.users.username
+
+                  request
+                    .get(app.config.host + '/v1/posts/' + post.id)
+                    .query({ authToken: authTokenC })
+                    .end(function(err, res) {
+                      err.should.not.be.empty
+                      err.status.should.eql(403)
+                      var error = JSON.parse(err.response.error.text)
+                      error.err.should.eql('Not found')
+                      done()
+                    })
+                })
+            })
+        })
+
+        it('should send private message that can be read by recipients', function(done) {
+          var body = 'body'
+            , post
+
+          request
+            .post(app.config.host + '/v1/posts')
+            .send({ post: { body: body }, meta: { feeds: [usernameB] }, authToken: authToken })
+            .end(function(err, res) {
+              post = res.body.posts
+
+              request
+                .get(app.config.host + '/v1/posts/' + post.id)
+                .query({ authToken: authTokenB })
+                .end(function(err, res) {
+                  res.body.should.not.be.empty
+                  res.body.posts.body.should.eql(post.body)
+                  done()
+                })
+            })
+        })
+
+        it('should send private message to private feed for both users', function(done) {
+          var body = 'body'
+
+          request
+            .post(app.config.host + '/v1/posts')
+            .send({ post: { body: body }, meta: { feeds: [usernameB] }, authToken: authToken })
+            .end(function(err, res) {
+              funcTestHelper.getTimeline('/v1/timelines/filter/directs', authToken, function(err, res) {
+                res.body.should.have.property('posts')
+                res.body.posts.length.should.eql(1)
+                res.body.posts[0].should.have.property('body')
+                res.body.posts[0].body.should.eql(body)
+                funcTestHelper.getTimeline('/v1/timelines/filter/directs', authTokenB, function(err, res) {
+                  res.body.should.have.property('posts')
+                  res.body.posts.length.should.eql(1)
+                  res.body.posts[0].should.have.property('body')
+                  res.body.posts[0].body.should.eql(body)
+                  done()
+                })
+              })
+            })
+        })
+      })
+    })
+
     describe('in a group', function() {
       var groupName = 'pepyatka-dev'
       var otherUserName = 'yole'
@@ -259,12 +396,11 @@ describe("PostsController", function() {
           .send({ post: { body: 'Post body' }, meta: { feeds: [otherUserName] }, authToken: authToken })
           .end(function(err, res) {
             err.status.should.eql(403)
-            res.body.err.should.eql("You can't post to another user's feed")
+            res.body.err.should.eql("You can't send private messages to friends that are not mutual")
 
             done()
           })
       })
-
 
       it('should not allow a user to post to a group to which they are not subscribed', function(done) {
         request

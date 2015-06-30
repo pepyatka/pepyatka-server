@@ -6,6 +6,7 @@ var Promise = require('bluebird')
   , PostSerializer = models.PostSerializer
   , FeedFactory = models.FeedFactory
   , ForbiddenException = exceptions.ForbiddenException
+  , _ = require('lodash')
 
 exports.addController = function(app) {
   /**
@@ -34,10 +35,23 @@ exports.addController = function(app) {
           return feed.validateCanPost(req.user)
         })
         .then(function(feed) {
-          return feed.getPostsTimelineId()
+          // we are going to publish this message to posts feed if
+          // it's my home feed or group's feed, otherwise this is a
+          // private message that goes to its own feed(s)
+          if ((feed.isUser() && feed.id == req.user.id) ||
+              !feed.isUser()) {
+            return feed.getPostsTimelineId()
+          } else {
+            // private post goes to sendee and sender
+            return Promise.all([
+              feed.getDirectsTimelineId(),
+              req.user.getDirectsTimelineId()
+            ])
+          }
         })
       })
       .then(function(timelineIds) {
+        timelineIds = _.flatten(timelineIds)
         return req.user.newPost({
           body: req.body.post.body,
           attachments: req.body.post.attachments,
@@ -77,11 +91,18 @@ exports.addController = function(app) {
 
   PostsController.show = async function(req, res) {
     try {
+      var userId = req.user ? req.user.id : null
       var post = await models.Post.getById(req.params.postId, {
         maxComments: req.query.maxComments,
         maxLikes: req.query.maxLikes,
-        currentUser: req.user ? req.user.id : null
+        currentUser: userId
       })
+
+      var valid = await post.validateCanShow(userId)
+
+      // this is a private post
+      if (!valid)
+        throw new ForbiddenException("Not found")
 
       var author = await models.User.findById(post.userId)
       var banIds = await author.getBanIds()

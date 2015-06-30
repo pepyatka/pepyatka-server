@@ -512,6 +512,14 @@ exports.addModel = function(database) {
     return this.getGenericTimeline('Comments', params)
   }
 
+  User.prototype.getDirectsTimelineId = function(params) {
+    return this.getGenericTimelineId('Directs', params)
+  }
+
+  User.prototype.getDirectsTimeline = function(params) {
+    return this.getGenericTimeline('Directs', params)
+  }
+
   User.prototype.getTimelineIds = function() {
     return new Promise(function(resolve, reject) {
       database.hgetallAsync(mkKey(['user', this.id, 'timelines']))
@@ -761,10 +769,37 @@ exports.addModel = function(database) {
    * Checks if the specified user can post to the timeline of this user.
    */
   User.prototype.validateCanPost = function(postingUser) {
-    if (postingUser.username != this.username) {
-      return Promise.reject(new ForbiddenException("You can't post to another user's feed"))
-    }
-    return Promise.resolve(this)
+    var that = this
+      , subscriptionIds
+      , timelineIdA
+      , timelineIdB
+
+    // NOTE: when user is subscribed to another user she in fact is
+    // subscribed to her posts timeline
+    return new Promise(function(resolve, reject) {
+      postingUser.getPostsTimelineId()
+        .then(function(_timelineId) {
+          timelineIdA = _timelineId
+          return that.getPostsTimelineId()
+        })
+        .then(function(_timelineId) {
+          timelineIdB = _timelineId
+          return postingUser.getSubscriptionIds()
+        })
+        .then(function(_subscriptionIds) {
+          subscriptionIds = _subscriptionIds
+          return that.getSubscriptionIds()
+        })
+        .then(function(subscriberIds) {
+          if ((subscriberIds.indexOf(timelineIdA) == -1
+              || subscriptionIds.indexOf(timelineIdB) == -1)
+              && postingUser.username != that.username) {
+            return reject(new ForbiddenException("You can't send private messages to friends that are not mutual"))
+          }
+
+          return resolve(that)
+        })
+    })
   }
 
   User.prototype.validateCanSubscribe = async function(timelineId) {
