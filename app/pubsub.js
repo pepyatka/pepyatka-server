@@ -50,157 +50,84 @@ exports.init = function(database) {
     await* promises
   }
 
-  pubSub.newComment = function(commentId) {
-    return new Promise(function(resolve, reject) {
-      models.Comment.findById(commentId).bind({})
-        .then(function(comment) {
-          this.comment = comment
-          return comment.getPost()
-        })
-        .then(function(post) {
-          this.post = post
-          return post.getCommentsFriendOfFriendTimelines(this.comment.userId)
-        })
-        .then(function(timelines) {
-          var that = this
-          return Promise.map(timelines, function(timeline) {
-            that.post.isBannedFor(timeline.userId).bind({})
-              .then(function(isBanned) {
-                this.isBanned = isBanned
-                return that.post.isHiddenIn(timeline.id)
-              })
-              .then(function(isHidden) {
-                if (!isHidden && !this.isBanned)
-                  database.publishAsync('comment:new',
-                                        JSON.stringify({
-                                          timelineId: timeline.id,
-                                          commentId: commentId
-                                        }))
-              })
-          })
-        })
-        .then(function() {
-          return database.publishAsync('comment:new',
-                                       JSON.stringify({
-                                         postId: this.post.id,
-                                         commentId: commentId
-                                       }))
-        })
-        .then(function(res) { resolve(res) })
+  pubSub.newComment = async function(commentId) {
+    var comment = await models.Comment.findById(commentId)
+    var post = await comment.getPost()
+    var timelines = await post.getCommentsFriendOfFriendTimelines(comment.userId)
+
+    var promises = timelines.map(async function(timeline) {
+      let isBanned = await post.isBannedFor(timeline.userId)
+      let isHidden = await post.isHiddenIn(timeline.id)
+
+      if (!isHidden && !isBanned) {
+        let payload = JSON.stringify({ timelineId: timeline.id, commentId: commentId })
+        await database.publishAsync('comment:new', payload)
+      }
     })
+
+    await* promises
+
+    let payload = JSON.stringify({ postId: post.id, commentId: commentId })
+    await database.publishAsync('comment:new', payload)
   }
 
-  pubSub.destroyComment = function(commentId) {
-    return new Promise(function(resolve, reject) {
-      models.Comment.findById(commentId).bind({})
-        .then(function(comment) {
-          this.comment = comment
-          return comment.getPost()
-        })
-        .then(function(post) {
-          this.post = post
-          return database.publishAsync('comment:destroy',
-                                JSON.stringify({
-                                  postId: post.id,
-                                  commentId: this.comment.id
-                                }))
-        })
-        .then(function(res) { resolve(res) })
-    })
+  pubSub.destroyComment = async function(commentId) {
+    var comment = await models.Comment.findById(commentId)
+    var post = await comment.getPost()
+
+    let payload = JSON.stringify({ postId: post.id, commentId: commentId })
+    await database.publishAsync('comment:destroy', payload)
   }
 
-  pubSub.updateComment = function(commentId) {
-    return new Promise(function(resolve, reject) {
-      models.Comment.findById(commentId).bind({})
-        .then(function(comment) {
-          this.comment = comment
-          return comment.getPost()
-        })
-        .then(function(post) {
-          this.post = post
-          return database.publishAsync('comment:update',
-                                       JSON.stringify({
-                                         postId: post.id,
-                                         commentId: this.comment.id
-                                       }))
-        })
-        .then(function() { return this.post.getSubscribedTimelineIds() })
-        .then(function(timelineIds) {
-          return Promise.map(timelineIds, function(timelineId) {
-            database.publishAsync('comment:update',
-                                  JSON.stringify({
-                                    timelineId: timelineId,
-                                    commentId: commentId
-                                  }))
-          })
-        })
-        .then(function(res) { resolve(res) })
+  pubSub.updateComment = async function(commentId) {
+    var comment = await models.Comment.findById(commentId)
+    var post = await comment.getPost()
+
+    let payload = JSON.stringify({ postId: post.id, commentId: commentId })
+    await database.publishAsync('comment:update', payload)
+
+    var timelineIds = await post.getSubscribedTimelineIds()
+    var promises = timelineIds.map(async function(timelineId) {
+      let payload = JSON.stringify({ timelineId: timelineId, commentId: commentId })
+      await database.publishAsync('comment:update', payload)
     })
+
+    await* promises
   }
 
-  pubSub.newLike = function(postId, userId) {
-    return new Promise(function(resolve, reject) {
-      models.Post.findById(postId).bind({})
-        .then(function(post) {
-          this.post = post
-          return post.getLikesFriendOfFriendTimelines(userId)
-        })
-        .then(function(timelines) {
-          var that = this
-          return Promise.map(timelines, function(timeline) {
-            that.post.isBannedFor(timeline.userId).bind({})
-              .then(function(isBanned) {
-                this.isBanned = isBanned
-                return that.post.isHiddenIn(timeline.id)
-              })
-              .then(function(isHidden) {
-                if (!isHidden && !this.isBanned)
-                  return database.publishAsync('like:new',
-                                               JSON.stringify({
-                                                 timelineId: timeline.id,
-                                                 userId: userId,
-                                                 postId: postId
-                                               }))
-              })
-          })
-        })
-        .then(function() {
-          return database.publishAsync('like:new',
-                                       JSON.stringify({
-                                         userId: userId,
-                                         postId: postId
-                                       }))
-        })
-        .then(function(res) { resolve(res) })
+  pubSub.newLike = async function(postId, userId) {
+    var post = await models.Post.findById(postId)
+    var timelines = await post.getLikesFriendOfFriendTimelines(userId)
+
+    var promises = timelines.map(async function(timeline) {
+      var isBanned = await post.isBannedFor(timeline.userId)
+      var isHidden = await post.isHiddenIn(timeline.id)
+
+      if (!isHidden && !isBanned) {
+        let payload = JSON.stringify({ timelineId: timeline.id, userId: userId, postId: postId })
+        await database.publishAsync('like:new', payload)
+      }
     })
+
+    await* promises
+
+    let payload = JSON.stringify({ userId: userId, postId: postId })
+    await database.publishAsync('like:new', payload)
   }
 
-  pubSub.removeLike = function(postId, userId) {
-    return new Promise(function(resolve, reject) {
-      models.Post.findById(postId).bind({})
-        .then(function(post) {
-          this.post = post
-          return post.getSubscribedTimelineIds()
-        })
-        .then(function(timelineIds) {
-          return Promise.map(timelineIds, function(timelineId) {
-            return database.publishAsync('like:remove',
-                                  JSON.stringify({
-                                    timelineId: timelineId,
-                                    userId: userId,
-                                    postId: postId
-                                  }))
-          })
-        })
-        .then(function() {
-          return database.publishAsync('like:remove',
-                                       JSON.stringify({
-                                         userId: userId,
-                                         postId: postId
-                                       }))
-        })
-        .then(function(res) { resolve(res) })
+  pubSub.removeLike = async function(postId, userId) {
+    var post = await models.Post.findById(postId)
+    var timelineIds = await post.getSubscribedTimelineIds()
+
+    var promises = timelineIds.map(async function(timelineId) {
+      let payload = JSON.stringify({ timelineId: timelineId, userId: userId, postId: postId })
+      await database.publishAsync('like:remove', payload)
     })
+
+    await* promises
+
+    let payload = JSON.stringify({ userId: userId, postId: postId })
+    await database.publishAsync('like:remove', payload)
   }
 
   pubSub.hidePost = async function(userId, postId) {
