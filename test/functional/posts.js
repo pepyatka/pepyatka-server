@@ -54,6 +54,31 @@ describe("PostsController", function() {
         usernameB = user.username
       }))
 
+      it('should create public post that is visible to another user', function(done) {
+        var body = 'body'
+
+        request
+          .post(app.config.host + '/v1/posts')
+          .send({ post: { body: body }, authToken: authToken })
+          .end(function(err, res) {
+            res.body.should.not.be.empty
+            res.body.should.have.property('posts')
+            res.body.posts.should.have.property('body')
+            res.body.posts.body.should.eql(body)
+            var post = res.body.posts
+            request
+              .get(app.config.host + '/v1/posts/' + post.id)
+              .query({ authToken: authTokenB })
+              .end(function(err, res) {
+                res.body.should.not.be.empty
+                res.body.should.have.property('posts')
+                res.body.posts.should.have.property('body')
+                res.body.posts.body.should.eql(body)
+                done()
+              })
+          })
+      })
+
       it('should not be able to send private message if friends are not mutual', function(done) {
         var body = 'body'
 
@@ -96,6 +121,34 @@ describe("PostsController", function() {
               res.body.posts.should.have.property('body')
               res.body.posts.body.should.eql(body)
               done()
+            })
+        })
+
+        it('should publish private message to home feed', function(done) {
+          var body = 'body'
+
+          request
+            .post(app.config.host + '/v1/posts')
+            .send({ post: { body: body }, meta: { feeds: [usernameB] }, authToken: authToken })
+            .end(function(err, res) {
+              res.body.should.not.be.empty
+              res.body.should.have.property('posts')
+              res.body.posts.should.have.property('body')
+              res.body.posts.body.should.eql(body)
+
+              funcTestHelper.getTimeline('/v1/timelines/home', authTokenB, function(err, res) {
+                res.body.should.have.property('posts')
+                res.body.posts.length.should.eql(1)
+                res.body.posts[0].should.have.property('body')
+                res.body.posts[0].body.should.eql(body)
+                funcTestHelper.getTimeline('/v1/timelines/home', authToken, function(err, res) {
+                  res.body.should.have.property('posts')
+                  res.body.posts.length.should.eql(1)
+                  res.body.posts[0].should.have.property('body')
+                  res.body.posts[0].body.should.eql(body)
+                  done()
+                })
+              })
             })
         })
 
