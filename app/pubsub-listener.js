@@ -2,6 +2,7 @@ import Promise from 'bluebird'
 import { createClient as redis } from 'redis'
 import _ from 'lodash'
 import IoSever from 'socket.io'
+import adapter from 'socket.io-redis'
 
 import models from './models'
 import config_loader from '../config/config'
@@ -12,8 +13,7 @@ export default class PubsubListener {
     var io = IoSever(server)
     var config = config_loader.load()
 
-    var adapter = require('socket.io-redis')
-      , redisPub = redis(config.redis.port, config.redis.host, config.redis.options)
+    var redisPub = redis(config.redis.port, config.redis.host, config.redis.options)
       , redisSub = redis(config.redis.port, config.redis.host, _.extend(config.redis.options, { detect_buffers: true }))
 
     redisPub.on('error', function(err) { console.log(err) })
