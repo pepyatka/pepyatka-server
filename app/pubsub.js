@@ -1,9 +1,12 @@
-var Promise = require('bluebird')
-  , models = require('./models')
-  , async = require('async')
-  , config = require('../config/config').load()
-  , redis = require('redis').createClient
+import Promise from 'bluebird'
+import async from 'async'
+import { createClient as redis } from 'redis'
 import _ from 'lodash'
+
+import models from './models'
+import config_loader from '../config/config'
+
+var config = config_loader.load()
 
 exports.init = function(database) {
   "use strict";
@@ -11,55 +14,40 @@ exports.init = function(database) {
   var pubSub = function() {
   }
 
-  pubSub.newPost = function(postId) {
-    return new Promise(function(resolve, reject) {
-      models.Post.findById(postId)
-        .then(function(post) { return post.getSubscribedTimelineIds() })
-        .then(function(timelineIds) {
-          return Promise.map(timelineIds, function(timelineId) {
-            database.publishAsync('post:new',
-                                  JSON.stringify({
-                                    postId: postId,
-                                    timelineId: timelineId
-                                  }))
-          })
-        })
-        .then(function(res) { resolve(res) })
+  pubSub.newPost = async function(postId) {
+    var post = await models.Post.findById(postId)
+    var timelineIds = await post.getSubscribedTimelineIds()
+
+    var promises = timelineIds.map(async function(timelineId) {
+      let jsonedPost = JSON.stringify({ postId: postId, timelineId: timelineId })
+      await database.publishAsync('post:new', jsonedPost)
     })
+
+    await* promises
   }
 
-  pubSub.destroyPost = function(postId) {
-    return new Promise(function(resolve, reject) {
-      models.Post.findById(postId)
-        .then(function(post) { return post.getSubscribedTimelineIds() })
-        .then(function(timelineIds) {
-          return Promise.map(timelineIds, function(timelineId) {
-            database.publishAsync('post:destroy',
-                                  JSON.stringify({
-                                    postId: postId,
-                                    timelineId: timelineId
-                                  }))
-          })
-        })
-        .then(function(res) { resolve(res) })
+  pubSub.destroyPost = async function(postId) {
+    var post = await models.Post.findById(postId)
+    var timelineIds = await post.getSubscribedTimelineIds()
+
+    var promises = timelineIds.map(async function(timelineId) {
+      let jsonedPost = JSON.stringify({ postId: postId, timelineId: timelineId })
+      await database.publishAsync('post:destroy', jsonedPost)
     })
+
+    await* promises
   }
 
-  pubSub.updatePost = function(postId) {
-    return new Promise(function(resolve, reject) {
-      models.Post.findById(postId)
-        .then(function(post) { return post.getSubscribedTimelineIds() })
-        .then(function(timelineIds) {
-          return Promise.map(timelineIds, function(timelineId) {
-            database.publishAsync('post:update',
-                                  JSON.stringify({
-                                    postId: postId,
-                                    timelineId: timelineId
-                                  }))
-          })
-        })
-        .then(function(res) { resolve(res) })
+  pubSub.updatePost = async function(postId) {
+    var post = await models.Post.findById(postId)
+    var timelineIds = await post.getSubscribedTimelineIds()
+
+    var promises = timelineIds.map(async function(timelineId) {
+      let jsonedPost = JSON.stringify({ postId: postId, timelineId: timelineId })
+      await database.publishAsync('post:update', jsonedPost)
     })
+
+    await* promises
   }
 
   pubSub.newComment = function(commentId) {
@@ -215,34 +203,20 @@ exports.init = function(database) {
     })
   }
 
-  pubSub.hidePost = function(userId, postId) {
-    return new Promise(function(resolve, reject) {
-      models.User.findById(userId).bind({})
-        .then(function(user) { return user.getRiverOfNewsTimelineId() })
-        .then(function(riverOfNewsId) {
-          return database.publishAsync('post:hide',
-                                       JSON.stringify({
-                                         timelineId: riverOfNewsId,
-                                         postId: postId
-                                       }))
-        })
-        .then(function(res) { resolve(res) })
-    })
+  pubSub.hidePost = async function(userId, postId) {
+    var user = await models.User.findById(userId)
+    var riverOfNewsId = await user.getRiverOfNewsTimelineId()
+
+    var payload = JSON.stringify({ timelineId: riverOfNewsId, postId: postId })
+    await database.publishAsync('post:hide', payload)
   }
 
-  pubSub.unhidePost = function(userId, postId) {
-    return new Promise(function(resolve, reject) {
-      models.User.findById(userId).bind({})
-        .then(function(user) { return user.getRiverOfNewsTimelineId() })
-        .then(function(riverOfNewsId) {
-          return database.publishAsync('post:unhide',
-                                       JSON.stringify({
-                                         timelineId: riverOfNewsId,
-                                         postId: postId
-                                       }))
-        })
-        .then(function(res) { resolve(res) })
-    })
+  pubSub.unhidePost = async function(userId, postId) {
+    var user = await models.User.findById(userId)
+    var riverOfNewsId = await user.getRiverOfNewsTimelineId()
+
+    var payload = JSON.stringify({ timelineId: riverOfNewsId, postId: postId })
+    await database.publishAsync('post:unhide', payload)
   }
 
   pubSub.listen = function(server, app) {
