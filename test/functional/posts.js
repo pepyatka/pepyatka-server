@@ -45,7 +45,7 @@ describe("PostsController", function() {
         })
     })
 
-    describe('private feed', function() {
+    describe('private messages', function() {
       var authTokenB
         , usernameB
 
@@ -107,6 +107,66 @@ describe("PostsController", function() {
                   done()
                 })
             })
+        })
+
+        describe('are protected', function() {
+          var authTokenC
+            , usernameC
+            , post
+
+
+          beforeEach(funcTestHelper.createUser('zeus', 'password', function(token, user) {
+            authTokenC = token
+            usernameC = user.username
+          }))
+
+          beforeEach(function(done) {
+            var body = 'body'
+
+            request
+              .post(app.config.host + '/v1/posts')
+              .send({ post: { body: body }, meta: { feeds: [usernameB] }, authToken: authToken })
+              .end(function(err, res) {
+                res.body.should.not.be.empty
+                res.body.should.have.property('posts')
+                post = res.body.posts
+                post.should.have.property('body')
+                post.body.should.eql(body)
+                done()
+              })
+          })
+
+          it('should not be liked by person that is not in recipients', function(done) {
+            request
+              .post(app.config.host + '/v1/posts/' + post.id + '/like')
+              .send({ authToken: authTokenC })
+              .end(function(err, res) {
+                err.should.not.be.empty
+                err.status.should.eql(422)
+                var error = JSON.parse(err.response.error.text)
+                error.err.should.eql('Not found')
+
+                funcTestHelper.getTimeline('/v1/timelines/' + usernameC + '/likes', authTokenC, function(err, res) {
+                  res.body.should.not.have.property('posts')
+                  done()
+                })
+              })
+          })
+
+          it('should not be commented by person that is not in recipients', function(done) {
+            var body = 'comment'
+            funcTestHelper.createComment(body, post.id, authTokenC, function(err, res) {
+              err.should.not.be.empty
+              err.status.should.eql(422)
+              var error = JSON.parse(err.response.error.text)
+              error.err.should.eql('Not found')
+
+              funcTestHelper.getTimeline('/v1/timelines/' + usernameC + '/comments', authTokenC, function(err, res) {
+                res.body.should.not.have.property('posts')
+                done()
+              })
+            })
+          })
         })
 
         it('should be able to send private message', function(done) {
