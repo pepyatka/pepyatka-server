@@ -26,7 +26,7 @@ export default class PubsubListener {
 
     io.sockets.on('connection', function(socket) {
       socket.on('subscribe', function(data) {
-        for(var channel in data) {
+        for (let channel of data) {
           if (data[channel]) {
             data[channel].forEach(function(id) {
               if (id) {
@@ -40,7 +40,7 @@ export default class PubsubListener {
       })
 
       socket.on('unsubscribe', function(data) {
-        for(var channel in data) {
+        for (let channel of data) {
           if (data[channel]) {
             data[channel].forEach(function(id) {
               if (id) {
