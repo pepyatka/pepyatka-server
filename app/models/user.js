@@ -566,6 +566,22 @@ exports.addModel = function(database) {
     return this.subscriptions
   }
 
+  User.prototype.getSubscriberIds = async function() {
+    var timeline = await this.getPostsTimeline()
+    var subscriberIds = await timeline.getSubscriberIds()
+    this.subscriberIds = subscriberIds
+
+    return this.subscriberIds
+  }
+
+  User.prototype.getSubscribers = async function() {
+    var subscriberIds = await this.getSubscriberIds()
+    var subscriberPromises = subscriberIds.map(userId => models.User.findById(userId))
+    this.subscribers = await* subscriberPromises
+
+    return this.subscribers
+  }
+
   User.prototype.getBanIds = function() {
     var that = this
 
@@ -902,11 +918,7 @@ exports.addModel = function(database) {
       if (!that.isUser()) {
         // update group lastActivity for all subscribers
         var updatedAt = new Date().getTime()
-        that.getPostsTimeline()
-          .then(function(timeline) {
-            timelineId = timeline.id
-            return timeline.getSubscriberIds()
-          })
+        that.getSubscribers()
           .then(function(userIds) {
             return Promise.map(userIds, function(userId) {
               return database.zaddAsync(mkKey(['user', userId, 'subscriptions']), updatedAt, timelineId)
