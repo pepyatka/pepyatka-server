@@ -1,7 +1,7 @@
 import Promise from 'bluebird'
 import { createClient as redis } from 'redis'
 import _ from 'lodash'
-import IoSever from 'socket.io'
+import IoServer from 'socket.io'
 import adapter from 'socket.io-redis'
 
 import models from './models'
@@ -10,7 +10,7 @@ import config_loader from '../config/config'
 export default class PubsubListener {
   constructor(server, app) {
     "use strict";
-    var io = IoSever(server)
+    var io = IoServer(server)
     var config = config_loader.load()
 
     var redisPub = redis(config.redis.port, config.redis.host, config.redis.options)
