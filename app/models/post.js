@@ -233,6 +233,23 @@ exports.addModel = function(database) {
     })
   }
 
+  Post.prototype.getSubscribedTimelines = function() {
+    var that = this
+
+    return new Promise(function(resolve, reject) {
+      that.getSubscribedTimelineIds()
+        .then(function(timelineIds) {
+          return Promise.map(timelineIds, function(timelineId) {
+            return models.Timeline.findById(timelineId)
+          })
+        })
+        .then(function(timelines) {
+          that.subscribedTimelines = timelines
+          resolve(timelines)
+        })
+    })
+  }
+
   Post.prototype.getTimelineIds = function() {
     var that = this
 

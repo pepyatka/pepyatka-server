@@ -6,11 +6,15 @@ exports.init = function(database) {
   class pubSub {
     static async newPost(postId) {
       var post = await models.Post.findById(postId)
-      var timelineIds = await post.getSubscribedTimelineIds()
+      var timelines = await post.getSubscribedTimelines()
 
-      var promises = timelineIds.map(async function(timelineId) {
-        let jsonedPost = JSON.stringify({ postId: postId, timelineId: timelineId })
-        await database.publishAsync('post:new', jsonedPost)
+      var promises = timelines.map(async function(timeline) {
+        let isBanned = await post.isBannedFor(timeline.userId)
+
+        if (!isBanned) {
+          let payload = JSON.stringify({ postId: postId, timelineId: timeline.id })
+          await database.publishAsync('post:new', payload)
+        }
       })
 
       await* promises
