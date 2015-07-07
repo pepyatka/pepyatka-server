@@ -212,30 +212,29 @@ exports.addModel = function(database) {
     return Promise.resolve(valid)
   }
 
-  User.prototype.validate = function() {
-    return new Promise(function(resolve, reject) {
-      var valid
+  User.prototype.validate = async function() {
+    var valid
 
-      valid = this.isValidUsername().value()
-        && this.isValidScreenName().value()
-        && this.isValidEmail().value()
+    valid = this.isValidUsername().value()
+      && this.isValidScreenName().value()
+      && this.isValidEmail().value()
 
-      valid ? resolve(true) : reject(new Error("Invalid"))
-    }.bind(this))
+    if (!valid)
+      throw new Error("Invalid")
+
+    return true
   }
 
-  User.prototype.validateOnCreate = function() {
-    var that = this
+  User.prototype.validateOnCreate = async function() {
+    var promises = [
+      this.validate(),
+      this.validateUniquness(mkKey(['username', this.username, 'uid'])),
+      this.validateUniquness(mkKey(['user', this.id]))
+    ];
 
-    return new Promise(function(resolve, reject) {
-      Promise.join(that.validate(),
-                   that.validateUniquness(mkKey(['username', that.username, 'uid'])),
-                   that.validateUniquness(mkKey(['user', that.id])),
-                   function(valid, usernameIsUnique, idIsUnique) {
-                     resolve(that)
-                   })
-        .catch(function(e) { reject(e) })
-    })
+    await* promises
+
+    return this
   }
 
   //
@@ -249,46 +248,40 @@ exports.addModel = function(database) {
     return new Promise.resolve(true)
   }
 
-  User.prototype.create = function() {
-    var that = this
+  User.prototype.create = async function() {
+    this.createdAt = new Date().getTime()
+    this.updatedAt = new Date().getTime()
+    this.screenName = this.screenName || this.username
 
-    return new Promise(function(resolve, reject) {
-      that.createdAt = new Date().getTime()
-      that.updatedAt = new Date().getTime()
-      that.screenName = that.screenName || that.username
+    this.id = uuid.v4()
 
-      that.id = uuid.v4()
+    var user = await this.validateOnCreate()
+    await user.initPassword()
 
-      that.validateOnCreate()
-        .then(function(user) {
-          return user.initPassword()
-        })
-        .then(function(user) {
-          return Promise.all([
-            database.setAsync(mkKey(['username', user.username, 'uid']), user.id),
-            database.hmsetAsync(mkKey(['user', user.id]),
-                                { 'username': user.username,
-                                  'screenName': user.screenName,
-                                  'email': user.email,
-                                  'type': user.type,
-                                  'isPrivate': '0',
-                                  'createdAt': user.createdAt.toString(),
-                                  'updatedAt': user.updatedAt.toString(),
-                                  'hashedPassword': user.hashedPassword
-                                }),
-            user.createEmailIndex()
-            ])
-        })
-        .then(function() {
-          var stats = new models.Stats({
-            id: that.id
-          })
+    var promises = [
+      database.setAsync(mkKey(['username', user.username, 'uid']), user.id),
+      database.hmsetAsync(mkKey(['user', user.id]),
+                          { 'username': user.username,
+                            'screenName': user.screenName,
+                            'email': user.email,
+                            'type': user.type,
+                            'isPrivate': '0',
+                            'createdAt': user.createdAt.toString(),
+                            'updatedAt': user.updatedAt.toString(),
+                            'hashedPassword': user.hashedPassword
+                          }),
+      user.createEmailIndex()
+    ]
 
-          return stats.create()
-        })
-        .then(function(res) { resolve(that) })
-        .catch(function(e) { reject(e) })
+    await* promises
+
+    var stats = new models.Stats({
+      id: this.id
     })
+
+    await stats.create()
+
+    return this
   }
 
   User.prototype.update = function(params) {
