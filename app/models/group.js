@@ -61,54 +61,49 @@ exports.addModel = function(database) {
     return Promise.resolve(valid)
   }
 
-  Group.prototype.validate = function() {
-    return new Promise(function(resolve, reject) {
-      var valid
+  Group.prototype.validate = async function() {
+    var valid
 
-      valid = this.isValidUsername().value()
-        && this.isValidScreenName().value()
+    valid = this.isValidUsername().value()
+      && this.isValidScreenName().value()
 
-      valid ? resolve(valid) : reject(new Error("Invalid"))
-    }.bind(this))
+    if (!valid)
+      throw new Error("Invalid")
+
+    return valid
   }
 
-  Group.prototype.create = function(ownerId) {
-    var that = this
+  Group.prototype.create = async function(ownerId) {
+      this.createdAt = new Date().getTime()
+      this.updatedAt = new Date().getTime()
+      this.screenName = this.screenName || this.username
+      this.id = uuid.v4()
 
-    return new Promise(function(resolve, reject) {
-      that.createdAt = new Date().getTime()
-      that.updatedAt = new Date().getTime()
-      that.screenName = that.screenName || that.username
-      that.id = uuid.v4()
+      var group = await this.validateOnCreate()
 
-      that.validateOnCreate()
-        .then(function(group) {
-          return Promise.all([
-            database.setAsync(mkKey(['username', group.username, 'uid']), group.id),
-            database.hmsetAsync(mkKey(['user', group.id]),
-                                { 'username': group.username,
-                                  'screenName': group.screenName,
-                                  'type': group.type,
-                                  'createdAt': group.createdAt.toString(),
-                                  'updatedAt': group.updatedAt.toString(),
-                                  'isPrivate': group.isPrivate
-                                })
-          ])
-        })
-        .then(function() {
-          var stats = new models.Stats({
-            id: that.id
-          })
+      await* [
+        database.setAsync(mkKey(['username', group.username, 'uid']), group.id),
+        database.hmsetAsync(mkKey(['user', group.id]),
+                            { 'username': group.username,
+                              'screenName': group.screenName,
+                              'type': group.type,
+                              'createdAt': group.createdAt.toString(),
+                              'updatedAt': group.updatedAt.toString(),
+                              'isPrivate': group.isPrivate
+                            })
+      ]
 
-          return Promise.all([
-            that.addAdministrator(ownerId),
-            that.subscribeOwner(ownerId),
-            stats.create()
-          ])
-        })
-        .then(function(res) { resolve(that) })
-        .catch(function(e) { reject(e) })
-    })
+      var stats = new models.Stats({
+        id: this.id
+      })
+
+      await* [
+        this.addAdministrator(ownerId),
+        this.subscribeOwner(ownerId),
+        stats.create()
+      ]
+
+      return this
   }
 
   Group.prototype.update = function(params) {
