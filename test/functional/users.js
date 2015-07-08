@@ -218,89 +218,53 @@ describe("UsersController", function() {
   })
 
   describe('#subscribe()', function() {
-    var userA
-      , userB
-      , authTokenA
-      , authTokenB
+    var lunaContext = {}
+      , marsContext = {}
 
-    beforeEach(function(done) {
-      userA = {
-        username: 'Luna',
-        password: 'password'
-      }
-
-      userB = {
-        username: 'Mars',
-        password: 'password'
-      }
-
-      request
-        .post(app.config.host + '/v1/users')
-        .send({ username: userA.username, password: userA.password })
-        .end(function(err, res) {
-          authTokenA = res.body.authToken
-
-          request
-            .post(app.config.host + '/v1/users')
-            .send({ username: userB.username, password: userB.password })
-            .end(function(err, res) {
-              authTokenB = res.body.authToken
-
-              var body = 'Post body'
-
-              request
-                .post(app.config.host + '/v1/posts')
-                .send({ post: { body: body }, authToken: authTokenA })
-                .end(function(err, res) {
-                  done()
-                })
-            })
-        })
-    })
+    beforeEach(funcTestHelper.createUserCtx(lunaContext, 'Luna', 'password'))
+    beforeEach(funcTestHelper.createUserCtx(marsContext, 'Mars', 'password'))
+    beforeEach(function(done) { funcTestHelper.createPost(lunaContext, 'Post body')(done) })
 
     it('should submit a post to friends river of news', function(done) {
       var body = "Post body"
 
       request
-        .post(app.config.host + '/v1/users/' + userA.username + '/subscribe')
-        .send({ authToken: authTokenB })
+        .post(app.config.host + '/v1/users/' + lunaContext.username + '/subscribe')
+        .send({ authToken: marsContext.authToken })
         .end(function(err, res) {
           res.body.should.not.be.empty
           res.body.should.have.property('users')
           res.body.users.should.have.property('username')
-          res.body.users.username.should.eql(userB.username.toLowerCase())
+          res.body.users.username.should.eql(marsContext.username.toLowerCase())
 
-          request
-            .post(app.config.host + '/v1/posts')
-            .send({ post: { body: body }, authToken: authTokenA })
-            .end(function(err, res) {
-              request
-                .get(app.config.host + '/v1/timelines/home')
-                .query({ authToken: authTokenB })
-                .end(function(err, res) {
-                  res.body.should.not.be.empty
-                  res.body.should.have.property('timelines')
-                  res.body.timelines.should.have.property('posts')
-                  res.body.timelines.posts.length.should.eql(2)
-                  done()
-                })
-            })
+          funcTestHelper.createPost(lunaContext, body)(function(err, res) {
+            request
+              .get(app.config.host + '/v1/timelines/home')
+              .query({ authToken: marsContext.authToken })
+              .end(function(err, res) {
+                res.body.should.not.be.empty
+                res.body.should.have.property('timelines')
+                res.body.timelines.should.have.property('posts')
+                res.body.timelines.posts.length.should.eql(2)
+                done()
+              })
+          })
         })
     })
 
     it('should subscribe to a user', function(done) {
       request
-        .post(app.config.host + '/v1/users/' + userA.username + '/subscribe')
-        .send({ authToken: authTokenB })
+        .post(app.config.host + '/v1/users/' + lunaContext.username + '/subscribe')
+        .send({ authToken: marsContext.authToken })
         .end(function(err, res) {
           res.body.should.not.be.empty
           res.body.should.have.property('users')
           res.body.users.should.have.property('username')
-          res.body.users.username.should.eql(userB.username.toLowerCase())
+          res.body.users.username.should.eql(marsContext.username.toLowerCase())
 
           request
             .get(app.config.host + '/v1/timelines/home')
-            .query({ authToken: authTokenB })
+            .query({ authToken: marsContext.authToken })
             .end(function(err, res) {
               res.body.should.not.be.empty
               res.body.should.have.property('timelines')
@@ -308,8 +272,8 @@ describe("UsersController", function() {
               res.body.timelines.posts.length.should.eql(1)
 
               request
-                .post(app.config.host + '/v1/users/' + userA.username + '/subscribe')
-                .send({ authToken: authTokenB })
+                .post(app.config.host + '/v1/users/' + lunaContext.username + '/subscribe')
+                .send({ authToken: marsContext.authToken })
                 .end(function(err, res) {
                   err.should.not.be.empty
                   err.status.should.eql(403)
@@ -324,8 +288,8 @@ describe("UsersController", function() {
 
     it('should not subscribe to herself', function(done) {
       request
-        .post(app.config.host + '/v1/users/' + userA.username + '/subscribe')
-        .send({ authToken: authTokenA })
+        .post(app.config.host + '/v1/users/' + lunaContext.username + '/subscribe')
+        .send({ authToken: lunaContext.authToken })
         .end(function(err, res) {
           err.should.not.be.empty
           err.status.should.eql(422)
@@ -335,7 +299,7 @@ describe("UsersController", function() {
 
     it('should require valid user to subscribe to another user', function(done) {
       request
-        .post(app.config.host + '/v1/users/' + userA.username + '/subscribe')
+        .post(app.config.host + '/v1/users/' + lunaContext.username + '/subscribe')
         .end(function(err, res) {
           err.should.not.be.empty
           err.status.should.eql(401)
@@ -892,41 +856,38 @@ describe("UsersController", function() {
     // Zeus writes a post, Mars comments, Zeus bans Mars and should see no comments
     it('should ban user comments', function(done) {
       var body = 'Post'
-      request
-        .post(app.config.host + '/v1/posts')
-        .send({ post: { body: body }, authToken: zeusContext.authToken })
-        .end(function(err, res) {
+      funcTestHelper.createPost(zeusContext, body)(function(err, res) {
+        res.body.should.not.be.empty
+        var postId = res.body.posts.id
+        funcTestHelper.createComment(body, postId, marsContext.authToken, function(err, res) {
           res.body.should.not.be.empty
-          var postId = res.body.posts.id
-          funcTestHelper.createComment(body, postId, marsContext.authToken, function(err, res) {
-            res.body.should.not.be.empty
 
-            request
-              .post(app.config.host + '/v1/users/' + banUsername + '/ban')
-              .send({ authToken: zeusContext.authToken })
-              .end(function(err, res) {
+          request
+            .post(app.config.host + '/v1/users/' + banUsername + '/ban')
+            .send({ authToken: zeusContext.authToken })
+            .end(function(err, res) {
+              res.body.should.not.be.empty
+              funcTestHelper.getTimeline('/v1/timelines/home', zeusContext.authToken, function(err, res) {
                 res.body.should.not.be.empty
-                funcTestHelper.getTimeline('/v1/timelines/home', zeusContext.authToken, function(err, res) {
-                  res.body.should.not.be.empty
-                  res.body.should.have.property('posts')
-                  res.body.posts.length.should.eql(1)
-                  var post = res.body.posts[0]
-                  post.should.not.have.property('comments')
+                res.body.should.have.property('posts')
+                res.body.posts.length.should.eql(1)
+                var post = res.body.posts[0]
+                post.should.not.have.property('comments')
 
-                  // Zeus should not see comments in single-post view either
-                  request
-                    .get(app.config.host + '/v1/posts/' + postId)
-                    .query({ authToken: zeusContext.authToken })
-                    .end(function(err, res) {
-                      res.body.should.not.be.empty
-                      res.body.should.have.property('posts')
-                      res.body.posts.should.not.have.property('comments')
-                      done()
-                    })
-                })
+                // Zeus should not see comments in single-post view either
+                request
+                  .get(app.config.host + '/v1/posts/' + postId)
+                  .query({ authToken: zeusContext.authToken })
+                  .end(function(err, res) {
+                    res.body.should.not.be.empty
+                    res.body.should.have.property('posts')
+                    res.body.posts.should.not.have.property('comments')
+                    done()
+                  })
               })
-          })
+            })
         })
+      })
     })
 
     // Zeus writes a post, Mars likes it, Zeus bans Mars and should not see like

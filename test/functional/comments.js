@@ -8,28 +8,10 @@ describe("CommentsController", function() {
 
   describe('#create()', function() {
     var post
-      , authToken
+      , context = {}
 
-    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
-      authToken = token
-    }))
-
-    beforeEach(function(done) {
-      var body = 'Post body'
-      request
-        .post(app.config.host + '/v1/posts')
-        .send({ post: { body: body }, authToken: authToken })
-        .end(function(err, res) {
-          res.body.should.not.be.empty
-          res.body.should.have.property('posts')
-          res.body.posts.should.have.property('body')
-          res.body.posts.body.should.eql(body)
-
-          post = res.body.posts
-
-          done()
-        })
-    })
+    beforeEach(funcTestHelper.createUserCtx(context, 'Luna', 'password'))
+    beforeEach(funcTestHelper.createPost(context, 'Post body'))
 
     describe('in a group', function() {
       var groupName = 'pepyatka-dev'
@@ -37,12 +19,12 @@ describe("CommentsController", function() {
       beforeEach(function(done) {
         var screenName = 'Pepyatka Developers';
         request
-            .post(app.config.host + '/v1/groups')
-            .send({ group: {username: groupName, screenName: screenName},
-              authToken: authToken })
-            .end(function(err, res) {
-              done()
-            })
+          .post(app.config.host + '/v1/groups')
+          .send({ group: { username: groupName, screenName: screenName },
+                  authToken: context.authToken })
+          .end(function(err, res) {
+            done()
+          })
       })
 
       it("should not update group's last activity", function(done) {
@@ -50,17 +32,17 @@ describe("CommentsController", function() {
 
         request
           .post(app.config.host + '/v1/posts')
-          .send({ post: { body: body }, meta: { feeds: [groupName] }, authToken: authToken })
+          .send({ post: { body: body }, meta: { feeds: [groupName] }, authToken: context.authToken })
           .end(function(err, res) {
             res.status.should.eql(200)
             var postB = res.body.posts
-            funcTestHelper.getTimeline('/v1/users/' + groupName, authToken, function(err, res) {
+            funcTestHelper.getTimeline('/v1/users/' + groupName, context.authToken, function(err, res) {
               res.status.should.eql(200)
               var lastUpdatedAt = res.body.users.updatedAt
 
-              funcTestHelper.createComment(body, postB.id, authToken, function(err, res) {
+              funcTestHelper.createComment(body, postB.id, context.authToken, function(err, res) {
                 res.status.should.eql(200)
-                funcTestHelper.getTimeline('/v1/users/' + groupName, authToken, function(err, res) {
+                funcTestHelper.getTimeline('/v1/users/' + groupName, context.authToken, function(err, res) {
                   res.status.should.eql(200)
                   res.body.should.have.property('users')
                   res.body.users.should.have.property('updatedAt')
@@ -75,9 +57,9 @@ describe("CommentsController", function() {
     })
 
     it('should create a comment with a valid user', function(done) {
-      var body = "Comment"
+      var body = 'Comment'
 
-      funcTestHelper.createComment(body, post.id, authToken, function(err, res) {
+      funcTestHelper.createCommentCtx(context, body)(function(err, res) {
         res.body.should.not.be.empty
         res.body.should.have.property('comments')
         res.body.comments.should.have.property('body')
@@ -90,7 +72,8 @@ describe("CommentsController", function() {
     it('should not create a comment for an invalid user', function(done) {
       var body = "Comment"
 
-      funcTestHelper.createComment(body, post.id, "token", function(err, res) {
+      context.authToken = 'token'
+      funcTestHelper.createCommentCtx(context, body)(function(err, res) {
         err.should.not.be.empty
         err.status.should.eql(401)
 
@@ -101,7 +84,8 @@ describe("CommentsController", function() {
     it('should not create a comment for an invalid post', function(done) {
       var body = "Comment"
 
-      funcTestHelper.createComment(body, 'id', authToken, function(err, res) {
+      context.post.id = 'id'
+      funcTestHelper.createCommentCtx(context, body)(function(err, res) {
         err.should.not.be.empty
         err.status.should.eql(422)
 
@@ -111,43 +95,21 @@ describe("CommentsController", function() {
   })
 
   describe('#update()', function() {
-    var post
-      , comment
-      , authToken
-      , otherUserAuthToken
+    var lunaContext = {}
+      , yoleContext = {}
 
-    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
-      authToken = token
-    }))
+    beforeEach(funcTestHelper.createUserCtx(lunaContext, 'Luna', 'password'))
+    beforeEach(funcTestHelper.createUserCtx(yoleContext, 'yole', 'pw'))
 
-    beforeEach(funcTestHelper.createUser('yole', 'pw', function(token) {
-      otherUserAuthToken = token
-    }))
-
-    beforeEach(function(done) {
-      var body = 'Post body'
-      request
-        .post(app.config.host + '/v1/posts')
-        .send({ post: { body: body }, authToken: authToken })
-        .end(function(err, res) {
-          post = res.body.posts
-
-          var body = "Comment"
-
-          funcTestHelper.createComment(body, post.id, authToken, function(err, res) {
-            comment = res.body.comments
-
-            done()
-          })
-        })
-    })
+    beforeEach(function(done) { funcTestHelper.createPost(lunaContext, 'post body')(done) })
+    beforeEach(function(done) { funcTestHelper.createCommentCtx(lunaContext, 'comment')(done) })
 
     it('should update a comment with a valid user', function(done) {
       var newBody = "New body"
       request
-        .post(app.config.host + '/v1/comments/' + comment.id)
+        .post(app.config.host + '/v1/comments/' + lunaContext.comment.id)
         .send({ comment: { body: newBody },
-                authToken: authToken,
+                authToken: lunaContext.authToken,
                 '_method': 'put'
               })
         .end(function(err, res) {
@@ -163,7 +125,7 @@ describe("CommentsController", function() {
     it('should not update a comment with a invalid user', function(done) {
       var newBody = "New body"
       request
-        .post(app.config.host + '/v1/comments/' + comment.id)
+        .post(app.config.host + '/v1/comments/' + lunaContext.comment.id)
         .send({ comment: { body: newBody },
                 '_method': 'put'
               })
@@ -178,9 +140,9 @@ describe("CommentsController", function() {
     it("should not update another user's comment", function(done) {
       var newBody = "New body"
       request
-          .post(app.config.host + '/v1/comments/' + comment.id)
+          .post(app.config.host + '/v1/comments/' + lunaContext.comment.id)
           .send({ comment: { body: newBody },
-            authToken: otherUserAuthToken,
+            authToken: yoleContext.authToken,
             '_method': 'put'
           })
           .end(function(err, res) {
@@ -191,46 +153,23 @@ describe("CommentsController", function() {
   })
 
   describe('#destroy()', function() {
-    var username = 'Luna'
-    var post
-      , comment
-      , authToken
-      , otherUserAuthToken
+    var lunaContext = {}
+      , yoleContext = {}
 
-    beforeEach(funcTestHelper.createUser(username, 'password', function(token) {
-      authToken = token
-    }))
+    beforeEach(funcTestHelper.createUserCtx(lunaContext, 'Luna', 'password'))
+    beforeEach(funcTestHelper.createUserCtx(yoleContext, 'yole', 'pw'))
 
-    beforeEach(funcTestHelper.createUser('yole', 'pw', function(token) {
-      otherUserAuthToken = token
-    }))
-
-    beforeEach(function(done) {
-      var body = 'Post body'
-      request
-        .post(app.config.host + '/v1/posts')
-        .send({ post: { body: body }, authToken: authToken })
-        .end(function(err, res) {
-          post = res.body.posts
-
-          var body = "Comment"
-
-          funcTestHelper.createComment(body, post.id, authToken, function(err, res) {
-            comment = res.body.comments
-
-            done()
-          })
-        })
-    })
+    beforeEach(function(done) { funcTestHelper.createPost(lunaContext, 'Post body')(done) })
+    beforeEach(function(done) { funcTestHelper.createCommentCtx(lunaContext, 'Comment')(done) })
 
     it('should destroy valid comment', function(done) {
-      funcTestHelper.removeComment(comment.id, authToken, function(err, res) {
+      funcTestHelper.removeComment(lunaContext.comment.id, lunaContext.authToken, function(err, res) {
         res.body.should.be.empty
         res.status.should.eql(200)
 
         request
-          .get(app.config.host + '/v1/posts/'+post.id)
-          .query({ authToken: authToken })
+          .get(app.config.host + '/v1/posts/' + lunaContext.post.id)
+          .query({ authToken: lunaContext.authToken })
           .end(function(err, res) {
             res.should.not.be.empty
             res.body.should.not.be.empty
@@ -243,7 +182,7 @@ describe("CommentsController", function() {
 
     it('should not destroy valid comment without user', function(done) {
       request
-        .post(app.config.host + '/v1/comments/' + comment.id)
+        .post(app.config.host + '/v1/comments/' + lunaContext.comment.id)
         .send({
           '_method': 'delete'
         })
@@ -256,16 +195,16 @@ describe("CommentsController", function() {
 
     it("should not destroy another user's comment", function(done) {
       request
-          .post(app.config.host + '/v1/comments/' + comment.id)
-          .query({ authToken: otherUserAuthToken })
-          .send({
-            '_method': 'delete'
-          })
-          .end(function(err, res) {
-            err.should.not.be.empty
-            err.status.should.eql(403)
-            done()
-          })
+        .post(app.config.host + '/v1/comments/' + lunaContext.comment.id)
+        .query({ authToken: yoleContext.authToken })
+        .send({
+          '_method': 'delete'
+        })
+        .end(function(err, res) {
+          err.should.not.be.empty
+          err.status.should.eql(403)
+          done()
+        })
     })
   })
 })

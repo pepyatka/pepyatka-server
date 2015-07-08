@@ -26,7 +26,7 @@ exports.addController = function(app) {
     } else if (req.body.meta.feeds) {
       feeds = [req.body.meta.feeds]
     } else {
-      feeds = [req.user.username]
+      return res.status(401).jsonp({ err: 'Cannot publish post to /dev/null' })
     }
 
     Promise.map(feeds, function(username) {
