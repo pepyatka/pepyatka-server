@@ -660,34 +660,26 @@ exports.addModel = function(database) {
     })
   }
 
-  Post.prototype.addLike = function(userId) {
-    var that = this
+  Post.prototype.addLike = async function(userId) {
+    try {
+      var user = await models.User.findById(userId)
+      await user.validateCanLikePost(this.id)
 
-    return new Promise(function(resolve, reject) {
+      var timelines = await this.getLikesFriendOfFriendTimelines(userId)
+      var now = new Date().getTime()
+      var promises = [
+        timelines.map((timeline) => timeline.updatePost(this.id, 'like')),
+        database.zaddAsync(mkKey(['post', this.id, 'likes']), now, userId)
+      ]
+      await* promises
 
-      models.User.findById(userId)
-        .then(function(user) {
-          return user.validateCanLikePost(that.id)
-        })
-        .then(function() {
-          return that.getLikesFriendOfFriendTimelines(userId)
-        })
-        .then(function(timelines) {
-          var now = new Date().getTime()
-
-          return Promise.all([
-            Promise.map(timelines, function(timeline) {
-              return timeline.updatePost(that.id, 'like')
-            }),
-            database.zaddAsync(mkKey(['post', that.id, 'likes']), now, userId)
-          ])
-        })
-        .then(function() { return pubSub.newLike(that.id, userId)})
-        .then(function() { return models.Stats.findById(userId) })
-        .then(function(stats) { return stats.addLike() })
-        .then(function(res) { resolve(res) })
-        .catch(function(err) { reject(err) })
-    })
+      await pubSub.newLike(this.id, userId)
+      var stats = await models.Stats.findById(userId)
+      var res = await stats.addLike()
+      return res
+    } catch(e) {
+      throw e
+    }
   }
 
   Post.prototype.removeLike = function(userId) {
