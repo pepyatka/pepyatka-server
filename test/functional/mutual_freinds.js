@@ -69,6 +69,44 @@ describe("MutualFriends", function() {
               })
           })
       })
+
+      it('should not publish commented private post to home feed of mutual friends', function(done) {
+        var body = 'body'
+        request
+          .post(app.config.host + '/v1/posts')
+          .send({ post: { body: body }, meta: { feeds: [marsContext.username] }, authToken: lunaContext.authToken })
+          .end(function(err, res) {
+            var post = res.body.posts
+            funcTestHelper.createComment(body, post.id, lunaContext.authToken, function(err, res) {
+              funcTestHelper.getTimeline('/v1/timelines/home', zeusContext.authToken, function(err, res) {
+                res.body.should.have.property('timelines')
+                res.body.timelines.should.have.property('name')
+                res.body.timelines.name.should.eql('RiverOfNews')
+                res.body.should.not.have.property('posts')
+                done()
+              })
+            })
+          })
+      })
+
+      it('should not publish commented private post to likes feed', function(done) {
+        var body = 'body'
+        request
+          .post(app.config.host + '/v1/posts')
+          .send({ post: { body: body }, meta: { feeds: [marsContext.username] }, authToken: lunaContext.authToken })
+          .end(function(err, res) {
+            var post = res.body.posts
+            funcTestHelper.createComment(body, post.id, lunaContext.authToken, function(err, res) {
+              funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.username + '/comments', lunaContext.authToken, function(err, res) {
+                res.body.should.have.property('timelines')
+                res.body.timelines.should.have.property('name')
+                res.body.timelines.name.should.eql('Comments')
+                res.body.should.not.have.property('posts')
+                done()
+              })
+            })
+          })
+      })
     })
   })
 })

@@ -419,27 +419,16 @@ exports.addModel = function(database) {
     })
   }
 
-  Post.prototype.addComment = function(commentId) {
-    var that = this
-    var timelineIds = []
-    var user
+  Post.prototype.addComment = async function(commentId) {
+    var timelines = []
+    var comment = await models.Comment.findById(commentId)
 
-    return new Promise(function(resolve, reject) {
-      models.Comment.findById(commentId)
-        .then(function(comment) { return that.getCommentsFriendOfFriendTimelines(comment.userId) })
-        .then(function(timelines) {
-          return Promise.map(timelines, function(timeline) {
-            return timeline.updatePost(that.id)
-          })
-        })
-        .then(function() {
-          return database.rpushAsync(mkKey(['post', that.id, 'comments']), commentId)
-        })
-        .then(function() {
-          return pubSub.newComment(commentId)
-        })
-        .then(function(res) { resolve(res) })
-    })
+    if (!await this.isPrivate())
+      timelines = await this.getCommentsFriendOfFriendTimelines(comment.userId)
+
+    await* timelines.map((timeline) => timeline.updatePost(this.id))
+    await database.rpushAsync(mkKey(['post', this.id, 'comments']), commentId)
+    return pubSub.newComment(commentId)
   }
 
   Post.prototype.getOmittedComments = function() {
@@ -662,7 +651,7 @@ exports.addModel = function(database) {
 
   Post.prototype.isPrivate = async function() {
     var timelines = await this.getPostedTo()
-    var arr = await timelines.map(async function(timeline) {
+    var arr = await* timelines.map(async function(timeline) {
       if (timeline.isDirects())
         return true
 
@@ -674,11 +663,12 @@ exports.addModel = function(database) {
   }
 
   Post.prototype.addLike = async function(userId) {
+    var timelines = []
     var user = await models.User.findById(userId)
     await user.validateCanLikePost(this.id)
 
     if (!await this.isPrivate())
-      var timelines = await this.getLikesFriendOfFriendTimelines(userId)
+      timelines = await this.getLikesFriendOfFriendTimelines(userId)
 
     var now = new Date().getTime()
     var promises = timelines.map((timeline) => timeline.updatePost(this.id, 'like'))
