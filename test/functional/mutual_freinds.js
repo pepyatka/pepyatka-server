@@ -107,6 +107,41 @@ describe("MutualFriends", function() {
             })
           })
       })
+
+      it('should not comment on direct message unless you are recipient', function(done) {
+        var body = 'body'
+        request
+          .post(app.config.host + '/v1/posts')
+          .send({ post: { body: body }, meta: { feeds: [marsContext.username] }, authToken: lunaContext.authToken })
+          .end(function(err, res) {
+            var post = res.body.posts
+            funcTestHelper.createComment(body, post.id, zeusContext.authToken, function(err, res) {
+              res.body.should.not.be.empty
+              res.body.should.have.property('err')
+              res.body.err.should.eql('Not found')
+              done()
+            })
+          })
+      })
+
+      it('should not like direct message unless you are recipient', function(done) {
+        var body = 'body'
+        request
+          .post(app.config.host + '/v1/posts')
+          .send({ post: { body: body }, meta: { feeds: [marsContext.username] }, authToken: lunaContext.authToken })
+          .end(function(err, res) {
+            var post = res.body.posts
+            request
+              .post(app.config.host + '/v1/posts/' + post.id + '/like')
+              .send({ authToken: zeusContext.authToken })
+              .end(function(err, res) {
+                res.body.should.not.be.empty
+                res.body.should.have.property('err')
+                res.body.err.should.eql('Not found')
+                done()
+              })
+          })
+      })
     })
   })
 })
