@@ -659,7 +659,7 @@ exports.addModel = function(database) {
       // post if it's not a direct message
       return false
     })
-    return _.reduce(arr, function(acc, x) { return acc || x }, false)
+    return _.every(arr, _.identity, true)
   }
 
   Post.prototype.addLike = async function(userId) {
