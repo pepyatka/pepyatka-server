@@ -43,7 +43,20 @@ exports.createUser = function(username, password, attributes, callback) {
 exports.createUserCtx = function(context, username, password) {
   return exports.createUser(username, password, function(token) {
     context.authToken = token
+    context.username = username
+    context.password = password
   })
+}
+
+exports.subscribeToCtx = function(context, username) {
+  return function(done) {
+    request
+      .post(app.config.host + '/v1/users/' + username + '/subscribe')
+      .send({ authToken: context.authToken })
+      .end(function(err, res) {
+        done()
+      })
+  }
 }
 
 exports.createPost = function(context, body, callback) {

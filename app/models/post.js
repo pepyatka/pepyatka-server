@@ -660,12 +660,26 @@ exports.addModel = function(database) {
     })
   }
 
+  Post.prototype.isPrivate = async function() {
+    var timelines = await this.getPostedTo()
+    var arr = await timelines.map(async function(timeline) {
+      if (timeline.isDirects())
+        return true
+
+      // we do not have private feeds yet so user can open any
+      // post if it's not a direct message
+      return false
+    })
+    return _.reduce(arr, function(acc, x) { return acc || x }, false)
+  }
+
   Post.prototype.addLike = async function(userId) {
     var user = await models.User.findById(userId)
     await user.validateCanLikePost(this.id)
 
-    // if (!(await this.isPrivate()))
-    var timelines = await this.getLikesFriendOfFriendTimelines(userId)
+    if (!await this.isPrivate())
+      var timelines = await this.getLikesFriendOfFriendTimelines(userId)
+
     var now = new Date().getTime()
     var promises = timelines.map((timeline) => timeline.updatePost(this.id, 'like'))
     promises.push(database.zaddAsync(mkKey(['post', this.id, 'likes']), now, userId))
@@ -673,8 +687,7 @@ exports.addModel = function(database) {
 
     await pubSub.newLike(this.id, userId)
     var stats = await models.Stats.findById(userId)
-    var res = await stats.addLike()
-    return res
+    return stats.addLike()
   }
 
   Post.prototype.removeLike = function(userId) {
