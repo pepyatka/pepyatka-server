@@ -661,25 +661,20 @@ exports.addModel = function(database) {
   }
 
   Post.prototype.addLike = async function(userId) {
-    try {
-      var user = await models.User.findById(userId)
-      await user.validateCanLikePost(this.id)
+    var user = await models.User.findById(userId)
+    await user.validateCanLikePost(this.id)
 
-      var timelines = await this.getLikesFriendOfFriendTimelines(userId)
-      var now = new Date().getTime()
-      var promises = [
-        timelines.map((timeline) => timeline.updatePost(this.id, 'like')),
-        database.zaddAsync(mkKey(['post', this.id, 'likes']), now, userId)
-      ]
-      await* promises
+    // if (!(await this.isPrivate()))
+    var timelines = await this.getLikesFriendOfFriendTimelines(userId)
+    var now = new Date().getTime()
+    var promises = timelines.map((timeline) => timeline.updatePost(this.id, 'like'))
+    promises.push(database.zaddAsync(mkKey(['post', this.id, 'likes']), now, userId))
+    await* promises
 
-      await pubSub.newLike(this.id, userId)
-      var stats = await models.Stats.findById(userId)
-      var res = await stats.addLike()
-      return res
-    } catch(e) {
-      throw e
-    }
+    await pubSub.newLike(this.id, userId)
+    var stats = await models.Stats.findById(userId)
+    var res = await stats.addLike()
+    return res
   }
 
   Post.prototype.removeLike = function(userId) {
