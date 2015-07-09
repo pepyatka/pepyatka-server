@@ -9,11 +9,9 @@ describe("GroupsController", function() {
   beforeEach(funcTestHelper.flushDb())
 
   describe("#create()", function() {
-    var authToken
+    var context = {}
 
-    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
-      authToken = token
-    }))
+    beforeEach(funcTestHelper.createUserCtx(context, 'Luna', 'password'))
 
     it('should reject unauthenticated users', function(done) {
       request
@@ -31,7 +29,7 @@ describe("GroupsController", function() {
       request
           .post(app.config.host + '/v1/groups')
           .send({ group: {username: userName, screenName: screenName},
-              authToken: authToken })
+              authToken: context.authToken })
           .end(function(err, res) {
             res.body.should.not.be.empty
             res.body.should.have.property('groups')
@@ -49,7 +47,7 @@ describe("GroupsController", function() {
       request
           .post(app.config.host + '/v1/groups')
           .send({ group: {username: userName, screenName: screenName, isPrivate: '1'},
-            authToken: authToken })
+            authToken: context.authToken })
           .end(function(err, res) {
             res.body.should.not.be.empty
             res.body.should.have.property('groups')
@@ -64,7 +62,7 @@ describe("GroupsController", function() {
       request
           .post(app.config.host + '/v1/groups')
           .send({ group: {username: userName, screenName: screenName},
-            authToken: authToken })
+            authToken: context.authToken })
           .end(function(err, res) {
             err.should.not.be.empty
             err.status.should.eql(422)
@@ -78,7 +76,7 @@ describe("GroupsController", function() {
       request
           .post(app.config.host + '/v1/groups')
           .send({ group: {username: userName, screenName: screenName},
-            authToken: authToken })
+            authToken: context.authToken })
           .end(function(err, res) {
             err.should.not.be.empty
             err.status.should.eql(422)
@@ -94,7 +92,7 @@ describe("GroupsController", function() {
       request
           .post(app.config.host + '/v1/groups')
           .send({ group: {username: userName, screenName: screenName},
-            authToken: authToken })
+            authToken: context.authToken })
           .end(function(err, res) {
             err.should.not.be.empty
             err.status.should.eql(422)
@@ -110,7 +108,7 @@ describe("GroupsController", function() {
       request
           .post(app.config.host + '/v1/groups')
           .send({ group: {username: userName, screenName: screenName},
-            authToken: authToken })
+            authToken: context.authToken })
           .end(function(err, res) {
             // TODO[yole] check that the user is an administrator
             done()
@@ -123,12 +121,12 @@ describe("GroupsController", function() {
       request
           .post(app.config.host + '/v1/groups')
           .send({ group: {username: userName, screenName: screenName},
-            authToken: authToken })
+            authToken: context.authToken })
           .end(function(err, res) {
             var newGroupId = res.body.groups.id
             request
                 .get(app.config.host + '/v1/users/Luna/subscriptions')
-                .query({authToken: authToken})
+                .query({ authToken: context.authToken })
                 .end(function(err, res) {
                   res.status.should.not.eql(404)
                   res.status.should.not.eql(422)
@@ -147,21 +145,17 @@ describe("GroupsController", function() {
   })
 
   describe('#admin', function() {
-    var authTokenAdmin, authTokenNonAdmin
+    var adminContext = {}
+      , nonAdminContext = {}
 
-    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
-      authTokenAdmin = token
-    }))
-
-    beforeEach(funcTestHelper.createUser('yole', 'wordpass', function(token) {
-      authTokenNonAdmin = token
-    }))
+    beforeEach(funcTestHelper.createUserCtx(adminContext, 'Luna', 'password'))
+    beforeEach(funcTestHelper.createUserCtx(nonAdminContext, 'yole', 'wordpass'))
 
     beforeEach(function(done) {
       request
           .post(app.config.host + '/v1/groups')
           .send({ group: {username: 'pepyatka-dev', screenName: 'Pepyatka Developers'},
-            authToken: authTokenAdmin })
+            authToken: adminContext.authToken })
           .end(function(err, res) {
             done()
           })
@@ -190,7 +184,7 @@ describe("GroupsController", function() {
     it('should allow an administrator to add another administrator', function(done) {
       request
           .post(app.config.host + '/v1/groups/pepyatka-dev/subscribers/yole/admin')
-          .send({authToken: authTokenAdmin})
+          .send({authToken: adminContext.authToken })
           .end(function(err, res) {
             res.status.should.eql(200)
             done()
@@ -199,23 +193,21 @@ describe("GroupsController", function() {
   })
 
   describe('#update', function() {
-    var authToken
+    var context = {}
       , group
 
-    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
-      authToken = token
-    }))
+    beforeEach(funcTestHelper.createUserCtx(context, 'Luna', 'password'))
 
     beforeEach(function(done) {
       request
-          .post(app.config.host + '/v1/groups')
-          .send({ group: {username: 'pepyatka-dev', screenName: 'Pepyatka Developers'},
-            authToken: authToken
-          })
-          .end(function(err, res) {
-            group = res.body.groups
-            done()
-          })
+        .post(app.config.host + '/v1/groups')
+        .send({ group: {username: 'pepyatka-dev', screenName: 'Pepyatka Developers'},
+                authToken: context.authToken
+              })
+        .end(function(err, res) {
+          group = res.body.groups
+          done()
+        })
     })
 
     it('should update group settings', function(done) {
@@ -223,7 +215,7 @@ describe("GroupsController", function() {
 
       request
         .post(app.config.host + '/v1/users/' + group.id)
-        .send({ authToken: authToken,
+        .send({ authToken: context.authToken,
                 user: { screenName: screenName },
                 '_method': 'put' })
         .end(function(err, res) {
@@ -239,21 +231,17 @@ describe("GroupsController", function() {
   })
 
   describe('#unadmin', function() {
-    var authTokenAdmin, authTokenNonAdmin
+    var adminContext = {}
+      , nonAdminContext = {}
 
-    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
-      authTokenAdmin = token
-    }))
-
-    beforeEach(funcTestHelper.createUser('yole', 'wordpass', function(token) {
-      authTokenNonAdmin = token
-    }))
+    beforeEach(funcTestHelper.createUserCtx(adminContext, 'Luna', 'password'))
+    beforeEach(funcTestHelper.createUserCtx(nonAdminContext, 'yole', 'wordpass'))
 
     beforeEach(function(done) {
       request
           .post(app.config.host + '/v1/groups')
           .send({ group: {username: 'pepyatka-dev', screenName: 'Pepyatka Developers'},
-            authToken: authTokenAdmin })
+            authToken: adminContext.authToken })
           .end(function(err, res) {
             done()
           })
@@ -263,7 +251,7 @@ describe("GroupsController", function() {
     beforeEach(function(done) {
       request
           .post(app.config.host + '/v1/groups/pepyatka-dev/subscribers/yole/admin')
-          .send({authToken: authTokenAdmin})
+          .send({ authToken: adminContext.authToken })
           .end(function(err, res) {
             done()
           })
@@ -272,7 +260,7 @@ describe("GroupsController", function() {
     it('should allow an administrator to remove another administrator', function(done) {
       request
           .post(app.config.host + '/v1/groups/pepyatka-dev/subscribers/yole/unadmin')
-          .send({authToken: authTokenAdmin})
+          .send({ authToken: adminContext.authToken })
           .end(function(err, res) {
             res.status.should.eql(200)
             done()
@@ -281,11 +269,9 @@ describe("GroupsController", function() {
   })
 
   describe('#updateProfilePicture', function() {
-    var authToken
+    var context = {}
 
-    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
-      authToken = token
-    }))
+    beforeEach(funcTestHelper.createUserCtx(context, 'Luna', 'password'))
 
     beforeEach(function(done){
       mkdirp.sync(config.profilePictures.fsDir)
@@ -296,7 +282,7 @@ describe("GroupsController", function() {
       request
         .post(app.config.host + '/v1/groups')
         .send({ group: {username: 'pepyatka-dev', screenName: 'Pepyatka Developers'},
-          authToken: authToken })
+          authToken: context.authToken })
         .end(function(err, res) {
           done()
         })
@@ -305,14 +291,14 @@ describe("GroupsController", function() {
     it('should update the profile picture', function(done) {
       request
         .post(app.config.host + '/v1/groups/pepyatka-dev/updateProfilePicture')
-        .set('X-Authentication-Token', authToken)
+        .set('X-Authentication-Token', context.authToken)
         .attach('file', 'test/fixtures/default-userpic-75.gif')
         .end(function(err, res) {
           res.status.should.eql(200)
           res.body.should.not.be.empty
           request
             .get(app.config.host + '/v1/users/pepyatka-dev')
-            .query({ authToken: authToken })
+            .query({ authToken: context.authToken })
             .end(function(err, res) {
               res.should.not.be.empty
               res.body.users.profilePictureLargeUrl.should.not.be.empty
