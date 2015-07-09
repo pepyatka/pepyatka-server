@@ -6,7 +6,7 @@ exports.init = function(database) {
   class pubSub {
     static async newPost(postId) {
       var post = await models.Post.findById(postId)
-      var timelines = await post.getSubscribedTimelines()
+      var timelines = await post.getTimelines()
 
       var promises = timelines.map(async function(timeline) {
         let isBanned = await post.isBannedFor(timeline.userId)
@@ -22,7 +22,7 @@ exports.init = function(database) {
 
     static async destroyPost(postId) {
       var post = await models.Post.findById(postId)
-      var timelineIds = await post.getSubscribedTimelineIds()
+      var timelineIds = await post.getTimelineIds()
 
       var promises = timelineIds.map(async function(timelineId) {
         let jsonedPost = JSON.stringify({ postId: postId, timelineId: timelineId })
@@ -34,7 +34,7 @@ exports.init = function(database) {
 
     static async updatePost(postId) {
       var post = await models.Post.findById(postId)
-      var timelineIds = await post.getSubscribedTimelineIds()
+      var timelineIds = await post.getTimelineIds()
 
       var promises = timelineIds.map(async function(timelineId) {
         let jsonedPost = JSON.stringify({ postId: postId, timelineId: timelineId })
@@ -47,7 +47,7 @@ exports.init = function(database) {
     static async newComment(commentId) {
       var comment = await models.Comment.findById(commentId)
       var post = await comment.getPost()
-      var timelines = await post.getCommentsFriendOfFriendTimelines(comment.userId)
+      var timelines = await post.getTimelines()
 
       var promises = timelines.map(async function(timeline) {
         let isBanned = await post.isBannedFor(timeline.userId)
@@ -80,7 +80,7 @@ exports.init = function(database) {
       let payload = JSON.stringify({ postId: post.id, commentId: commentId })
       await database.publishAsync('comment:update', payload)
 
-      var timelineIds = await post.getSubscribedTimelineIds()
+      var timelineIds = await post.getTimelineIds()
       var promises = timelineIds.map(async function(timelineId) {
         let payload = JSON.stringify({ timelineId: timelineId, commentId: commentId })
         await database.publishAsync('comment:update', payload)
@@ -91,7 +91,7 @@ exports.init = function(database) {
 
     static async newLike(postId, userId) {
       var post = await models.Post.findById(postId)
-      var timelines = await post.getLikesFriendOfFriendTimelines(userId)
+      var timelines = await post.getTimelines()
 
       var promises = timelines.map(async function(timeline) {
         var isBanned = await post.isBannedFor(timeline.userId)
@@ -111,7 +111,7 @@ exports.init = function(database) {
 
     static async removeLike(postId, userId) {
       var post = await models.Post.findById(postId)
-      var timelineIds = await post.getSubscribedTimelineIds()
+      var timelineIds = await post.getTimelineIds()
 
       var promises = timelineIds.map(async function(timelineId) {
         let payload = JSON.stringify({ timelineId: timelineId, userId: userId, postId: postId })

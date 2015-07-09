@@ -288,7 +288,7 @@ exports.addModel = function(database) {
    */
   Timeline.prototype.getSubscribedTimelineIds = async function() {
     var subscribers = await this.getSubscribers(true);
-    return subscribers.map((subscriber) => subscriber.getRiverOfNewsTimelineId())
+    return await* subscribers.map((subscriber) => subscriber.getRiverOfNewsTimelineId())
   }
 
   Timeline.prototype.isRiverOfNews = function() {

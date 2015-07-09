@@ -262,6 +262,11 @@ exports.addModel = function(database) {
     })
   }
 
+  Post.prototype.getTimelines = async function() {
+    var timelineIds = await this.getTimelineIds()
+    return await* timelineIds.map((timelineId) => models.Timeline.findById(timelineId))
+  }
+
   Post.prototype.getPostedToIds = function() {
     var that = this
 
