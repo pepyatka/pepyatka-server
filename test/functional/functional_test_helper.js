@@ -19,6 +19,9 @@ exports.createUser = function(username, password, attributes, callback) {
       attributes = {}
     }
 
+    if (typeof attributes === 'undefined')
+      attributes = {}
+
     var user = {
       username: username,
       password: password
@@ -40,11 +43,12 @@ exports.createUser = function(username, password, attributes, callback) {
   }
 }
 
-exports.createUserCtx = function(context, username, password) {
-  return exports.createUser(username, password, function(token) {
+exports.createUserCtx = function(context, username, password, attrs) {
+  return exports.createUser(username, password, attrs, function(token, user) {
+    context.user      = user
     context.authToken = token
-    context.username = username.toLowerCase()
-    context.password = password
+    context.username  = username.toLowerCase()
+    context.password  = password
   })
 }
 
@@ -55,6 +59,41 @@ exports.subscribeToCtx = function(context, username) {
       .send({ authToken: context.authToken })
       .end(function(err, res) {
         done()
+      })
+  }
+}
+
+exports.updateUserCtx = function(context, attrs) {
+  return function(done) {
+    request
+      .post(app.config.host + '/v1/users/' + context.user.id)
+      .send({ authToken: context.authToken,
+              user: { email: attrs.email },
+              '_method': 'put' })
+      .end(function(err, res) {
+        done(err, res)
+      })
+  }
+}
+
+exports.sendResetPassword = function(email) {
+  return function(done) {
+    request
+      .post(app.config.host + '/v1/passwords')
+      .send({ email: email })
+      .end(function(err, res) {
+        done(err, res)
+      })
+  }
+}
+
+exports.resetPassword = function(token) {
+  return function(done) {
+    request
+      .post(app.config.host + '/v1/passwords/token')
+      .send({ '_method': 'put' })
+      .end(function(err, res) {
+        done(err, res)
       })
   }
 }
