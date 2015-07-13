@@ -81,6 +81,48 @@ describe("TimelinesController", function() {
     })
   })
 
+  describe('#pagination', function() {
+    var context = {}
+
+    beforeEach(funcTestHelper.createUserCtx(context, 'Luna', 'password'))
+    beforeEach(function(done) { funcTestHelper.createPost(context, 'Post one')(done) })
+    beforeEach(function(done) { funcTestHelper.createPost(context, 'Post two')(done) })
+    beforeEach(function(done) { funcTestHelper.createPost(context, 'Post three')(done) })
+
+    it('should respect explicit pagination limits', function(done) {
+      funcTestHelper.getTimelinePaged('/v1/timelines/' + context.username, context.authToken, 0, 1, function(err, res) {
+          res.should.not.be.empty
+          res.body.should.not.be.empty
+          res.body.should.have.property('timelines')
+          res.body.timelines.should.have.property('name')
+          res.body.timelines.name.should.eql('Posts')
+          res.body.timelines.should.have.property('posts')
+          res.body.timelines.posts.length.should.eql(1)
+          res.body.should.have.property('posts')
+          res.body.posts.length.should.eql(1)
+          res.body.posts[0].body.should.eql('Post three') // Latest post first
+          done()
+        })
+    })
+
+    it('should respect pagination offset', function(done) {
+      funcTestHelper.getTimelinePaged('/v1/timelines/' + context.username, context.authToken, 1, 1, function(err, res) {
+          res.should.not.be.empty
+          res.body.should.not.be.empty
+          res.body.should.have.property('timelines')
+          res.body.timelines.should.have.property('name')
+          res.body.timelines.name.should.eql('Posts')
+          res.body.timelines.should.have.property('posts')
+          res.body.timelines.posts.length.should.eql(1)
+          res.body.should.have.property('posts')
+          res.body.posts.length.should.eql(1)
+          res.body.posts[0].body.should.eql('Post two')
+          done()
+        })
+    })
+
+  })
+
   describe('#likes()', function() {
     var context = {}
 

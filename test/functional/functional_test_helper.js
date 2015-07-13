@@ -2,6 +2,7 @@
 
 var request = require('superagent')
     , app = require('../../index')
+    , _ = require('lodash')
 
 exports.flushDb = function() {
   return function(done) {
@@ -176,6 +177,28 @@ exports.getTimeline = function(timelinePath, authToken, callback) {
     var sendParams = {};
     if (authToken) {
       sendParams.authToken = authToken
+    }
+    request
+      .get(app.config.host + timelinePath)
+      .query(sendParams)
+      .end(function(err, res) {
+        done(err, res)
+      })
+
+  }(callback)
+}
+
+exports.getTimelinePaged = function(timelinePath, authToken, offset, limit, callback) {
+  return function(done) {
+    var sendParams = {};
+    if (!_.isUndefined(authToken)) {
+      sendParams.authToken = authToken
+    }
+    if (!_.isUndefined(offset)) {
+      sendParams.offset = offset
+    }
+    if (!_.isUndefined(limit)) {
+      sendParams.limit = limit
     }
     request
       .get(app.config.host + timelinePath)
