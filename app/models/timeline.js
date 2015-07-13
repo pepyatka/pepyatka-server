@@ -134,13 +134,19 @@ exports.addModel = function(database) {
   }
 
   Timeline.prototype.getPostIds = function(offset, limit) {
-    var that = this
-
-    if (!offset || !limit) {
+    if (_.isUndefined(offset))
       offset = this.offset
+    else
+      if (offset < 0) offset = 0
+    // -1 = special magic number, meaning “do not use limit defaults,
+    // do not use passed in value, use 0 instead". this is at the very least
+    // used in Timeline.merge()
+    if (_.isUndefined(limit))
       limit = this.limit
-    }
+    else
+      if (limit < 0) limit = 0
 
+    var that = this
     return new Promise(function(resolve, reject) {
       database.zrevrangeAsync(mkKey(['timeline', that.id, 'posts']), offset, offset+limit-1)
         .then(function(postIds) {
@@ -163,14 +169,19 @@ exports.addModel = function(database) {
   }
 
   Timeline.prototype.getPosts = function(offset, limit) {
+    if (_.isUndefined(offset))
+      offset = this.offset
+    else
+      if (offset < 0) offset = 0
+
+    if (_.isUndefined(limit))
+      limit = this.limit
+    else
+      if (limit < 0) limit = 0
+
     var that = this
     var p_post
     var p_banIds
-
-    if (!offset || !limit) {
-      offset = this.offset
-      limit = this.limit
-    }
 
     return new Promise(function(resolve, reject) {
       that.getPostIds(offset, limit).bind({})
