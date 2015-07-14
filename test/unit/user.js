@@ -186,7 +186,7 @@ describe('User', function() {
           })
         })
         .catch(function(e) {
-          e.message.should.eql("Invalid")
+          e.message.should.eql("Invalid screenname")
           done()
         })
     })
