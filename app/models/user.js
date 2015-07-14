@@ -198,18 +198,23 @@ exports.addModel = function(database) {
   }
 
   User.prototype.isValidScreenName = function() {
-    var valid
-
-    if (!this.screenName) {
-      valid = false
-    } else {
-      var len = GraphemeBreaker.countBreaks(this.screenName)
-
-      valid = len >= 3
-          && len <= 25
-    }
+    var valid = this.screenNameIsValid(this.screenName)
 
     return Promise.resolve(valid)
+  }
+
+  User.prototype.screenNameIsValid = function(screenName) {
+    if (!screenName) {
+      return false
+    }
+
+    var len = GraphemeBreaker.countBreaks(screenName)
+
+    if (len < 3 || len > 25) {
+      return false
+    }
+
+    return true
   }
 
   User.prototype.validate = async function() {
