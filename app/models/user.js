@@ -181,11 +181,17 @@ exports.addModel = function(database) {
   }
 
   User.prototype.isValidEmail = function() {
-    var valid = true
-    if (this.email.length > 0) {
-      valid = validator.isEmail(this.email)
-    }
+    var valid = this.emailIsValid(this.email)
+
     return Promise.resolve(valid)
+  }
+
+  User.prototype.emailIsValid = function(email) {
+    if (email.length == 0) {
+      return true
+    }
+
+    return validator.isEmail(email)
   }
 
   User.prototype.isValidUsername = function() {
@@ -289,32 +295,56 @@ exports.addModel = function(database) {
     return this
   }
 
-  User.prototype.update = function(params) {
-    var that = this
+  User.prototype.update = async function(params) {
+    var has_changes = false
 
-    return new Promise(function(resolve, reject) {
-      that.updatedAt = new Date().getTime()
-      if (params.hasOwnProperty('screenName'))
-        that.screenName = params.screenName
-      if (params.hasOwnProperty('email'))
-        that.email = params.email
-      that.isPrivate = params.isPrivate
+    if (params.hasOwnProperty('screenName') && params.screenName != this.screenName) {
+      if (!this.screenNameIsValid(params.screenName)) {
+        throw new Error("Invalid screenname")
+      }
 
-      that.validate()
-        .then(function() {
-          return Promise.all([
-            database.hmsetAsync(mkKey(['user', that.id]),
-                                { 'screenName': that.screenName,
-                                  'email': that.email,
-                                  'isPrivate': that.isPrivate,
-                                  'updatedAt': that.updatedAt.toString()
-                                }),
-            that.createEmailIndex()
-          ])
-        })
-        .then(function() { resolve(that) })
-        .catch(function(e) { reject(e) })
-    })
+      this.screenName = params.screenName
+      has_changes = true
+    }
+
+    if (params.hasOwnProperty('email') && params.email != this.email) {
+      if (!this.emailIsValid(params.email)) {
+        throw new Error("Invalid email")
+      }
+
+      this.email = params.email
+      has_changes = true
+    }
+
+    if (params.hasOwnProperty('isPrivate') && params.isPrivate != this.isPrivate) {
+      if (params.isPrivate != '0' && params.isPrivate != '1') {
+        // ???
+        throw new Error("bad input")
+      }
+
+      this.isPrivate = params.isPrivate
+      has_changes = true
+    }
+
+    if (has_changes) {
+      this.updatedAt = new Date().getTime()
+
+      var payload = {
+        'screenName': this.screenName,
+        'email':      this.email,
+        'isPrivate':  this.isPrivate,
+        'updatedAt':  this.updatedAt.toString()
+      };
+
+      var promises = [
+        database.hmsetAsync(mkKey(['user', this.id]), payload),
+        this.createEmailIndex()
+      ]
+
+      await* promises
+    }
+
+    return this
   }
 
   User.prototype.updatePassword = async function(password, passwordConfirmation) {
