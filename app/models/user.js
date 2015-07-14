@@ -296,7 +296,7 @@ exports.addModel = function(database) {
   }
 
   User.prototype.update = async function(params) {
-    var has_changes = false
+    var hasChanges = false
 
     if (params.hasOwnProperty('screenName') && params.screenName != this.screenName) {
       if (!this.screenNameIsValid(params.screenName)) {
@@ -304,7 +304,7 @@ exports.addModel = function(database) {
       }
 
       this.screenName = params.screenName
-      has_changes = true
+      hasChanges = true
     }
 
     if (params.hasOwnProperty('email') && params.email != this.email) {
@@ -313,7 +313,7 @@ exports.addModel = function(database) {
       }
 
       this.email = params.email
-      has_changes = true
+      hasChanges = true
     }
 
     if (params.hasOwnProperty('isPrivate') && params.isPrivate != this.isPrivate) {
@@ -323,10 +323,10 @@ exports.addModel = function(database) {
       }
 
       this.isPrivate = params.isPrivate
-      has_changes = true
+      hasChanges = true
     }
 
-    if (has_changes) {
+    if (hasChanges) {
       this.updatedAt = new Date().getTime()
 
       var payload = {
