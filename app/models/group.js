@@ -106,25 +106,25 @@ exports.addModel = function(database) {
       return this
   }
 
-  Group.prototype.update = function(params) {
-    var that = this
+  Group.prototype.update = async function(params) {
+    if (params.hasOwnProperty('screenName') && this.screenName != params.screenName) {
+      if (!this.screenNameIsValid(params.screenName)) {
+        throw new Error("Invalid screenname")
+      }
 
-    return new Promise(function(resolve, reject) {
-      that.updatedAt = new Date().getTime()
-      if (params.hasOwnProperty('screenName'))
-        that.screenName = params.screenName
+      this.screenName = params.screenName
+      this.updatedAt = new Date().getTime()
 
-      that.validate()
-        .then(function(user) {
-          database.hmsetAsync(mkKey(['user', that.id]),
-                              { 'screenName': that.screenName,
-                                'isPrivate': that.isPrivate,
-                                'updatedAt': that.updatedAt.toString()
-                              })
-        })
-        .then(function() { resolve(that) })
-        .catch(function(e) { reject(e) })
-    })
+      var payload = {
+        'screenName': this.screenName,
+        'isPrivate':  this.isPrivate,
+        'updatedAt':  this.updatedAt.toString()
+      }
+
+      await database.hmsetAsync(mkKey(['user', this.id]), payload)
+    }
+
+    return this
   }
 
   Group.prototype.mkAdminsKey = function() {
