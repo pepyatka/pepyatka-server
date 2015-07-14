@@ -181,11 +181,17 @@ exports.addModel = function(database) {
   }
 
   User.prototype.isValidEmail = function() {
-    var valid = true
-    if (this.email.length > 0) {
-      valid = validator.isEmail(this.email)
-    }
+    var valid = this.emailIsValid(this.email)
+
     return Promise.resolve(valid)
+  }
+
+  User.prototype.emailIsValid = function(email) {
+    if (email.length == 0) {
+      return true
+    }
+
+    return validator.isEmail(email)
   }
 
   User.prototype.isValidUsername = function() {
