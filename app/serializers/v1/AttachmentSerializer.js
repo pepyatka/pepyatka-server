@@ -4,7 +4,8 @@ var models = require('../../models')
 
 exports.addSerializer = function() {
   return new Serializer('attachments', {
-    select: ['id', 'fileName', 'fileSize', 'url', 'thumbnailUrl', 'createdAt', 'updatedAt', 'createdBy'],
+    select: ['id', 'fileName', 'fileSize', 'url', 'thumbnailUrl',
+             'mediaType', 'createdAt', 'updatedAt', 'createdBy'],
     createdBy: { through: UserSerializer, embed: true }
   })
 }

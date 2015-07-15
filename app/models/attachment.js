@@ -2,6 +2,7 @@
 
 var Promise = require('bluebird')
   , uuid = require('uuid')
+  , mime = require('mime')
   , config = require('../../config/config').load()
   , gm = require('gm')
   , fs = require('fs')
@@ -25,6 +26,7 @@ exports.addModel = function(database) {
     this.mimeType = params.mimeType // mime type, e.g. 'image/jpeg'
     this.fileExtension = params.fileExtension // jpg|png|gif etc.
     this.noThumbnail = params.noThumbnail // if true, image thumbnail URL == original URL
+    this.mediaType = params.mediaType // image | audio | general
 
     this.userId = params.userId
     this.postId = params.postId
@@ -87,7 +89,8 @@ exports.addModel = function(database) {
           attachment.fileSize = attachment.file.size
           attachment.mimeType = attachment.file.type
 
-          var supportedExtensions = /\.(jpe?g|png|gif)$/i
+          // TODO: extract to config
+          var supportedExtensions = /\.(jpe?g|png|gif|mp3|pdf|ppt|txt|docx?)$/i
           if (attachment.fileName && attachment.fileName.match(supportedExtensions).length !== null) {
             attachment.fileExtension = attachment.fileName.match(supportedExtensions)[1].toLowerCase()
           } else {
@@ -102,6 +105,7 @@ exports.addModel = function(database) {
             fileName: attachment.fileName,
             fileSize: attachment.fileSize,
             mimeType: attachment.mimeType,
+            mediaType: attachment.mediaType,
             fileExtension: attachment.fileExtension,
             noThumbnail: attachment.noThumbnail,
             userId: attachment.userId,
@@ -172,9 +176,11 @@ exports.addModel = function(database) {
           reject(err)
           return
         }
-        if ('image') { // TODO: support for various media types
+
+        var _handleImage = function() {
           gm(originalPath).size(function (err, size) {
             // Check if we need to resize
+            that.mediaType = 'image'
             if (size !== undefined && (size.width > 525 || size.height > 175)) {
               // Looks big enough, needs a resize
               that.noThumbnail = '0'
@@ -195,6 +201,32 @@ exports.addModel = function(database) {
               resolve(attachment)
             }
           })
+        }
+
+        var _handleAudio = function() {
+          that.noThumbnail = '1'
+          that.mediaType = 'audio'
+          resolve(attachment)
+        }
+
+        var _handleGeneral = function() {
+          that.noThumbnail = '1'
+          that.mediaType = 'general'
+          resolve(attachment)
+        }
+
+        var mimetype = mime.lookup(that.fileName)
+        if (mimetype === "image/jpeg" ||
+            mimetype === "image/gif" ||
+            mimetype === "image/png" ||
+            mimetype === "image/bmp") {
+          _handleImage()
+        } else if (mimetype === "audio/mpeg" ||
+                   mimetype === "audio/ogg" ||
+                   mimetype === "audio/x-wav") {
+          _handleAudio()
+        } else {
+          _handleGeneral()
         }
       })
     })
