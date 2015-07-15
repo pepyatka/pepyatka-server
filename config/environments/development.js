@@ -49,18 +49,18 @@ exports.getConfig = function() {
 
   config.attachments = {
     // Make sure that all directories here have a trailing slash
-    urlDir: 'http://localhost:3000/attachments/original/',
+    urlDir: 'http://localhost:3333/attachments/original/',
     fsDir: './public/files/original/',
     fileSizeLimit: '10mb',
 
     thumbnails: {
-      urlDir: 'http://localhost:3000/attachments/thumbnails/',
+      urlDir: 'http://localhost:3333/attachments/thumbnails/',
       fsDir: './public/files/thumbnails/'
     }
   }
 
   config.profilePictures = {
-    urlDir: 'http://localhost:3000/files/profilePictures/',
+    urlDir: 'http://localhost:3333/files/profilePictures/',
     fsDir: './public/files/profilePictures/'
   }
 
