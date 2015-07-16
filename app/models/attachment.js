@@ -91,8 +91,9 @@ exports.addModel = function(database) {
           attachment.mimeType = attachment.file.type
 
           // TODO: extract to config
-          var supportedExtensions = /\.(jpe?g|png|gif|mp3|pdf|ppt|txt|docx?)$/i
-          if (attachment.fileName && attachment.fileName.match(supportedExtensions).length !== null) {
+          var supportedExtensions = /\.(jpe?g|png|gif|mp3|m4a|pdf|ppt|txt|docx?)$/i
+
+          if (attachment.fileName && attachment.fileName.match(supportedExtensions) !== null) {
             attachment.fileExtension = attachment.fileName.match(supportedExtensions)[1].toLowerCase()
           } else {
             attachment.fileExtension = null
@@ -172,7 +173,7 @@ exports.addModel = function(database) {
     await fs.rename(tmpPath, originalPath)
 
     const supportedImageTypes = ["image/jpeg", "image/gif", "image/png", "image/bmp"]
-    const supportedAudioTypes = ["audio/mpeg", "audio/ogg", "audio/x-wav"]
+    const supportedAudioTypes = ["audio/x-m4a", "audio/mp4", "audio/mpeg", "audio/ogg", "audio/x-wav"]
 
     try {
       let magic = new mmm.Magic(mmm.MAGIC_MIME_TYPE)
