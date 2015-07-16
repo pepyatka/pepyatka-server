@@ -178,7 +178,6 @@ describe('Group', function() {
         })
 
         group.create()
-          .then(function(group) { return group.isValidEmail() })
           .catch(function(e) {
             e.message.should.eql("Invalid")
             done()

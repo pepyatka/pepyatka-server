@@ -74,7 +74,6 @@ describe('User', function() {
         })
 
         user.create()
-          .then(function(user) { return user.isValidEmail() })
           .catch(function(e) {
             e.message.should.eql("Invalid")
             done()
