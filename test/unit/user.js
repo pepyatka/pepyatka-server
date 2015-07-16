@@ -42,8 +42,11 @@ describe('User', function() {
   })
 
   describe('#isValidUsername()', function() {
-    var valid = ['luna', '12345', 'hello1234',
-                 ' group', 'group '] // automatically trims
+    var valid = [
+      'luna', 'lun', '12345', 'hello1234',
+      ' group', 'group ',  // automatically trims
+      'aaaaaaaaaaaaaaaaaaaaaaaaa'  // 25 chars is ok
+    ]
     valid.forEach(function(username) {
       it('should allow username ' + username, function(done) {
 

@@ -151,8 +151,11 @@ describe('Group', function() {
   })
 
   describe('#isValidUsername()', function() {
-    var valid = ['luna', '12345', 'hello1234', 'save-our-snobs',
-                   ' group', 'group '] // automatically trims
+    var valid = [
+      'luna', 'lun', '12345', 'hello1234', 'save-our-snobs',
+      ' group', 'group ',  // automatically trims
+      'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'  // 35 chars is ok
+    ]
     valid.forEach(function(username) {
       it('should allow username ' + username, function(done) {
 

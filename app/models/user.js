@@ -196,7 +196,8 @@ exports.addModel = function(database) {
 
   User.prototype.isValidUsername = function() {
     var valid = this.username
-        && this.username.length > 1
+        && this.username.length >= 3   // per the spec
+        && this.username.length <= 25  // per the spec
         && this.username.match(/^[A-Za-z0-9]+$/)
         && models.FeedFactory.stopList().indexOf(this.username) == -1
 
