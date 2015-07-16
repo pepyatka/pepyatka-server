@@ -49,6 +49,7 @@ describe('User', function() {
 
         var user = new User({
           username: username,
+          screenName: 'test',
           password: 'password',
           email: 'user@example.com'
         })
@@ -62,18 +63,23 @@ describe('User', function() {
       })
     })
 
-    var invalid = ['lu', '-12345', 'luna-', 'hel--lo', 'save-our-snobs', 'абизьян',
-                   'gr oup']
+    var invalid = [
+      'lu', '-12345', 'luna-', 'hel--lo', 'save-our-snobs', 'абизьян',
+      'gr oup', '',
+      'aaaaaaaaaaaaaaaaaaaaaaaaaa'  // 26 chars is 1 char too much
+    ]
     invalid.forEach(function(username) {
       it('should not allow invalid username ' + username, function(done) {
 
         var user = new User({
           username: username,
+          screenName: 'test',
           password: 'password',
           email: 'user@example.com'
         })
 
         user.create()
+          .then(function() { done(new Error('FAIL')) })
           .catch(function(e) {
             e.message.should.eql("Invalid")
             done()
