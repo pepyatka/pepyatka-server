@@ -2,10 +2,11 @@
 
 var Promise = require('bluebird')
   , uuid = require('uuid')
-  , mime = require('mime')
+  , mmm = require('mmmagic')
+  , _ = require('lodash')
   , config = require('../../config/config').load()
   , gm = require('gm')
-  , fs = require('fs')
+  , fs = Promise.promisifyAll(require('fs'))
   , inherits = require('util').inherits
   , models = require('../models')
   , AbstractModel = models.AbstractModel
@@ -23,7 +24,7 @@ exports.addModel = function(database) {
     this.file = params.file // FormData File object
     this.fileName = params.fileName // original file name, e.g. 'cute-little-kitten.jpg'
     this.fileSize = params.fileSize // file size in bytes
-    this.mimeType = params.mimeType // mime type, e.g. 'image/jpeg'
+    this.mimeType = params.mimeType // used as a fallback, in case we can't detect proper one
     this.fileExtension = params.fileExtension // jpg|png|gif etc.
     this.noThumbnail = params.noThumbnail // if true, image thumbnail URL == original URL
     this.mediaType = params.mediaType // image | audio | general
@@ -164,72 +165,56 @@ exports.addModel = function(database) {
   }
 
   // Rename file and process thumbnail, if necessary
-  Attachment.prototype.handleMedia = function(attachment) {
-    var that = this
+  Attachment.prototype.handleMedia = async function(attachment) {
+    var tmpPath = this.file.path
+    var originalPath = this.getPath()
 
-    return new Promise(function(resolve, reject) {
-      var tmpPath = that.file.path
-      var originalPath = that.getPath()
+    await fs.rename(tmpPath, originalPath)
 
-      fs.rename(tmpPath, originalPath, function(err) {
-        if (err) {
-          reject(err)
-          return
-        }
+    const supportedImageTypes = ["image/jpeg", "image/gif", "image/png", "image/bmp"]
+    const supportedAudioTypes = ["audio/mpeg", "audio/ogg", "audio/x-wav"]
 
-        var _handleImage = function() {
-          gm(originalPath).size(function (err, size) {
-            // Check if we need to resize
-            that.mediaType = 'image'
-            if (size !== undefined && (size.width > 525 || size.height > 175)) {
-              // Looks big enough, needs a resize
-              that.noThumbnail = '0'
-              gm(originalPath)
-                .resize(525, 175)
-                .autoOrient()
-                .quality(95)
-                .write(that.getThumbnailPath(), function (err) {
-                  if (err) {
-                    reject(err)
-                  }
-                  // Thumbnail has been resized and stored successfully
-                  resolve(attachment)
-                })
-            } else {
-              // Since it's small, just use the same URL as a original image
-              that.noThumbnail = '1'
-              resolve(attachment)
-            }
-          })
-        }
+    try {
+      let magic = new mmm.Magic(mmm.MAGIC_MIME_TYPE)
+      let detectFile = Promise.promisify(magic.detectFile, magic);
 
-        var _handleAudio = function() {
-          that.noThumbnail = '1'
-          that.mediaType = 'audio'
-          resolve(attachment)
-        }
+      this.mimeType = await detectFile(originalPath)
+    } catch(e) {
+      if (_.isEmpty(this.mimeType)) {
+        throw e
+      }
+      // otherwise, we'll use the fallback provided by the user
+    }
 
-        var _handleGeneral = function() {
-          that.noThumbnail = '1'
-          that.mediaType = 'general'
-          resolve(attachment)
-        }
+    if (supportedImageTypes.indexOf(this.mimeType) != -1) {
+      let img = Promise.promisifyAll(gm(originalPath))
+      let size = await img.size()
 
-        var mimetype = mime.lookup(that.fileName)
-        if (mimetype === "image/jpeg" ||
-            mimetype === "image/gif" ||
-            mimetype === "image/png" ||
-            mimetype === "image/bmp") {
-          _handleImage()
-        } else if (mimetype === "audio/mpeg" ||
-                   mimetype === "audio/ogg" ||
-                   mimetype === "audio/x-wav") {
-          _handleAudio()
-        } else {
-          _handleGeneral()
-        }
-      })
-    })
+      this.mediaType = 'image'
+
+      if (size.width > 525 || size.height > 175) {
+        // Looks big enough, needs a resize
+        this.noThumbnail = '0'
+
+        img = img
+          .resize(525, 175)
+          .autoOrient()
+          .quality(95)
+
+        await img.write(this.getThumbnailPath())
+      } else {
+        // Since it's small, just use original image
+        this.noThumbnail = '1'
+      }
+    } else if (supportedAudioTypes.indexOf(this.mimeType) != -1) {
+      this.noThumbnail = '1'
+      this.mediaType = 'audio'
+    } else {
+      this.noThumbnail = '1'
+      this.mediaType = 'general'
+    }
+
+    return attachment
   }
 
   return Attachment
