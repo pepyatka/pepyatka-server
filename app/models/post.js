@@ -2,6 +2,7 @@
 
 var Promise = require('bluebird')
   , uuid = require('uuid')
+  , GraphemeBreaker = require('grapheme-breaker')
   , inherits = require("util").inherits
   , models = require('../models')
   , AbstractModel = models.AbstractModel
@@ -61,6 +62,12 @@ exports.addModel = function(database) {
 
     if (!valid) {
       throw new Error("Invalid")
+    }
+
+    var len = GraphemeBreaker.countBreaks(this.body)
+
+    if (len > 350) {
+      throw new Error("Maximum post-length is 350 graphemes")
     }
 
     return this
