@@ -72,6 +72,9 @@ describe('Attachment', function() {
           newAttachment.id.should.eql(attachment.id)
           return newAttachment
         }).then(function(newAttachment) {
+          newAttachment.should.have.a.property('mediaType')
+          newAttachment.mediaType.should.be.equal('image')
+
           newAttachment.should.have.a.property('fileName')
           newAttachment.fileName.should.be.equal(file.name)
 
@@ -92,7 +95,7 @@ describe('Attachment', function() {
             stats.size.should.be.equal(file.size)
             done()
           })
-        })
+        }).catch(function(e) { done(e) })
     })
   })
 })
