@@ -3,6 +3,8 @@
 var redis = require('../config/database')
   , database = redis.connect()
 
+exports.database = database
+
 exports.AbstractSerializer = require('./serializers/abstract_serializer').addSerializer()
 exports.Serializer         = require("./serializers/serializer").addSerializer()
 

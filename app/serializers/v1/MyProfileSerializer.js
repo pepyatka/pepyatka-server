@@ -7,7 +7,7 @@ exports.addSerializer = function() {
   return new Serializer('users', {
     select: ['id', 'username', 'type', 'screenName', 'email', 'statistics',
              'subscriptions', 'profilePictureLargeUrl', 'profilePictureMediumUrl',
-             'banIds', 'subscribers'],
+             'banIds', 'subscribers', 'isPrivate'],
     subscriptions: { through: SubscriptionSerializer, embed: true },
     subscribers: { through: SubscriberSerializer }
   })

@@ -322,6 +322,11 @@ exports.addModel = function(database) {
         throw new Error("bad input")
       }
 
+      if (params.isPrivate === '1' && this.isPrivate === '0')
+        await this.unsubscribeNonFriends()
+      else if (params.isPrivate === '0' && this.isPrivate === '1')
+        await this.subscribeNonFriends()
+
       this.isPrivate = params.isPrivate
       hasChanges = true
     }
@@ -334,7 +339,7 @@ exports.addModel = function(database) {
         'email':      this.email,
         'isPrivate':  this.isPrivate,
         'updatedAt':  this.updatedAt.toString()
-      };
+      }
 
       var promises = [
         database.hmsetAsync(mkKey(['user', this.id]), payload),
@@ -345,6 +350,83 @@ exports.addModel = function(database) {
     }
 
     return this
+  }
+
+  User.prototype.subscribeNonFriends = async function() {
+    // NOTE: this method is super ineffective as it iterates all posts
+    // and then all comments in user's timeline, we could make it more
+    // efficient when introduce Entries table with meta column (post to
+    // timelines many-to-many over Entries)
+
+    var timeline = await this.getPostsTimeline()
+    var posts = await timeline.getPosts(0, -1)
+
+    // first of all, let's revive likes
+    await* _.flatten(posts.map(async (post) => {
+      let likes = await post.getLikes()
+      return await* _.flatten(likes.map(async (user) => {
+        let timelineId = await user.getLikesTimelineId()
+        let time = await database.zscoreAsync(mkKey(['post', post.id, 'likes']), user.id)
+
+        return [
+          database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), time, post.id),
+          database.saddAsync(mkKey(['post', post.id, 'timelines']), timelineId)
+        ]
+      }))
+    }))
+
+    // and now reviving comments. oh, god save the queen!
+    await* _.flatten(posts.map(async (post) => {
+      let comments = await post.getComments()
+      let userIds = _.uniq(await* _.flatten(comments.map(async (comment) => comment.userId)))
+
+      return await* _.flatten(userIds.map(async (userId) => {
+        let user = await models.User.findById(userId)
+        let timelineId = await user.getCommentsTimelineId()
+        // NOTE: I'm cheating with time when we supposed to add that
+        // post to comments timeline, but who notices this?
+        let time = post.updatedAt
+
+        return [
+          database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), time, post.id),
+          database.saddAsync(mkKey(['post', post.id, 'timelines']), timelineId)
+        ]
+      }))
+    }))
+  }
+
+  User.prototype.unsubscribeNonFriends = async function() {
+    var subscriptionIds = await this.getFriendIds()
+    var timeline = await this.getPostsTimeline()
+
+    // users that I'm not following are ex-followers now
+    var subscribers = await this.getSubscribers()
+    await* subscribers.map(function(user) {
+      // this is not friend, let's unsubscribe her before going to private
+      if (subscriptionIds.indexOf(user.id) === -1) {
+        return user.unsubscribeFrom(timeline.id, { likes: true, comments: true })
+      }
+    })
+
+    // we need to review post by post as some strangers that are not
+    // followers and friends could commented on or like my posts
+    // let's find strangers first
+    var posts = await timeline.getPosts(0, -1)
+    var users = _.flatten(await* posts.map(async (post) => {
+      let timelines = await post.getTimelines()
+      let users = _.compact(await* timelines.map(async (timeline) => {
+        let user = await timeline.getUser()
+
+        if (subscriptionIds.indexOf(user.id) === -1 &&
+            user.id != this.id) {
+          return user
+        }
+      }))
+      return _.uniq(users, 'id')
+    }))
+
+    // and remove all private posts from all strangers timelines
+    await* users.map((user) => user.unsubscribeFrom(timeline.id, { likes: true, comments: true }))
   }
 
   User.prototype.updatePassword = async function(password, passwordConfirmation) {
@@ -594,6 +676,19 @@ exports.addModel = function(database) {
     return this.subscriptions
   }
 
+  User.prototype.getFriendIds = async function() {
+    var timelines = await this.getSubscriptions()
+    timelines = _.filter(timelines, function(timeline) {
+      return timeline.isPosts()
+    })
+    return await* timelines.map((timeline) => timeline.userId)
+  }
+
+  User.prototype.getFriends = async function() {
+    var userIds = await this.getFriendIds()
+    return await* userIds.map((userId) => models.User.findById(userId))
+  }
+
   User.prototype.getSubscriberIds = async function() {
     var timeline = await this.getPostsTimeline()
     var subscriberIds = await timeline.getSubscriberIds()
@@ -682,41 +777,38 @@ exports.addModel = function(database) {
     })
   }
 
-  User.prototype.unsubscribeFrom = function(timelineId) {
-    var currentTime = new Date().getTime()
-    var that = this
-    var timeline
+  User.prototype.unsubscribeFrom = async function(timelineId, options = {}) {
+    var timeline = await models.Timeline.findById(timelineId)
+    var user = await models.FeedFactory.findById(timeline.userId)
 
-    return new Promise(function(resolve, reject) {
-      models.Timeline.findById(timelineId).bind({})
-        .then(function(newTimeline) {
-          timeline = newTimeline
-          return models.FeedFactory.findById(newTimeline.userId)
-        })
-        .then(function(user) {
-          this.user = user
-          if (user.username == that.username)
-            throw new Error("Invalid")
+    // a user cannot unsubscribe from herself
+    if (user.username == this.username)
+      throw new Error("Invalid")
 
-          return user.getPublicTimelineIds()
-        })
-        .then(function(timelineIds) {
-          return Promise.map(timelineIds, function(timelineId) {
-            return Promise.all([
-              database.zremAsync(mkKey(['user', that.id, 'subscriptions']), timelineId),
-              database.zremAsync(mkKey(['timeline', timelineId, 'subscribers']), that.id)
-            ])
-          })
-        })
-        .then(function(res) { return that.getRiverOfNewsTimelineId() })
-        .then(function(riverOfNewsId) { return timeline.unmerge(riverOfNewsId) })
-        .then(function() { return models.Stats.findById(that.id) })
-        .then(function(stats) { return stats.removeSubscription() })
-        .then(function() { return models.Stats.findById(this.user.id) })
-        .then(function(stats) { return stats.removeSubscriber() })
-        .then(function(res) { resolve(res) })
-        .catch(function(e) { reject(e) })
-    })
+    var timelineIds = await user.getPublicTimelineIds()
+    await* _.flatten(timelineIds.map((timelineId) => [
+      database.zremAsync(mkKey(['user', this.id, 'subscriptions']), timelineId),
+      database.zremAsync(mkKey(['timeline', timelineId, 'subscribers']), this.id)
+    ]))
+
+    var promises = [
+      timeline.unmerge(await this.getRiverOfNewsTimelineId())
+    ]
+
+    // remove post from likes or comments timelines when user goes private
+    if (options.likes)
+      promises.push(timeline.unmerge(await this.getLikesTimelineId()))
+
+    if (options.comments)
+      promises.push(timeline.unmerge(await this.getCommentsTimelineId()))
+
+    // update counters for subscriber and her friend
+    promises.push((await models.Stats.findById(this.id)).removeSubscription())
+    promises.push((await models.Stats.findById(user.id)).removeSubscriber())
+
+    await* promises
+
+    return this
   }
 
   User.prototype.getStatistics = function() {
