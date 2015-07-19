@@ -66,8 +66,8 @@ exports.addModel = function(database) {
 
     var len = GraphemeBreaker.countBreaks(this.body)
 
-    if (len > 350) {
-      throw new Error("Maximum post-length is 350 graphemes")
+    if (len > 1500) {
+      throw new Error("Maximum post-length is 1500 graphemes")
     }
 
     return this
