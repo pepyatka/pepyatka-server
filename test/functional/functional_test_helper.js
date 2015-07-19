@@ -50,6 +50,7 @@ exports.createUserCtx = function(context, username, password, attrs) {
     context.authToken = token
     context.username  = username.toLowerCase()
     context.password  = password
+    context.attributes = attrs
   })
 }
 
