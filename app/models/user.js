@@ -260,6 +260,10 @@ exports.addModel = function(database) {
     return new Promise.resolve(true)
   }
 
+  User.prototype.dropIndexForEmail = function(email) {
+    return database.delAsync(mkKey(['email', email, 'uid']))
+  }
+
   User.prototype.create = async function() {
     this.createdAt = new Date().getTime()
     this.updatedAt = new Date().getTime()
@@ -298,6 +302,8 @@ exports.addModel = function(database) {
 
   User.prototype.update = async function(params) {
     var hasChanges = false
+      , emailChanged = false
+      , oldEmail = ""
 
     if (params.hasOwnProperty('screenName') && params.screenName != this.screenName) {
       if (!this.screenNameIsValid(params.screenName)) {
@@ -313,8 +319,11 @@ exports.addModel = function(database) {
         throw new Error("Invalid email")
       }
 
+      oldEmail = this.email
       this.email = params.email
+
       hasChanges = true
+      emailChanged = true
     }
 
     if (params.hasOwnProperty('isPrivate') && params.isPrivate != this.isPrivate) {
@@ -338,9 +347,17 @@ exports.addModel = function(database) {
       };
 
       var promises = [
-        database.hmsetAsync(mkKey(['user', this.id]), payload),
-        this.createEmailIndex()
+        database.hmsetAsync(mkKey(['user', this.id]), payload)
       ]
+
+      if (emailChanged) {
+        if (oldEmail.length != "") {
+          promises.push(this.dropIndexForEmail(oldEmail))
+        }
+        if (this.email.length != "") {
+          promises.push(this.createEmailIndex())
+        }
+      }
 
       await* promises
     }
