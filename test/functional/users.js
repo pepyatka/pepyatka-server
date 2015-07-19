@@ -620,8 +620,33 @@ describe("UsersController", function() {
     describe('double-user tests', function() {
       "use strict";
 
-      it('should not let user use email, which is used by other user')
-      it('should let user to use email, which was used by other user, but not used anymore')
+      var lunaContext = {}
+      var marsContext = {}
+
+      beforeEach(funcTestHelper.createUserCtx(lunaContext, 'luna', 'luna', {email: "luna@example.org"}))
+      beforeEach(funcTestHelper.createUserCtx(marsContext, 'mars', 'mars', {email: "mars@example.org"}))
+
+      it('should not let user use email, which is used by other user', function(done) {
+        funcTestHelper.updateUserCtx(lunaContext, {email: marsContext.attributes.email})(function(err, response) {
+          $should.exist(err)
+          err.status.should.eql(422)
+          err.response.error.should.have.property('text')
+          JSON.parse(err.response.error.text).err.should.eql('Invalid email')
+          done()
+        })
+      })
+
+      it('should let user to use email, which was used by other user, but not used anymore', function(done) {
+        funcTestHelper.updateUserCtx(marsContext, {email: 'other@example.org'})(function (err, response) {
+          $should.not.exist(err)
+
+          funcTestHelper.updateUserCtx(lunaContext, {email: marsContext.attributes.email})(function (err2, response2) {
+            $should.not.exist(err2)
+            done()
+          })
+        })
+      })
+
       it('should let user "reset" password using newly set email')
     })
   })
