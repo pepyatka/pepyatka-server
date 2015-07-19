@@ -170,7 +170,7 @@ exports.addModel = function(database) {
     var tmpPath = this.file.path
     var originalPath = this.getPath()
 
-    await fs.rename(tmpPath, originalPath)
+    await fs.renameAsync(tmpPath, originalPath)
 
     const supportedImageTypes = ["image/jpeg", "image/gif", "image/png", "image/bmp"]
     const supportedAudioTypes = ["audio/x-m4a", "audio/mp4", "audio/mpeg", "audio/ogg", "audio/x-wav"]
@@ -189,7 +189,7 @@ exports.addModel = function(database) {
 
     if (supportedImageTypes.indexOf(this.mimeType) != -1) {
       let img = Promise.promisifyAll(gm(originalPath))
-      let size = await img.size()
+      let size = await img.sizeAsync()
 
       this.mediaType = 'image'
 
@@ -202,7 +202,7 @@ exports.addModel = function(database) {
           .autoOrient()
           .quality(95)
 
-        await img.write(this.getThumbnailPath())
+        await img.writeAsync(this.getThumbnailPath())
       } else {
         // Since it's small, just use original image
         this.noThumbnail = '1'
