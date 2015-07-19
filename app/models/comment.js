@@ -43,19 +43,18 @@ exports.addModel = function(database) {
     }
   })
 
-  Comment.prototype.validate = function() {
-    return new Promise(function(resolve, reject) {
-      var valid
+  Comment.prototype.validate = async function() {
+    var valid
 
-      valid = this.body
-        && this.body.length > 0
-        && this.userId
-        && this.userId.length > 0
-        && this.postId
-      && this.postId.length > 0
+    valid = this.body && this.body.length > 0
+      && this.userId && this.userId.length > 0
+      && this.postId && this.postId.length > 0
 
-      valid ? resolve(valid) : reject(new Error("Invalid"))
-    }.bind(this))
+    if (!valid) {
+      throw new Error("Invalid")
+    }
+
+    return this
   }
 
   Comment.prototype.validateOnCreate = function() {
