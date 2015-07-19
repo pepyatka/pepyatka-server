@@ -132,6 +132,7 @@ exports.addModel = function(database) {
 
             resolve(new models.Post(attrs))
           })
+          .catch(function(e) { reject(e) })
       } else {
         resolve(new models.Post(attrs))
       }
@@ -180,18 +181,27 @@ exports.addModel = function(database) {
     return bcrypt.compareAsync(clearPassword, this.hashedPassword)
   }
 
-  User.prototype.isValidEmail = function() {
-    var valid = this.emailIsValid(this.email)
-
-    return Promise.resolve(valid)
+  User.prototype.isValidEmail = async function() {
+    return User.emailIsValid(this.email)
   }
 
-  User.prototype.emailIsValid = function(email) {
+  User.emailIsValid = async function(email) {
     if (email.length == 0) {
       return true
     }
 
-    return validator.isEmail(email)
+    if (!validator.isEmail(email)) {
+      return false
+    }
+
+    var uid = await database.getAsync(mkKey(['email', email, 'uid']))
+
+    if (uid) {
+      // email is taken
+      return false
+    }
+
+    return true
   }
 
   User.prototype.isValidUsername = function() {
@@ -229,7 +239,7 @@ exports.addModel = function(database) {
 
     valid = this.isValidUsername().value()
       && this.isValidScreenName().value()
-      && this.isValidEmail().value()
+      && await this.isValidEmail()
 
     if (!valid)
       throw new Error("Invalid")
@@ -315,7 +325,7 @@ exports.addModel = function(database) {
     }
 
     if (params.hasOwnProperty('email') && params.email != this.email) {
-      if (!this.emailIsValid(params.email)) {
+      if (!(await User.emailIsValid(params.email))) {
         throw new Error("Invalid email")
       }
 

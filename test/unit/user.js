@@ -47,21 +47,19 @@ describe('User', function() {
       ' group', 'group ',  // automatically trims
       'aaaaaaaaaaaaaaaaaaaaaaaaa'  // 25 chars is ok
     ]
+
+    var i = 1
     valid.forEach(function(username) {
-      it('should allow username ' + username, function(done) {
+      it(`should allow username '${username}'`, function(done) {
 
         var user = new User({
           username: username,
           screenName: 'test',
           password: 'password',
-          email: 'user@example.com'
+          email: `user+${i++}@example.com`
         })
 
         user.create()
-          .then(function(user) { return user.isValidEmail() })
-          .then(function(valid) {
-            valid.should.eql(true)
-          })
           .then(function() { done() })
       })
     })
@@ -101,10 +99,6 @@ describe('User', function() {
       })
 
       user.create()
-        .then(function(user) { return user.isValidEmail() })
-        .then(function(valid) {
-          valid.should.eql(true)
-        })
         .then(function() { done() })
     })
 
@@ -115,10 +109,6 @@ describe('User', function() {
       })
 
       user.create()
-        .then(function(user) { return user.isValidEmail() })
-        .then(function(valid) {
-          valid.should.eql(true)
-        })
         .then(function() { done() })
     })
 
@@ -132,6 +122,27 @@ describe('User', function() {
       return user.create()
         .catch(function(e) {
           expect(e.message).to.equal('Invalid');
+        })
+    })
+
+    it('should not allow 2 users with same email', function(done) {
+      var user1 = new User({
+        username: 'Luna1',
+        password: 'password',
+        email: 'email@example.com'
+      })
+
+      var user2 = new User({
+        username: 'Luna2',
+        password: 'password',
+        email: 'email@example.com'
+      })
+
+      user1.create()
+        .then(function() { return user2.create() })
+        .catch(function(e) {
+          expect(e.message).to.equal('Invalid');
+          done()
         })
     })
   })
