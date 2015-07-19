@@ -212,9 +212,7 @@ describe("UsersController", function() {
   })
 
   describe('#subscribers()', function() {
-    it('should return list of subscribers', function(done) {
-      done()
-    })
+    it('should return list of subscribers')
   })
 
   describe('#subscribe()', function() {
