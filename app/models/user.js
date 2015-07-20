@@ -132,6 +132,7 @@ exports.addModel = function(database) {
 
             resolve(new models.Post(attrs))
           })
+          .catch(function(e) { reject(e) })
       } else {
         resolve(new models.Post(attrs))
       }
@@ -180,18 +181,27 @@ exports.addModel = function(database) {
     return bcrypt.compareAsync(clearPassword, this.hashedPassword)
   }
 
-  User.prototype.isValidEmail = function() {
-    var valid = this.emailIsValid(this.email)
-
-    return Promise.resolve(valid)
+  User.prototype.isValidEmail = async function() {
+    return User.emailIsValid(this.email)
   }
 
-  User.prototype.emailIsValid = function(email) {
+  User.emailIsValid = async function(email) {
     if (email.length == 0) {
       return true
     }
 
-    return validator.isEmail(email)
+    if (!validator.isEmail(email)) {
+      return false
+    }
+
+    var uid = await database.getAsync(mkKey(['email', email, 'uid']))
+
+    if (uid) {
+      // email is taken
+      return false
+    }
+
+    return true
   }
 
   User.prototype.isValidUsername = function() {
@@ -229,7 +239,7 @@ exports.addModel = function(database) {
 
     valid = this.isValidUsername().value()
       && this.isValidScreenName().value()
-      && this.isValidEmail().value()
+      && await this.isValidEmail()
 
     if (!valid)
       throw new Error("Invalid")
@@ -258,6 +268,10 @@ exports.addModel = function(database) {
       return database.setAsync(mkKey(['email', this.email, 'uid']), this.id)
     }
     return new Promise.resolve(true)
+  }
+
+  User.prototype.dropIndexForEmail = function(email) {
+    return database.delAsync(mkKey(['email', email, 'uid']))
   }
 
   User.prototype.create = async function() {
@@ -298,6 +312,8 @@ exports.addModel = function(database) {
 
   User.prototype.update = async function(params) {
     var hasChanges = false
+      , emailChanged = false
+      , oldEmail = ""
 
     if (params.hasOwnProperty('screenName') && params.screenName != this.screenName) {
       if (!this.screenNameIsValid(params.screenName)) {
@@ -309,12 +325,15 @@ exports.addModel = function(database) {
     }
 
     if (params.hasOwnProperty('email') && params.email != this.email) {
-      if (!this.emailIsValid(params.email)) {
+      if (!(await User.emailIsValid(params.email))) {
         throw new Error("Invalid email")
       }
 
+      oldEmail = this.email
       this.email = params.email
+
       hasChanges = true
+      emailChanged = true
     }
 
     if (params.hasOwnProperty('isPrivate') && params.isPrivate != this.isPrivate) {
@@ -338,9 +357,17 @@ exports.addModel = function(database) {
       };
 
       var promises = [
-        database.hmsetAsync(mkKey(['user', this.id]), payload),
-        this.createEmailIndex()
+        database.hmsetAsync(mkKey(['user', this.id]), payload)
       ]
+
+      if (emailChanged) {
+        if (oldEmail.length != "") {
+          promises.push(this.dropIndexForEmail(oldEmail))
+        }
+        if (this.email.length != "") {
+          promises.push(this.createEmailIndex())
+        }
+      }
 
       await* promises
     }
