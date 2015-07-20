@@ -323,7 +323,7 @@ exports.addModel = function(database) {
   Timeline.prototype.updatePost = async function(postId, action) {
     var currentTime = new Date().getTime()
 
-    var score = await database.zscoreAsync(mkKey(['timeline', this.id, 'posts']), postId).bind({})
+    var score = await database.zscoreAsync(mkKey(['timeline', this.id, 'posts']), postId)
 
     // For the time being like does not bump post
     if (action === "like" && score != null)
