@@ -33,6 +33,224 @@ describe("MutualFriends", function() {
       })
       beforeEach(function(done) { funcTestHelper.createPost(lunaContext, 'Post body')(done) })
 
+      describe('and manage subscription requests', function() {
+        beforeEach(function(done) {
+          request
+            .post(app.config.host + '/v1/users/' + lunaContext.user.username + '/sendRequest')
+            .send({ authToken: zeusContext.authToken,
+                    '_method': 'post' })
+            .end(function(err, res) {
+              done()
+            })
+        })
+
+        it('should show liked post per context', function(done) {
+          request
+            .post(app.config.host + '/v1/users/acceptRequest/' + zeusContext.user.username)
+            .send({ authToken: lunaContext.authToken,
+                    '_method': 'post' })
+            .end(function(err, res) {
+              request
+                .post(app.config.host + '/v1/posts/' + lunaContext.post.id + '/like')
+                .send({ authToken: marsContext.authToken })
+                .end(function(err, res) {
+                  funcTestHelper.getTimeline('/v1/timelines/' + marsContext.user.username + '/likes', marsContext.authToken, function(err, res) {
+                    // NOTE: right now we do not have meta to show
+                    // posts per context, once this done we'll need to
+                    // refactor this test
+
+                    // view mars/likes timeline as mars -- 0 posts
+                    res.body.should.not.have.property('posts')
+
+                    funcTestHelper.getTimeline('/v1/timelines/' + marsContext.user.username + '/likes', zeusContext.authToken, function(err, res) {
+                      // view mars/likes timeline as zeus -- 0 posts
+                      res.body.should.not.have.property('posts')
+
+                      done()
+                    })
+                  })
+                })
+            })
+        })
+
+        it('should show liked post per context', function(done) {
+          request
+            .post(app.config.host + '/v1/users/acceptRequest/' + zeusContext.user.username)
+            .send({ authToken: lunaContext.authToken,
+                    '_method': 'post' })
+            .end(function(err, res) {
+              funcTestHelper.createComment('comment', lunaContext.post.id, marsContext.authToken, function(err, res) {
+                funcTestHelper.getTimeline('/v1/timelines/' + marsContext.user.username + '/comments', marsContext.authToken, function(err, res) {
+                  // NOTE: right now we do not have meta to show
+                  // posts per context, once this done we'll need to
+                  // refactor this test
+
+                  // view mars/comments timeline as mars -- 0 posts
+                  res.body.should.not.have.property('posts')
+
+                  funcTestHelper.getTimeline('/v1/timelines/' + marsContext.user.username + '/comments', zeusContext.authToken, function(err, res) {
+                    // view mars/comments timeline as zeus -- 0 posts
+                    res.body.should.not.have.property('posts')
+
+                    done()
+                  })
+                })
+              })
+            })
+        })
+
+        it('should not be accepted by invalid user', function(done) {
+          request
+            .post(app.config.host + '/v1/users/acceptRequest/' + zeusContext.user.username)
+            .send({ authToken: zeusContext.authToken,
+                    '_method': 'post' })
+            .end(function(err, res) {
+              err.should.not.be.empty
+              err.status.should.eql(422)
+              done()
+            })
+        })
+
+        it('should be able to accept', function(done) {
+          request
+            .post(app.config.host + '/v1/users/acceptRequest/' + zeusContext.user.username)
+            .send({ authToken: lunaContext.authToken,
+                    '_method': 'post' })
+            .end(function(err, res) {
+              res.should.not.be.empty
+              res.error.should.be.empty
+
+              request
+                .get(app.config.host + '/v1/users/whoami')
+                .query({ authToken: lunaContext.authToken })
+                .end(function(err, res) {
+                  // check there are no subscription requests
+                  res.should.not.be.empty
+                  res.body.should.not.be.empty
+                  res.body.should.have.property('users')
+                  res.body.users.should.not.have.property('subscriptionRequests')
+                  res.body.should.not.have.property('requests')
+
+                  request
+                    .get(app.config.host + '/v1/users/whoami')
+                    .query({ authToken: lunaContext.authToken })
+                    .end(function(err, res) {
+                      // check there are no pending requests
+                      res.should.not.be.empty
+                      res.body.should.not.be.empty
+                      res.body.should.have.property('users')
+                      res.body.users.should.not.have.property('pendingSubscriptionRequests')
+                      res.body.should.not.have.property('requests')
+
+                      funcTestHelper.getTimeline('/v1/timelines/home', zeusContext.authToken, function(err, res) {
+                        // check user is subscribed
+                        res.should.not.be.empty
+                        res.body.should.not.be.empty
+                        res.body.should.have.property('timelines')
+                        res.body.timelines.should.have.property('name')
+                        res.body.timelines.name.should.eql('RiverOfNews')
+                        res.body.timelines.should.have.property('posts')
+                        res.body.timelines.posts.length.should.eql(1)
+                        res.body.should.have.property('posts')
+                        res.body.posts.length.should.eql(1)
+                        var post = res.body.posts[0]
+                        post.body.should.eql(lunaContext.post.body)
+                        done()
+                      })
+                    })
+                })
+            })
+        })
+
+        it('should be able to reject', function(done) {
+          request
+            .post(app.config.host + '/v1/users/rejectRequest/' + zeusContext.user.username)
+            .send({ authToken: lunaContext.authToken,
+                    '_method': 'post' })
+            .end(function(err, res) {
+              res.should.not.be.empty
+              res.error.should.be.empty
+
+              request
+                .get(app.config.host + '/v1/users/whoami')
+                .query({ authToken: lunaContext.authToken })
+                .end(function(err, res) {
+                  // check there are no subscription requests
+                  res.should.not.be.empty
+                  res.body.should.not.be.empty
+                  res.body.should.have.property('users')
+                  res.body.users.should.not.have.property('subscriptionRequests')
+                  res.body.should.not.have.property('requests')
+
+                  request
+                    .get(app.config.host + '/v1/users/whoami')
+                    .query({ authToken: lunaContext.authToken })
+                    .end(function(err, res) {
+                      res.should.not.be.empty
+                      res.body.should.not.be.empty
+                      res.body.should.have.property('users')
+                      res.body.users.should.not.have.property('pendingSubscriptionRequests')
+                      res.body.should.not.have.property('requests')
+
+                      funcTestHelper.getTimeline('/v1/timelines/home', zeusContext.authToken, function(err, res) {
+                        // check user is not subscribed
+                        res.should.not.be.empty
+                        res.body.should.not.be.empty
+                        res.body.should.have.property('timelines')
+                        res.body.timelines.should.have.property('name')
+                        res.body.timelines.name.should.eql('RiverOfNews')
+                        res.body.timelines.should.not.have.property('posts')
+                        res.body.should.not.have.property('posts')
+                        done()
+                      })
+                    })
+                })
+            })
+        })
+      })
+
+      it('should be able to send and receive subscription request', function(done) {
+        request
+          .post(app.config.host + '/v1/users/' + lunaContext.user.username + '/sendRequest')
+          .send({ authToken: zeusContext.authToken,
+                  '_method': 'post' })
+          .end(function(err, res) {
+            res.should.not.be.empty
+            res.error.should.be.empty
+
+            request
+              .get(app.config.host + '/v1/users/whoami')
+              .query({ authToken: lunaContext.authToken })
+              .end(function(err, res) {
+                // check there are subscription requests
+                res.should.not.be.empty
+                res.body.should.not.be.empty
+                res.body.should.have.property('users')
+                res.body.users.should.have.property('subscriptionRequests')
+                res.body.users.subscriptionRequests.length.should.eql(1)
+                res.body.should.have.property('requests')
+                res.body.requests.length.should.eql(1)
+                res.body.requests[0].id.should.eql(zeusContext.user.id)
+
+                request
+                  .get(app.config.host + '/v1/users/whoami')
+                  .query({ authToken: zeusContext.authToken })
+                  .end(function(err, res) {
+                    // check there are pending requests
+                    res.should.not.be.empty
+                    res.body.should.not.be.empty
+                    res.body.should.have.property('users')
+                    res.body.users.should.have.property('pendingSubscriptionRequests')
+                    res.body.users.pendingSubscriptionRequests.length.should.eql(1)
+                    res.body.should.have.property('requests')
+                    res.body.requests.length.should.eql(1)
+                    res.body.requests[0].id.should.eql(lunaContext.user.id)
+                    done()
+                  })
+              })
+          })
+      })
+
       it('that should be visible to subscribers only', function(done) {
         funcTestHelper.getTimeline('/v1/timelines/home', marsContext.authToken, function(err, res) {
           res.should.not.be.empty

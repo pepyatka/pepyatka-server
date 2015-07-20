@@ -1055,5 +1055,79 @@ exports.addModel = function(database) {
     })
   }
 
+  User.prototype.sendSubscriptionRequest = async function(userId) {
+    await this.validateCanSendSubscriptionRequest(userId)
+
+    var currentTime = new Date().getTime()
+    return await* [
+      database.zaddAsync(mkKey(['user', userId, 'requests']), currentTime, this.id),
+      database.zaddAsync(mkKey(['user', this.id, 'pending']), currentTime, userId)
+    ]
+  }
+
+  User.prototype.acceptSubscriptionRequest = async function(userId) {
+    await this.validateCanManageSubscriptionRequests(userId)
+
+    await* [
+      database.zremAsync(mkKey(['user', this.id, 'requests']), userId),
+      database.zremAsync(mkKey(['user', userId, 'pending']), this.id)
+    ]
+
+    var timelineId = await this.getPostsTimelineId()
+
+    var user = await models.User.findById(userId)
+    return user.subscribeTo(timelineId)
+  }
+
+  User.prototype.rejectSubscriptionRequest = async function(userId) {
+    await this.validateCanManageSubscriptionRequests(userId)
+
+    return await* [
+      database.zremAsync(mkKey(['user', this.id, 'requests']), userId),
+      database.zremAsync(mkKey(['user', userId, 'pending']), this.id)
+    ]
+  }
+
+  User.prototype.getPendingSubscriptionRequestIds = async function() {
+    var key = mkKey(['user', this.id, 'pending'])
+    this.pendingSubscriptionRequestIds = await database.zrevrangeAsync(key, 0, -1)
+    return this.pendingSubscriptionRequestIds
+  }
+
+  User.prototype.getPendingSubscriptionRequests = async function() {
+    var pendingSubscriptionRequestIds = await this.getPendingSubscriptionRequestIds()
+    return await* pendingSubscriptionRequestIds.map((userId) => models.User.findById(userId))
+  }
+
+  User.prototype.getSubscriptionRequestIds = async function() {
+    var key = mkKey(['user', this.id, 'requests'])
+    return database.zrevrangeAsync(key, 0, -1)
+  }
+
+  User.prototype.getSubscriptionRequests = async function() {
+    var subscriptionRequestIds = await this.getSubscriptionRequestIds()
+    return await* subscriptionRequestIds.map((userId) => models.User.findById(userId))
+  }
+
+  User.prototype.validateCanSendSubscriptionRequest = async function(userId) {
+    var key = mkKey(['user', userId, 'requests'])
+    var exists = await database.zscoreAsync(key, this.id)
+    var user = models.User.findById(userId)
+
+    // user can send subscription request if and only if subscription
+    // is a private and this is first time user is subscribing to it
+    return !exists && user.isPrivate === '1'
+  }
+
+  User.prototype.validateCanManageSubscriptionRequests = async function(userId) {
+    var key = mkKey(['user', this.id, 'requests'])
+    var exists = await database.zscoreAsync(key, userId)
+
+    if (!exists)
+      throw new Error("Invalid")
+
+    return true
+  }
+
   return User
 }

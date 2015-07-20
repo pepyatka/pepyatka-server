@@ -427,8 +427,9 @@ exports.addModel = function(database) {
   Post.prototype.addComment = async function(commentId) {
     var timelines = []
     var comment = await models.Comment.findById(commentId)
+    var owner = await models.User.findById(this.userId)
 
-    if (!await this.isPrivate())
+    if (!await this.isPrivate() && owner.isPrivate !== '1')
       timelines = await this.getCommentsFriendOfFriendTimelines(comment.userId)
 
     await* timelines.map((timeline) => timeline.updatePost(this.id))
@@ -671,8 +672,9 @@ exports.addModel = function(database) {
     var timelines = []
     var user = await models.User.findById(userId)
     await user.validateCanLikePost(this.id)
+    var owner = await models.User.findById(this.userId)
 
-    if (!await this.isPrivate())
+    if (!await this.isPrivate() && owner.isPrivate !== '1')
       timelines = await this.getLikesFriendOfFriendTimelines(userId)
 
     var now = new Date().getTime()
