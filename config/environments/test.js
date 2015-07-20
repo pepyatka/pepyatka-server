@@ -21,23 +21,31 @@ exports.getConfig = function() {
     USERNAME_STOP_LIST: ['anonymous', 'public', 'about', 'signin', 'logout',
                          'signup', 'filter', 'settings', 'account', 'groups',
                          'friends', 'list', 'search', 'summary', 'share','404',
-                         'iphone']
+                         'iphone', 'attachments', 'files', 'profilepics']
   }
 
-  config.attachments = {
-    // Make sure that all directories here have a trailing slash
-    urlDir: config.host + '/attachments/original/',
-    fsDir: '/tmp/pepyatka-attachments/original/',
-
-    thumbnails: {
-      urlDir: config.host + '/attachments/thumbnails/',
-      fsDir: '/tmp/pepyatka-attachments/thumbnails/'
+  config.media = {
+    url: config.host + '/', // must have trailing slash
+    storage: {
+      type: 'fs',
+      rootDir: '/tmp/pepyatka-media/' // must have trailing slash
     }
   }
-
+  config.attachments = {
+    url: config.media.url,
+    storage: config.media.storage,
+    path: 'attachments/', // must have trailing slash
+    fileSizeLimit: '10mb'
+  }
+  config.thumbnails = {
+    url: config.media.url,
+    storage: config.media.storage,
+    path: 'attachments/thumbnails/' // must have trailing slash
+  }
   config.profilePictures = {
-    urlDir: config.host + '/profile-pictures/',
-    fsDir: '/tmp/pepyatka-profile-pictures/'
+    url: config.media.url,
+    storage: config.media.storage,
+    path: 'profilepics/' // must have trailing slash
   }
 
   config.mailer = {

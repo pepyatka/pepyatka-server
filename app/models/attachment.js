@@ -131,7 +131,7 @@ exports.addModel = function(database) {
   Attachment.prototype.getUrl = function() {
     var that = this
     return new Promise(function(resolve, reject) {
-      resolve(config.attachments.urlDir + that.getFilename())
+      resolve(config.attachments.url + config.attachments.path + that.getFilename())
     })
   }
 
@@ -142,19 +142,19 @@ exports.addModel = function(database) {
       if (that.noThumbnail === '1') {
         resolve(that.getUrl())
       } else {
-        resolve(config.attachments.thumbnails.urlDir + that.getFilename())
+        resolve(config.thumbnails.url + config.thumbnails.path + that.getFilename())
       }
     })
   }
 
   // Get local filesystem path for original file
   Attachment.prototype.getPath = function() {
-    return config.attachments.fsDir + this.getFilename()
+    return config.attachments.storage.rootDir + config.attachments.path + this.getFilename()
   }
 
   // Get local filesystem path for thumbnail file
   Attachment.prototype.getThumbnailPath = function() {
-    return config.attachments.thumbnails.fsDir + this.getFilename()
+    return config.thumbnails.storage.rootDir + config.thumbnails.path + this.getFilename()
   }
 
   // Get file name
