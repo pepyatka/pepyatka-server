@@ -378,7 +378,7 @@ exports.addModel = function(database) {
     // and now reviving comments. oh, god save the queen!
     await* _.flatten(posts.map(async (post) => {
       let comments = await post.getComments()
-      let userIds = _.uniq(await* _.flatten(comments.map(async (comment) => comment.userId)))
+      let userIds = _.uniq(comments.map((comment) => comment.userId))
 
       return await* _.flatten(userIds.map(async (userId) => {
         let user = await models.User.findById(userId)
@@ -678,9 +678,7 @@ exports.addModel = function(database) {
 
   User.prototype.getFriendIds = async function() {
     var timelines = await this.getSubscriptions()
-    timelines = _.filter(timelines, function(timeline) {
-      return timeline.isPosts()
-    })
+    timelines = _.filter(timelines, _.method('isPosts'))
     return await* timelines.map((timeline) => timeline.userId)
   }
 
