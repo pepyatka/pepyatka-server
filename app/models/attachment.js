@@ -12,6 +12,7 @@ var Promise = require('bluebird')
   , AbstractModel = models.AbstractModel
   , Post = models.Post
   , mkKey = require('../support/models').mkKey
+  , aws = require('aws-sdk')
 
 exports.addModel = function(database) {
   /**
@@ -84,7 +85,7 @@ exports.addModel = function(database) {
       that.id = uuid.v4()
 
       that.validateOnCreate()
-        // Save file to FS
+        // Save file to FS or S3
         .then(function(attachment) {
           attachment.fileName = attachment.file.name
           attachment.fileSize = attachment.file.size
@@ -165,21 +166,21 @@ exports.addModel = function(database) {
     return this.id
   }
 
-  // Rename file and process thumbnail, if necessary
+  // Store the file and process its thumbnail, if necessary
   Attachment.prototype.handleMedia = async function(attachment) {
-    var tmpPath = this.file.path
-    var originalPath = this.getPath()
+    var tmpAttachmentFile = this.file.path
+    var tmpThumbnailFile = tmpAttachmentFile + '.thumbnail'
+    var attachmentFile = this.getPath()
+    var thumbnailFile = this.getThumbnailPath()
 
-    await fs.renameAsync(tmpPath, originalPath)
+    const supportedImageTypes = ['image/jpeg', 'image/gif', 'image/png']
+    const supportedAudioTypes = ['audio/x-m4a', 'audio/mp4', 'audio/mpeg', 'audio/ogg', 'audio/x-wav']
 
-    const supportedImageTypes = ["image/jpeg", "image/gif", "image/png", "image/bmp"]
-    const supportedAudioTypes = ["audio/x-m4a", "audio/mp4", "audio/mpeg", "audio/ogg", "audio/x-wav"]
-
+    // Check a mime type
     try {
       let magic = new mmm.Magic(mmm.MAGIC_MIME_TYPE)
-      let detectFile = Promise.promisify(magic.detectFile, magic);
-
-      this.mimeType = await detectFile(originalPath)
+      let detectFile = Promise.promisify(magic.detectFile, magic)
+      this.mimeType = await detectFile(tmpAttachmentFile)
     } catch(e) {
       if (_.isEmpty(this.mimeType)) {
         throw e
@@ -187,8 +188,9 @@ exports.addModel = function(database) {
       // otherwise, we'll use the fallback provided by the user
     }
 
+    // Store a thumbnail for a compatible image
     if (supportedImageTypes.indexOf(this.mimeType) != -1) {
-      let img = Promise.promisifyAll(gm(originalPath))
+      let img = Promise.promisifyAll(gm(tmpAttachmentFile))
       let size = await img.sizeAsync()
 
       this.mediaType = 'image'
@@ -202,9 +204,27 @@ exports.addModel = function(database) {
           .autoOrient()
           .quality(95)
 
-        await img.writeAsync(this.getThumbnailPath())
+        if (config.thumbnails.storage.type === 's3') {
+          await img.writeAsync(tmpThumbnailFile)
+
+          let s3 = new aws.S3({
+            'accessKeyId': config.thumbnails.storage.accessKeyId,
+            'secretAccessKey': config.thumbnails.storage.secretAccessKey
+          })
+          let putObject = Promise.promisify(s3.putObject, s3)
+          await putObject({
+            ACL: 'public-read',
+            Bucket: config.thumbnails.storage.bucket,
+            Key: config.thumbnails.path + this.getFilename(),
+            Body: fs.createReadStream(tmpThumbnailFile),
+            ContentType: this.mimeType
+          })
+          await fs.unlinkAsync(tmpThumbnailFile)
+        } else {
+          await img.writeAsync(thumbnailFile)
+        }
       } else {
-        // Since it's small, just use original image
+        // Since it's small, just use the original image
         this.noThumbnail = '1'
       }
     } else if (supportedAudioTypes.indexOf(this.mimeType) != -1) {
@@ -213,6 +233,25 @@ exports.addModel = function(database) {
     } else {
       this.noThumbnail = '1'
       this.mediaType = 'general'
+    }
+
+    // Store an original attachment
+    if (config.attachments.storage.type === 's3') {
+      let s3 = new aws.S3({
+        'accessKeyId': config.attachments.storage.accessKeyId,
+        'secretAccessKey': config.attachments.storage.secretAccessKey
+      })
+      let putObject = Promise.promisify(s3.putObject, s3)
+      await putObject({
+        ACL: 'public-read',
+        Bucket: config.attachments.storage.bucket,
+        Key: config.attachments.path + this.getFilename(),
+        Body: fs.createReadStream(tmpAttachmentFile),
+        ContentType: this.mimeType
+      })
+      await fs.unlinkAsync(tmpAttachmentFile)
+    } else {
+      await fs.renameAsync(tmpAttachmentFile, attachmentFile)
     }
 
     return attachment
