@@ -187,7 +187,8 @@ exports.addModel = function(database) {
   }
 
   User.prototype.emailIsValid = function(email) {
-    if (email.length == 0) {
+    // email is optional
+    if (!email || email.length == 0) {
       return true
     }
 
