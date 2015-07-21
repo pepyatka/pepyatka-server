@@ -219,13 +219,11 @@ exports.addController = function(app) {
       if (!req.user || req.user.id != req.params.userId)
         return res.status(401).jsonp({ err: 'Not found' })
 
-      var attrs = {}
-
-      _.each(["screenName", "email", "isPrivate"], function(key) {
-        if (key in req.body.user) {
-          attrs[key] = req.body.user[key]
-        }
-      })
+      var attrs = _.reduce(["screenName", "email", "isPrivate"], function(acc, key) {
+        if (key in req.body.user)
+          acc[key] = req.body.user[key]
+        return acc
+      }, {})
 
       try {
         var user = await req.user.update(attrs)
