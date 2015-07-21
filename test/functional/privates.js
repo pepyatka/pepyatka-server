@@ -17,6 +17,64 @@ describe("MutualFriends", function() {
     beforeEach(funcTestHelper.createUserCtx(marsContext, 'mars', 'pw'))
     beforeEach(funcTestHelper.createUserCtx(zeusContext, 'zeus', 'pw'))
 
+    describe('publish private post to public feed', function() {
+      var group = 'group'
+
+      beforeEach(function(done) { funcTestHelper.subscribeToCtx(marsContext, lunaContext.username)(done) })
+      beforeEach(function(done) { funcTestHelper.subscribeToCtx(lunaContext, marsContext.username)(done) })
+      beforeEach(function(done) {
+        request
+          .post(app.config.host + '/v1/groups')
+          .send({ group: { username: group, screenName: group },
+                  authToken: lunaContext.authToken })
+          .end(function(err, res) {
+            done()
+          })
+      })
+      beforeEach(function(done) { funcTestHelper.subscribeToCtx(zeusContext, group)(done) })
+
+      it('should send private post to public feed', function(done) {
+        var post = 'post'
+        request
+          .post(app.config.host + '/v1/posts')
+          .send({ post: { body: post }, meta: { feeds: [group, lunaContext.user.username] }, authToken: lunaContext.authToken })
+          .end(function(err, res) {
+            funcTestHelper.getTimeline('/v1/timelines/home', zeusContext.authToken, function(err, res) {
+              res.should.not.be.empty
+              res.body.should.not.be.empty
+              res.body.should.have.property('timelines')
+              res.body.timelines.should.have.property('name')
+              res.body.timelines.name.should.eql('RiverOfNews')
+              res.body.timelines.should.have.property('posts')
+              res.body.timelines.posts.length.should.eql(1)
+              res.body.should.have.property('posts')
+              res.body.posts.length.should.eql(1)
+              var _post = res.body.posts[0]
+              _post.body.should.eql(post)
+              request
+                .post(app.config.host + '/v1/posts/' + _post.id + '/like')
+                .send({ authToken: zeusContext.authToken })
+                .end(function(err, res) {
+                  funcTestHelper.getTimeline('/v1/timelines/' + zeusContext.user.username +'/likes', zeusContext.authToken, function(err, res) {
+                    res.should.not.be.empty
+                    res.body.should.not.be.empty
+                    res.body.should.have.property('timelines')
+                    res.body.timelines.should.have.property('name')
+                    res.body.timelines.name.should.eql('Likes')
+                    res.body.timelines.should.have.property('posts')
+                    res.body.timelines.posts.length.should.eql(1)
+                    res.body.should.have.property('posts')
+                    res.body.posts.length.should.eql(1)
+                    var _post = res.body.posts[0]
+                    _post.body.should.eql(post)
+                    done()
+                  })
+                })
+            })
+          })
+      })
+    })
+
     describe('can protect private posts', function() {
       beforeEach(function(done) { funcTestHelper.subscribeToCtx(marsContext, lunaContext.username)(done) })
       beforeEach(function(done) { funcTestHelper.subscribeToCtx(lunaContext, marsContext.username)(done) })

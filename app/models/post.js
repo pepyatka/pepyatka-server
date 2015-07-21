@@ -427,9 +427,8 @@ exports.addModel = function(database) {
   Post.prototype.addComment = async function(commentId) {
     var timelines = []
     var comment = await models.Comment.findById(commentId)
-    var owner = await models.User.findById(this.userId)
 
-    if (!await this.isPrivate() && owner.isPrivate !== '1')
+    if (!await this.isPrivate())
       timelines = await this.getCommentsFriendOfFriendTimelines(comment.userId)
 
     await* timelines.map((timeline) => timeline.updatePost(this.id))
@@ -657,8 +656,10 @@ exports.addModel = function(database) {
 
   Post.prototype.isPrivate = async function() {
     var timelines = await this.getPostedTo()
-    var arr = await* timelines.map(async function(timeline) {
-      if (timeline.isDirects())
+    var arr = await* timelines.map(async (timeline) => {
+      var owner = await models.User.findById(timeline.userId)
+
+      if (timeline.isDirects() || owner.isPrivate === '1')
         return true
 
       // we do not have private feeds yet so user can open any
@@ -672,9 +673,8 @@ exports.addModel = function(database) {
     var timelines = []
     var user = await models.User.findById(userId)
     await user.validateCanLikePost(this.id)
-    var owner = await models.User.findById(this.userId)
 
-    if (!await this.isPrivate() && owner.isPrivate !== '1')
+    if (!await this.isPrivate())
       timelines = await this.getLikesFriendOfFriendTimelines(userId)
 
     var now = new Date().getTime()
