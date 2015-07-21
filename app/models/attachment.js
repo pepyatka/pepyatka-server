@@ -206,19 +206,7 @@ exports.addModel = function(database) {
 
         if (config.thumbnails.storage.type === 's3') {
           await img.writeAsync(tmpThumbnailFile)
-
-          let s3 = new aws.S3({
-            'accessKeyId': config.thumbnails.storage.accessKeyId,
-            'secretAccessKey': config.thumbnails.storage.secretAccessKey
-          })
-          let putObject = Promise.promisify(s3.putObject, s3)
-          await putObject({
-            ACL: 'public-read',
-            Bucket: config.thumbnails.storage.bucket,
-            Key: config.thumbnails.path + this.getFilename(),
-            Body: fs.createReadStream(tmpThumbnailFile),
-            ContentType: this.mimeType
-          })
+          await this.uploadToS3(tmpThumbnailFile, config.thumbnails)
           await fs.unlinkAsync(tmpThumbnailFile)
         } else {
           await img.writeAsync(thumbnailFile)
@@ -237,24 +225,29 @@ exports.addModel = function(database) {
 
     // Store an original attachment
     if (config.attachments.storage.type === 's3') {
-      let s3 = new aws.S3({
-        'accessKeyId': config.attachments.storage.accessKeyId,
-        'secretAccessKey': config.attachments.storage.secretAccessKey
-      })
-      let putObject = Promise.promisify(s3.putObject, s3)
-      await putObject({
-        ACL: 'public-read',
-        Bucket: config.attachments.storage.bucket,
-        Key: config.attachments.path + this.getFilename(),
-        Body: fs.createReadStream(tmpAttachmentFile),
-        ContentType: this.mimeType
-      })
+      await this.uploadToS3(tmpAttachmentFile, config.attachments)
       await fs.unlinkAsync(tmpAttachmentFile)
     } else {
       await fs.renameAsync(tmpAttachmentFile, attachmentFile)
     }
 
     return attachment
+  }
+
+  // Upload original attachment or its thumbnail to the S3 bucket
+  Attachment.prototype.uploadToS3 = async function(sourceFile, subConfig) {
+    let s3 = new aws.S3({
+      'accessKeyId': subConfig.storage.accessKeyId,
+      'secretAccessKey': subConfig.storage.secretAccessKey
+    })
+    let putObject = Promise.promisify(s3.putObject, s3)
+    await putObject({
+      ACL: 'public-read',
+      Bucket: subConfig.storage.bucket,
+      Key: subConfig.path + this.getFilename(),
+      Body: fs.createReadStream(sourceFile),
+      ContentType: this.mimeType
+    })
   }
 
   return Attachment
