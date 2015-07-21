@@ -67,7 +67,14 @@ describe("MutualFriends", function() {
                     res.body.posts.length.should.eql(1)
                     var _post = res.body.posts[0]
                     _post.body.should.eql(post)
-                    done()
+                    request
+                      .get(app.config.host + '/v1/posts/' + _post.id)
+                      .query({ authToken: zeusContext.authToken })
+                      .end(function(err, res) {
+                        res.body.should.not.be.empty
+                        res.body.posts.body.should.eql(_post.body)
+                        done()
+                      })
                   })
                 })
             })
@@ -322,7 +329,23 @@ describe("MutualFriends", function() {
           res.body.posts.length.should.eql(1)
           var post = res.body.posts[0]
           post.body.should.eql(lunaContext.post.body)
-          done()
+          // post should be visible to owner
+          request
+            .get(app.config.host + '/v1/posts/' + lunaContext.post.id)
+            .query({ authToken: lunaContext.authToken })
+            .end(function(err, res) {
+              res.body.should.not.be.empty
+              res.body.posts.body.should.eql(lunaContext.post.body)
+              // post should be visible to subscribers
+              request
+                .get(app.config.host + '/v1/posts/' + lunaContext.post.id)
+                .query({ authToken: lunaContext.authToken })
+                .end(function(err, res) {
+                  res.body.should.not.be.empty
+                  res.body.posts.body.should.eql(lunaContext.post.body)
+                  done()
+                })
+            })
         })
       })
 
@@ -335,7 +358,17 @@ describe("MutualFriends", function() {
           res.body.timelines.name.should.eql('RiverOfNews')
           res.body.timelines.should.not.have.property('posts')
           res.body.should.not.have.property('posts')
-          done()
+          // post should not be visible to ex-subscribers
+          request
+            .get(app.config.host + '/v1/posts/' + lunaContext.post.id)
+            .query({ authToken: zeusContext.authToken })
+            .end(function(err, res) {
+              err.should.not.be.empty
+              err.status.should.eql(403)
+              var error = JSON.parse(err.response.error.text)
+              error.err.should.eql('Not found')
+              done()
+            })
         })
       })
 

@@ -755,6 +755,10 @@ exports.addModel = function(database) {
     var timelines = await this.getPostedTo()
 
     var arr = await* timelines.map(async function(timeline) {
+      // owner can read her posts
+      if (timeline.userId === userId)
+        return true
+
       // if post is already in user's feed then she can read it
       if (timeline.isDirects())
         return timeline.userId === userId
