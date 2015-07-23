@@ -276,30 +276,51 @@ describe("MutualFriends", function() {
 
       it('should protect posts timeline', function(done) {
         funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.user.username, zeusContext.authToken, function(err, res) {
-          err.should.not.be.empty
-          err.status.should.eql(401)
-          var error = JSON.parse(err.response.error.text)
-          error.err.should.eql('Denied')
+          res.should.not.be.empty
+          res.body.should.not.be.empty
+          res.body.should.have.property('timelines')
+          res.body.timelines.should.have.property('name')
+          res.body.timelines.name.should.eql('Posts')
+          res.body.timelines.should.not.have.property('posts')
+          res.body.should.not.have.property('posts')
+          // err.should.not.be.empty
+          // err.status.should.eql(401)
+          // var error = JSON.parse(err.response.error.text)
+          // error.err.should.eql('Denied')
           done()
         })
       })
 
       it('should protect likes timeline', function(done) {
         funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.user.username + '/likes', zeusContext.authToken, function(err, res) {
-          err.should.not.be.empty
-          err.status.should.eql(401)
-          var error = JSON.parse(err.response.error.text)
-          error.err.should.eql('Denied')
+          res.should.not.be.empty
+          res.body.should.not.be.empty
+          res.body.should.have.property('timelines')
+          res.body.timelines.should.have.property('name')
+          res.body.timelines.name.should.eql('Likes')
+          res.body.timelines.should.not.have.property('posts')
+          res.body.should.not.have.property('posts')
+          // err.should.not.be.empty
+          // err.status.should.eql(401)
+          // var error = JSON.parse(err.response.error.text)
+          // error.err.should.eql('Denied')
           done()
         })
       })
 
       it('should protect likes timeline', function(done) {
         funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.user.username + '/comments', zeusContext.authToken, function(err, res) {
-          err.should.not.be.empty
-          err.status.should.eql(401)
-          var error = JSON.parse(err.response.error.text)
-          error.err.should.eql('Denied')
+          res.should.not.be.empty
+          res.body.should.not.be.empty
+          res.body.should.have.property('timelines')
+          res.body.timelines.should.have.property('name')
+          res.body.timelines.name.should.eql('Comments')
+          res.body.timelines.should.not.have.property('posts')
+          res.body.should.not.have.property('posts')
+          // err.should.not.be.empty
+          // err.status.should.eql(401)
+          // var error = JSON.parse(err.response.error.text)
+          // error.err.should.eql('Denied')
           done()
         })
       })
