@@ -814,7 +814,7 @@ describe("UsersController", function() {
     }))
 
     beforeEach(function(done){
-      mkdirp.sync(config.profilePictures.fsDir)
+      mkdirp.sync(config.profilePictures.storage.rootDir + config.profilePictures.path)
       done()
     })
 

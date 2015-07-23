@@ -814,7 +814,7 @@ exports.addModel = function(database) {
   }
 
   User.prototype.getProfilePicturePath = function(uuid, size) {
-    return config.profilePictures.fsDir + this.getProfilePictureFilename(uuid, size)
+    return config.profilePictures.storage.rootDir + config.profilePictures.path + this.getProfilePictureFilename(uuid, size)
   }
 
   User.prototype.getProfilePictureFilename = function(uuid, size) {
@@ -825,7 +825,7 @@ exports.addModel = function(database) {
     if (_.isEmpty(this.profilePictureUuid)) {
       return Promise.resolve('')
     }
-    return Promise.resolve(config.profilePictures.urlDir + this.getProfilePictureFilename(
+    return Promise.resolve(config.profilePictures.url + config.profilePictures.path + this.getProfilePictureFilename(
         this.profilePictureUuid, User.PROFILE_PICTURE_SIZE_LARGE))
   }
 
@@ -833,7 +833,7 @@ exports.addModel = function(database) {
     if (_.isEmpty(this.profilePictureUuid)) {
       return Promise.resolve('')
     }
-    return Promise.resolve(config.profilePictures.urlDir + this.getProfilePictureFilename(
+    return Promise.resolve(config.profilePictures.url + config.profilePictures.path + this.getProfilePictureFilename(
       this.profilePictureUuid, User.PROFILE_PICTURE_SIZE_MEDIUM))
   }
 
