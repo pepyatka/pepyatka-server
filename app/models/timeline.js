@@ -148,7 +148,14 @@ exports.addModel = function(database) {
 
     var that = this
     return new Promise(function(resolve, reject) {
-      database.zrevrangeAsync(mkKey(['timeline', that.id, 'posts']), offset, offset+limit-1)
+      that.validateCanShow(that.currentUser)
+        .then(function(valid) {
+          // this is a private timeline
+          if (!valid)
+            limit = -1
+
+          return database.zrevrangeAsync(mkKey(['timeline', that.id, 'posts']), offset, offset+limit-1)
+        })
         .then(function(postIds) {
           that.postIds = postIds
           resolve(that.postIds)
@@ -364,7 +371,7 @@ exports.addModel = function(database) {
     // this is a public feed, anyone can read public posts, this is
     // a free country
     var user = await this.getUser()
-    if (user.isPrivate !== '1')
+    if (user && user.isPrivate !== '1')
       return true
 
     // otherwise user can view post if and only if she is subscriber

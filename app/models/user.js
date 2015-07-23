@@ -359,7 +359,9 @@ exports.addModel = function(database) {
     // efficient when introduce Entries table with meta column (post to
     // timelines many-to-many over Entries)
 
-    var timeline = await this.getPostsTimeline()
+    var timeline = await this.getPostsTimeline({
+      currentUser: this.id
+    })
     var posts = await timeline.getPosts(0, -1)
 
     // first of all, let's revive likes
