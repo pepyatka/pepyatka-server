@@ -274,6 +274,36 @@ describe("MutualFriends", function() {
         })
       })
 
+      it('should protect posts timeline', function(done) {
+        funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.user.username, zeusContext.authToken, function(err, res) {
+          err.should.not.be.empty
+          err.status.should.eql(401)
+          var error = JSON.parse(err.response.error.text)
+          error.err.should.eql('Denied')
+          done()
+        })
+      })
+
+      it('should protect likes timeline', function(done) {
+        funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.user.username + '/likes', zeusContext.authToken, function(err, res) {
+          err.should.not.be.empty
+          err.status.should.eql(401)
+          var error = JSON.parse(err.response.error.text)
+          error.err.should.eql('Denied')
+          done()
+        })
+      })
+
+      it('should protect likes timeline', function(done) {
+        funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.user.username + '/comments', zeusContext.authToken, function(err, res) {
+          err.should.not.be.empty
+          err.status.should.eql(401)
+          var error = JSON.parse(err.response.error.text)
+          error.err.should.eql('Denied')
+          done()
+        })
+      })
+
       it('should be able to send and receive subscription request', function(done) {
         request
           .post(app.config.host + '/v1/users/' + lunaContext.user.username + '/sendRequest')
