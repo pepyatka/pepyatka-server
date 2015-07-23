@@ -55,12 +55,6 @@ exports.addController = function(app) {
         currentUser: currentUser
       })
 
-      var valid = await timeline.validateCanShow(currentUser)
-
-      // this is a private timeline
-      if (!valid)
-        timeline = timeline.turnIntoPrivate()
-
       new TimelineSerializer(timeline).toJSON(function(err, json) {
         res.jsonp(json)
       })
@@ -81,12 +75,6 @@ exports.addController = function(app) {
         currentUser: currentUser
       })
 
-      var valid = await timeline.validateCanShow(currentUser)
-
-      // this is a private timeline
-      if (!valid)
-        timeline = timeline.turnIntoPrivate()
-
       new TimelineSerializer(timeline).toJSON(function(err, json) {
         res.jsonp(json)
       })
@@ -106,12 +94,6 @@ exports.addController = function(app) {
         limit: req.query.limit,
         currentUser: currentUser
       })
-
-      var valid = await timeline.validateCanShow(currentUser)
-
-      // this is a private timeline
-      if (!valid)
-        timeline = timeline.turnIntoPrivate()
 
       new TimelineSerializer(timeline).toJSON(function(err, json) {
         res.jsonp(json)
