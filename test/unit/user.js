@@ -42,39 +42,45 @@ describe('User', function() {
   })
 
   describe('#isValidUsername()', function() {
-    var valid = ['luna', '12345', 'hello1234',
-                 ' group', 'group '] // automatically trims
+    var valid = [
+      'luna', 'lun', '12345', 'hello1234',
+      ' group', 'group ',  // automatically trims
+      'aaaaaaaaaaaaaaaaaaaaaaaaa'  // 25 chars is ok
+    ]
+
+    var i = 1
     valid.forEach(function(username) {
-      it('should allow username ' + username, function(done) {
+      it(`should allow username '${username}'`, function(done) {
 
         var user = new User({
           username: username,
+          screenName: 'test',
           password: 'password',
-          email: 'user@example.com'
+          email: `user+${i++}@example.com`
         })
 
         user.create()
-          .then(function(user) { return user.isValidEmail() })
-          .then(function(valid) {
-            valid.should.eql(true)
-          })
           .then(function() { done() })
       })
     })
 
-    var invalid = ['lu', '-12345', 'luna-', 'hel--lo', 'save-our-snobs', 'абизьян',
-                   'gr oup']
+    var invalid = [
+      'lu', '-12345', 'luna-', 'hel--lo', 'save-our-snobs', 'абизьян',
+      'gr oup', '',
+      'aaaaaaaaaaaaaaaaaaaaaaaaaa'  // 26 chars is 1 char too much
+    ]
     invalid.forEach(function(username) {
       it('should not allow invalid username ' + username, function(done) {
 
         var user = new User({
           username: username,
+          screenName: 'test',
           password: 'password',
           email: 'user@example.com'
         })
 
         user.create()
-          .then(function(user) { return user.isValidEmail() })
+          .then(function() { done(new Error('FAIL')) })
           .catch(function(e) {
             e.message.should.eql("Invalid")
             done()
@@ -93,10 +99,6 @@ describe('User', function() {
       })
 
       user.create()
-        .then(function(user) { return user.isValidEmail() })
-        .then(function(valid) {
-          valid.should.eql(true)
-        })
         .then(function() { done() })
     })
 
@@ -107,10 +109,6 @@ describe('User', function() {
       })
 
       user.create()
-        .then(function(user) { return user.isValidEmail() })
-        .then(function(valid) {
-          valid.should.eql(true)
-        })
         .then(function() { done() })
     })
 
@@ -124,6 +122,27 @@ describe('User', function() {
       return user.create()
         .catch(function(e) {
           expect(e.message).to.equal('Invalid');
+        })
+    })
+
+    it('should not allow 2 users with same email', function(done) {
+      var user1 = new User({
+        username: 'Luna1',
+        password: 'password',
+        email: 'email@example.com'
+      })
+
+      var user2 = new User({
+        username: 'Luna2',
+        password: 'password',
+        email: 'email@example.com'
+      })
+
+      user1.create()
+        .then(function() { return user2.create() })
+        .catch(function(e) {
+          expect(e.message).to.equal('Invalid');
+          done()
         })
     })
   })

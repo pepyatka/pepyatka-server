@@ -151,13 +151,17 @@ describe('Group', function() {
   })
 
   describe('#isValidUsername()', function() {
-    var valid = ['luna', '12345', 'hello1234', 'save-our-snobs',
-                   ' group', 'group '] // automatically trims
+    var valid = [
+      'luna', 'lun', '12345', 'hello1234', 'save-our-snobs',
+      ' group', 'group ',  // automatically trims
+      'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'  // 35 chars is ok
+    ]
     valid.forEach(function(username) {
       it('should allow username ' + username, function(done) {
 
         var group = new Group({
-          username: username
+          username: username,
+          screenName: 'test'
         })
 
         group.create()
@@ -166,19 +170,24 @@ describe('Group', function() {
             valid.should.eql(true)
           })
           .then(function() { done() })
+          .catch(function(e) { done(e) })
       })
     })
 
-    var invalid = ['lu', '-12345', 'luna-', 'hel--lo', 'абизьян', 'gr oup']
+    var invalid = [
+      'lu', '-12345', 'luna-', 'hel--lo', 'абизьян', 'gr oup',
+      'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'  // 36 chars is 1 char too much
+    ]
     invalid.forEach(function(username) {
       it('should not allow invalid username ' + username, function(done) {
 
         var group = new Group({
-          username: username
+          username: username,
+          screenName: 'test'
         })
 
         group.create()
-          .then(function(group) { return group.isValidEmail() })
+          .then(function() { done(new Error('FAIL')) })
           .catch(function(e) {
             e.message.should.eql("Invalid")
             done()

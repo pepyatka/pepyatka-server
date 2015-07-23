@@ -2,6 +2,7 @@
 
 var Promise = require('bluebird')
   , uuid = require('uuid')
+  , GraphemeBreaker = require('grapheme-breaker')
   , inherits = require("util").inherits
   , models = require('../models')
   , AbstractModel = models.AbstractModel
@@ -53,17 +54,23 @@ exports.addModel = function(database) {
     }
   })
 
-  Post.prototype.validate = function() {
-    return new Promise(function(resolve, reject) {
-      var valid
+  Post.prototype.validate = async function() {
+    var valid
 
-      valid = this.body
-        && this.body.length > 0
-        && this.userId
-        && this.userId.length > 0
+    valid = this.body && this.body.length > 0
+      && this.userId && this.userId.length > 0
 
-      valid ? resolve(valid) : reject(new Error("Invalid"))
-    }.bind(this))
+    if (!valid) {
+      throw new Error("Invalid")
+    }
+
+    var len = GraphemeBreaker.countBreaks(this.body)
+
+    if (len > 1500) {
+      throw new Error("Maximum post-length is 1500 graphemes")
+    }
+
+    return this
   }
 
   Post.prototype.validateOnCreate = function() {

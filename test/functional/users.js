@@ -212,9 +212,7 @@ describe("UsersController", function() {
   })
 
   describe('#subscribers()', function() {
-    it('should return list of subscribers', function(done) {
-      done()
-    })
+    it('should return list of subscribers')
   })
 
   describe('#subscribe()', function() {
@@ -524,99 +522,58 @@ describe("UsersController", function() {
   })
 
   describe("#update()", function() {
-    var authToken
-      , user
+    describe('single-user tests', function() {
+      "use strict";
 
-    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token, luna) {
-      authToken = token
-      user = luna
-    }))
+      var authToken
+        , user
 
-    it('should update current user', function(done) {
-      var screenName = 'Mars'
+      beforeEach(funcTestHelper.createUser('Luna', 'password', function(token, luna) {
+        authToken = token
+        user = luna
+      }))
 
-      request
-        .post(app.config.host + '/v1/users/' + user.id)
-        .send({ authToken: authToken,
-                user: { screenName: screenName },
-                '_method': 'put' })
-        .end(function(err, res) {
-          res.should.not.be.empty
-          res.body.should.not.be.empty
-          res.body.should.have.property('users')
-          res.body.users.should.have.property('id')
-          res.body.users.should.have.property('screenName')
-          res.body.users.screenName.should.eql(screenName)
-          done()
-        })
-    })
+      it('should update current user', function(done) {
+        var screenName = 'Mars'
 
-    it('should update privacy settings', function(done) {
-      var screenName = 'Mars'
-
-      request
-        .post(app.config.host + '/v1/users/' + user.id)
-        .send({ authToken: authToken,
-                user: { isPrivate: '1' },
-                '_method': 'put' })
-        .end(function(err, res) {
-          res.should.not.be.empty
-          res.body.should.not.be.empty
-          res.body.should.have.property('users')
-          res.body.users.should.have.property('id')
-          res.body.users.should.have.property('isPrivate')
-          res.body.users.isPrivate.should.eql('1')
-          done()
-        })
-    })
-
-    it('should require signed in user', function(done) {
-      var screenName = 'Mars'
-
-      request
-        .post(app.config.host + '/v1/users/' + user.id)
-        .send({ authToken: 'abc',
-                user: { screenName: screenName },
-                '_method': 'put' })
-        .end(function(err, res) {
-          err.should.not.be.empty
-          err.status.should.eql(401)
-          done()
-        })
-    })
-
-    var invalid = [
-      '', 'a', 'aa', 'aaaaaaaaaaaaaaaaaaaaaaaaaa',
-      '\u4E9C\u4E9C',  // 2 han ideographs
-      '\u0928\u093F\u0928\u093F'  // Devanagari syllable "ni" (repeated 2 times)
-    ]
-
-    _.forEach(invalid, function(screenName) {
-      it('should not allow invalid screen-name: ' + screenName, function(done) {
         request
           .post(app.config.host + '/v1/users/' + user.id)
           .send({ authToken: authToken,
-            user: { screenName: screenName },
-            '_method': 'put' })
+                  user: { screenName: screenName },
+                  '_method': 'put' })
           .end(function(err, res) {
-            err.should.not.be.empty
-            err.status.should.eql(422)
+            res.should.not.be.empty
+            res.body.should.not.be.empty
+            res.body.should.have.property('users')
+            res.body.users.should.have.property('id')
+            res.body.users.should.have.property('screenName')
+            res.body.users.screenName.should.eql(screenName)
             done()
           })
       })
-    })
 
-    var valid = [
-      'aaa', 'aaaaaaaaaaaaaaaaaaaaaaaaa',
-      '\u4E9C\u4E9C\u4E9C',
-      '\u0928\u093F\u0928\u093F\u0928\u093F',
-      // extreme grapheme example follows
-      'Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍'
-      // extreme grapheme example done
-    ]
+      it('should update privacy settings', function(done) {
+        var screenName = 'Mars'
 
-    _.forEach(valid, function(screenName) {
-      it('should allow valid screen-name: ' + screenName, function(done) {
+        request
+          .post(app.config.host + '/v1/users/' + user.id)
+          .send({ authToken: authToken,
+                  user: { isPrivate: '1' },
+                  '_method': 'put' })
+          .end(function(err, res) {
+            res.should.not.be.empty
+            res.body.should.not.be.empty
+            res.body.should.have.property('users')
+            res.body.users.should.have.property('id')
+            res.body.users.should.have.property('isPrivate')
+            res.body.users.isPrivate.should.eql('1')
+            done()
+          })
+      })
+
+      it('should require signed in user', function(done) {
+        var screenName = 'Mars'
+
         request
           .post(app.config.host + '/v1/users/' + user.id)
           .send({ authToken: authToken,
@@ -631,6 +588,118 @@ describe("UsersController", function() {
             res.body.users.screenName.should.eql(screenName)
             done()
           })
+      })
+
+      it('should require signed in user', function(done) {
+        var screenName = 'Mars'
+
+        request
+          .post(app.config.host + '/v1/users/' + user.id)
+          .send({ authToken: 'abc',
+            user: { screenName: screenName },
+            '_method': 'put' })
+          .end(function(err, res) {
+            err.should.not.be.empty
+            err.status.should.eql(401)
+            done()
+          })
+      })
+
+      var invalid = [
+        '', 'a', 'aa', 'aaaaaaaaaaaaaaaaaaaaaaaaaa',
+        '\u4E9C\u4E9C',  // 2 han ideographs
+        '\u0928\u093F\u0928\u093F'  // Devanagari syllable "ni" (repeated 2 times)
+      ]
+
+      _.forEach(invalid, function(screenName) {
+        it('should not allow invalid screen-name: ' + screenName, function(done) {
+          request
+            .post(app.config.host + '/v1/users/' + user.id)
+            .send({ authToken: authToken,
+              user: { screenName: screenName },
+              '_method': 'put' })
+            .end(function(err, res) {
+              err.should.not.be.empty
+              err.status.should.eql(422)
+              done()
+            })
+        })
+      })
+
+      var valid = [
+        'aaa', 'aaaaaaaaaaaaaaaaaaaaaaaaa',
+        '\u4E9C\u4E9C\u4E9C',
+        '\u0928\u093F\u0928\u093F\u0928\u093F',
+        // extreme grapheme example follows
+        'Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍Z͑ͫ̓ͪ̂ͫ̽͏̴̙̤̞͉͚̯̞̠͍'
+        // extreme grapheme example done
+      ]
+
+      _.forEach(valid, function(screenName) {
+        it('should allow valid screen-name: ' + screenName, function(done) {
+          request
+            .post(app.config.host + '/v1/users/' + user.id)
+            .send({ authToken: authToken,
+              user: { screenName: screenName },
+              '_method': 'put' })
+            .end(function(err, res) {
+              res.should.not.be.empty
+              res.body.should.not.be.empty
+              res.body.should.have.property('users')
+              res.body.users.should.have.property('id')
+              res.body.users.should.have.property('screenName')
+              res.body.users.screenName.should.eql(screenName)
+              done()
+            })
+        })
+      })
+    })
+
+    describe('double-user tests', function() {
+      "use strict";
+
+      var lunaContext = {}
+      var marsContext = {}
+
+      beforeEach(funcTestHelper.createUserCtx(lunaContext, 'luna', 'luna', {email: "luna@example.org"}))
+      beforeEach(funcTestHelper.createUserCtx(marsContext, 'mars', 'mars', {email: "mars@example.org"}))
+
+      it('should not let user use email, which is used by other user', function(done) {
+        funcTestHelper.updateUserCtx(lunaContext, {email: marsContext.attributes.email})(function(err, response) {
+          $should.exist(err)
+          err.status.should.eql(422)
+          err.response.error.should.have.property('text')
+          JSON.parse(err.response.error.text).err.should.eql('Invalid email')
+          done()
+        })
+      })
+
+      it('should let user to use email, which was used by other user, but not used anymore', function(done) {
+        funcTestHelper.updateUserCtx(marsContext, {email: 'other@example.org'})(function (err, response) {
+          $should.not.exist(err)
+
+          funcTestHelper.updateUserCtx(lunaContext, {email: marsContext.attributes.email})(function (err2, response2) {
+            $should.not.exist(err2)
+            done()
+          })
+        })
+      })
+
+      it('should let user "reset" password using newly set email', function(done) {
+        funcTestHelper.updateUserCtx(marsContext, {email: 'other@example.org'})(function (err, res) {
+          $should.not.exist(err)
+
+          funcTestHelper.sendResetPassword(marsContext.attributes.email)(function(err2, res2) {
+            $should.exist(err2)
+
+            funcTestHelper.sendResetPassword('other@example.org')(function(err3, res3) {
+              $should.not.exist(err3)
+              $should.exist(res3)
+              res3.body.message.should.eql('We will send a password reset link to other@example.org in a moment')
+              done()
+            })
+          })
+        })
       })
     })
   })
