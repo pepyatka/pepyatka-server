@@ -237,8 +237,8 @@ exports.addModel = function(database) {
   // Upload original attachment or its thumbnail to the S3 bucket
   Attachment.prototype.uploadToS3 = async function(sourceFile, subConfig) {
     let s3 = new aws.S3({
-      'accessKeyId': subConfig.storage.accessKeyId,
-      'secretAccessKey': subConfig.storage.secretAccessKey
+      'accessKeyId': subConfig.storage.accessKeyId || null,
+      'secretAccessKey': subConfig.storage.secretAccessKey || null
     })
     let putObject = Promise.promisify(s3.putObject, s3)
     await putObject({
