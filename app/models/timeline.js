@@ -344,6 +344,14 @@ exports.addModel = function(database) {
       return feed.updateLastActivityAt()
   }
 
+  Timeline.prototype.turnIntoPrivate = function() {
+    this.posts = []
+    this.postIds = []
+    this.limit = 0
+
+    return this
+  }
+
   Timeline.prototype.validateCanShow = async function(userId) {
     // owner can read her posts
     if (this.userId === userId)

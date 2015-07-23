@@ -59,7 +59,7 @@ exports.addController = function(app) {
 
       // this is a private timeline
       if (!valid)
-        return res.status(401).jsonp({ err: 'Denied' })
+        timeline = timeline.turnIntoPrivate()
 
       new TimelineSerializer(timeline).toJSON(function(err, json) {
         res.jsonp(json)
@@ -85,7 +85,7 @@ exports.addController = function(app) {
 
       // this is a private timeline
       if (!valid)
-        return res.status(401).jsonp({ err: 'Denied' })
+        timeline = timeline.turnIntoPrivate()
 
       new TimelineSerializer(timeline).toJSON(function(err, json) {
         res.jsonp(json)
@@ -111,7 +111,7 @@ exports.addController = function(app) {
 
       // this is a private timeline
       if (!valid)
-        return res.status(401).jsonp({ err: 'Denied' })
+        timeline = timeline.turnIntoPrivate()
 
       new TimelineSerializer(timeline).toJSON(function(err, json) {
         res.jsonp(json)
