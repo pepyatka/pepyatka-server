@@ -344,5 +344,25 @@ exports.addModel = function(database) {
       return feed.updateLastActivityAt()
   }
 
+  Timeline.prototype.validateCanShow = async function(userId) {
+    // owner can read her posts
+    if (this.userId === userId)
+      return true
+
+    // if post is already in user's feed then she can read it
+    if (this.isDirects())
+      return this.userId === userId
+
+    // this is a public feed, anyone can read public posts, this is
+    // a free country
+    var user = await this.getUser()
+    if (user.isPrivate !== '1')
+      return true
+
+    // otherwise user can view post if and only if she is subscriber
+    var userIds = await this.getSubscriberIds()
+    return userIds.indexOf(userId) >= 0
+  }
+
   return Timeline
 }
