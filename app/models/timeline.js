@@ -150,9 +150,9 @@ exports.addModel = function(database) {
     return new Promise(function(resolve, reject) {
       that.validateCanShow(that.currentUser)
         .then(function(valid) {
-          // this is a private timeline
+          // this is a private timeline, you shall not pass
           if (!valid)
-            limit = -1
+            return resolve([])
 
           return database.zrevrangeAsync(mkKey(['timeline', that.id, 'posts']), offset, offset+limit-1)
         })
