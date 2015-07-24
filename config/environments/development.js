@@ -44,7 +44,7 @@ exports.getConfig = function() {
     USERNAME_STOP_LIST: ['anonymous', 'public', 'about', 'signin', 'logout',
                          'signup', 'filter', 'settings', 'account', 'groups',
                          'friends', 'list', 'search', 'summary', 'share','404',
-                         'iphone']
+                         'iphone', 'requests']
   }
 
   config.attachments = {
