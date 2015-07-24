@@ -981,6 +981,10 @@ exports.addModel = function(database) {
     if (theirBanIds.indexOf(this.id) >= 0) {
       throw new ForbiddenException("This user prevented your from subscribing to them")
     }
+
+    if (user.isPrivate === '1')
+      throw new ForbiddenException("You cannot subscribe to private feed")
+
     return timelineId
   }
 

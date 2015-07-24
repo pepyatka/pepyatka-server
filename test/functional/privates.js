@@ -313,6 +313,25 @@ describe("MutualFriends", function() {
         })
       })
 
+      it('should not subscribe to private feed', function(done) {
+        funcTestHelper.subscribeToCtx(zeusContext, lunaContext.username)(function(err, res) {
+          err.should.not.be.empty
+          err.status.should.eql(403)
+          var error = JSON.parse(err.response.error.text)
+          error.err.should.eql('You cannot subscribe to private feed')
+          funcTestHelper.getTimeline('/v1/timelines/home', zeusContext.authToken, function(err, res) {
+            res.should.not.be.empty
+            res.body.should.not.be.empty
+            res.body.should.have.property('timelines')
+            res.body.timelines.should.have.property('name')
+            res.body.timelines.name.should.eql('RiverOfNews')
+            res.body.timelines.should.not.have.property('posts')
+            res.body.should.not.have.property('posts')
+            done()
+          })
+        })
+      })
+
       it('should be able to send and receive subscription request', function(done) {
         request
           .post(app.config.host + '/v1/users/' + lunaContext.user.username + '/sendRequest')
@@ -646,18 +665,28 @@ describe("MutualFriends", function() {
       })
 
       it('should be visible to mutual friends', function(done) {
-        funcTestHelper.subscribeToCtx(marsContext, lunaContext.username)(function() {
-          request
-            .get(app.config.host + '/v1/users/' + marsContext.username + '/subscriptions')
-            .query({ authToken: marsContext.authToken })
-            .end(function(err, res) {
-              res.body.should.not.be.empty
-              res.body.should.have.property('subscriptions')
-              res.body.subscriptions.should.not.be.empty
-              res.body.subscriptions.length.should.eql(3)
-              done()
-            })
-        })
+        request
+          .post(app.config.host + '/v1/users/' + lunaContext.user.username + '/sendRequest')
+          .send({ authToken: marsContext.authToken,
+                  '_method': 'post' })
+          .end(function(err, res) {
+            request
+              .post(app.config.host + '/v1/users/acceptRequest/' + marsContext.user.username)
+              .send({ authToken: lunaContext.authToken,
+                      '_method': 'post' })
+              .end(function(err, res) {
+                request
+                  .get(app.config.host + '/v1/users/' + marsContext.username + '/subscriptions')
+                  .query({ authToken: marsContext.authToken })
+                  .end(function(err, res) {
+                    res.body.should.not.be.empty
+                    res.body.should.have.property('subscriptions')
+                    res.body.subscriptions.should.not.be.empty
+                    res.body.subscriptions.length.should.eql(3)
+                    done()
+                  })
+              })
+          })
       })
     })
   })
