@@ -283,10 +283,6 @@ describe("MutualFriends", function() {
           res.body.timelines.name.should.eql('Posts')
           res.body.timelines.should.not.have.property('posts')
           res.body.should.not.have.property('posts')
-          // err.should.not.be.empty
-          // err.status.should.eql(401)
-          // var error = JSON.parse(err.response.error.text)
-          // error.err.should.eql('Denied')
           done()
         })
       })
@@ -300,10 +296,6 @@ describe("MutualFriends", function() {
           res.body.timelines.name.should.eql('Likes')
           res.body.timelines.should.not.have.property('posts')
           res.body.should.not.have.property('posts')
-          // err.should.not.be.empty
-          // err.status.should.eql(401)
-          // var error = JSON.parse(err.response.error.text)
-          // error.err.should.eql('Denied')
           done()
         })
       })
@@ -317,10 +309,6 @@ describe("MutualFriends", function() {
           res.body.timelines.name.should.eql('Comments')
           res.body.timelines.should.not.have.property('posts')
           res.body.should.not.have.property('posts')
-          // err.should.not.be.empty
-          // err.status.should.eql(401)
-          // var error = JSON.parse(err.response.error.text)
-          // error.err.should.eql('Denied')
           done()
         })
       })
