@@ -59,7 +59,7 @@ exports.subscribeToCtx = function(context, username) {
       .post(app.config.host + '/v1/users/' + username + '/subscribe')
       .send({ authToken: context.authToken })
       .end(function(err, res) {
-        done()
+        done(err, res)
       })
   }
 }
