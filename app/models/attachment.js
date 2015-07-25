@@ -246,8 +246,21 @@ exports.addModel = function(database) {
       Bucket: subConfig.storage.bucket,
       Key: subConfig.path + this.getFilename(),
       Body: fs.createReadStream(sourceFile),
-      ContentType: this.mimeType
+      ContentType: this.mimeType,
+      ContentDisposition: this.getContentDisposition()
     })
+  }
+
+  // Get cross-browser Content-Disposition header for attachment
+  Attachment.prototype.getContentDisposition = function() {
+    // Old browsers (IE8) need ASCII-only fallback filenames
+    let fileNameAscii = this.fileName.replace(/[^\x00-\x7F]/g, '_');
+
+    // Modern browsers support UTF-8 filenames
+    let fileNameUtf8 = encodeURIComponent(this.fileName)
+
+    // Inline version of 'attfnboth' method (http://greenbytes.de/tech/tc2231/#attfnboth)
+    return `inline; filename="${fileNameAscii}"; filename*=utf-8''${fileNameUtf8}`
   }
 
   return Attachment
