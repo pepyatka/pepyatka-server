@@ -43,55 +43,64 @@ exports.addController = function(app) {
       .catch(function(e) { exceptions.reportError(res)(e) })
   }
 
-  TimelineController.posts = function(req, res) {
-    var username = req.params.username
+  TimelineController.posts = async function(req, res) {
+    try {
+      var username = req.params.username
 
-    models.User.findByUsername(username)
-      .then(function(user) { return user.getPostsTimeline({
+      var user = await models.User.findByUsername(username)
+      var currentUser = req.user ? req.user.id : null
+      var timeline = await user.getPostsTimeline({
         offset: req.query.offset,
         limit: req.query.limit,
-        currentUser: req.user ? req.user.id : null
-      })}).then(function(timeline) {
-        new TimelineSerializer(timeline).toJSON(function(err, json) {
-          res.jsonp(json)
-        })
+        currentUser: currentUser
       })
-      .catch(function(e) { exceptions.reportError(res)(e) })
+
+      new TimelineSerializer(timeline).toJSON(function(err, json) {
+        res.jsonp(json)
+      })
+    } catch(e) {
+      exceptions.reportError(res)(e)
+    }
   }
 
-  TimelineController.likes = function(req, res) {
-    var username = req.params.username
+  TimelineController.likes = async function(req, res) {
+    try {
+      var username = req.params.username
 
-    models.User.findByUsername(username)
-      .then(function(user) { return user.getLikesTimeline({
+      var user = await models.User.findByUsername(username)
+      var currentUser = req.user ? req.user.id : null
+      var timeline = await user.getLikesTimeline({
         offset: req.query.offset,
         limit: req.query.limit,
-        currentUser: req.user ? req.user.id : null
-      })})
-      .then(function(timeline) {
-        new TimelineSerializer(timeline).toJSON(function(err, json) {
-          res.jsonp(json)
-        })
+        currentUser: currentUser
       })
-      .catch(function(e) { res.status(422).send({}) })
+
+      new TimelineSerializer(timeline).toJSON(function(err, json) {
+        res.jsonp(json)
+      })
+    } catch(e) {
+      exceptions.reportError(res)(e)
+    }
   }
 
+  TimelineController.comments = async function(req, res) {
+    try {
+      var username = req.params.username
 
-  TimelineController.comments = function(req, res) {
-    var username = req.params.username
-
-    models.User.findByUsername(username)
-      .then(function(user) { return user.getCommentsTimeline({
+      var user = await models.User.findByUsername(username)
+      var currentUser = req.user ? req.user.id : null
+      var timeline = await user.getCommentsTimeline({
         offset: req.query.offset,
         limit: req.query.limit,
-        currentUser: req.user ? req.user.id : null
-      })})
-      .then(function(timeline) {
-        new TimelineSerializer(timeline).toJSON(function(err, json) {
-          res.jsonp(json)
-        })
+        currentUser: currentUser
       })
-      .catch(function(e) { res.status(422).send({}) })
+
+      new TimelineSerializer(timeline).toJSON(function(err, json) {
+        res.jsonp(json)
+      })
+    } catch(e) {
+      exceptions.reportError(res)(e)
+    }
   }
 
   TimelineController.myDiscussions = function(req, res) {

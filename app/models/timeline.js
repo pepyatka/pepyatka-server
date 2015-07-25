@@ -148,7 +148,14 @@ exports.addModel = function(database) {
 
     var that = this
     return new Promise(function(resolve, reject) {
-      database.zrevrangeAsync(mkKey(['timeline', that.id, 'posts']), offset, offset+limit-1)
+      that.validateCanShow(that.currentUser)
+        .then(function(valid) {
+          // this is a private timeline, you shall not pass
+          if (!valid)
+            return resolve([])
+
+          return database.zrevrangeAsync(mkKey(['timeline', that.id, 'posts']), offset, offset+limit-1)
+        })
         .then(function(postIds) {
           that.postIds = postIds
           resolve(that.postIds)
@@ -234,31 +241,25 @@ exports.addModel = function(database) {
     })
   }
 
-  Timeline.prototype.unmerge = function(timelineId) {
-    var that = this
+  Timeline.prototype.unmerge = async function(timelineId) {
+    // zinterstore saves results to a key. so we have to
+    // create a temporary storage
+    var randomKey = mkKey(['timeline', this.id, 'random', uuid.v4()])
 
-    return new Promise(function(resolve, reject) {
-      // zinterstore saves results to a key. so we have to
-      // create a temporary storage
-      var randomKey = mkKey(['timeline', that.id, 'random', uuid.v4()])
+    await database.zinterstoreAsync(
+      randomKey,
+      2,
+      mkKey(['timeline', timelineId, 'posts']),
+      mkKey(['timeline', this.id, 'posts']),
+      'AGGREGATE', 'MAX')
 
-      database.zinterstoreAsync(
-        randomKey, 2,
-        mkKey(['timeline', timelineId, 'posts']),
-        mkKey(['timeline', that.id, 'posts']),
-        'AGGREGATE', 'MAX')
-        .then(function() { return database.zrangeAsync(randomKey, 0, -1) })
-        .then(function(postIds) {
-          return Promise.map(postIds, function(postId) {
-            return Promise.all([
-              database.sremAsync(mkKey(['post', postId, 'timelines']), timelineId),
-              database.zremAsync(mkKey(['timeline', timelineId, 'posts']), postId)
-            ])
-          })
-        })
-        .then(function() { return database.delAsync(randomKey) })
-        .then(function(res) { resolve(res) })
-    })
+    var postIds = await database.zrangeAsync(randomKey, 0, -1)
+    await* _.flatten(postIds.map((postId) => [
+      database.sremAsync(mkKey(['post', postId, 'timelines']), timelineId),
+      database.zremAsync(mkKey(['timeline', timelineId, 'posts']), postId)
+    ]))
+
+    return database.delAsync(randomKey)
   }
 
   Timeline.prototype.getUser = function() {
@@ -326,31 +327,56 @@ exports.addModel = function(database) {
     return this.name === "Hides"
   }
 
-  Timeline.prototype.updatePost = function(postId, action) {
+  Timeline.prototype.updatePost = async function(postId, action) {
     var currentTime = new Date().getTime()
-    var that = this
 
-    return new Promise(function(resolve, reject) {
-      database.zscoreAsync(mkKey(['timeline', that.id, 'posts']), postId).bind({})
-        .then(function(score) {
-          // For the time being like does not bump post
-          if (action === "like" && score != null)
-            return
+    var score = await database.zscoreAsync(mkKey(['timeline', this.id, 'posts']), postId)
 
-          return database.zaddAsync(mkKey(['timeline', that.id, 'posts']), currentTime, postId)
-        })
-        .then(function(res) { return database.saddAsync(mkKey(['post', postId, 'timelines']), that.id) })
-        .then(function(res) { return database.hsetAsync(mkKey(['post', postId]), 'updatedAt', currentTime) })
-        .then(function(post) { return that.getUser() })
-        .then(function(feed) {
-          // does not update lastActivity on like
-          if (action === 'like')
-            return null
-          else
-            return feed.updateLastActivityAt()
-        })
-        .then(function() { resolve() })
-    })
+    // For the time being like does not bump post
+    if (action === "like" && score != null)
+      return
+
+    await* [
+      database.zaddAsync(mkKey(['timeline', this.id, 'posts']), currentTime, postId),
+      database.saddAsync(mkKey(['post', postId, 'timelines']), this.id),
+      database.hsetAsync(mkKey(['post', postId]), 'updatedAt', currentTime)
+    ]
+
+    var feed = await this.getUser()
+
+    // does not update lastActivity on like
+    if (action === 'like')
+      return null
+    else
+      return feed.updateLastActivityAt()
+  }
+
+  Timeline.prototype.turnIntoPrivate = function() {
+    this.posts = []
+    this.postIds = []
+    this.limit = 0
+
+    return this
+  }
+
+  Timeline.prototype.validateCanShow = async function(userId) {
+    // owner can read her posts
+    if (this.userId === userId)
+      return true
+
+    // if post is already in user's feed then she can read it
+    if (this.isDirects())
+      return this.userId === userId
+
+    // this is a public feed, anyone can read public posts, this is
+    // a free country
+    var user = await this.getUser()
+    if (user && user.isPrivate !== '1')
+      return true
+
+    // otherwise user can view post if and only if she is subscriber
+    var userIds = await this.getSubscriberIds()
+    return userIds.indexOf(userId) >= 0
   }
 
   return Timeline

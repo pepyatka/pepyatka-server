@@ -36,5 +36,6 @@ environment.init(app)
 
       replServer.context.app = app
       replServer.context.models = require('../app/models')
+      replServer.context.database = require('../app/models').database
     })
   })

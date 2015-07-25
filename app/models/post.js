@@ -663,8 +663,10 @@ exports.addModel = function(database) {
 
   Post.prototype.isPrivate = async function() {
     var timelines = await this.getPostedTo()
-    var arr = await* timelines.map(async function(timeline) {
-      if (timeline.isDirects())
+    var arr = await* timelines.map(async (timeline) => {
+      var owner = await models.User.findById(timeline.userId)
+
+      if (timeline.isDirects() || owner.isPrivate === '1')
         return true
 
       // we do not have private feeds yet so user can open any
@@ -756,29 +758,30 @@ exports.addModel = function(database) {
     })
   }
 
-  Post.prototype.validateCanShow = function(userId) {
-    var that = this
+  Post.prototype.validateCanShow = async function(userId) {
+    var timelines = await this.getPostedTo()
 
-    return new Promise(function(resolve, reject) {
-      that.getPostedTo()
-        .then(function(timelines) {
-          return Promise.map(timelines, function(timeline) {
-            // if post is already in user's feed then she can read it
-            if (timeline.isDirects())
-                return timeline.userId === userId
+    var arr = await* timelines.map(async function(timeline) {
+      // owner can read her posts
+      if (timeline.userId === userId)
+        return true
 
-            // we do not have private feeds yet so user can open any
-            // post if it's not a direct message
-            return true
+      // if post is already in user's feed then she can read it
+      if (timeline.isDirects())
+        return timeline.userId === userId
 
-            // // otherwise user can view post if and only if she is subscriber
-            // return timeline.getSubscriberIds()
-            //   .then(function(userIds) { return userIds.indexOf(userId) >= 0 })
-          })
-        })
-        .then(function(arr) { return _.reduce(arr, function(acc, x) { return acc || x }, false) })
-        .then(function(valid) { resolve(valid) })
+      // this is a public feed, anyone can read public posts, this is
+      // a free country
+      var user = await timeline.getUser()
+      if (user.isPrivate !== '1')
+        return true
+
+      // otherwise user can view post if and only if she is subscriber
+      var userIds = await timeline.getSubscriberIds()
+      return userIds.indexOf(userId) >= 0
     })
+
+    return _.reduce(arr, function(acc, x) { return acc || x }, false)
   }
 
   return Post

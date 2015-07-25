@@ -36,6 +36,48 @@ exports.addController = function(app) {
       }
     }
 
+    static async sendRequest(req, res) {
+      if (!req.user)
+        return res.status(401).jsonp({ err: 'Not found' })
+
+      try {
+        var user = await models.User.findByUsername(req.params.username)
+        await req.user.sendSubscriptionRequest(user.id)
+
+        res.jsonp({})
+      } catch(e) {
+        exceptions.reportError(res)(e)
+      }
+    }
+
+    static async acceptRequest(req, res) {
+      if (!req.user)
+        return res.status(401).jsonp({ err: 'Not found' })
+
+      try {
+        var user = await models.User.findByUsername(req.params.username)
+        await req.user.acceptSubscriptionRequest(user.id)
+
+        res.jsonp({})
+      } catch(e) {
+        exceptions.reportError(res)(e)
+      }
+    }
+
+    static async rejectRequest(req, res) {
+      if (!req.user)
+        return res.status(401).jsonp({ err: 'Not found' })
+
+      try {
+        var user = await models.User.findByUsername(req.params.username)
+        await req.user.rejectSubscriptionRequest(user.id)
+
+        res.jsonp({})
+      } catch(e) {
+        exceptions.reportError(res)(e)
+      }
+    }
+
     static async whoami(req, res) {
       if (!req.user)
         return res.status(401).jsonp({ err: 'Not found' })
@@ -177,13 +219,11 @@ exports.addController = function(app) {
       if (!req.user || req.user.id != req.params.userId)
         return res.status(401).jsonp({ err: 'Not found' })
 
-      var attrs = {}
-
-      _.each(["screenName", "email", "isPrivate"], function(key) {
-        if (key in req.body.user) {
-          attrs[key] = req.body.user[key]
-        }
-      })
+      var attrs = _.reduce(["screenName", "email", "isPrivate"], function(acc, key) {
+        if (key in req.body.user)
+          acc[key] = req.body.user[key]
+        return acc
+      }, {})
 
       try {
         var user = await req.user.update(attrs)
