@@ -482,10 +482,12 @@ exports.addModel = function(database) {
     }
   }
 
-  User.prototype.getAdministratorIds = function() {
-    return new Promise(function(resolve, reject) {
-      resolve([])
-    })
+  User.prototype.getAdministratorIds = async function() {
+    return [this.id]
+  }
+
+  User.prototype.getAdministrators = async function() {
+    return [this]
   }
 
   User.prototype.getMyDiscussionsTimeline = function(params) {

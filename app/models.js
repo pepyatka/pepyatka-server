@@ -22,6 +22,7 @@ exports.Attachment    = require('./models/attachment').addModel(database)
 exports.Comment       = require('./models/comment').addModel(database)
 exports.Stats         = require('./models/stats').addModel(database)
 
+exports.AdminSerializer         = require('./serializers/v1/AdminSerializer').addSerializer()
 exports.UserSerializer         = require('./serializers/v1/UserSerializer').addSerializer()
 exports.SubscriberSerializer   = require('./serializers/v1/SubscriberSerializer').addSerializer()
 exports.SubscriptionSerializer = require('./serializers/v1/SubscriptionSerializer').addSerializer()

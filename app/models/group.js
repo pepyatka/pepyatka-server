@@ -184,14 +184,15 @@ exports.addModel = function(database) {
     })
   }
 
-  Group.prototype.getAdministratorIds = function() {
-    var that = this
+  Group.prototype.getAdministratorIds = async function() {
+    this.administratorIds = await database.zrevrangeAsync(this.mkAdminsKey(), 0, -1)
+    return this.administratorIds
+  }
 
-    return new Promise(function(resolve, reject) {
-      database.zrevrangeAsync(that.mkAdminsKey(), 0, -1)
-        .then(function(result) { resolve(result) })
-        .catch(function(e) { reject(e) })
-    })
+  Group.prototype.getAdministrators = async function() {
+    var adminIds = await this.getAdministratorIds()
+    this.administrators = await* adminIds.map((userId) => models.User.findById(userId))
+    return this.administrators
   }
 
   /**

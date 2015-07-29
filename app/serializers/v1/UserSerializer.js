@@ -1,11 +1,13 @@
 var models = require("../../models")
   , Serializer = models.Serializer
-  , UserSerializer = models.UserSerializer
+  , AdminSerializer = models.AdminSerializer
 
 exports.addSerializer = function() {
   return new Serializer('users', {
     select: ['id', 'username', 'type', 'screenName', 'statistics',
-             'profilePictureLargeUrl', 'profilePictureMediumUrl', 'administratorIds',
-             'updatedAt', 'isPrivate']
+             'profilePictureLargeUrl', 'profilePictureMediumUrl',
+             'updatedAt', 'isPrivate',
+             'administrators'],
+    administrators: { through: AdminSerializer, embed: true }
   })
 }

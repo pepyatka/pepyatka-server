@@ -1,6 +1,6 @@
 "use strict";
 
-import models, {UserSerializer, MyProfileSerializer, SubscriberSerializer, SubscriptionSerializer} from '../../../models'
+import models, {UserSerializer, GroupSerializer, MyProfileSerializer, SubscriberSerializer, SubscriptionSerializer} from '../../../models'
 import jwt from 'jsonwebtoken'
 import _ from 'lodash'
 import exceptions from '../../../support/exceptions'
@@ -88,7 +88,9 @@ exports.addController = function(app) {
 
     static async show(req, res) {
       var feed = await models.FeedFactory.findByUsername(req.params.username)
-      var json = await new UserSerializer(feed).promiseToJSON()
+      // HACK: feed.isUser() ? UserSerializer : GroupSerializer
+      var serializer = UserSerializer
+      var json = await new serializer(feed).promiseToJSON()
       res.jsonp(json)
     }
 
