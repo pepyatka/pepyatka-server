@@ -1153,7 +1153,10 @@ exports.addModel = function(database) {
 
     // user can send subscription request if and only if subscription
     // is a private and this is first time user is subscribing to it
-    return !exists && user.isPrivate === '1'
+    if (!exists && user.isPrivate === '1')
+      return true
+
+    throw new Error("Invalid")
   }
 
   User.prototype.validateCanManageSubscriptionRequests = async function(userId) {

@@ -127,6 +127,33 @@ describe("MutualFriends", function() {
             })
         })
 
+        it('should not allow banned user to send subscription request', function(done) {
+          request
+            .post(app.config.host + '/v1/users/' + zeusContext.user.username + '/ban')
+            .send({ authToken: lunaContext.authToken })
+            .end(function(err, res) {
+              request
+                .post(app.config.host + '/v1/users/' + lunaContext.user.username + '/sendRequest')
+                .send({ authToken: zeusContext.authToken,
+                        '_method': 'post' })
+                .end(function(err, res) {
+                  res.should.not.be.empty
+                  res.body.err.should.not.be.empty
+                  res.body.err.should.eql('Invalid')
+                  request
+                    .get(app.config.host + '/v1/users/whoami')
+                    .query({ authToken: lunaContext.authToken })
+                    .end(function(err, res) {
+                      res.should.not.be.empty
+                      res.body.should.not.be.empty
+                      res.body.should.have.property('users')
+                      res.body.users.should.not.have.property('subscriptionRequests')
+                      done()
+                    })
+                })
+            })
+        })
+
         it('should show liked post per context', function(done) {
           request
             .post(app.config.host + '/v1/users/acceptRequest/' + zeusContext.user.username)
