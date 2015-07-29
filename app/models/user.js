@@ -762,10 +762,11 @@ exports.addModel = function(database) {
   User.prototype.ban = async function(username) {
     var currentTime = new Date().getTime()
     var user = await models.User.findByUsername(username)
-    await user.unsubscribeFrom(await this.getPostsTimelineId())
-    await this.rejectSubscriptionRequest(user.id)
-
-    return database.zaddAsync(mkKey(['user', this.id, 'bans']), currentTime, user.id)
+    return await* [
+      user.unsubscribeFrom(await this.getPostsTimelineId()),
+      this.rejectSubscriptionRequest(user.id),
+      database.zaddAsync(mkKey(['user', this.id, 'bans']), currentTime, user.id)
+    ]
   }
 
   User.prototype.unban = async function(username) {
@@ -1149,11 +1150,13 @@ exports.addModel = function(database) {
   User.prototype.validateCanSendSubscriptionRequest = async function(userId) {
     var key = mkKey(['user', userId, 'requests'])
     var exists = await database.zscoreAsync(key, this.id)
-    var user = models.User.findById(userId)
+    var user = await models.User.findById(userId)
+    var banIds = await user.getBanIds()
 
     // user can send subscription request if and only if subscription
     // is a private and this is first time user is subscribing to it
-    if (!exists && user.isPrivate === '1')
+    if (!exists && user.isPrivate === '1' &&
+       banIds.indexOf(this.id) === -1)
       return true
 
     throw new Error("Invalid")
