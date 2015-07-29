@@ -763,6 +763,8 @@ exports.addModel = function(database) {
     var currentTime = new Date().getTime()
     var user = await models.User.findByUsername(username)
     await user.unsubscribeFrom(await this.getPostsTimelineId())
+    await this.rejectSubscriptionRequest(user.id)
+
     return database.zaddAsync(mkKey(['user', this.id, 'bans']), currentTime, user.id)
   }
 

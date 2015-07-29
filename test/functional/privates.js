@@ -109,6 +109,24 @@ describe("MutualFriends", function() {
             })
         })
 
+        it('should reject subscription request after ban', function(done) {
+          request
+            .post(app.config.host + '/v1/users/' + zeusContext.user.username + '/ban')
+            .send({ authToken: lunaContext.authToken })
+            .end(function(err, res) {
+              request
+                .get(app.config.host + '/v1/users/whoami')
+                .query({ authToken: lunaContext.authToken })
+                .end(function(err, res) {
+                  res.should.not.be.empty
+                  res.body.should.not.be.empty
+                  res.body.should.have.property('users')
+                  res.body.users.should.not.have.property('subscriptionRequests')
+                  done()
+                })
+            })
+        })
+
         it('should show liked post per context', function(done) {
           request
             .post(app.config.host + '/v1/users/acceptRequest/' + zeusContext.user.username)
