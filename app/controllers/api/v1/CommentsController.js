@@ -10,6 +10,12 @@ exports.addController = function(app) {
         return res.status(401).jsonp({ err: 'Not found' })
 
       try {
+        var valid = await req.user.validateCanComment(req.body.comment.postId)
+
+        // this is a private post
+        if (!valid)
+          throw new ForbiddenException("Not found")
+
         var newComment = await req.user.newComment({
           body: req.body.comment.body,
           postId: req.body.comment.postId
@@ -21,7 +27,7 @@ exports.addController = function(app) {
           res.jsonp(json)
         })
       } catch (e) {
-        res.status(422).send({})
+        exceptions.reportError(res)(e)
       }
     }
 

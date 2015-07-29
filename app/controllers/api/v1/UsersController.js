@@ -23,8 +23,9 @@ exports.addController = function(app) {
       }
 
       try {
-        var newUser = new models.User(params)
-        var user = await newUser.create()
+        var user = new models.User(params)
+        await user.create()
+
         var secret = config.secret
         var authToken = jwt.sign({ userId: user.id }, secret)
 
@@ -176,11 +177,14 @@ exports.addController = function(app) {
       if (!req.user || req.user.id != req.params.userId)
         return res.status(401).jsonp({ err: 'Not found' })
 
-      var attrs = {
-        screenName: req.body.user.screenName,
-        email: req.body.user.email,
-        isPrivate: req.body.user.isPrivate
-      }
+      var attrs = {}
+
+      _.each(["screenName", "email", "isPrivate"], function(key) {
+        if (key in req.body.user) {
+          attrs[key] = req.body.user[key]
+        }
+      })
+
       try {
         var user = await req.user.update(attrs)
         var json = await new MyProfileSerializer(user).promiseToJSON()

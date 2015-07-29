@@ -6,6 +6,7 @@ var Promise = require('bluebird')
   , PostSerializer = models.PostSerializer
   , FeedFactory = models.FeedFactory
   , ForbiddenException = exceptions.ForbiddenException
+  , _ = require('lodash')
 
 exports.addController = function(app) {
   /**
@@ -25,7 +26,7 @@ exports.addController = function(app) {
     } else if (req.body.meta.feeds) {
       feeds = [req.body.meta.feeds]
     } else {
-      feeds = [req.user.username]
+      return res.status(401).jsonp({ err: 'Cannot publish post to /dev/null' })
     }
 
     Promise.map(feeds, function(username) {
@@ -34,10 +35,23 @@ exports.addController = function(app) {
           return feed.validateCanPost(req.user)
         })
         .then(function(feed) {
-          return feed.getPostsTimelineId()
+          // we are going to publish this message to posts feed if
+          // it's my home feed or group's feed, otherwise this is a
+          // private message that goes to its own feed(s)
+          if ((feed.isUser() && feed.id == req.user.id) ||
+              !feed.isUser()) {
+            return feed.getPostsTimelineId()
+          } else {
+            // private post goes to sendee and sender
+            return Promise.all([
+              feed.getDirectsTimelineId(),
+              req.user.getDirectsTimelineId()
+            ])
+          }
         })
       })
       .then(function(timelineIds) {
+        timelineIds = _.flatten(timelineIds)
         return req.user.newPost({
           body: req.body.post.body,
           attachments: req.body.post.attachments,
@@ -75,18 +89,39 @@ exports.addController = function(app) {
       .catch(exceptions.reportError(res))
   }
 
-  PostsController.show = function(req, res) {
-    models.Post.getById(req.params.postId, {
-      maxComments: req.query.maxComments,
-      maxLikes: req.query.maxLikes,
-      currentUser: req.user ? req.user.id : null
-    })
-      .then(function(post) {
-        new PostSerializer(post).toJSON(function(err, json) {
-          res.jsonp(json)
-        })
+  PostsController.show = async function(req, res) {
+    try {
+      var userId = req.user ? req.user.id : null
+      var post = await models.Post.getById(req.params.postId, {
+        maxComments: req.query.maxComments,
+        maxLikes: req.query.maxLikes,
+        currentUser: userId
       })
-      .catch(exceptions.reportError(res))
+
+      var valid = await post.validateCanShow(userId)
+
+      // this is a private post
+      if (!valid)
+        throw new ForbiddenException("Not found")
+
+      var author = await models.User.findById(post.userId)
+      var banIds = await author.getBanIds()
+      if (banIds.indexOf(post.currentUser) >= 0)
+        throw new ForbiddenException("This user has prevented you from seeing their posts")
+
+      var you = await models.User.findById(post.currentUser)
+      if (you) {
+        var yourBanIds = await you.getBanIds()
+        if (yourBanIds.indexOf(author.id) >= 0)
+          throw new ForbiddenException("You have blocked this user and do not want to see their posts")
+      }
+
+      var json = new PostSerializer(post).promiseToJSON()
+
+      res.jsonp(await json)
+    } catch(e) {
+      exceptions.reportError(res)(e)
+    }
   }
 
   PostsController.like = function(req, res) {

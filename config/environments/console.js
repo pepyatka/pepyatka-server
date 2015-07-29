@@ -28,6 +28,8 @@ exports.getConfig = function() {
     logLevel: 'warn'
   }
 
+  config.host = 'http://localhost:' + config.port
+
   config.application = {
     // Pepyatka won't allow users to use the following usernames, they
     // are reserved for internal pages.
@@ -44,24 +46,46 @@ exports.getConfig = function() {
     USERNAME_STOP_LIST: ['anonymous', 'public', 'about', 'signin', 'logout',
                          'signup', 'filter', 'settings', 'account', 'groups',
                          'friends', 'list', 'search', 'summary', 'share','404',
-                         'iphone']
+                         'iphone', 'attachments', 'files', 'profilepics']
   }
 
-  config.attachments = {
-    // Make sure that all directories here have a trailing slash
-    urlDir: 'http://localhost:3000/attachments/original/',
-    fsDir: './public/files/original/',
-    fileSizeLimit: '10mb',
+  config.media = {
+    // Public URL prefix
+    url: config.host + '/', // must have trailing slash
 
-    thumbnails: {
-      urlDir: 'http://localhost:3000/attachments/thumbnails/',
-      fsDir: './public/files/thumbnails/'
+    // File storage
+    storage: {
+      // 'fs' for local file system or 's3' for AWS S3
+      type: 'fs',
+
+      // Parameters for 'fs'
+      rootDir: './public/files/', // must have trailing slash
+
+      // Parameters for 's3'
+      accessKeyId: 'ACCESS-KEY-ID',
+      secretAccessKey: 'SECRET-ACCESS-KEY',
+      bucket: 'bucket-name'
     }
   }
-
+  config.attachments = {
+    url: config.media.url,
+    storage: config.media.storage,
+    path: 'attachments/', // must have trailing slash
+    fileSizeLimit: '10mb'
+  }
+  config.thumbnails = {
+    url: config.media.url,
+    storage: config.media.storage,
+    path: 'attachments/thumbnails/' // must have trailing slash
+  }
   config.profilePictures = {
-    urlDir: 'http://localhost:3000/files/profilePictures/',
-    fsDir: './public/files/profilePictures/'
+    // Profile pictures only support 'fs' for the time being, so we won't use shared values by default
+    url: config.host + '/',
+    storage: {
+      type: 'fs',
+      rootDir: config.media.storage.rootDir
+    },
+    path: 'profilepics/' // must have trailing slash
   }
 
   config.mailer = {

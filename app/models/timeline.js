@@ -134,13 +134,19 @@ exports.addModel = function(database) {
   }
 
   Timeline.prototype.getPostIds = function(offset, limit) {
-    var that = this
-
-    if (!offset || !limit) {
+    if (_.isUndefined(offset))
       offset = this.offset
+    else
+      if (offset < 0) offset = 0
+    // -1 = special magic number, meaning “do not use limit defaults,
+    // do not use passed in value, use 0 instead". this is at the very least
+    // used in Timeline.merge()
+    if (_.isUndefined(limit))
       limit = this.limit
-    }
+    else
+      if (limit < 0) limit = 0
 
+    var that = this
     return new Promise(function(resolve, reject) {
       database.zrevrangeAsync(mkKey(['timeline', that.id, 'posts']), offset, offset+limit-1)
         .then(function(postIds) {
@@ -163,18 +169,42 @@ exports.addModel = function(database) {
   }
 
   Timeline.prototype.getPosts = function(offset, limit) {
-    var that = this
-
-    if (!offset || !limit) {
+    if (_.isUndefined(offset))
       offset = this.offset
+    else
+      if (offset < 0) offset = 0
+
+    if (_.isUndefined(limit))
       limit = this.limit
-    }
+    else
+      if (limit < 0) limit = 0
+
+    var that = this
+    var p_post
+    var p_banIds
 
     return new Promise(function(resolve, reject) {
-      that.getPostIds(offset, limit)
+      that.getPostIds(offset, limit).bind({})
         .then(function(postIds) {
           return Promise.map(postIds, function(postId) {
             return Post.findById(postId, { currentUser: that.currentUser })
+          })
+        })
+        .then(function(posts) {
+          this.posts = posts
+          return that.currentUser ? models.User.findById(that.currentUser) : null
+        })
+        .then(function(user) {
+          return user ? user.getBanIds() : []
+        })
+        .then(function(banIds) {
+          p_banIds = banIds
+          return Promise.map(this.posts, function(post) {
+            return models.User.findById(post.userId).then(function(user) {
+              return user.getBanIds()
+            }).then(function(reverseBanIds) {
+              return ((p_banIds.indexOf(post.userId) >= 0) || (reverseBanIds.indexOf(that.currentUser) >= 0)) ? null : post
+            })
           })
         })
         .then(function(posts) {
@@ -245,7 +275,7 @@ exports.addModel = function(database) {
       database.zrevrangeAsync(mkKey(['timeline', that.id, 'subscribers']), 0, -1)
         .then(function(userIds) {
           // A user is always subscribed to their own posts timeline.
-          if (includeSelf && that.isPosts()) {
+          if (includeSelf && (that.isPosts() || that.isDirects())) {
             userIds = _.uniq(userIds.concat([that.userId]))
           }
           that.subscriberIds = userIds
@@ -269,7 +299,7 @@ exports.addModel = function(database) {
    */
   Timeline.prototype.getSubscribedTimelineIds = async function() {
     var subscribers = await this.getSubscribers(true);
-    return subscribers.map((subscriber) => subscriber.getRiverOfNewsTimelineId())
+    return await* subscribers.map((subscriber) => subscriber.getRiverOfNewsTimelineId())
   }
 
   Timeline.prototype.isRiverOfNews = function() {
@@ -286,6 +316,10 @@ exports.addModel = function(database) {
 
   Timeline.prototype.isComments = function() {
     return this.name === "Comments"
+  }
+
+  Timeline.prototype.isDirects = function() {
+    return this.name === "Directs"
   }
 
   Timeline.prototype.isHides = function() {

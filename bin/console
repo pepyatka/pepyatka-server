@@ -16,7 +16,8 @@ module.exports = {}
 
 environment.init(app)
   .then(function(app) {
-    var pubsub = require('../app/pubsub').init().listen(server, app)
+    var PubsubListener = require('../app/pubsub-listener')
+      , pubsub = new PubsubListener(server, app)
     var routes = require('../app/routes')(app)
 
     var port = (process.env.PEPYATKA_SERVER_PORT || app.get('port'))

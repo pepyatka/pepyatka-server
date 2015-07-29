@@ -40,8 +40,8 @@ describe('Attachment', function() {
         .then(function(newPost) { post = newPost })
         .then(function() {
           // Create directories for attachments
-          mkdirp.sync(config.attachments.fsDir)
-          mkdirp.sync(config.attachments.thumbnails.fsDir)
+          mkdirp.sync(config.attachments.storage.rootDir + config.attachments.path)
+          mkdirp.sync(config.thumbnails.storage.rootDir + config.thumbnails.path)
         })
         .then(function() {
           // "Upload" tiny GIF image
@@ -72,6 +72,9 @@ describe('Attachment', function() {
           newAttachment.id.should.eql(attachment.id)
           return newAttachment
         }).then(function(newAttachment) {
+          newAttachment.should.have.a.property('mediaType')
+          newAttachment.mediaType.should.be.equal('image')
+
           newAttachment.should.have.a.property('fileName')
           newAttachment.fileName.should.be.equal(file.name)
 
@@ -87,12 +90,13 @@ describe('Attachment', function() {
           newAttachment.should.have.a.property('noThumbnail')
           newAttachment.noThumbnail.should.be.equal('1')
 
-          newAttachment.getPath().should.be.equal(config.attachments.fsDir + newAttachment.id + '.' + newAttachment.fileExtension)
+          newAttachment.getPath().should.be.equal(config.attachments.storage.rootDir + config.attachments.path +
+            newAttachment.id + '.' + newAttachment.fileExtension)
           fs.stat(newAttachment.getPath(), function(err, stats) {
             stats.size.should.be.equal(file.size)
             done()
           })
-        })
+        }).catch(function(e) { done(e) })
     })
   })
 })

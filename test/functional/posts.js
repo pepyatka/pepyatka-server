@@ -7,42 +7,279 @@ describe("PostsController", function() {
   beforeEach(funcTestHelper.flushDb())
 
   describe('#create()', function() {
-    var authToken
-      , username
+    var ctx = {}
 
-    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token, user) {
-      authToken = token
-      username = user.username
-    }))
+    beforeEach(funcTestHelper.createUserCtx(ctx, 'Luna', 'password'))
 
     it('should create a post with a valid user', function(done) {
       var body = 'Post body'
 
-      request
-        .post(app.config.host + '/v1/posts')
-        .send({ post: { body: body }, authToken: authToken })
-        .end(function(err, res) {
-          res.body.should.not.be.empty
-          res.body.should.have.property('posts')
-          res.body.posts.should.have.property('body')
-          res.body.posts.body.should.eql(body)
+      funcTestHelper.createPost(ctx, body)(function(req, res) {
+        res.body.should.not.be.empty
+        res.body.should.have.property('posts')
+        res.body.posts.should.have.property('body')
+        res.body.posts.body.should.eql(body)
 
-          done()
-        })
+        done()
+      })
     })
 
     it('should not create a post with an invalid user', function(done) {
       var body = 'Post body'
 
-      request
-        .post(app.config.host + '/v1/posts')
-        .send({ post: { body: body }, authToken: 'token' })
-        .end(function(err, res) {
-          err.should.not.be.empty
-          err.status.should.eql(401)
+      ctx.authToken = 'token'
+      funcTestHelper.createPost(ctx, body)(function(err, res) {
+        err.should.not.be.empty
+        err.status.should.eql(401)
 
-          done()
+        done()
+      })
+    })
+
+    describe('private messages', function() {
+      var authTokenB
+        , usernameB
+
+      beforeEach(funcTestHelper.createUser('mars', 'password', function(token, user) {
+        authTokenB = token
+        usernameB = user.username
+      }))
+
+      it('should create public post that is visible to another user', function(done) {
+        var body = 'body'
+
+        funcTestHelper.createPost(ctx, body)(function(err, res) {
+          res.body.should.not.be.empty
+          res.body.should.have.property('posts')
+          res.body.posts.should.have.property('body')
+          res.body.posts.body.should.eql(body)
+          var post = res.body.posts
+          request
+            .get(app.config.host + '/v1/posts/' + post.id)
+            .query({ authToken: authTokenB })
+            .end(function(err, res) {
+              res.body.should.not.be.empty
+              res.body.should.have.property('posts')
+              res.body.posts.should.have.property('body')
+              res.body.posts.body.should.eql(body)
+              done()
+            })
         })
+      })
+
+      it('should not be able to send private message if friends are not mutual', function(done) {
+        var body = 'body'
+
+        request
+          .post(app.config.host + '/v1/posts')
+          .send({ post: { body: body }, meta: { feeds: [usernameB] }, authToken: ctx.authToken })
+          .end(function(err, res) {
+            err.should.not.be.empty
+            err.status.should.eql(403)
+            err.response.error.should.have.property('text')
+            JSON.parse(err.response.error.text).err.should.eql("You can't send private messages to friends that are not mutual")
+            done()
+          })
+      })
+
+      describe('for mutual friends', function() {
+        beforeEach(function(done) {
+          request
+            .post(app.config.host + '/v1/users/' + ctx.username + '/subscribe')
+            .send({ authToken: authTokenB })
+            .end(function(err, res) {
+              request
+                .post(app.config.host + '/v1/users/' + usernameB + '/subscribe')
+                .send({ authToken: ctx.authToken })
+                .end(function(err, res) {
+                  done()
+                })
+            })
+        })
+
+        describe('are protected', function() {
+          var authTokenC
+            , usernameC
+            , post
+
+          beforeEach(funcTestHelper.createUser('zeus', 'password', function(token, user) {
+            authTokenC = token
+            usernameC = user.username
+          }))
+
+          beforeEach(function(done) {
+            var body = 'body'
+
+            request
+              .post(app.config.host + '/v1/posts')
+              .send({ post: { body: body }, meta: { feeds: [usernameB] }, authToken: ctx.authToken })
+              .end(function(err, res) {
+                res.body.should.not.be.empty
+                res.body.should.have.property('posts')
+                post = res.body.posts
+                post.should.have.property('body')
+                post.body.should.eql(body)
+                done()
+              })
+          })
+
+          it('should not be liked by person that is not in recipients', function(done) {
+            request
+              .post(app.config.host + '/v1/posts/' + post.id + '/like')
+              .send({ authToken: authTokenC })
+              .end(function(err, res) {
+                err.should.not.be.empty
+                err.status.should.eql(422)
+                var error = JSON.parse(err.response.error.text)
+                error.err.should.eql('Not found')
+
+                funcTestHelper.getTimeline('/v1/timelines/' + usernameC + '/likes', authTokenC, function(err, res) {
+                  res.body.should.not.have.property('posts')
+                  done()
+                })
+              })
+          })
+
+          it('should not be commented by person that is not in recipients', function(done) {
+            var body = 'comment'
+            funcTestHelper.createComment(body, post.id, authTokenC, function(err, res) {
+              err.should.not.be.empty
+              err.status.should.eql(422)
+              var error = JSON.parse(err.response.error.text)
+              error.err.should.eql('Not found')
+
+              funcTestHelper.getTimeline('/v1/timelines/' + usernameC + '/comments', authTokenC, function(err, res) {
+                res.body.should.not.have.property('posts')
+                done()
+              })
+            })
+          })
+        })
+
+        it('should be able to send private message', function(done) {
+          var body = 'body'
+
+          request
+            .post(app.config.host + '/v1/posts')
+            .send({ post: { body: body }, meta: { feeds: [usernameB] }, authToken: ctx.authToken })
+            .end(function(err, res) {
+              res.body.should.not.be.empty
+              res.body.should.have.property('posts')
+              res.body.posts.should.have.property('body')
+              res.body.posts.body.should.eql(body)
+              done()
+            })
+        })
+
+        it('should publish private message to home feed', function(done) {
+          var body = 'body'
+
+          request
+            .post(app.config.host + '/v1/posts')
+            .send({ post: { body: body }, meta: { feeds: [usernameB] }, authToken: ctx.authToken })
+            .end(function(err, res) {
+              res.body.should.not.be.empty
+              res.body.should.have.property('posts')
+              res.body.posts.should.have.property('body')
+              res.body.posts.body.should.eql(body)
+
+              funcTestHelper.getTimeline('/v1/timelines/home', authTokenB, function(err, res) {
+                res.body.should.have.property('posts')
+                res.body.posts.length.should.eql(1)
+                res.body.posts[0].should.have.property('body')
+                res.body.posts[0].body.should.eql(body)
+                funcTestHelper.getTimeline('/v1/timelines/home', ctx.authToken, function(err, res) {
+                  res.body.should.have.property('posts')
+                  res.body.posts.length.should.eql(1)
+                  res.body.posts[0].should.have.property('body')
+                  res.body.posts[0].body.should.eql(body)
+                  done()
+                })
+              })
+            })
+        })
+
+        it('should send private message that cannot be read by anyone else', function(done) {
+          var body = 'body'
+            , post
+
+          request
+            .post(app.config.host + '/v1/posts')
+            .send({ post: { body: body }, meta: { feeds: [usernameB] }, authToken: ctx.authToken })
+            .end(function(err, res) {
+              post = res.body.posts
+
+              var authTokenC
+                , usernameC
+
+              request
+                .post(app.config.host + '/v1/users')
+                .send({
+                  username: 'zeus',
+                  password: 'password'
+                })
+                .end(function(err, res) {
+                  authTokenC = res.body.users.token
+                  usernameC = res.body.users.username
+
+                  request
+                    .get(app.config.host + '/v1/posts/' + post.id)
+                    .query({ authToken: authTokenC })
+                    .end(function(err, res) {
+                      err.should.not.be.empty
+                      err.status.should.eql(403)
+                      var error = JSON.parse(err.response.error.text)
+                      error.err.should.eql('Not found')
+                      done()
+                    })
+                })
+            })
+        })
+
+        it('should send private message that can be read by recipients', function(done) {
+          var body = 'body'
+            , post
+
+          request
+            .post(app.config.host + '/v1/posts')
+            .send({ post: { body: body }, meta: { feeds: [usernameB] }, authToken: ctx.authToken })
+            .end(function(err, res) {
+              post = res.body.posts
+
+              request
+                .get(app.config.host + '/v1/posts/' + post.id)
+                .query({ authToken: authTokenB })
+                .end(function(err, res) {
+                  res.body.should.not.be.empty
+                  res.body.posts.body.should.eql(post.body)
+                  done()
+                })
+            })
+        })
+
+        it('should send private message to private feed for both users', function(done) {
+          var body = 'body'
+
+          request
+            .post(app.config.host + '/v1/posts')
+            .send({ post: { body: body }, meta: { feeds: [usernameB] }, authToken: ctx.authToken })
+            .end(function(err, res) {
+              funcTestHelper.getTimeline('/v1/timelines/filter/directs', ctx.authToken, function(err, res) {
+                res.body.should.have.property('posts')
+                res.body.posts.length.should.eql(1)
+                res.body.posts[0].should.have.property('body')
+                res.body.posts[0].body.should.eql(body)
+                funcTestHelper.getTimeline('/v1/timelines/filter/directs', authTokenB, function(err, res) {
+                  res.body.should.have.property('posts')
+                  res.body.posts.length.should.eql(1)
+                  res.body.posts[0].should.have.property('body')
+                  res.body.posts[0].body.should.eql(body)
+                  done()
+                })
+              })
+            })
+        })
+      })
     })
 
     describe('in a group', function() {
@@ -53,12 +290,12 @@ describe("PostsController", function() {
       beforeEach(function(done) {
         var screenName = 'Pepyatka Developers';
         request
-            .post(app.config.host + '/v1/groups')
-            .send({ group: {username: groupName, screenName: screenName},
-              authToken: authToken })
-            .end(function(err, res) {
-              done()
-            })
+          .post(app.config.host + '/v1/groups')
+          .send({ group: { username: groupName, screenName: screenName },
+                  authToken: ctx.authToken })
+          .end(function(err, res) {
+            done()
+          })
       })
 
       beforeEach(funcTestHelper.createUser(otherUserName, 'pw', function(token) {
@@ -70,7 +307,7 @@ describe("PostsController", function() {
 
         request
           .post(app.config.host + '/v1/posts')
-          .send({ post: { body: body }, meta: { feeds: [groupName] }, authToken: authToken })
+          .send({ post: { body: body }, meta: { feeds: [groupName] }, authToken: ctx.authToken })
           .end(function(err, res) {
             res.body.should.not.be.empty
             res.body.should.have.property('posts')
@@ -79,14 +316,14 @@ describe("PostsController", function() {
 
             request
               .get(app.config.host + '/v1/timelines/' + groupName)
-              .query({authToken: authToken})
+              .query({authToken: ctx.authToken})
               .end(function (err, res) {
                 res.body.posts.length.should.eql(1)
                 res.body.posts[0].body.should.eql(body)
 
                 // Verify that the post didn't appear in the user's own timeline
                 request
-                  .get(app.config.host + '/v1/timelines/' + username)
+                  .get(app.config.host + '/v1/timelines/' + ctx.username)
                   .query({ authToken: context.authToken })
                   .end(function(err, res) {
                     res.should.not.be.empty
@@ -108,7 +345,7 @@ describe("PostsController", function() {
 
         request
           .post(app.config.host + '/v1/posts')
-          .send({ post: { body: body }, meta: { feeds: [groupName, username] }, authToken: authToken })
+          .send({ post: { body: body }, meta: { feeds: [groupName, ctx.username] }, authToken: ctx.authToken })
           .end(function(err, res) {
             res.body.should.not.be.empty
             res.body.should.have.property('posts')
@@ -117,14 +354,14 @@ describe("PostsController", function() {
 
             request
               .get(app.config.host + '/v1/timelines/' + groupName)
-              .query({authToken: authToken})
+              .query({authToken: ctx.authToken})
               .end(function (err, res) {
                 res.body.posts.length.should.eql(1)
                 res.body.posts[0].body.should.eql(body)
 
                 // Verify that the post didn't appear in the user's own timeline
                 request
-                  .get(app.config.host + '/v1/timelines/' + username)
+                  .get(app.config.host + '/v1/timelines/' + ctx.username)
                   .query({ authToken: context.authToken })
                   .end(function(err, res) {
                     res.body.posts.length.should.eql(1)
@@ -139,17 +376,17 @@ describe("PostsController", function() {
       it("should update group's last activity", function(done) {
         var body = 'Post body'
 
-        funcTestHelper.getTimeline('/v1/users/' + groupName, authToken, function(err, res) {
+        funcTestHelper.getTimeline('/v1/users/' + groupName, ctx.authToken, function(err, res) {
           var oldGroupTimestamp = res.body.users.updatedAt;
 
           request
             .post(app.config.host + '/v1/posts')
-            .send({post: {body: body}, meta: {feeds: [groupName]}, authToken: authToken})
+            .send({post: {body: body}, meta: {feeds: [groupName]}, authToken: ctx.authToken})
             .end(function (err, res) {
               var postTimestamp = res.body.posts.createdAt
               res.status.should.eql(200)
 
-              funcTestHelper.getTimeline('/v1/users/' + groupName, authToken, function (err, res) {
+              funcTestHelper.getTimeline('/v1/users/' + groupName, ctx.authToken, function (err, res) {
                 var groupTimestamp = res.body.users.updatedAt;
 
                 groupTimestamp.should.be.gt(oldGroupTimestamp)
@@ -171,7 +408,7 @@ describe("PostsController", function() {
 
             request
               .post(app.config.host + '/v1/posts')
-              .send({ post: { body: body }, meta: { feeds: [groupName] }, authToken: authToken })
+              .send({ post: { body: body }, meta: { feeds: [groupName] }, authToken: ctx.authToken })
               .end(function(err, res) {
                 res.status.should.eql(200)
                 funcTestHelper.getTimeline('/v1/timelines/home', otherUserAuthToken, function(err, res) {
@@ -186,7 +423,7 @@ describe("PostsController", function() {
 
       it("should not show post to group in the timeline of another user", function(done) {
         request
-          .post(app.config.host + '/v1/users/' + username + '/subscribe')
+          .post(app.config.host + '/v1/users/' + ctx.username + '/subscribe')
           .send({ authToken: otherUserAuthToken })
           .end(function(err, res) {
             res.status.should.eql(200)
@@ -194,7 +431,7 @@ describe("PostsController", function() {
 
             request
               .post(app.config.host + '/v1/posts')
-              .send({ post: { body: body }, meta: { feeds: [groupName] }, authToken: authToken })
+              .send({ post: { body: body }, meta: { feeds: [groupName] }, authToken: ctx.authToken })
               .end(function(err, res) {
                 res.status.should.eql(200)
                 funcTestHelper.getTimeline('/v1/timelines/home', otherUserAuthToken, function(err, res) {
@@ -207,7 +444,7 @@ describe("PostsController", function() {
 
       it("should not show liked post to group in the timeline of another user", function(done) {
         request
-          .post(app.config.host + '/v1/users/' + username + '/subscribe')
+          .post(app.config.host + '/v1/users/' + ctx.username + '/subscribe')
           .send({ authToken: otherUserAuthToken })
           .end(function(err, res) {
             res.status.should.eql(200)
@@ -215,13 +452,13 @@ describe("PostsController", function() {
 
             request
               .post(app.config.host + '/v1/posts')
-              .send({ post: { body: body }, meta: { feeds: [groupName] }, authToken: authToken })
+              .send({ post: { body: body }, meta: { feeds: [groupName] }, authToken: ctx.authToken })
               .end(function(err, res) {
                 res.status.should.eql(200)
                 var post = res.body.posts
                 request
                   .post(app.config.host + '/v1/posts/' + post.id + '/like')
-                  .send({ authToken: authToken })
+                  .send({ authToken: ctx.authToken })
                   .end(function(err, res) {
                     funcTestHelper.getTimeline('/v1/timelines/home', otherUserAuthToken, function(err, res) {
                       res.body.should.not.have.property('posts')
@@ -237,15 +474,15 @@ describe("PostsController", function() {
 
         request
           .post(app.config.host + '/v1/posts')
-          .send({ post: { body: body }, meta: { feeds: [groupName] }, authToken: authToken })
+          .send({ post: { body: body }, meta: { feeds: [groupName] }, authToken: ctx.authToken })
           .end(function(err, res) {
             res.status.should.eql(200)
             var post = res.body.posts
             request
               .post(app.config.host + '/v1/posts/' + post.id + '/like')
-              .send({ authToken: authToken })
+              .send({ authToken: ctx.authToken })
               .end(function(err, res) {
-                funcTestHelper.getTimeline('/v1/timelines/' + username, authToken, function(err, res) {
+                funcTestHelper.getTimeline('/v1/timelines/' + ctx.username, ctx.authToken, function(err, res) {
                   res.body.should.not.have.property('posts')
                   done()
                 })
@@ -256,15 +493,14 @@ describe("PostsController", function() {
       it("should not allow a user to post to another user's feed", function(done) {
         request
           .post(app.config.host + '/v1/posts')
-          .send({ post: { body: 'Post body' }, meta: { feeds: [otherUserName] }, authToken: authToken })
+          .send({ post: { body: 'Post body' }, meta: { feeds: [otherUserName] }, authToken: ctx.authToken })
           .end(function(err, res) {
             err.status.should.eql(403)
-            res.body.err.should.eql("You can't post to another user's feed")
+            res.body.err.should.eql("You can't send private messages to friends that are not mutual")
 
             done()
           })
       })
-
 
       it('should not allow a user to post to a group to which they are not subscribed', function(done) {
         request
@@ -286,30 +522,10 @@ describe("PostsController", function() {
   })
 
   describe('#like()', function() {
-    var authToken
-      , post
+    var context = {}
 
-    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
-      authToken = token
-    }))
-
-    beforeEach(function(done) {
-      var body = 'Post body'
-
-      request
-        .post(app.config.host + '/v1/posts')
-        .send({ post: { body: body }, authToken: authToken })
-        .end(function(err, res) {
-          res.body.should.not.be.empty
-          res.body.should.have.property('posts')
-          res.body.posts.should.have.property('body')
-          res.body.posts.body.should.eql(body)
-
-          post = res.body.posts
-
-          done()
-        })
-    })
+    beforeEach(funcTestHelper.createUserCtx(context, 'Luna', 'password'))
+    beforeEach(function(done) { funcTestHelper.createPost(context, 'Post body')(done) })
 
     describe('in a group', function() {
       var groupName = 'pepyatka-dev'
@@ -319,7 +535,7 @@ describe("PostsController", function() {
         request
             .post(app.config.host + '/v1/groups')
             .send({ group: {username: groupName, screenName: screenName},
-              authToken: authToken })
+              authToken: context.authToken })
             .end(function(err, res) {
               done()
             })
@@ -330,19 +546,19 @@ describe("PostsController", function() {
 
         request
           .post(app.config.host + '/v1/posts')
-          .send({ post: { body: body }, meta: { feeds: [groupName] }, authToken: authToken })
+          .send({ post: { body: body }, meta: { feeds: [groupName] }, authToken: context.authToken })
           .end(function(err, res) {
             res.status.should.eql(200)
-            funcTestHelper.getTimeline('/v1/users/' + groupName, authToken, function(err, res) {
+            funcTestHelper.getTimeline('/v1/users/' + groupName, context.authToken, function(err, res) {
               res.status.should.eql(200)
               var lastUpdatedAt = res.body.users.updatedAt
 
               request
-                .post(app.config.host + '/v1/posts/' + post.id + '/like')
-                .send({ authToken: authToken })
+                .post(app.config.host + '/v1/posts/' + context.post.id + '/like')
+                .send({ authToken: context.authToken })
                 .end(function(err, res) {
                   res.status.should.eql(200)
-                  funcTestHelper.getTimeline('/v1/users/' + groupName, authToken, function(err, res) {
+                  funcTestHelper.getTimeline('/v1/users/' + groupName, context.authToken, function(err, res) {
                     res.status.should.eql(200)
                     res.body.should.have.property('users')
                     res.body.users.should.have.property('updatedAt')
@@ -358,15 +574,15 @@ describe("PostsController", function() {
 
     it('should like post with a valid user not more than 1 time', function(done) {
       request
-        .post(app.config.host + '/v1/posts/' + post.id + '/like')
-        .send({ authToken: authToken })
+        .post(app.config.host + '/v1/posts/' + context.post.id + '/like')
+        .send({ authToken: context.authToken })
         .end(function(err, res) {
           res.body.should.be.empty
           $should.not.exist(err)
 
           request
-            .post(app.config.host + '/v1/posts/' + post.id + '/like')
-            .send({ authToken: authToken })
+            .post(app.config.host + '/v1/posts/' + context.post.id + '/like')
+            .send({ authToken: context.authToken })
             .end(function(err, res) {
               err.should.not.be.empty
               err.status.should.eql(403)
@@ -380,7 +596,7 @@ describe("PostsController", function() {
 
     it('should not like post with an invalid user', function(done) {
       request
-        .post(app.config.host + '/v1/posts/' + post.id + '/like')
+        .post(app.config.host + '/v1/posts/' + context.post.id + '/like')
         .end(function(err, res) {
           err.should.not.be.empty
           err.status.should.eql(401)
@@ -391,7 +607,7 @@ describe("PostsController", function() {
     it('should not like invalid post', function(done) {
       request
         .post(app.config.host + '/v1/posts/:id/like')
-        .send({ authToken: authToken })
+        .send({ authToken: context.authToken })
         .end(function(err, res) {
           err.should.not.be.empty
           err.status.should.eql(404)
@@ -401,35 +617,15 @@ describe("PostsController", function() {
   })
 
   describe('#unlike()', function() {
-    var authToken
-      , post
+    var context = {}
 
-    beforeEach(funcTestHelper.createUser('Luna', 'password', function(token) {
-      authToken = token
-    }))
-
-    beforeEach(function(done) {
-        var body = 'Post body'
-
-      request
-        .post(app.config.host + '/v1/posts')
-        .send({ post: { body: body }, authToken: authToken })
-        .end(function(err, res) {
-          res.body.should.not.be.empty
-          res.body.should.have.property('posts')
-          res.body.posts.should.have.property('body')
-          res.body.posts.body.should.eql(body)
-
-          post = res.body.posts
-
-          done()
-        })
-    })
+    beforeEach(funcTestHelper.createUserCtx(context, 'Luna', 'password'))
+    beforeEach(function(done) { funcTestHelper.createPost(context, 'Post body')(done) })
 
     it('unlike should fail if post was not yet liked and succeed after it was liked with a valid user', function(done) {
       request
-        .post(app.config.host + '/v1/posts/' + post.id + '/unlike')
-        .send({ authToken: authToken })
+        .post(app.config.host + '/v1/posts/' + context.post.id + '/unlike')
+        .send({ authToken: context.authToken })
         .end(function(err, res) {
 
           err.should.not.be.empty
@@ -438,15 +634,15 @@ describe("PostsController", function() {
           JSON.parse(err.response.error.text).err.should.eql("You can't un-like post that you haven't yet liked")
 
           request
-            .post(app.config.host + '/v1/posts/' + post.id + '/like')
-            .send({ authToken: authToken })
+            .post(app.config.host + '/v1/posts/' + context.post.id + '/like')
+            .send({ authToken: context.authToken })
             .end(function(err, res) {
               res.body.should.be.empty
               $should.not.exist(err)
 
               request
-                .post(app.config.host + '/v1/posts/' + post.id + '/unlike')
-                .send({ authToken: authToken })
+                .post(app.config.host + '/v1/posts/' + context.post.id + '/unlike')
+                .send({ authToken: context.authToken })
                 .end(function(err, res) {
                   res.body.should.be.empty
                   $should.not.exist(err)
@@ -459,7 +655,7 @@ describe("PostsController", function() {
 
     it('should not unlike post with an invalid user', function(done) {
       request
-        .post(app.config.host + '/v1/posts/' + post.id + '/unlike')
+        .post(app.config.host + '/v1/posts/' + context.post.id + '/unlike')
         .end(function(err, res) {
           err.should.not.be.empty
           err.status.should.eql(401)
@@ -470,7 +666,7 @@ describe("PostsController", function() {
     it('should not unlike invalid post', function(done) {
       request
         .post(app.config.host + '/v1/posts/:id/unlike')
-        .send({ authToken: authToken })
+        .send({ authToken: context.authToken })
         .end(function(err, res) {
           err.should.not.be.empty
           err.status.should.eql(404)

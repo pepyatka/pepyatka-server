@@ -2,14 +2,17 @@
 
 var Promise = require('bluebird')
   , uuid = require('uuid')
+  , mmm = require('mmmagic')
+  , _ = require('lodash')
   , config = require('../../config/config').load()
   , gm = require('gm')
-  , fs = require('fs')
+  , fs = Promise.promisifyAll(require('fs'))
   , inherits = require('util').inherits
   , models = require('../models')
   , AbstractModel = models.AbstractModel
   , Post = models.Post
   , mkKey = require('../support/models').mkKey
+  , aws = require('aws-sdk')
 
 exports.addModel = function(database) {
   /**
@@ -22,9 +25,10 @@ exports.addModel = function(database) {
     this.file = params.file // FormData File object
     this.fileName = params.fileName // original file name, e.g. 'cute-little-kitten.jpg'
     this.fileSize = params.fileSize // file size in bytes
-    this.mimeType = params.mimeType // mime type, e.g. 'image/jpeg'
+    this.mimeType = params.mimeType // used as a fallback, in case we can't detect proper one
     this.fileExtension = params.fileExtension // jpg|png|gif etc.
     this.noThumbnail = params.noThumbnail // if true, image thumbnail URL == original URL
+    this.mediaType = params.mediaType // image | audio | general
 
     this.userId = params.userId
     this.postId = params.postId
@@ -81,14 +85,16 @@ exports.addModel = function(database) {
       that.id = uuid.v4()
 
       that.validateOnCreate()
-        // Save file to FS
+        // Save file to FS or S3
         .then(function(attachment) {
           attachment.fileName = attachment.file.name
           attachment.fileSize = attachment.file.size
           attachment.mimeType = attachment.file.type
 
-          var supportedExtensions = /\.(jpe?g|png|gif)$/i
-          if (attachment.fileName && attachment.fileName.match(supportedExtensions).length !== null) {
+          // TODO: extract to config
+          var supportedExtensions = /\.(jpe?g|png|gif|mp3|m4a|pdf|ppt|txt|docx?)$/i
+
+          if (attachment.fileName && attachment.fileName.match(supportedExtensions) !== null) {
             attachment.fileExtension = attachment.fileName.match(supportedExtensions)[1].toLowerCase()
           } else {
             attachment.fileExtension = null
@@ -102,6 +108,7 @@ exports.addModel = function(database) {
             fileName: attachment.fileName,
             fileSize: attachment.fileSize,
             mimeType: attachment.mimeType,
+            mediaType: attachment.mediaType,
             fileExtension: attachment.fileExtension,
             noThumbnail: attachment.noThumbnail,
             userId: attachment.userId,
@@ -125,7 +132,7 @@ exports.addModel = function(database) {
   Attachment.prototype.getUrl = function() {
     var that = this
     return new Promise(function(resolve, reject) {
-      resolve(config.attachments.urlDir + that.getFilename())
+      resolve(config.attachments.url + config.attachments.path + that.getFilename())
     })
   }
 
@@ -136,19 +143,19 @@ exports.addModel = function(database) {
       if (that.noThumbnail === '1') {
         resolve(that.getUrl())
       } else {
-        resolve(config.attachments.thumbnails.urlDir + that.getFilename())
+        resolve(config.thumbnails.url + config.thumbnails.path + that.getFilename())
       }
     })
   }
 
   // Get local filesystem path for original file
   Attachment.prototype.getPath = function() {
-    return config.attachments.fsDir + this.getFilename()
+    return config.attachments.storage.rootDir + config.attachments.path + this.getFilename()
   }
 
   // Get local filesystem path for thumbnail file
   Attachment.prototype.getThumbnailPath = function() {
-    return config.attachments.thumbnails.fsDir + this.getFilename()
+    return config.thumbnails.storage.rootDir + config.thumbnails.path + this.getFilename()
   }
 
   // Get file name
@@ -159,44 +166,87 @@ exports.addModel = function(database) {
     return this.id
   }
 
-  // Rename file and process thumbnail, if necessary
-  Attachment.prototype.handleMedia = function(attachment) {
-    var that = this
+  // Store the file and process its thumbnail, if necessary
+  Attachment.prototype.handleMedia = async function(attachment) {
+    var tmpAttachmentFile = this.file.path
+    var tmpThumbnailFile = tmpAttachmentFile + '.thumbnail'
+    var attachmentFile = this.getPath()
+    var thumbnailFile = this.getThumbnailPath()
 
-    return new Promise(function(resolve, reject) {
-      var tmpPath = that.file.path
-      var originalPath = that.getPath()
+    const supportedImageTypes = ['image/jpeg', 'image/gif', 'image/png']
+    const supportedAudioTypes = ['audio/x-m4a', 'audio/mp4', 'audio/mpeg', 'audio/ogg', 'audio/x-wav']
 
-      fs.rename(tmpPath, originalPath, function(err) {
-        if (err) {
-          reject(err)
-          return
+    // Check a mime type
+    try {
+      let magic = new mmm.Magic(mmm.MAGIC_MIME_TYPE)
+      let detectFile = Promise.promisify(magic.detectFile, magic)
+      this.mimeType = await detectFile(tmpAttachmentFile)
+    } catch(e) {
+      if (_.isEmpty(this.mimeType)) {
+        throw e
+      }
+      // otherwise, we'll use the fallback provided by the user
+    }
+
+    // Store a thumbnail for a compatible image
+    if (supportedImageTypes.indexOf(this.mimeType) != -1) {
+      let img = Promise.promisifyAll(gm(tmpAttachmentFile))
+      let size = await img.sizeAsync()
+
+      this.mediaType = 'image'
+
+      if (size.width > 525 || size.height > 175) {
+        // Looks big enough, needs a resize
+        this.noThumbnail = '0'
+
+        img = img
+          .resize(525, 175)
+          .autoOrient()
+          .quality(95)
+
+        if (config.thumbnails.storage.type === 's3') {
+          await img.writeAsync(tmpThumbnailFile)
+          await this.uploadToS3(tmpThumbnailFile, config.thumbnails)
+          await fs.unlinkAsync(tmpThumbnailFile)
+        } else {
+          await img.writeAsync(thumbnailFile)
         }
-        if ('image') { // TODO: support for various media types
-          gm(originalPath).size(function (err, size) {
-            // Check if we need to resize
-            if (size !== undefined && (size.width > 525 || size.height > 175)) {
-              // Looks big enough, needs a resize
-              that.noThumbnail = '0'
-              gm(originalPath)
-                .resize(525, 175)
-                .autoOrient()
-                .quality(95)
-                .write(that.getThumbnailPath(), function (err) {
-                  if (err) {
-                    reject(err)
-                  }
-                  // Thumbnail has been resized and stored successfully
-                  resolve(attachment)
-                })
-            } else {
-              // Since it's small, just use the same URL as a original image
-              that.noThumbnail = '1'
-              resolve(attachment)
-            }
-          })
-        }
-      })
+      } else {
+        // Since it's small, just use the original image
+        this.noThumbnail = '1'
+      }
+    } else if (supportedAudioTypes.indexOf(this.mimeType) != -1) {
+      this.noThumbnail = '1'
+      this.mediaType = 'audio'
+    } else {
+      this.noThumbnail = '1'
+      this.mediaType = 'general'
+    }
+
+    // Store an original attachment
+    if (config.attachments.storage.type === 's3') {
+      await this.uploadToS3(tmpAttachmentFile, config.attachments)
+      await fs.unlinkAsync(tmpAttachmentFile)
+    } else {
+      await fs.renameAsync(tmpAttachmentFile, attachmentFile)
+    }
+
+    return attachment
+  }
+
+  // Upload original attachment or its thumbnail to the S3 bucket
+  Attachment.prototype.uploadToS3 = async function(sourceFile, subConfig) {
+    let s3 = new aws.S3({
+      'accessKeyId': subConfig.storage.accessKeyId || null,
+      'secretAccessKey': subConfig.storage.secretAccessKey || null
+    })
+    let putObject = Promise.promisify(s3.putObject, s3)
+    await putObject({
+      ACL: 'public-read',
+      Bucket: subConfig.storage.bucket,
+      Key: subConfig.path + this.getFilename(),
+      Body: fs.createReadStream(sourceFile),
+      ContentType: this.mimeType
     })
   }
 

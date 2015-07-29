@@ -54,82 +54,78 @@ exports.addModel = function(database) {
 
   Group.prototype.isValidUsername = function() {
     var valid = this.username
-        && this.username.length > 1
+        && this.username.length >= 3   // per spec
+        && this.username.length <= 35  // per evidence and consensus
         && this.username.match(/^[A-Za-z0-9]+(-[a-zA-Z0-9]+)*$/)
         && models.FeedFactory.stopList().indexOf(this.username) == -1
 
     return Promise.resolve(valid)
   }
 
-  Group.prototype.validate = function() {
-    return new Promise(function(resolve, reject) {
-      var valid
+  Group.prototype.validate = async function() {
+    var valid
 
-      valid = this.isValidUsername().value()
-        && this.isValidScreenName().value()
+    valid = this.isValidUsername().value()
+      && this.isValidScreenName().value()
 
-      valid ? resolve(valid) : reject(new Error("Invalid"))
-    }.bind(this))
+    if (!valid)
+      throw new Error("Invalid")
+
+    return valid
   }
 
-  Group.prototype.create = function(ownerId) {
-    var that = this
+  Group.prototype.create = async function(ownerId) {
+      this.createdAt = new Date().getTime()
+      this.updatedAt = new Date().getTime()
+      this.screenName = this.screenName || this.username
+      this.id = uuid.v4()
 
-    return new Promise(function(resolve, reject) {
-      that.createdAt = new Date().getTime()
-      that.updatedAt = new Date().getTime()
-      that.screenName = that.screenName || that.username
-      that.id = uuid.v4()
+      var group = await this.validateOnCreate()
 
-      that.validateOnCreate()
-        .then(function(group) {
-          return Promise.all([
-            database.setAsync(mkKey(['username', group.username, 'uid']), group.id),
-            database.hmsetAsync(mkKey(['user', group.id]),
-                                { 'username': group.username,
-                                  'screenName': group.screenName,
-                                  'type': group.type,
-                                  'createdAt': group.createdAt.toString(),
-                                  'updatedAt': group.updatedAt.toString(),
-                                  'isPrivate': group.isPrivate
-                                })
-          ])
-        })
-        .then(function() {
-          var stats = new models.Stats({
-            id: that.id
-          })
+      await* [
+        database.setAsync(mkKey(['username', group.username, 'uid']), group.id),
+        database.hmsetAsync(mkKey(['user', group.id]),
+                            { 'username': group.username,
+                              'screenName': group.screenName,
+                              'type': group.type,
+                              'createdAt': group.createdAt.toString(),
+                              'updatedAt': group.updatedAt.toString(),
+                              'isPrivate': group.isPrivate
+                            })
+      ]
 
-          return Promise.all([
-            that.addAdministrator(ownerId),
-            that.subscribeOwner(ownerId),
-            stats.create()
-          ])
-        })
-        .then(function(res) { resolve(that) })
-        .catch(function(e) { reject(e) })
-    })
+      var stats = new models.Stats({
+        id: this.id
+      })
+
+      await* [
+        this.addAdministrator(ownerId),
+        this.subscribeOwner(ownerId),
+        stats.create()
+      ]
+
+      return this
   }
 
-  Group.prototype.update = function(params) {
-    var that = this
+  Group.prototype.update = async function(params) {
+    if (params.hasOwnProperty('screenName') && this.screenName != params.screenName) {
+      if (!this.screenNameIsValid(params.screenName)) {
+        throw new Error("Invalid screenname")
+      }
 
-    return new Promise(function(resolve, reject) {
-      that.updatedAt = new Date().getTime()
-      if (params.hasOwnProperty('screenName'))
-        that.screenName = params.screenName
+      this.screenName = params.screenName
+      this.updatedAt = new Date().getTime()
 
-      that.validate()
-        .then(function(user) {
-          database.hmsetAsync(mkKey(['user', that.id]),
-                              { 'screenName': that.screenName,
-                                'isPrivate': that.isPrivate,
-                                'updatedAt': that.updatedAt.toString()
-                              })
-        })
-        .then(function() { resolve(that) })
-        .catch(function(e) { reject(e) })
-    })
+      var payload = {
+        'screenName': this.screenName,
+        'isPrivate':  this.isPrivate,
+        'updatedAt':  this.updatedAt.toString()
+      }
+
+      await database.hmsetAsync(mkKey(['user', this.id]), payload)
+    }
+
+    return this
   }
 
   Group.prototype.mkAdminsKey = function() {
