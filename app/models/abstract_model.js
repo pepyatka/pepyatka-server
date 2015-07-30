@@ -50,27 +50,23 @@ exports.addModel = function(database) {
    * Given the ID of an object, returns a promise resolving to that object,
    * or a rejected promise if an object of that type with that ID does not exist.
    */
-  AbstractModel.getById = function(identifier, params) {
-    var that = this
+  AbstractModel.getById = async function(identifier, params) {
+    var result = await this.findById(identifier, params)
 
-    return this.findById(identifier, params).then(function(result) {
-      if (result != null) {
-        return Promise.resolve(result)
-      }
-      return Promise.reject(new NotFoundException("Can't find " + that.namespace))
-    })
+    if (result !== null)
+      return result
+
+    throw new NotFoundException("Can't find " + this.namespace)
   }
 
   AbstractModel.prototype = {
-    validateUniquness: function(attribute) {
-      return new Promise(function(resolve, reject) {
-        database.existsAsync(attribute)
-          .then(function(res) {
-            var valid = res === 0
+    validateUniquness: async function(attribute) {
+      var res = await database.existsAsync(attribute)
 
-            valid ? resolve(true) : reject(new Error("Already exists"))
-          })
-      })
+      if (res === 0)
+        return true
+      else
+        throw new Error("Already exists")
     }
   }
 

@@ -22,7 +22,7 @@ exports.addController = function(app) {
       username: req.body.group.username,
       screenName: req.body.group.screenName,
       isPrivate: req.body.group.isPrivate
-    };
+    }
 
     try {
       var group = new Group(params)
@@ -35,47 +35,41 @@ exports.addController = function(app) {
     }
   }
 
-  GroupsController.update = function(req, res) {
+  GroupsController.update = async function(req, res) {
     var attrs = {
       screenName: req.body.user.screenName,
       isPrivate: req.body.user.isPrivate
     }
-    models.Group.getById(req.params.userId).bind({})
-      .then(function(group) {
-        this.group = group
-        return group.validateCanUpdate(req.user)
-      })
-      .then(function() {
-        return this.group.update(attrs)
-      })
-      .then(function(group) {
-        new models.GroupSerializer(group).toJSON(function(err, json) {
-          res.jsonp(json)
-        })
-      })
-      .catch(exceptions.reportError(res))
+
+    try {
+      var group = await models.Group.getById(req.params.userId)
+      await group.validateCanUpdate(req.user)
+      group = await group.update(attrs)
+
+      var json = await new models.GroupSerializer(group).promiseToJSON()
+      res.jsonp(json)
+    } catch(e) {
+      exceptions.reportError(res)(e)
+    }
   }
 
-  GroupsController.changeAdminStatus = function(req, res, newStatus) {
-    Group.findByUsername(req.params.groupName).bind({})
-        .then(function(group) {
-          this.group = group
-          return group.validateCanUpdate(req.user)
-        })
-        .then(function() {
-          return User.findByUsername(req.params.adminName)
-        })
-        .then(function(newAdmin) {
-          if (newStatus) {
-            return this.group.addAdministrator(newAdmin.id)
-          } else {
-            return this.group.removeAdministrator(newAdmin.id)
-          }
-        })
-        .then(function() {
-          res.jsonp({err: null, status: 'success'})
-        })
-        .catch(exceptions.reportError(res))
+  GroupsController.changeAdminStatus = async function(req, res, newStatus) {
+    try {
+      var group = await Group.findByUsername(req.params.groupName)
+      await group.validateCanUpdate(req.user)
+
+      var newAdmin = await User.findByUsername(req.params.adminName)
+
+      if (newStatus) {
+        await group.addAdministrator(newAdmin.id)
+      } else {
+        await group.removeAdministrator(newAdmin.id)
+      }
+
+      res.jsonp({ err: null, status: 'success' })
+    } catch(e) {
+      exceptions.reportError(res)(e)
+    }
   }
 
   GroupsController.admin = function(req, res) {
@@ -86,7 +80,7 @@ exports.addController = function(app) {
     GroupsController.changeAdminStatus(req, res, false)
   }
 
-  GroupsController.updateProfilePicture = function(req, res) {
+  GroupsController.updateProfilePicture = async function(req, res) {
     Group.findByUsername(req.params.groupName).bind({})
       .then(function(group) {
         return group.validateCanUpdate(req.user)
