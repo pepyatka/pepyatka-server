@@ -1068,29 +1068,13 @@ exports.addModel = function(database) {
 
   }
 
-  User.prototype.updateLastActivityAt = function() {
-    var that = this
-    var timelineId
-
-    return new Promise(function(resolve, reject) {
-      if (!that.isUser()) {
-        // update group lastActivity for all subscribers
-        var updatedAt = new Date().getTime()
-        that.getSubscribers()
-          .then(function(userIds) {
-            return Promise.map(userIds, function(userId) {
-              return database.zaddAsync(mkKey(['user', userId, 'subscriptions']), updatedAt, timelineId)
-            })
-          })
-          .then(function() {
-            return database.hmsetAsync(mkKey(['user', that.id]),
-                                       { 'updatedAt': updatedAt.toString() })
-          })
-          .then(function() { resolve() })
-      } else {
-        resolve()
-      }
-    })
+  User.prototype.updateLastActivityAt = async function() {
+    if (!this.isUser()) {
+      // update group lastActivity for all subscribers
+      var updatedAt = new Date().getTime()
+      return database.hmsetAsync(mkKey(['user', this.id]),
+                                 { 'updatedAt': updatedAt.toString() })
+    }
   }
 
   User.prototype.sendSubscriptionRequest = async function(userId) {

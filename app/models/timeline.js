@@ -62,7 +62,7 @@ exports.addModel = function(database) {
       .then(function(timelines) {
         return Promise.map(timelines, function(timeline) {
           return timeline.getUser()
-            .then(function(user) { return user.updateLastActivityAt() })
+            .then(function(feed) { return feed.updateLastActivityAt() })
             .then(function() { return timeline.getSubscribedTimelineIds() })
         })
       })
