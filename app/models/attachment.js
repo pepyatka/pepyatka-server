@@ -45,34 +45,29 @@ exports.addModel = function(database) {
   Attachment.namespace = 'attachment'
   Attachment.findById = Attachment.super_.findById
 
-  Attachment.prototype.validate = function() {
-    return new Promise(function(resolve, reject) {
-      var valid = this.file
+  Attachment.prototype.validate = async function() {
+    var valid = this.file
         && Object.keys(this.file).length > 0
         && this.file.path
         && this.file.path.length > 0
         && this.userId
         && this.userId.length > 0
 
-      if (valid) {
-        resolve(valid)
-      } else {
-        reject(new Error('Invalid'))
-      }
-    }.bind(this))
+    if (!valid)
+      throw new Error('Invalid')
+
+    return true
   }
 
-  Attachment.prototype.validateOnCreate = function() {
-    var that = this
+  Attachment.prototype.validateOnCreate = async function() {
+    var promises = [
+      this.validate(),
+      this.validateUniquness(mkKey(['attachment', this.id]))
+    ]
 
-    return new Promise(function(resolve, reject) {
-      Promise.join(that.validate(),
-                   that.validateUniquness(mkKey(['attachment', that.id])),
-                   function(valid, idIsUnique) {
-                     resolve(that)
-                   })
-        .catch(function(e) { reject(e) })
-      })
+    await* promises
+
+    return this
   }
 
   Attachment.prototype.create = function() {
