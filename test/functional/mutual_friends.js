@@ -1,7 +1,6 @@
 var request = require('superagent')
   , app = require('../../index')
   , models = require('../../app/models')
-  , async = require('async')
   , funcTestHelper = require('./functional_test_helper')
   , config = require('../../config/config').load()
   , _ = require('lodash')

@@ -3,6 +3,8 @@
 var redis = require('../config/database')
   , database = redis.connect()
 
+exports.database = database
+
 exports.AbstractSerializer = require('./serializers/abstract_serializer').addSerializer()
 exports.Serializer         = require("./serializers/serializer").addSerializer()
 
@@ -20,9 +22,11 @@ exports.Attachment    = require('./models/attachment').addModel(database)
 exports.Comment       = require('./models/comment').addModel(database)
 exports.Stats         = require('./models/stats').addModel(database)
 
+exports.AdminSerializer         = require('./serializers/v1/AdminSerializer').addSerializer()
 exports.UserSerializer         = require('./serializers/v1/UserSerializer').addSerializer()
 exports.SubscriberSerializer   = require('./serializers/v1/SubscriberSerializer').addSerializer()
 exports.SubscriptionSerializer = require('./serializers/v1/SubscriptionSerializer').addSerializer()
+exports.SubscriptionRequestSerializer = require('./serializers/v1/SubscriptionRequestSerializer').addSerializer()
 exports.MyProfileSerializer    = require('./serializers/v1/MyProfileSerializer').addSerializer()
 exports.LikeSerializer         = require('./serializers/v1/LikeSerializer').addSerializer()
 exports.GroupSerializer        = require('./serializers/v1/GroupSerializer').addSerializer()

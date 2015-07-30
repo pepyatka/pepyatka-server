@@ -552,6 +552,25 @@ describe("UsersController", function() {
           })
       })
 
+      it('should update privacy settings', function(done) {
+        var screenName = 'Mars'
+
+        request
+          .post(app.config.host + '/v1/users/' + user.id)
+          .send({ authToken: authToken,
+                  user: { isPrivate: '1' },
+                  '_method': 'put' })
+          .end(function(err, res) {
+            res.should.not.be.empty
+            res.body.should.not.be.empty
+            res.body.should.have.property('users')
+            res.body.users.should.have.property('id')
+            res.body.users.should.have.property('isPrivate')
+            res.body.users.isPrivate.should.eql('1')
+            done()
+          })
+      })
+
       it('should require signed in user', function(done) {
         var screenName = 'Mars'
 

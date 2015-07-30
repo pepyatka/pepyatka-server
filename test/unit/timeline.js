@@ -104,13 +104,19 @@ describe('Timeline', function() {
 
   describe('#getPosts()', function() {
     it('should return an empty list for an empty timeline', function(done) {
-      var userId = uuid.v4()
-      var timeline = new Timeline({
-        name: 'name',
-        userId: userId
+      var user = new User({
+        username: 'Luna',
+        password: 'password'
       })
 
-      timeline.create()
+      user.create()
+        .then(function(_user) {
+          var timeline = new Timeline({
+            name: 'name',
+            userId: _user.id
+          })
+          return timeline.create()
+        })
         .then(function(timeline) { return timeline.getPosts() })
         .then(function(posts) {
           posts.should.be.empty
