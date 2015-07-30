@@ -146,7 +146,10 @@
   }
   function sendEnc (res, key, data ){
     res.writeHead(200, { 'Content-Type': 'text/plain' })
-    openpgp.encryptMessage(key,data).then( function (a){res.write(a) res.end()})
+    openpgp.encryptMessage(key,data).then( function (a){
+    	res.write(a) 
+      res.end()
+    })
   }
   
   SecretController.update = function(req,res){

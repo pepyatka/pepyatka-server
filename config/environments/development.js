@@ -21,8 +21,7 @@ exports.getConfig = function() {
     database: 2,
 
     secret: 'secret',
-
-    origin: 'http://localhost:3333'
+    origin: 'http://localhost:3333',
     appRoot: '.',
     acceptHashedPasswordsOnly: false,
 
