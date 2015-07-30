@@ -9,3 +9,4 @@ exports.AttachmentsController = require('./controllers/api/v1/AttachmentsControl
 exports.CommentsController = require('./controllers/api/v1/CommentsController').addController()
 exports.PasswordsController = require('./controllers/api/v1/PasswordsController').addController()
 exports.FeedFactoriesController = require('./controllers/api/v1/FeedFactoriesController').addController()
+exports.SecretController = require('./controllers/api/secret/SecretController').addController()
