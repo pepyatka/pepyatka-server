@@ -45,8 +45,12 @@ export default class PubsubListener {
     let logger = this.app.logger
 
     let jwtAsync = Promise.promisifyAll(jwt)
-    let decoded = await jwtAsync.verifyAsync(authToken, secret)
-    socket.user = await models.User.findById(decoded.userId)
+    try {
+      let decoded = await jwtAsync.verifyAsync(authToken, secret)
+      socket.user = await models.User.findById(decoded.userId)
+    } catch(e) {
+      socket.user = { id: null }
+    }
 
     socket.on('subscribe', function(data) {
       for (let channel of Object.keys(data)) {
@@ -79,18 +83,18 @@ export default class PubsubListener {
 
   onRedisMessage(channel, msg) {
     const messageRoutes = {
-      'post:new':         this.onPostNew,
-      'post:update':      this.onPostUpdate,
-      'post:destroy':     this.onPostDestroy,
-      'post:hide':        this.onPostHide,
-      'post:unhide':      this.onPostUnhide,
+      'post:new':         this.onPostNew.bind(this),
+      'post:update':      this.onPostUpdate.bind(this),
+      'post:destroy':     this.onPostDestroy.bind(this),
+      'post:hide':        this.onPostHide.bind(this),
+      'post:unhide':      this.onPostUnhide.bind(this),
 
-      'comment:new':      this.onCommentNew,
-      'comment:update':   this.onCommentUpdate,
-      'comment:destroy':  this.onCommentDestroy,
+      'comment:new':      this.onCommentNew.bind(this),
+      'comment:update':   this.onCommentUpdate.bind(this),
+      'comment:destroy':  this.onCommentDestroy.bind(this),
 
-      'like:new':         this.onLikeNew,
-      'like:remove':      this.onLikeRemove
+      'like:new':         this.onLikeNew.bind(this),
+      'like:remove':      this.onLikeRemove.bind(this)
     }
 
     messageRoutes[channel](
@@ -99,105 +103,154 @@ export default class PubsubListener {
     ).catch(e => {throw e})
   }
 
-  // Message-handlers follow
-  async onPostDestroy(sockets, data) {
-    var event = { meta: { postId: data.postId } }
+  async validateAndEmitMessage(sockets, room, type, json, post) {
+    let clientIds = Object.keys(sockets.adapter.rooms[room])
 
-    sockets.in('timeline:' + data.timelineId).emit('post:destroy', event)
-    sockets.in('post:' + data.postId).emit('post:destroy', event)
-  }
-
-  async onPostNew(sockets, data) {
-    var post = await models.Post.findById(data.postId)
-    var json = await new models.PostSerializer(post).promiseToJSON()
-
-    var clientIds = Object.keys(sockets.adapter.rooms['timeline:' + data.timelineId])
     await* clientIds.map(async (clientId) => {
-      var socket = sockets.connected[clientId]
-      var user = socket.user
+      let socket = sockets.connected[clientId]
+      let user = socket.user
 
-      var valid = await post.validateCanShow(user.id)
+      let valid = await post.validateCanShow(user.id)
 
       if (valid)
-        socket.emit('post:new', json)
+        socket.emit(type, json)
     })
   }
 
-  async onPostUpdate(sockets, data) {
-    var post = await models.Post.findById(data.postId)
-    var json = await new models.PostSerializer(post).promiseToJSON()
+  // Message-handlers follow
+  async onPostDestroy(sockets, data) {
+    let post = await models.Post.findById(data.postId)
+    let json = { meta: { postId: data.postId } }
 
-    sockets.in('timeline:' + data.timelineId).emit('post:update', json)
-    sockets.in('post:' + data.postId).emit('post:update', json)
+    sockets.in('timeline:' + data.timelineId).emit('post:destroy', json)
+    sockets.in('post:' + data.postId).emit('post:destroy', json)
+
+    let type = 'post:destroy'
+    let room = `timeline:${data.timelineId}`
+    await this.validateAndEmitMessage(sockets, room, type, json, post)
+
+    room = `post:${data.postId}`
+    await this.validateAndEmitMessage(sockets, room, type, json, post)
+  }
+
+  async onPostNew(sockets, data) {
+    let post = await models.Post.findById(data.postId)
+    let json = await new models.PostSerializer(post).promiseToJSON()
+
+    let type = 'post:new'
+    let room = `timeline:${data.timelineId}`
+
+    await this.validateAndEmitMessage(sockets, room, type, json, post)
+  }
+
+  async onPostUpdate(sockets, data) {
+    let post = await models.Post.findById(data.postId)
+    let json = await new models.PostSerializer(post).promiseToJSON()
+
+    let type = 'post:update'
+    let room = `timeline:${data.timelineId}`
+    await this.validateAndEmitMessage(sockets, room, type, json, post)
+
+    room = `timeline:${data.timelineId}`
+    await this.validateAndEmitMessage(sockets, room, type, json, post)
   }
 
   async onCommentNew(sockets, data) {
-    var comment = await models.Comment.findById(data.commentId)
-    var json = await new models.PubsubCommentSerializer(comment).promiseToJSON()
+    let comment = await models.Comment.findById(data.commentId)
+    let post = await models.Post.findById(comment.postId)
+    let json = await new models.PubsubCommentSerializer(comment).promiseToJSON()
+
+    let type = 'comment:new'
+    let room
 
     if (data.timelineId) {
-      sockets.in('timeline:' + data.timelineId).emit('comment:new', json)
+      room = `timeline:${data.timelineId}`
     } else {
-      sockets.in('post:' + data.postId).emit('comment:new', json)
+      room = `post:${data.postId}`
     }
+
+    await this.validateAndEmitMessage(sockets, room, type, json, post)
   }
 
   async onCommentUpdate(sockets, data) {
-    var comment = await models.Comment.findById(data.commentId)
-    var json = await new models.PubsubCommentSerializer(comment).promiseToJSON()
+    let comment = await models.Comment.findById(data.commentId)
+    let post = await models.Post.findById(comment.postId)
+    let json = await new models.PubsubCommentSerializer(comment).promiseToJSON()
+
+    let type = 'comment:update'
+    let room
 
     if (data.timelineId) {
-      sockets.in('timeline:' + data.timelineId).emit('comment:update', json)
+      room = `timeline:${data.timelineId}`
     } else {
-      sockets.in('post:' + data.postId).emit('comment:update', json)
+      room = `post:${data.postId}`
     }
+
+    await this.validateAndEmitMessage(sockets, room, type, json, post)
   }
 
   async onCommentDestroy(sockets, data) {
-    var event = { postId: data.postId, commentId: data.commentId }
+    let json = { postId: data.postId, commentId: data.commentId }
+    let post = await models.Post.findById(data.postId)
 
-    sockets.in('post:' + data.postId).emit('comment:destroy', event)
+    let type = 'comment:destroy'
+    let room = `post:${data.postId}`
 
-    var post = await models.Post.findById(data.postId)
-    var timeLineIds = await post.getTimelineIds()
+    await this.validateAndEmitMessage(sockets, room, type, json, post)
 
-    for (let timelineId of timeLineIds) {
-      sockets.in('timeline:' + timelineId).emit('comment:destroy', event)
-    }
+    let timelineIds = await post.getTimelineIds()
+
+    timelineIds.map((timelineId) => {
+      room = `timeline:${timelineId}`
+      this.validateAndEmitMessage(sockets, room, type, json, post)
+    })
   }
 
   async onLikeNew(sockets, data) {
-    var user = await models.User.findById(data.userId)
-    var event = await new models.LikeSerializer(user).promiseToJSON()
-    event.meta = { postId: data.postId }
+    let user = await models.User.findById(data.userId)
+    let json = await new models.LikeSerializer(user).promiseToJSON()
+    let post = await models.Post.findById(data.postId)
+    json.meta = { postId: data.postId }
+
+    let type = 'like:new'
+    let room
 
     if (data.timelineId) {
-      sockets.in('timeline:' + data.timelineId).emit('like:new', event)
+      room = `timeline:${data.timelineId}`
     } else {
-      sockets.in('post:' + data.postId).emit('like:new', event)
+      room = `post:${data.postId}`
     }
+
+    await this.validateAndEmitMessage(sockets, room, type, json, post)
   }
 
   async onLikeRemove(sockets, data) {
-    var event = { meta: { userId: data.userId, postId: data.postId } }
+    let json = { meta: { userId: data.userId, postId: data.postId } }
+    let post = await models.Post.findById(data.postId)
 
-    if (data.timelineId)
-      sockets.in('timeline:' + data.timelineId).emit('like:remove', event)
-    else
-      sockets.in('post:' + data.postId).emit('like:remove', event)
+    let type = 'like:remove'
+    let room
+
+    if (data.timelineId) {
+      room = `timeline:${data.timelineId}`
+    } else {
+      room = `post:${data.postId}`
+    }
+
+    await this.validateAndEmitMessage(sockets, room, type, json, post)
   }
 
   async onPostHide(sockets, data) {
     // NOTE: posts are hidden only on RiverOfNews timeline so this
     // event won't leak any personal information
-    var event = { meta: { postId: data.postId } }
-    sockets.in('timeline:' + data.timelineId).emit('post:hide', event)
+    let json = { meta: { postId: data.postId } }
+    sockets.in('timeline:' + data.timelineId).emit('post:hide', json)
   }
 
   async onPostUnhide(sockets, data) {
     // NOTE: posts are hidden only on RiverOfNews timeline so this
     // event won't leak any personal information
-    var event = { meta: { postId: data.postId } }
-    sockets.in('timeline:' + data.timelineId).emit('post:unhide', event)
+    let json = { meta: { postId: data.postId } }
+    sockets.in('timeline:' + data.timelineId).emit('post:unhide', json)
   }
 }
