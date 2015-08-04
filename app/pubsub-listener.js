@@ -3,6 +3,7 @@ import { createClient as createRedisClient } from 'redis'
 import _ from 'lodash'
 import IoServer from 'socket.io'
 import redis_adapter from 'socket.io-redis'
+import jwt from 'jsonwebtoken'
 
 import models from './models'
 import config_loader from '../config/config'
@@ -37,8 +38,15 @@ export default class PubsubListener {
     redisClient.on('message', this.onRedisMessage.bind(this))
   }
 
-  onConnect(socket) {
-    var logger = this.app.logger
+  async onConnect(socket) {
+    let authToken = socket.handshake.query.token
+    let config = config_loader.load()
+    let secret = config.secret
+    let logger = this.app.logger
+
+    let jwtAsync = Promise.promisifyAll(jwt)
+    let decoded = await jwtAsync.verifyAsync(authToken, secret)
+    socket.user = await models.User.findById(decoded.userId)
 
     socket.on('subscribe', function(data) {
       for (let channel of Object.keys(data)) {
@@ -103,7 +111,16 @@ export default class PubsubListener {
     var post = await models.Post.findById(data.postId)
     var json = await new models.PostSerializer(post).promiseToJSON()
 
-    sockets.in('timeline:' + data.timelineId).emit('post:new', json)
+    var clientIds = Object.keys(sockets.adapter.rooms['timeline:' + data.timelineId])
+    await* clientIds.map(async (clientId) => {
+      var socket = sockets.connected[clientId]
+      var user = socket.user
+
+      var valid = await post.validateCanShow(user.id)
+
+      if (valid)
+        socket.emit('post:new', json)
+    })
   }
 
   async onPostUpdate(sockets, data) {
