@@ -200,6 +200,23 @@ exports.addController = function(app) {
       }
     }
 
+    static async unsubscribeUser(req, res) {
+      if (!req.user)
+        return res.status(401).jsonp({ err: 'Not found' })
+
+      try {
+        var user = await models.User.findByUsername(req.params.username)
+        var timelineId = await req.user.getPostsTimelineId()
+        await user.validateCanUnsubscribe(timelineId)
+        await user.unsubscribeFrom(timelineId)
+
+        var json = await new MyProfileSerializer(req.user).promiseToJSON()
+        res.jsonp(json)
+      } catch(e) {
+        exceptions.reportError(res)(e)
+      }
+    }
+
     static async unsubscribe(req, res) {
       if (!req.user)
         return res.status(401).jsonp({ err: 'Not found' })

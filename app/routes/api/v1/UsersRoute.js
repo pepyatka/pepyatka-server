@@ -7,6 +7,9 @@ exports.addRoutes = function(app) {
   app.post('/v1/users',                          UsersController.create)
   app.post('/v1/users/acceptRequest/:username',  UsersController.acceptRequest)
   app.post('/v1/users/rejectRequest/:username',  UsersController.rejectRequest)
+  // NOTE: this is going to change and be more consistent when we
+  // introduce groups management
+  app.post('/v1/users/:username/unsubscribeFromMe', UsersController.unsubscribeUser)
   app.post('/v1/users/:username/sendRequest',    UsersController.sendRequest)
   app.get( '/v1/users/whoami',                   UsersController.whoami)
   app.get( '/v1/users/:username',                UsersController.show)
