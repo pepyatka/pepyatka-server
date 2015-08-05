@@ -83,6 +83,8 @@ describe("MutualFriends", function() {
     })
 
     describe('can protect private posts', function() {
+      var herculesContext = {}
+
       beforeEach(function(done) { funcTestHelper.subscribeToCtx(marsContext, lunaContext.username)(done) })
       beforeEach(function(done) { funcTestHelper.subscribeToCtx(lunaContext, marsContext.username)(done) })
       beforeEach(function(done) { funcTestHelper.subscribeToCtx(zeusContext, lunaContext.username)(done) })
@@ -97,6 +99,7 @@ describe("MutualFriends", function() {
           })
       })
       beforeEach(function(done) { funcTestHelper.createPost(lunaContext, 'Post body')(done) })
+      beforeEach(funcTestHelper.createUserCtx(herculesContext, 'hercules', 'pw'))
 
       describe('and manage subscription requests', function() {
         beforeEach(function(done) {
@@ -274,45 +277,54 @@ describe("MutualFriends", function() {
 
         it('should be able to reject', function(done) {
           request
-            .post(app.config.host + '/v1/users/rejectRequest/' + zeusContext.user.username)
-            .send({ authToken: lunaContext.authToken,
+            .post(app.config.host + '/v1/users/' + lunaContext.user.username + '/sendRequest')
+            .send({ authToken: herculesContext.authToken,
                     '_method': 'post' })
             .end(function(err, res) {
-              res.should.not.be.empty
-              res.error.should.be.empty
-
               request
-                .get(app.config.host + '/v1/users/whoami')
-                .query({ authToken: lunaContext.authToken })
+                .post(app.config.host + '/v1/users/rejectRequest/' + herculesContext.user.username)
+                .send({ authToken: lunaContext.authToken,
+                        '_method': 'post' })
                 .end(function(err, res) {
-                  // check there are no subscription requests
                   res.should.not.be.empty
-                  res.body.should.not.be.empty
-                  res.body.should.have.property('users')
-                  res.body.users.should.not.have.property('subscriptionRequests')
-                  res.body.should.not.have.property('requests')
+                  res.error.should.be.empty
 
                   request
                     .get(app.config.host + '/v1/users/whoami')
                     .query({ authToken: lunaContext.authToken })
                     .end(function(err, res) {
+                      // check there are no subscription requests
                       res.should.not.be.empty
                       res.body.should.not.be.empty
                       res.body.should.have.property('users')
-                      res.body.users.should.not.have.property('pendingSubscriptionRequests')
-                      res.body.should.not.have.property('requests')
+                      res.body.users.should.have.property('subscriptionRequests')
+                      res.body.should.have.property('requests')
+                      // request from zeus
+                      res.body.users.subscriptionRequests.length.should.eql(1)
+                      res.body.requests.length.should.eql(1)
 
-                      funcTestHelper.getTimeline('/v1/timelines/home', zeusContext.authToken, function(err, res) {
-                        // check user is not subscribed
-                        res.should.not.be.empty
-                        res.body.should.not.be.empty
-                        res.body.should.have.property('timelines')
-                        res.body.timelines.should.have.property('name')
-                        res.body.timelines.name.should.eql('RiverOfNews')
-                        res.body.timelines.should.not.have.property('posts')
-                        res.body.should.not.have.property('posts')
-                        done()
-                      })
+                      request
+                        .get(app.config.host + '/v1/users/whoami')
+                        .query({ authToken: herculesContext.authToken })
+                        .end(function(err, res) {
+                          res.should.not.be.empty
+                          res.body.should.not.be.empty
+                          res.body.should.have.property('users')
+                          res.body.users.should.not.have.property('pendingSubscriptionRequests')
+                          res.body.should.not.have.property('requests')
+
+                          funcTestHelper.getTimeline('/v1/timelines/home', herculesContext.authToken, function(err, res) {
+                            // check user is not subscribed
+                            res.should.not.be.empty
+                            res.body.should.not.be.empty
+                            res.body.should.have.property('timelines')
+                            res.body.timelines.should.have.property('name')
+                            res.body.timelines.name.should.eql('RiverOfNews')
+                            res.body.timelines.should.not.have.property('posts')
+                            res.body.should.not.have.property('posts')
+                            done()
+                          })
+                        })
                     })
                 })
             })
@@ -326,8 +338,8 @@ describe("MutualFriends", function() {
           res.body.should.have.property('timelines')
           res.body.timelines.should.have.property('name')
           res.body.timelines.name.should.eql('Posts')
-          res.body.timelines.should.not.have.property('posts')
-          res.body.should.not.have.property('posts')
+          res.body.timelines.should.have.property('posts')
+          res.body.should.have.property('posts')
           done()
         })
       })
@@ -359,12 +371,12 @@ describe("MutualFriends", function() {
       })
 
       it('should not subscribe to private feed', function(done) {
-        funcTestHelper.subscribeToCtx(zeusContext, lunaContext.username)(function(err, res) {
+        funcTestHelper.subscribeToCtx(herculesContext, lunaContext.username)(function(err, res) {
           err.should.not.be.empty
           err.status.should.eql(403)
           var error = JSON.parse(err.response.error.text)
           error.err.should.eql('You cannot subscribe to private feed')
-          funcTestHelper.getTimeline('/v1/timelines/home', zeusContext.authToken, function(err, res) {
+          funcTestHelper.getTimeline('/v1/timelines/home', herculesContext.authToken, function(err, res) {
             res.should.not.be.empty
             res.body.should.not.be.empty
             res.body.should.have.property('timelines')
@@ -452,24 +464,22 @@ describe("MutualFriends", function() {
         })
       })
 
-      it('that should not be visible to ex-subscribers', function(done) {
+      it('that should be visible to ex-subscribers', function(done) {
         funcTestHelper.getTimeline('/v1/timelines/home', zeusContext.authToken, function(err, res) {
           res.should.not.be.empty
           res.body.should.not.be.empty
           res.body.should.have.property('timelines')
           res.body.timelines.should.have.property('name')
           res.body.timelines.name.should.eql('RiverOfNews')
-          res.body.timelines.should.not.have.property('posts')
-          res.body.should.not.have.property('posts')
+          res.body.timelines.should.have.property('posts')
+          res.body.should.have.property('posts')
           // post should not be visible to ex-subscribers
           request
             .get(app.config.host + '/v1/posts/' + lunaContext.post.id)
             .query({ authToken: zeusContext.authToken })
             .end(function(err, res) {
-              err.should.not.be.empty
-              err.status.should.eql(403)
-              var error = JSON.parse(err.response.error.text)
-              error.err.should.eql('Not found')
+              res.body.should.not.be.empty
+              res.body.posts.body.should.eql(lunaContext.post.body)
               done()
             })
         })
@@ -478,7 +488,7 @@ describe("MutualFriends", function() {
       it('that should not be visible to users that are not subscribed', function(done) {
         request
           .get(app.config.host + '/v1/posts/' + lunaContext.post.id)
-          .query({ authToken: zeusContext.authToken })
+          .query({ authToken: herculesContext.authToken })
           .end(function(err, res) {
             err.should.not.be.empty
             err.status.should.eql(403)

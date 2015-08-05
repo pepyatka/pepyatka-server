@@ -431,13 +431,13 @@ exports.addModel = function(database) {
     var timeline = await this.getPostsTimeline()
 
     // users that I'm not following are ex-followers now
-    var subscribers = await this.getSubscribers()
-    await* subscribers.map(function(user) {
-      // this is not friend, let's unsubscribe her before going to private
-      if (subscriptionIds.indexOf(user.id) === -1) {
-        return user.unsubscribeFrom(timeline.id, { likes: true, comments: true })
-      }
-    })
+    // var subscribers = await this.getSubscribers()
+    // await* subscribers.map(function(user) {
+    //   // this is not friend, let's unsubscribe her before going to private
+    //   if (subscriptionIds.indexOf(user.id) === -1) {
+    //     return user.unsubscribeFrom(timeline.id, { likes: true, comments: true })
+    //   }
+    // })
 
     // we need to review post by post as some strangers that are not
     // followers and friends could commented on or like my posts
