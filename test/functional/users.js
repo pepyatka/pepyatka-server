@@ -935,6 +935,7 @@ describe("UsersController", function() {
             .post(app.config.host + '/v1/users/' + banUsername + '/ban')
             .send({ authToken: zeusContext.authToken })
             .end(function(err, res) {
+              res.error.should.be.empty
               res.body.should.not.be.empty
               funcTestHelper.getTimeline('/v1/timelines/home', zeusContext.authToken, function(err, res) {
                 res.body.should.not.be.empty

@@ -762,11 +762,15 @@ exports.addModel = function(database) {
   User.prototype.ban = async function(username) {
     var currentTime = new Date().getTime()
     var user = await models.User.findByUsername(username)
-    return await* [
+    var promises = [
       user.unsubscribeFrom(await this.getPostsTimelineId()),
-      this.rejectSubscriptionRequest(user.id),
       database.zaddAsync(mkKey(['user', this.id, 'bans']), currentTime, user.id)
     ]
+    // reject if and only if there is a pending request
+    var requestIds = await this.getSubscriptionRequestIds()
+    if (requestIds.indexOf(user.id) >= 0)
+      promises.push(this.rejectSubscriptionRequest(user.id))
+    return await* promises
   }
 
   User.prototype.unban = async function(username) {
