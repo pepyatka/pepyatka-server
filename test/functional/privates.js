@@ -331,42 +331,110 @@ describe("MutualFriends", function() {
         })
       })
 
+      xit('should protect user stats', function(done) {
+        funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.user.username, herculesContext.authToken, function(err, res) {
+          res.should.not.be.empty
+          res.body.should.not.be.empty
+          res.body.should.have.property('users')
+          res.body.users[0].should.not.have.property('statistics')
+
+          funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.user.username, lunaContext.authToken, function(err, res) {
+            res.should.not.be.empty
+            res.body.should.not.be.empty
+            res.body.should.have.property('users')
+            res.body.users[0].should.have.property('statistics')
+            done()
+          })
+        })
+      })
+
       it('should protect posts timeline', function(done) {
-        funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.user.username, zeusContext.authToken, function(err, res) {
+        funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.user.username, herculesContext.authToken, function(err, res) {
           res.should.not.be.empty
           res.body.should.not.be.empty
           res.body.should.have.property('timelines')
           res.body.timelines.should.have.property('name')
           res.body.timelines.name.should.eql('Posts')
-          res.body.timelines.should.have.property('posts')
-          res.body.should.have.property('posts')
-          done()
+          res.body.timelines.should.not.have.property('posts')
+          res.body.should.not.have.property('posts')
+
+          funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.user.username, lunaContext.authToken, function(err, res) {
+            res.should.not.be.empty
+            res.body.should.not.be.empty
+            res.body.should.have.property('timelines')
+            res.body.timelines.should.have.property('name')
+            res.body.timelines.name.should.eql('Posts')
+            res.body.timelines.should.have.property('posts')
+            res.body.should.have.property('posts')
+            done()
+          })
         })
       })
 
-      it('should protect likes timeline', function(done) {
-        funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.user.username + '/likes', zeusContext.authToken, function(err, res) {
-          res.should.not.be.empty
-          res.body.should.not.be.empty
-          res.body.should.have.property('timelines')
-          res.body.timelines.should.have.property('name')
-          res.body.timelines.name.should.eql('Likes')
-          res.body.timelines.should.not.have.property('posts')
-          res.body.should.not.have.property('posts')
-          done()
-        })
+      xit('should be visible for auth users in likes timeline', function(done) {
+        request
+          .post(app.config.host + '/v1/posts/' + lunaContext.post.id + '/like')
+          .send({ authToken: lunaContext.authToken })
+          .end(function(err, res) {
+            funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.user.username + '/likes', lunaContext.authToken, function(err, res) {
+              res.should.not.be.empty
+              res.body.should.not.be.empty
+              res.body.should.have.property('timelines')
+              res.body.timelines.should.have.property('name')
+              res.body.timelines.name.should.eql('Likes')
+              res.body.timelines.should.have.property('posts')
+              res.body.should.have.property('posts')
+              done()
+            })
+          })
       })
 
       it('should protect likes timeline', function(done) {
-        funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.user.username + '/comments', zeusContext.authToken, function(err, res) {
-          res.should.not.be.empty
-          res.body.should.not.be.empty
-          res.body.should.have.property('timelines')
-          res.body.timelines.should.have.property('name')
-          res.body.timelines.name.should.eql('Comments')
-          res.body.timelines.should.not.have.property('posts')
-          res.body.should.not.have.property('posts')
-          done()
+        request
+          .post(app.config.host + '/v1/posts/' + lunaContext.post.id + '/like')
+          .send({ authToken: lunaContext.authToken })
+          .end(function(err, res) {
+            funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.user.username + '/likes', herculesContext.authToken, function(err, res) {
+              res.should.not.be.empty
+              res.body.should.not.be.empty
+              res.body.should.have.property('timelines')
+              res.body.timelines.should.have.property('name')
+              res.body.timelines.name.should.eql('Likes')
+              res.body.timelines.should.not.have.property('posts')
+              res.body.should.not.have.property('posts')
+
+              done()
+            })
+          })
+      })
+
+      xit('should be visible for auth users in comments timeline', function(done) {
+        funcTestHelper.createComment('body', lunaContext.post.id, lunaContext.authToken, function(err, res) {
+          funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.user.username + '/comments', lunaContext.authToken, function(err, res) {
+            res.should.not.be.empty
+            res.body.should.not.be.empty
+            res.body.should.have.property('timelines')
+            res.body.timelines.should.have.property('name')
+            res.body.timelines.name.should.eql('Comments')
+            res.body.timelines.should.have.property('posts')
+            res.body.should.have.property('posts')
+            done()
+          })
+        })
+      })
+
+      it('should protect comments timeline', function(done) {
+        funcTestHelper.createComment('body', lunaContext.post.id, lunaContext.authToken, function(err, res) {
+          funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.user.username + '/comments', herculesContext.authToken, function(err, res) {
+            res.should.not.be.empty
+            res.body.should.not.be.empty
+            res.body.should.have.property('timelines')
+            res.body.timelines.should.have.property('name')
+            res.body.timelines.name.should.eql('Comments')
+            res.body.timelines.should.not.have.property('posts')
+            res.body.should.not.have.property('posts')
+            done()
+          })
         })
       })
 
