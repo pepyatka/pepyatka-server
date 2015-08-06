@@ -1,6 +1,7 @@
 "use strict";
 
 var SessionRoute = require('./routes/api/v1/SessionRoute')
+  , BookmarkletRoute = require('./routes/api/v1/BookmarkletRoute')
   , UsersRoute = require('./routes/api/v1/UsersRoute')
   , TimelinesRoute = require('./routes/api/v1/TimelinesRoute')
   , PostsRoute = require('./routes/api/v1/PostsRoute')
@@ -44,6 +45,7 @@ module.exports = function(app) {
   PasswordsRoute.addRoutes(app)
 
   app.all('/*', findUser)
+  BookmarkletRoute.addRoutes(app)
   UsersRoute.addRoutes(app)
   GroupsRoute.addRoutes(app)
   TimelinesRoute.addRoutes(app)

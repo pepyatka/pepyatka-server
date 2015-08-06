@@ -46,6 +46,7 @@
     "socket.io-redis": "0.1.4",
     "superagent": "1.2.0",
     "underscore.string": "3.1.1",
+    "url": "0.10.3",
     "uuid": "2.0.1",
     "validator": "3.40.1",
     "winston": "1.0.1"
