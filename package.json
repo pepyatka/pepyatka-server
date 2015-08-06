@@ -32,7 +32,7 @@
     "jsonwebtoken": "5.0.2",
     "lodash": "3.10.0",
     "method-override": "2.3.3",
-    "mmmagic": "0.3.14",
+    "mmmagic": "0.3.15",
     "mocha": "2.2.5",
     "morgan": "1.6.0",
     "nodemailer": "1.4.0",
