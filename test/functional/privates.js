@@ -5,7 +5,7 @@ var request = require('superagent')
   , config = require('../../config/config').load()
   , _ = require('lodash')
 
-describe("MutualFriends", function() {
+describe("Privates", function() {
   beforeEach(funcTestHelper.flushDb())
 
   describe('user Luna and user Mars', function() {
