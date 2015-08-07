@@ -104,18 +104,9 @@ exports.addController = function(app) {
         return res.status(404).send({})
       }
 
-      if (user.isPrivate === '1') {
-        if (!req.user) {
-          // no anonymous users allowed
-          return res.status(401).jsonp({ err: 'User is private' })
-        }
-
-        let subscriberIds = await user.getSubscriberIds()
-
-        if (req.user.id !== user.id && subscriberIds.indexOf(req.user.id) == -1) {
-          // not an owner and not a subscriber
-          return res.status(401).jsonp({ err: 'User is private' })
-        }
+      if (false === await user.validateCanBeAccessedByUser(req.user)) {
+        res.status(401).jsonp({ err: 'User is private' })
+        return
       }
 
       try {
@@ -148,18 +139,9 @@ exports.addController = function(app) {
         return res.status(404).send({})
       }
 
-      if (user.isPrivate === '1') {
-        if (!req.user) {
-          // no anonymous users allowed
-          return res.status(401).jsonp({ err: 'User is private' })
-        }
-
-        let subscriberIds = await user.getSubscriberIds()
-
-        if (req.user.id !== user.id && subscriberIds.indexOf(req.user.id) == -1) {
-          // not an owner and not a subscriber
-          return res.status(401).jsonp({ err: 'User is private' })
-        }
+      if (false === await user.validateCanBeAccessedByUser(req.user)) {
+        res.status(401).jsonp({ err: 'User is private' })
+        return
       }
 
       try {

@@ -1176,5 +1176,25 @@ exports.addModel = function(database) {
     return true
   }
 
+  User.prototype.validateCanBeAccessedByUser = async function(otherUser) {
+    if (this.isPrivate !== '1') {
+      return true
+    }
+
+    if (!otherUser) {
+      // no anonymous users allowed
+      return false
+    }
+
+    let subscriberIds = await this.getSubscriberIds()
+
+    if (otherUser.id !== this.id && subscriberIds.indexOf(otherUser.id) == -1) {
+      // not an owner and not a subscriber
+      return false
+    }
+
+    return true
+  }
+
   return User
 }
