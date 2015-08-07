@@ -396,24 +396,34 @@ exports.addModel = function(database) {
     for (let post of posts) {
       let actions = []
 
-      for (let user of await post.getLikes()) {
-        let timelineId = await user.getLikesTimelineId()
-        let time = await database.zscoreAsync(mkKey(['post', post.id, 'likes']), user.id)
+      let [likes, comments] = await* [post.getLikes(), post.getComments()];
 
-        actions.push(database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), time, post.id))
-        actions.push(database.saddAsync(mkKey(['post', post.id, 'timelines']), timelineId))
+      for (let likes_chunk of _.chunk(likes, 10)) {
+        let promises = likes_chunk.map(async (user) => {
+          let timelineId = await user.getLikesTimelineId()
+          let time = await database.zscoreAsync(mkKey(['post', post.id, 'likes']), user.id)
+
+          actions.push(database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), time, post.id))
+          actions.push(database.saddAsync(mkKey(['post', post.id, 'timelines']), timelineId))
+        })
+
+        await* promises
       }
 
-      for (let comment of await post.getComments()) {
-        let user = await models.User.findById(comment.userId)
-        let timelineId = await user.getCommentsTimelineId()
+      for (let comments_chunk of _.chunk(comments, 10)) {
+        let promises = comments_chunk.map(async (comment) => {
+          let user = await models.User.findById(comment.userId)
+          let timelineId = await user.getCommentsTimelineId()
 
-        // NOTE: I'm cheating with time when we supposed to add that
-        // post to comments timeline, but who notices this?
-        let time = post.updatedAt
+          // NOTE: I'm cheating with time when we supposed to add that
+          // post to comments timeline, but who notices this?
+          let time = post.updatedAt
 
-        actions.push(database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), time, post.id))
-        actions.push(database.saddAsync(mkKey(['post', post.id, 'timelines']), timelineId))
+          actions.push(database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), time, post.id))
+          actions.push(database.saddAsync(mkKey(['post', post.id, 'timelines']), timelineId))
+        })
+
+        await* promises
       }
 
       await* actions
