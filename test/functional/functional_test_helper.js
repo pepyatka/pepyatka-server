@@ -210,3 +210,41 @@ exports.getTimelinePaged = function(timelinePath, authToken, offset, limit, call
 
   }(callback)
 }
+
+exports.getSubscribers = function(username, authToken, callback) {
+  return function(done) {
+    let sendParams = {};
+    if (authToken) {
+      sendParams.authToken = authToken
+    }
+
+    let url = `${app.config.host}/v1/users/${username}/subscribers`
+
+    request
+      .get(url)
+      .query(sendParams)
+      .end(function(err, res) {
+        done(err, res)
+      })
+
+  }(callback)
+}
+
+exports.getSubscriptions = function(username, authToken, callback) {
+  return function(done) {
+    let sendParams = {};
+    if (authToken) {
+      sendParams.authToken = authToken
+    }
+
+    let url = `${app.config.host}/v1/users/${username}/subscriptions`
+
+    request
+      .get(url)
+      .query(sendParams)
+      .end(function(err, res) {
+        done(err, res)
+      })
+
+  }(callback)
+}
