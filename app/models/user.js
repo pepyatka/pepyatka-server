@@ -393,37 +393,31 @@ exports.addModel = function(database) {
     var posts = await timeline.getPosts(0, -1)
 
     // first of all, let's revive likes
-    await* _.flatten(posts.map(async (post) => {
-      let likes = await post.getLikes()
-      return await* _.flatten(likes.map(async (user) => {
+    for (let post of posts) {
+      let actions = []
+
+      for (let user of await post.getLikes()) {
         let timelineId = await user.getLikesTimelineId()
         let time = await database.zscoreAsync(mkKey(['post', post.id, 'likes']), user.id)
 
-        return [
-          database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), time, post.id),
-          database.saddAsync(mkKey(['post', post.id, 'timelines']), timelineId)
-        ]
-      }))
-    }))
+        actions.push(database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), time, post.id))
+        actions.push(database.saddAsync(mkKey(['post', post.id, 'timelines']), timelineId))
+      }
 
-    // and now reviving comments. oh, god save the queen!
-    await* _.flatten(posts.map(async (post) => {
-      let comments = await post.getComments()
-      let userIds = _.uniq(comments.map((comment) => comment.userId))
-
-      return await* _.flatten(userIds.map(async (userId) => {
-        let user = await models.User.findById(userId)
+      for (let comment of await post.getComments()) {
+        let user = await models.User.findById(comment.userId)
         let timelineId = await user.getCommentsTimelineId()
+
         // NOTE: I'm cheating with time when we supposed to add that
         // post to comments timeline, but who notices this?
         let time = post.updatedAt
 
-        return [
-          database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), time, post.id),
-          database.saddAsync(mkKey(['post', post.id, 'timelines']), timelineId)
-        ]
-      }))
-    }))
+        actions.push(database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), time, post.id))
+        actions.push(database.saddAsync(mkKey(['post', post.id, 'timelines']), timelineId))
+      }
+
+      await* actions
+    }
   }
 
   User.prototype.unsubscribeNonFriends = async function() {
