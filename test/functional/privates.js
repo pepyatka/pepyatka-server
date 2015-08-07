@@ -348,6 +348,47 @@ describe("Privates", function() {
         })
       })
 
+      it('should protect subscribers of private user', function(done) {
+        funcTestHelper.getSubscribers(lunaContext.username, null, function(err, res) {
+          _.isObject(err).should.be.true  // anonymous doesn't have access
+          err.status.should.equal(401)
+
+          funcTestHelper.getSubscribers(lunaContext.username, herculesContext.authToken, function(err, res) {
+            _.isObject(err).should.be.true  // hercules doesn't have access
+            err.status.should.equal(401)
+
+            funcTestHelper.getSubscribers(lunaContext.username, marsContext.authToken, function(err, res) {
+              _.isObject(err).should.be.false  // mars has access
+
+              funcTestHelper.getSubscribers(lunaContext.username, lunaContext.authToken, function (err, res) {
+                _.isObject(err).should.be.false  // luna is an owner
+                done()
+              })
+            })
+          })
+        })
+      })
+
+      it('should protect subscriptions of private user', function(done) {
+        funcTestHelper.getSubscriptions(lunaContext.username, null, function(err, res) {
+          _.isObject(err).should.be.true  // anonymous doesn't have access
+          err.status.should.equal(401)
+
+          funcTestHelper.getSubscriptions(lunaContext.username, herculesContext.authToken, function(err, res) {
+            _.isObject(err).should.be.true  // hercules doesn't have access
+            err.status.should.equal(401)
+
+            funcTestHelper.getSubscriptions(lunaContext.username, marsContext.authToken, function(err, res) {
+              _.isObject(err).should.be.false  // mars has access
+
+              funcTestHelper.getSubscriptions(lunaContext.username, lunaContext.authToken, function (err, res) {
+                _.isObject(err).should.be.false  // luna is an owner
+                done()
+              })
+            })
+          })
+        })
+      })
       it('should protect posts timeline', function(done) {
         funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.user.username, herculesContext.authToken, function(err, res) {
           res.should.not.be.empty
