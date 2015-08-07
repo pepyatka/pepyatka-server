@@ -175,50 +175,33 @@ exports.addModel = function(database) {
     })
   }
 
-  Timeline.prototype.getPosts = function(offset, limit) {
+  Timeline.prototype.getPosts = async function(offset, limit) {
     if (_.isUndefined(offset))
       offset = this.offset
-    else
-      if (offset < 0) offset = 0
+    else if (offset < 0)
+      offset = 0
 
     if (_.isUndefined(limit))
       limit = this.limit
-    else
-      if (limit < 0) limit = 0
+    else if (limit < 0)
+      limit = 0
 
-    var that = this
-    var p_post
-    var p_banIds
+    let user = this.currentUser ? (await models.User.findById(this.currentUser)) : null
+    let banIds = user ? (await user.getBanIds()) : []
 
-    return new Promise(function(resolve, reject) {
-      that.getPostIds(offset, limit).bind({})
-        .then(function(postIds) {
-          return Promise.map(postIds, function(postId) {
-            return Post.findById(postId, { currentUser: that.currentUser })
-          })
-        })
-        .then(function(posts) {
-          this.posts = posts
-          return that.currentUser ? models.User.findById(that.currentUser) : null
-        })
-        .then(function(user) {
-          return user ? user.getBanIds() : []
-        })
-        .then(function(banIds) {
-          p_banIds = banIds
-          return Promise.map(this.posts, function(post) {
-            return models.User.findById(post.userId).then(function(user) {
-              return user.getBanIds()
-            }).then(function(reverseBanIds) {
-              return ((p_banIds.indexOf(post.userId) >= 0) || (reverseBanIds.indexOf(that.currentUser) >= 0)) ? null : post
-            })
-          })
-        })
-        .then(function(posts) {
-          that.posts = posts.filter(Boolean)
-          resolve(that.posts)
-        })
+    let postIds = await this.getPostIds(offset, limit)
+    let posts = await* postIds.map(postId => Post.findById(postId, { currentUser: this.currentUser }))
+
+    posts = await* posts.map(async (post) => {
+      let user = await models.User.findById(post.userId)
+      let reverseBanIds = await user.getBanIds()
+
+      return ((banIds.indexOf(post.userId) >= 0) || (reverseBanIds.indexOf(this.currentUser) >= 0)) ? null : post
     })
+
+    this.posts = posts.filter(Boolean)
+
+    return this.posts
   }
 
   Timeline.prototype.merge = function(timelineId) {

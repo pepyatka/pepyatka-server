@@ -13,21 +13,19 @@ exports.addModel = function(database) {
   var AbstractModel = function() {
   }
 
-  AbstractModel.findById = function(identifier, params) {
-    var that = this
+  AbstractModel.findById = async function(identifier, params) {
+    let attrs = await database.hgetallAsync(mkKey([this.namespace, identifier]))
 
-    return new Promise(function(resolve, reject) {
-      database.hgetallAsync(mkKey([that.namespace, identifier]))
-        .then(function(attrs) {
-          if (attrs !== null) {
-            attrs.id = identifier
-            _.each(params, function(value, key) { attrs[key] = value })
-            resolve(new that.className(attrs))
-          } else {
-            resolve(null)
-          }
-        })
+    if (attrs === null) {
+      return null
+    }
+
+    attrs.id = identifier
+    _.each(params, function(value, key) {
+      attrs[key] = value
     })
+
+    return new this.className(attrs)
   }
 
   AbstractModel.findByAttribute = function(attribute, value) {

@@ -356,12 +356,14 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      models.User.findById(userId).bind({})
+      let theUser
+
+      models.User.findById(userId)
         .then(function(user) {
-          this.user = user
+          theUser = user
           return pubSub.hidePost(user.id, that.id)
         })
-        .then(function() { return this.user.getHidesTimelineId() })
+        .then(function() { return theUser.getHidesTimelineId() })
         .then(function(timelineId) {
           return Promise.all([
             database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), that.updatedAt, that.id),
@@ -376,12 +378,14 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      models.User.findById(userId).bind({})
+      let theUser
+
+      models.User.findById(userId)
         .then(function(user) {
-          this.user = user
+          theUser = user
           return pubSub.unhidePost(user.id, that.id)
         })
-        .then(function() { return this.user.getHidesTimelineId() })
+        .then(function() { return theUser.getHidesTimelineId() })
         .then(function(timelineId) {
           return Promise.all([
             database.zremAsync(mkKey(['timeline', timelineId, 'posts']), that.id),
@@ -659,17 +663,18 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
+      let theUser
 
-      models.User.findById(userId).bind({})
+      models.User.findById(userId)
         .then(function(user) {
-          this.user = user
-          return this.user.validateCanUnLikePost(that.id)
+          theUser = user
+          return user.validateCanUnLikePost(that.id)
         })
         .then(function() {
           return database.zremAsync(mkKey(['post', that.id, 'likes']), userId)
         })
         .then(function() {
-          return this.user.getLikesTimelineId()
+          return theUser.getLikesTimelineId()
         })
         .then(function(timelineId) {
           Promise.all([
@@ -704,7 +709,7 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      models.Timeline.findById(timelineId).bind({})
+      models.Timeline.findById(timelineId)
         .then(function(timeline) {
           if (!(timeline.isRiverOfNews() || timeline.isHides()))
             resolve(false)

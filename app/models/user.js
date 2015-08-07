@@ -784,13 +784,15 @@ exports.addModel = function(database) {
     var timeline
 
     return new Promise(function(resolve, reject) {
-      models.Timeline.findById(timelineId).bind({})
+      let theUser
+
+      models.Timeline.findById(timelineId)
         .then(function(newTimeline) {
           timeline = newTimeline
           return models.FeedFactory.findById(newTimeline.userId)
         })
         .then(function(user) {
-          this.user = user
+          theUser = user
           if (user.username == that.username)
             throw new Error("Invalid")
 
@@ -808,7 +810,7 @@ exports.addModel = function(database) {
         .then(function(riverOfNewsId) { return timeline.merge(riverOfNewsId) })
         .then(function() { return models.Stats.findById(that.id) })
         .then(function(stats) { return stats.addSubscription() })
-        .then(function() { return models.Stats.findById(this.user.id) })
+        .then(function() { return models.Stats.findById(theUser.id) })
         .then(function(stats) { return stats.addSubscriber() })
         .then(function(res) { resolve(res) })
         .catch(function(e) { reject(e) })

@@ -136,16 +136,18 @@ exports.addModel = function(database) {
     var that = this
 
     return new Promise(function(resolve, reject) {
-      return User.findById(ownerId).bind({}).then(function(owner) {
+      let theOwner
+
+      return User.findById(ownerId).then(function(owner) {
         if (!owner) {
           resolve(null)
           return
         }
-        this.owner = owner
+        theOwner = owner
         return that.getPostsTimelineId()
       })
       .then(function(timelineId) {
-        return this.owner.subscribeTo(timelineId)
+        return theOwner.subscribeTo(timelineId)
       })
       .then(function(res) { resolve(res)})
       .catch(function(e) { reject(e) })
