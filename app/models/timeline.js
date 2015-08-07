@@ -192,7 +192,7 @@ exports.addModel = function(database) {
     let postIds = await this.getPostIds(offset, limit)
     let posts = await* postIds.map(postId => Post.findById(postId, { currentUser: this.currentUser }))
 
-    posts = await* posts.map(async (post) => {
+    posts = await* posts.filter(Boolean).map(async (post) => {
       let user = await models.User.findById(post.userId)
       let reverseBanIds = await user.getBanIds()
 
