@@ -398,6 +398,7 @@ describe('Post', function() {
           users.should.be.empty
         })
         .then(function() { done() })
+        .catch(function(e) { done(e) })
     })
 
     it('should add user to likes', function(done) {
