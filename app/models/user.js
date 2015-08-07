@@ -457,7 +457,7 @@ exports.addModel = function(database) {
     }))
 
     // and remove all private posts from all strangers timelines
-    await* users.map((user) => user.unsubscribeFrom(timeline.id, { likes: true, comments: true }))
+    await* users.map((user) => user.unsubscribeFrom(timeline.id, { likes: true, comments: true, skip: true }))
   }
 
   User.prototype.updatePassword = async function(password, passwordConfirmation) {

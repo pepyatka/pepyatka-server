@@ -764,6 +764,7 @@ describe("MutualFriends", function() {
     describe('can go private and unsubscribe followers', function() {
       beforeEach(function(done) { funcTestHelper.createPost(lunaContext, 'Post body')(done) })
       beforeEach(function(done) { funcTestHelper.subscribeToCtx(marsContext, lunaContext.username)(done) })
+      beforeEach(function(done) { funcTestHelper.createComment('body', lunaContext.post.id, zeusContext.authToken, done) })
       beforeEach(function(done) {
         request
           .post(app.config.host + '/v1/users/' + lunaContext.user.id)
@@ -775,14 +776,14 @@ describe("MutualFriends", function() {
           })
       })
 
-      it('should not be visible to unsubscribed users', function(done) {
+      it('should be visible to already subscribed users', function(done) {
         request
           .get(app.config.host + '/v1/users/' + marsContext.username + '/subscriptions')
           .query({ authToken: marsContext.authToken })
           .end(function(err, res) {
             res.body.should.not.be.empty
             res.body.should.have.property('subscriptions')
-            res.body.subscriptions.should.be.empty
+            res.body.subscriptions.length.should.eql(3)
             done()
           })
       })
@@ -809,6 +810,19 @@ describe("MutualFriends", function() {
                     done()
                   })
               })
+          })
+      })
+
+      it('should be visible to subscribers', function(done) {
+        request
+          .get(app.config.host + '/v1/users/' + marsContext.username + '/subscriptions')
+          .query({ authToken: marsContext.authToken })
+          .end(function(err, res) {
+            res.body.should.not.be.empty
+            res.body.should.have.property('subscriptions')
+            res.body.subscriptions.should.not.be.empty
+            res.body.subscriptions.length.should.eql(3)
+            done()
           })
       })
     })
