@@ -442,22 +442,26 @@ exports.addModel = function(database) {
     // we need to review post by post as some strangers that are not
     // followers and friends could commented on or like my posts
     // let's find strangers first
-    var posts = await timeline.getPosts(0, -1)
-    var users = _.flatten(await* posts.map(async (post) => {
-      let timelines = await post.getTimelines()
-      let users = _.compact(await* timelines.map(async (timeline) => {
-        let user = await timeline.getUser()
+    let posts = await timeline.getPosts(0, -1)
 
-        if (subscriptionIds.indexOf(user.id) === -1 &&
-            user.id != this.id) {
-          return user
-        }
-      }))
-      return _.uniq(users, 'id')
-    }))
+    let allUsers = []
+
+    for (let post of posts) {
+      let timelines = await post.getTimelines()
+      let user_promises = timelines.map(timeline => timeline.getUser())
+      let users = await* user_promises
+
+      allUsers = _.uniq(allUsers.concat(users), 'id')
+    }
 
     // and remove all private posts from all strangers timelines
-    await* users.map((user) => user.unsubscribeFrom(timeline.id, { likes: true, comments: true, skip: true }))
+    let users = _.filter(
+      allUsers,
+      user => (subscriptionIds.indexOf(user.id) === -1 && user.id != this.id)
+    )
+    let actions = users.map((user) => user.unsubscribeFrom(timeline.id, { likes: true, comments: true, skip: true }))
+
+    await* actions
   }
 
   User.prototype.updatePassword = async function(password, passwordConfirmation) {
