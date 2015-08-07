@@ -459,9 +459,11 @@ exports.addModel = function(database) {
       allUsers,
       user => (subscriptionIds.indexOf(user.id) === -1 && user.id != this.id)
     )
-    let actions = users.map((user) => user.unsubscribeFrom(timeline.id, { likes: true, comments: true, skip: true }))
 
-    await* actions
+    for (let chunk of _.chunk(users, 10)) {
+      let actions = chunk.map(user => user.unsubscribeFrom(timeline.id, { likes: true, comments: true, skip: true }))
+      await* actions
+    }
   }
 
   User.prototype.updatePassword = async function(password, passwordConfirmation) {
