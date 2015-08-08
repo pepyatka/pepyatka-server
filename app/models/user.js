@@ -387,10 +387,10 @@ exports.addModel = function(database) {
     // efficient when introduce Entries table with meta column (post to
     // timelines many-to-many over Entries)
 
-    var timeline = await this.getPostsTimeline({
-      currentUser: this.id
-    })
-    var posts = await timeline.getPosts(0, -1)
+    let timeline = await this.getPostsTimeline({currentUser: this.id})
+    let posts = await timeline.getPosts(0, -1)
+
+    let fixedUsers = []
 
     // first of all, let's revive likes
     for (let post of posts) {
@@ -398,41 +398,53 @@ exports.addModel = function(database) {
 
       let [likes, comments] = await* [post.getLikes(), post.getComments()];
 
-      for (let likes_chunk of _.chunk(likes, 10)) {
-        let promises = likes_chunk.map(async (user) => {
-          let likesTimeline = await user.getLikesTimeline()
+      for (let usersChunk of _.chunk(likes, 10)) {
+        let promises = usersChunk.map(async (user) => {
+          let likesTimelineId = await user.getLikesTimelineId()
           let time = await database.zscoreAsync(mkKey(['post', post.id, 'likes']), user.id)
 
-          actions.push(database.zaddAsync(mkKey(['timeline', likesTimeline.id, 'posts']), time, post.id))
-          actions.push(database.saddAsync(mkKey(['post', post.id, 'timelines']), likesTimeline.id))
-
-          let riverId = await user.getRiverOfNewsTimelineId()
-          actions.push(likesTimeline.mergeTo(riverId))
+          actions.push(database.zaddAsync(mkKey(['timeline', likesTimelineId, 'posts']), time, post.id))
+          actions.push(database.saddAsync(mkKey(['post', post.id, 'timelines']), likesTimelineId))
         })
 
         await* promises
       }
 
-      for (let comments_chunk of _.chunk(comments, 10)) {
-        let promises = comments_chunk.map(async (comment) => {
-          let user = await models.User.findById(comment.userId)
-          let commentsTimeline = await user.getCommentsTimeline()
+      let commenters = _.uniq(await* comments.map(comment => models.User.findById(comment.userId)), 'id')
+
+      for (let usersChunk of _.chunk(commenters, 10)) {
+        let promises = usersChunk.map(async (user) => {
+          let commentsTimelineId = await user.getCommentsTimelineId()
 
           // NOTE: I'm cheating with time when we supposed to add that
           // post to comments timeline, but who notices this?
           let time = post.updatedAt
 
-          actions.push(database.zaddAsync(mkKey(['timeline', commentsTimeline.id, 'posts']), time, post.id))
-          actions.push(database.saddAsync(mkKey(['post', post.id, 'timelines']), commentsTimeline.id))
-
-          let riverId = await user.getRiverOfNewsTimelineId()
-          actions.push(commentsTimeline.mergeTo(riverId))
+          actions.push(database.zaddAsync(mkKey(['timeline', commentsTimelineId, 'posts']), time, post.id))
+          actions.push(database.saddAsync(mkKey(['post', post.id, 'timelines']), commentsTimelineId))
         })
 
         await* promises
       }
 
       await* actions
+
+      fixedUsers = _.uniq(fixedUsers.concat(likes).concat(commenters), 'id')
+    }
+
+    for (let usersChunk of _.chunk(fixedUsers, 10)) {
+      let promises = usersChunk.map(async (user) => {
+        let [riverId, commentsTimeline, likesTimeline] = await* [
+          user.getRiverOfNewsTimelineId(),
+          user.getCommentsTimeline(),
+          user.getLikesTimeline()
+        ]
+
+        await commentsTimeline.mergeTo(riverId)
+        await likesTimeline.mergeTo(riverId)
+      })
+
+      await* promises
     }
   }
 
