@@ -630,13 +630,10 @@ describe("Privates", function() {
             })
         })
 
-        it('should remove posts from ex-followers comments timeline', function(done) {
+        it('stranger should not see posts in lunas follower comments timeline', function(done) {
           funcTestHelper.getTimeline('/v1/timelines/' + marsContext.username + '/comments', zeusContext.authToken, function(err, res) {
-            res.should.not.be.empty
-            res.body.should.not.be.empty
-            res.body.should.have.property('timelines')
-            res.body.timelines.should.have.property('name')
-            res.body.timelines.name.should.eql('Comments')
+            _.isUndefined(res).should.be.false
+            res.should.have.deep.property('body.timelines')
             res.body.timelines.should.not.have.property('posts')
             done()
           })
@@ -644,60 +641,69 @@ describe("Privates", function() {
 
         it('should remove posts from stranger comments timeline', function(done) {
           funcTestHelper.getTimeline('/v1/timelines/' + zeusContext.username + '/comments', zeusContext.authToken, function(err, res) {
-            res.should.not.be.empty
-            res.body.should.not.be.empty
-            res.body.should.have.property('timelines')
-            res.body.timelines.should.have.property('name')
-            res.body.timelines.name.should.eql('Comments')
+            _.isUndefined(res).should.be.false
+            res.should.have.deep.property('body.timelines')
             res.body.timelines.should.not.have.property('posts')
             done()
           })
         })
 
-        it('should revive ex-followers posts in comments timeline', function(done) {
-          request
-            .post(app.config.host + '/v1/users/' + lunaContext.user.id)
-            .send({ authToken: lunaContext.authToken,
-                    user: { isPrivate: '0' },
-                    '_method': 'put' })
-            .end(function(err, res) {
-              funcTestHelper.getTimeline('/v1/timelines/' + marsContext.username + '/comments', marsContext.authToken, function(err, res) {
-                res.should.not.be.empty
-                res.body.should.not.be.empty
-                res.body.should.have.property('timelines')
-                res.body.timelines.should.have.property('name')
-                res.body.timelines.name.should.eql('Comments')
-                res.body.timelines.should.have.property('posts')
-                res.body.timelines.posts.length.should.eql(1)
-                res.body.should.have.property('posts')
-                res.body.posts.length.should.eql(1)
-                res.body.posts[0].body.should.eql(lunaContext.post.body)
-                done()
-              })
-            })
+        it('should remove posts from stranger river of news', function(done) {
+          funcTestHelper.getTimeline('/v1/timelines/home', zeusContext.authToken, function(err, res) {
+            _.isUndefined(res).should.be.false
+            res.should.have.deep.property('body.timelines')
+            res.body.timelines.should.not.have.property('posts')
+            done()
+          })
         })
 
-        it('should revive stranger posts in comments timeline', function(done) {
-          request
-            .post(app.config.host + '/v1/users/' + lunaContext.user.id)
-            .send({ authToken: lunaContext.authToken,
-                    user: { isPrivate: '0' },
-                    '_method': 'put' })
-            .end(function(err, res) {
-              funcTestHelper.getTimeline('/v1/timelines/' + zeusContext.username + '/comments', zeusContext.authToken, function(err, res) {
-                res.should.not.be.empty
-                res.body.should.not.be.empty
-                res.body.should.have.property('timelines')
-                res.body.timelines.should.have.property('name')
-                res.body.timelines.name.should.eql('Comments')
-                res.body.timelines.should.have.property('posts')
-                res.body.timelines.posts.length.should.eql(1)
-                res.body.should.have.property('posts')
-                res.body.posts.length.should.eql(1)
-                res.body.posts[0].body.should.eql(lunaContext.post.body)
+        describe('when luna comes back to being public', function(done) {
+          beforeEach(function(done) {
+            request
+              .post(app.config.host + '/v1/users/' + lunaContext.user.id)
+              .send({ authToken: lunaContext.authToken,
+                user: { isPrivate: '0' },
+                '_method': 'put' })
+              .end(function(err, res) {
                 done()
               })
+          })
+
+          it('stranger should see posts in lunas follower comments timeline', function(done) {
+            funcTestHelper.getTimeline('/v1/timelines/' + marsContext.username + '/comments', zeusContext.authToken, function(err, res) {
+              _.isUndefined(res).should.be.false
+              res.should.have.deep.property('body.timelines.posts')
+              res.body.timelines.posts.length.should.eql(1)
+              res.body.should.have.property('posts')
+              res.body.posts.length.should.eql(1)
+              res.body.posts[0].body.should.eql(lunaContext.post.body)
+              done()
             })
+          })
+
+          it('should revive posts in strangers comments timeline', function(done) {
+            funcTestHelper.getTimeline('/v1/timelines/' + zeusContext.username + '/comments', zeusContext.authToken, function(err, res) {
+              _.isUndefined(res).should.be.false
+              res.should.have.deep.property('body.timelines.posts')
+              res.body.timelines.posts.length.should.eql(1)
+              res.body.should.have.property('posts')
+              res.body.posts.length.should.eql(1)
+              res.body.posts[0].body.should.eql(lunaContext.post.body)
+              done()
+            })
+          })
+
+          it('should revive posts in strangers river of news', function(done) {
+            funcTestHelper.getTimeline('/v1/timelines/home', zeusContext.authToken, function(err, res) {
+              _.isUndefined(res).should.be.false
+              res.should.have.deep.property('body.timelines.posts')
+              res.body.timelines.posts.length.should.eql(1)
+              res.body.should.have.property('posts')
+              res.body.posts.length.should.eql(1)
+              res.body.posts[0].body.should.eql(lunaContext.post.body)
+              done()
+            })
+          })
         })
       })
 
