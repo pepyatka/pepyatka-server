@@ -582,22 +582,13 @@ exports.addModel = function(database) {
     })
   }
 
-  User.prototype.getGenericTimeline = function(name, params) {
-    var that = this
-    var p_timeline
+  User.prototype.getGenericTimeline = async function(name, params) {
+    let timelineId = await this["get" + name + "TimelineId"](params)
+    let timeline = await models.Timeline.findById(timelineId, params)
 
-    return new Promise(function(resolve, reject) {
-      that["get" + name + "TimelineId"](params)
-        .then(function(timelineId) { return models.Timeline.findById(timelineId, params) })
-        .then(function(timeline) {
-          p_timeline = timeline
-          return timeline.getPosts(timeline.offset, timeline.limit)
-        })
-        .then(function(posts) {
-          p_timeline.posts = posts.filter(Boolean) // @fixme already filtered in getPosts
-          resolve(p_timeline)
-        })
-    })
+    timeline.posts = await timeline.getPosts(timeline.offset, timeline.limit)
+
+    return timeline
   }
 
   User.prototype.getHidesTimelineId = function(params) {
