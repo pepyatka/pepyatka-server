@@ -40,7 +40,7 @@ describe("Privates", function() {
           .send({ post: { body: post }, meta: { feeds: [group, lunaContext.user.username] }, authToken: lunaContext.authToken })
           .end(function(err, res) {
             funcTestHelper.getTimeline('/v1/timelines/home', zeusContext.authToken, function(err, res) {
-              res.should.not.be.empty
+              _.isUndefined(res).should.be.false
               res.body.should.not.be.empty
               res.body.should.have.property('timelines')
               res.body.timelines.should.have.property('name')
@@ -56,7 +56,7 @@ describe("Privates", function() {
                 .send({ authToken: zeusContext.authToken })
                 .end(function(err, res) {
                   funcTestHelper.getTimeline('/v1/timelines/' + zeusContext.user.username +'/likes', zeusContext.authToken, function(err, res) {
-                    res.should.not.be.empty
+                    _.isUndefined(res).should.be.false
                     res.body.should.not.be.empty
                     res.body.should.have.property('timelines')
                     res.body.timelines.should.have.property('name')
@@ -71,6 +71,7 @@ describe("Privates", function() {
                       .get(app.config.host + '/v1/posts/' + _post.id)
                       .query({ authToken: zeusContext.authToken })
                       .end(function(err, res) {
+                        _.isUndefined(res).should.be.false
                         res.body.should.not.be.empty
                         res.body.posts.body.should.eql(_post.body)
                         done()
