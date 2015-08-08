@@ -207,6 +207,23 @@ exports.addModel = function(database) {
       if (readerBannedAuthor || authorBannedReader)
         return null
 
+      if (author.isPrivate) {
+        let postTimelines = await post.getTimelines()
+        let promises = postTimelines.map(async (timeline) => {
+          if (!timeline.isPosts() && !timeline.isDirects()) {
+            return false
+          }
+
+          return timeline.validateCanShow(this.currentUser)
+        })
+
+        let wasPostedToReadableFeed = _.any(await* promises)
+
+        if (!wasPostedToReadableFeed) {
+          return null
+        }
+      }
+
       return post
     })
 
