@@ -850,8 +850,7 @@ exports.addModel = function(database) {
     }
 
     // remove all posts of The Timeline from user's River of News
-    if (_.isUndefined(options.skip))
-      promises.push(timeline.unmerge(await this.getRiverOfNewsTimelineId()))
+    promises.push(timeline.unmerge(await this.getRiverOfNewsTimelineId()))
 
     // remove all posts of The Timeline from likes timeline of user
     if (options.likes)
