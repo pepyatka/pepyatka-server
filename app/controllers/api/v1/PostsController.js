@@ -15,56 +15,60 @@ exports.addController = function(app) {
   var PostsController = function() {
   }
 
-  PostsController.create = function(req, res) {
-    if (!req.user)
-      return res.status(401).jsonp({ err: 'Not found' })
+  PostsController.create = async function(req, res) {
+    if (!req.user) {
+      res.status(401).jsonp({ err: 'Not found' })
+      return
+    }
 
     var feeds = []
     req.body.meta = req.body.meta || {}
-    if (Array.isArray(req.body.meta.feeds)) {
+
+    if (_.isArray(req.body.meta.feeds)) {
       feeds = req.body.meta.feeds
     } else if (req.body.meta.feeds) {
       feeds = [req.body.meta.feeds]
     } else {
-      return res.status(401).jsonp({ err: 'Cannot publish post to /dev/null' })
+      res.status(401).jsonp({ err: 'Cannot publish post to /dev/null' })
+      return
     }
 
-    Promise.map(feeds, function(username) {
-      return FeedFactory.findByUsername(username)
-        .then(function(feed) {
-          return feed.validateCanPost(req.user)
-        })
-        .then(function(feed) {
-          // we are going to publish this message to posts feed if
-          // it's my home feed or group's feed, otherwise this is a
-          // private message that goes to its own feed(s)
-          if ((feed.isUser() && feed.id == req.user.id) ||
-              !feed.isUser()) {
-            return feed.getPostsTimelineId()
-          } else {
-            // private post goes to sendee and sender
-            return Promise.all([
-              feed.getDirectsTimelineId(),
-              req.user.getDirectsTimelineId()
-            ])
-          }
-        })
+    try {
+      let promises = feeds.map(async (username) => {
+        let feed = await FeedFactory.findByUsername(username)
+        await feed.validateCanPost(req.user)
+
+        // we are going to publish this message to posts feed if
+        // it's my home feed or group's feed, otherwise this is a
+        // private message that goes to its own feed(s)
+        if (
+          (feed.isUser() && feed.id == req.user.id) ||
+          !feed.isUser()
+        ) {
+          return feed.getPostsTimelineId()
+        } else {
+          // private post goes to sendee and sender
+          return await* [
+            feed.getDirectsTimelineId(),
+            req.user.getDirectsTimelineId()
+          ]
+        }
       })
-      .then(function(timelineIds) {
-        timelineIds = _.flatten(timelineIds)
-        return req.user.newPost({
-          body: req.body.post.body,
-          attachments: req.body.post.attachments,
-          timelineIds: timelineIds
-        })
+      let timelineIds = _.flatten(await* promises)
+
+      let newPost = await req.user.newPost({
+        body: req.body.post.body,
+        attachments: req.body.post.attachments,
+        timelineIds: timelineIds
       })
-      .then(function(newPost) { return newPost.create() })
-      .then(function(newPost) {
-        new PostSerializer(newPost).toJSON(function(err, json) {
-          res.jsonp(json)
-        })
-      })
-      .catch(exceptions.reportError(res))
+
+      await newPost.create()
+
+      let json = await new PostSerializer(newPost).promiseToJSON()
+      res.jsonp(json)
+    } catch (e) {
+      exceptions.reportError(res)(e)
+    }
   }
 
   PostsController.update = function(req, res) {
