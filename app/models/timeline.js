@@ -186,17 +186,28 @@ exports.addModel = function(database) {
     else if (limit < 0)
       limit = 0
 
-    let user = this.currentUser ? (await models.User.findById(this.currentUser)) : null
-    let banIds = user ? (await user.getBanIds()) : []
+    let reader = this.currentUser ? (await models.User.findById(this.currentUser)) : null
+    let banIds = reader ? (await reader.getBanIds()) : []
 
     let postIds = await this.getPostIds(offset, limit)
-    let posts = await* postIds.map(postId => Post.findById(postId, { currentUser: this.currentUser }))
+    let posts = (await* postIds.map(postId => Post.findById(postId, { currentUser: this.currentUser }))).filter(Boolean)
 
-    posts = await* posts.filter(Boolean).map(async (post) => {
-      let user = await models.User.findById(post.userId)
-      let reverseBanIds = await user.getBanIds()
+    posts = await* posts.map(async (post) => {
+      if (post.userId === this.currentUser) {
+        // shortcut for the author
+        return post
+      }
 
-      return ((banIds.indexOf(post.userId) >= 0) || (reverseBanIds.indexOf(this.currentUser) >= 0)) ? null : post
+      let author = await models.User.findById(post.userId)
+      let reverseBanIds = await author.getBanIds()
+
+      let readerBannedAuthor = (banIds.indexOf(post.userId) >= 0)
+      let authorBannedReader = (reverseBanIds.indexOf(this.currentUser) >= 0)
+
+      if (readerBannedAuthor || authorBannedReader)
+        return null
+
+      return post
     })
 
     this.posts = posts.filter(Boolean)
