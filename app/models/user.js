@@ -120,23 +120,16 @@ exports.addModel = function(database) {
     return this.type === "user"
   }
 
-  User.prototype.newPost = function(attrs) {
-    var that = this
+  User.prototype.newPost = async function(attrs) {
     attrs.userId = this.id
 
-    return new Promise(function(resolve, reject) {
-      if (!attrs.timelineIds || !attrs.timelineIds[0]) {
-        that.getPostsTimelineId()
-          .then(function(timelineId) {
-            attrs.timelineIds = [timelineId]
+    if (!attrs.timelineIds || !attrs.timelineIds[0]) {
+      let timelineId = await this.getPostsTimelineId()
 
-            resolve(new models.Post(attrs))
-          })
-          .catch(function(e) { reject(e) })
-      } else {
-        resolve(new models.Post(attrs))
-      }
-    }.bind(this))
+      attrs.timelineIds = [timelineId]
+    }
+
+    return new models.Post(attrs)
   }
 
   User.prototype.updateResetPasswordToken = function() {
