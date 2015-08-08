@@ -400,11 +400,14 @@ exports.addModel = function(database) {
 
       for (let likes_chunk of _.chunk(likes, 10)) {
         let promises = likes_chunk.map(async (user) => {
-          let timelineId = await user.getLikesTimelineId()
+          let likesTimeline = await user.getLikesTimeline()
           let time = await database.zscoreAsync(mkKey(['post', post.id, 'likes']), user.id)
 
-          actions.push(database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), time, post.id))
-          actions.push(database.saddAsync(mkKey(['post', post.id, 'timelines']), timelineId))
+          actions.push(database.zaddAsync(mkKey(['timeline', likesTimeline.id, 'posts']), time, post.id))
+          actions.push(database.saddAsync(mkKey(['post', post.id, 'timelines']), likesTimeline.id))
+
+          let riverId = await user.getRiverOfNewsTimelineId()
+          actions.push(likesTimeline.mergeTo(riverId))
         })
 
         await* promises
@@ -413,14 +416,17 @@ exports.addModel = function(database) {
       for (let comments_chunk of _.chunk(comments, 10)) {
         let promises = comments_chunk.map(async (comment) => {
           let user = await models.User.findById(comment.userId)
-          let timelineId = await user.getCommentsTimelineId()
+          let commentsTimeline = await user.getCommentsTimeline()
 
           // NOTE: I'm cheating with time when we supposed to add that
           // post to comments timeline, but who notices this?
           let time = post.updatedAt
 
-          actions.push(database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), time, post.id))
-          actions.push(database.saddAsync(mkKey(['post', post.id, 'timelines']), timelineId))
+          actions.push(database.zaddAsync(mkKey(['timeline', commentsTimeline.id, 'posts']), time, post.id))
+          actions.push(database.saddAsync(mkKey(['post', post.id, 'timelines']), commentsTimeline.id))
+
+          let riverId = await user.getRiverOfNewsTimelineId()
+          actions.push(commentsTimeline.mergeTo(riverId))
         })
 
         await* promises
