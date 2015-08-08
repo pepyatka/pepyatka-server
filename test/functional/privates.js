@@ -630,6 +630,22 @@ describe("Privates", function() {
             })
         })
 
+        it('subscriber should still see posts in his comments timeline', function(done) {
+          funcTestHelper.getTimeline('/v1/timelines/' + marsContext.username + '/comments', marsContext.authToken, function(err, res) {
+            _.isUndefined(res).should.be.false
+            res.should.have.deep.property('body.timelines.posts')
+            done()
+          })
+        })
+
+        it('subscriber should still see posts in his river of news', function(done) {
+          funcTestHelper.getTimeline('/v1/timelines/home', marsContext.authToken, function(err, res) {
+            _.isUndefined(res).should.be.false
+            res.should.have.deep.property('body.timelines.posts')
+            done()
+          })
+        })
+
         it('stranger should not see posts in lunas follower comments timeline', function(done) {
           funcTestHelper.getTimeline('/v1/timelines/' + marsContext.username + '/comments', zeusContext.authToken, function(err, res) {
             _.isUndefined(res).should.be.false
@@ -667,6 +683,22 @@ describe("Privates", function() {
               .end(function(err, res) {
                 done()
               })
+          })
+
+          it('subscriber should still see posts in his comments timeline', function(done) {
+            funcTestHelper.getTimeline('/v1/timelines/' + marsContext.username + '/comments', marsContext.authToken, function(err, res) {
+              _.isUndefined(res).should.be.false
+              res.should.have.deep.property('body.timelines.posts')
+              done()
+            })
+          })
+
+          it('subscriber should still see posts in his river of news', function(done) {
+            funcTestHelper.getTimeline('/v1/timelines/home', marsContext.authToken, function(err, res) {
+              _.isUndefined(res).should.be.false
+              res.should.have.deep.property('body.timelines.posts')
+              done()
+            })
           })
 
           it('stranger should see posts in lunas follower comments timeline', function(done) {

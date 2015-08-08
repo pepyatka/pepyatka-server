@@ -449,7 +449,7 @@ exports.addModel = function(database) {
   }
 
   User.prototype.unsubscribeNonFriends = async function() {
-    var subscriptionIds = await this.getFriendIds()
+    var subscriptionIds = await this.getSubscriberIds()
     var timeline = await this.getPostsTimeline()
 
     // users that I'm not following are ex-followers now
