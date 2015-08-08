@@ -817,7 +817,7 @@ exports.addModel = function(database) {
           })
         })
         .then(function(res) { return that.getRiverOfNewsTimelineId() })
-        .then(function(riverOfNewsId) { return timeline.merge(riverOfNewsId) })
+        .then(function(riverOfNewsId) { return timeline.mergeTo(riverOfNewsId) })
         .then(function() { return models.Stats.findById(that.id) })
         .then(function(stats) { return stats.addSubscription() })
         .then(function() { return models.Stats.findById(theUser.id) })

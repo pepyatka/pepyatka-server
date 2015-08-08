@@ -140,7 +140,7 @@ exports.addModel = function(database) {
       if (offset < 0) offset = 0
     // -1 = special magic number, meaning “do not use limit defaults,
     // do not use passed in value, use 0 instead". this is at the very least
-    // used in Timeline.merge()
+    // used in Timeline.mergeTo()
     if (_.isUndefined(limit))
       limit = this.limit
     else
@@ -204,24 +204,24 @@ exports.addModel = function(database) {
     return this.posts
   }
 
-  Timeline.prototype.merge = function(timelineId) {
-    var that = this
+  /**
+   * Merges contents of this timeline into timeline specified by id
+   * @param timelineId
+   */
+  Timeline.prototype.mergeTo = async function(timelineId) {
+    await database.zunionstoreAsync(
+      mkKey(['timeline', timelineId, 'posts']), 2,
+      mkKey(['timeline', timelineId, 'posts']),
+      mkKey(['timeline', this.id, 'posts']),
+      'AGGREGATE', 'MAX'
+    )
 
-    return new Promise(function(resolve, reject) {
-      database.zunionstoreAsync(
-        mkKey(['timeline', timelineId, 'posts']), 2,
-        mkKey(['timeline', timelineId, 'posts']),
-        mkKey(['timeline', that.id, 'posts']),
-        'AGGREGATE', 'MAX')
-        .then(function() { return Timeline.findById(timelineId) })
-        .then(function(timeline) { return timeline.getPostIds(0, -1) })
-        .then(function(postIds) {
-          return Promise.map(postIds, function(postId) {
-            return database.sadd(mkKey(['post', postId, 'timelines']), timelineId)
-          })
-        })
-        .then(function(res) { resolve(res) })
-    })
+    let timeline = await Timeline.findById(timelineId)
+    let postIds = await timeline.getPostIds(0, -1)
+
+    let promises = postIds.map(postId => database.saddAsync(mkKey(['post', postId, 'timelines']), timelineId))
+
+    await* promises
   }
 
   Timeline.prototype.unmerge = async function(timelineId) {
