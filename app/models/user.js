@@ -835,24 +835,29 @@ exports.addModel = function(database) {
     if (user.username == this.username)
       throw new Error("Invalid")
 
-    var timelineIds = await user.getPublicTimelineIds()
+    let promises = []
 
     if (_.isUndefined(options.skip)) {
-      await* _.flatten(timelineIds.map((timelineId) => [
+      // remove timelines from user's subscriptions
+      let timelineIds = await user.getPublicTimelineIds()
+
+      let unsubPromises = _.flatten(timelineIds.map((timelineId) => [
         database.zremAsync(mkKey(['user', this.id, 'subscriptions']), timelineId),
         database.zremAsync(mkKey(['timeline', timelineId, 'subscribers']), this.id)
       ]))
+
+      promises = promises.concat(unsubPromises)
     }
 
-    var promises = []
-
+    // remove all posts of The Timeline from user's River of News
     if (_.isUndefined(options.skip))
       promises.push(timeline.unmerge(await this.getRiverOfNewsTimelineId()))
 
-    // remove post from likes or comments timelines when user goes private
+    // remove all posts of The Timeline from likes timeline of user
     if (options.likes)
       promises.push(timeline.unmerge(await this.getLikesTimelineId()))
 
+    // remove all post of The Timeline from comments timeline of user
     if (options.comments)
       promises.push(timeline.unmerge(await this.getCommentsTimelineId()))
 
