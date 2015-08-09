@@ -442,7 +442,7 @@ exports.addModel = function(database) {
   }
 
   User.prototype.unsubscribeNonFriends = async function() {
-    var subscriptionIds = await this.getSubscriberIds()
+    var subscriberIds = await this.getSubscriberIds()
     var timeline = await this.getPostsTimeline()
 
     // users that I'm not following are ex-followers now
@@ -463,8 +463,8 @@ exports.addModel = function(database) {
 
     for (let post of posts) {
       let timelines = await post.getTimelines()
-      let user_promises = timelines.map(timeline => timeline.getUser())
-      let users = await* user_promises
+      let userPromises = timelines.map(timeline => timeline.getUser())
+      let users = await* userPromises
 
       allUsers = _.uniq(allUsers.concat(users), 'id')
     }
@@ -472,7 +472,7 @@ exports.addModel = function(database) {
     // and remove all private posts from all strangers timelines
     let users = _.filter(
       allUsers,
-      user => (subscriptionIds.indexOf(user.id) === -1 && user.id != this.id)
+      user => (subscriberIds.indexOf(user.id) === -1 && user.id != this.id)
     )
 
     for (let chunk of _.chunk(users, 10)) {
