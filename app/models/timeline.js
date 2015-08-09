@@ -140,7 +140,7 @@ exports.addModel = function(database) {
       if (offset < 0) offset = 0
     // -1 = special magic number, meaning “do not use limit defaults,
     // do not use passed in value, use 0 instead". this is at the very least
-    // used in Timeline.merge()
+    // used in Timeline.mergeTo()
     if (_.isUndefined(limit))
       limit = this.limit
     else
@@ -186,17 +186,45 @@ exports.addModel = function(database) {
     else if (limit < 0)
       limit = 0
 
-    let user = this.currentUser ? (await models.User.findById(this.currentUser)) : null
-    let banIds = user ? (await user.getBanIds()) : []
+    let reader = this.currentUser ? (await models.User.findById(this.currentUser)) : null
+    let banIds = reader ? (await reader.getBanIds()) : []
 
     let postIds = await this.getPostIds(offset, limit)
-    let posts = await* postIds.map(postId => Post.findById(postId, { currentUser: this.currentUser }))
+    let posts = (await* postIds.map(postId => Post.findById(postId, { currentUser: this.currentUser }))).filter(Boolean)
 
-    posts = await* posts.filter(Boolean).map(async (post) => {
-      let user = await models.User.findById(post.userId)
-      let reverseBanIds = await user.getBanIds()
+    posts = await* posts.map(async (post) => {
+      if (post.userId === this.currentUser) {
+        // shortcut for the author
+        return post
+      }
 
-      return ((banIds.indexOf(post.userId) >= 0) || (reverseBanIds.indexOf(this.currentUser) >= 0)) ? null : post
+      let author = await models.User.findById(post.userId)
+      let reverseBanIds = await author.getBanIds()
+
+      let readerBannedAuthor = (banIds.indexOf(post.userId) >= 0)
+      let authorBannedReader = (reverseBanIds.indexOf(this.currentUser) >= 0)
+
+      if (readerBannedAuthor || authorBannedReader)
+        return null
+
+      if (author.isPrivate) {
+        let postTimelines = await post.getTimelines()
+        let promises = postTimelines.map(async (timeline) => {
+          if (!timeline.isPosts() && !timeline.isDirects()) {
+            return false
+          }
+
+          return timeline.validateCanShow(this.currentUser)
+        })
+
+        let wasPostedToReadableFeed = _.any(await* promises)
+
+        if (!wasPostedToReadableFeed) {
+          return null
+        }
+      }
+
+      return post
     })
 
     this.posts = posts.filter(Boolean)
@@ -204,24 +232,24 @@ exports.addModel = function(database) {
     return this.posts
   }
 
-  Timeline.prototype.merge = function(timelineId) {
-    var that = this
+  /**
+   * Merges contents of this timeline into timeline specified by id
+   * @param timelineId
+   */
+  Timeline.prototype.mergeTo = async function(timelineId) {
+    await database.zunionstoreAsync(
+      mkKey(['timeline', timelineId, 'posts']), 2,
+      mkKey(['timeline', timelineId, 'posts']),
+      mkKey(['timeline', this.id, 'posts']),
+      'AGGREGATE', 'MAX'
+    )
 
-    return new Promise(function(resolve, reject) {
-      database.zunionstoreAsync(
-        mkKey(['timeline', timelineId, 'posts']), 2,
-        mkKey(['timeline', timelineId, 'posts']),
-        mkKey(['timeline', that.id, 'posts']),
-        'AGGREGATE', 'MAX')
-        .then(function() { return Timeline.findById(timelineId) })
-        .then(function(timeline) { return timeline.getPostIds(0, -1) })
-        .then(function(postIds) {
-          return Promise.map(postIds, function(postId) {
-            return database.sadd(mkKey(['post', postId, 'timelines']), timelineId)
-          })
-        })
-        .then(function(res) { resolve(res) })
-    })
+    let timeline = await Timeline.findById(timelineId)
+    let postIds = await timeline.getPostIds(0, -1)
+
+    let promises = postIds.map(postId => database.saddAsync(mkKey(['post', postId, 'timelines']), timelineId))
+
+    await* promises
   }
 
   Timeline.prototype.unmerge = async function(timelineId) {

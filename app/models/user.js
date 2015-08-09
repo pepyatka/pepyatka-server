@@ -120,23 +120,16 @@ exports.addModel = function(database) {
     return this.type === "user"
   }
 
-  User.prototype.newPost = function(attrs) {
-    var that = this
+  User.prototype.newPost = async function(attrs) {
     attrs.userId = this.id
 
-    return new Promise(function(resolve, reject) {
-      if (!attrs.timelineIds || !attrs.timelineIds[0]) {
-        that.getPostsTimelineId()
-          .then(function(timelineId) {
-            attrs.timelineIds = [timelineId]
+    if (!attrs.timelineIds || !attrs.timelineIds[0]) {
+      let timelineId = await this.getPostsTimelineId()
 
-            resolve(new models.Post(attrs))
-          })
-          .catch(function(e) { reject(e) })
-      } else {
-        resolve(new models.Post(attrs))
-      }
-    }.bind(this))
+      attrs.timelineIds = [timelineId]
+    }
+
+    return new models.Post(attrs)
   }
 
   User.prototype.updateResetPasswordToken = function() {
@@ -387,10 +380,10 @@ exports.addModel = function(database) {
     // efficient when introduce Entries table with meta column (post to
     // timelines many-to-many over Entries)
 
-    var timeline = await this.getPostsTimeline({
-      currentUser: this.id
-    })
-    var posts = await timeline.getPosts(0, -1)
+    let timeline = await this.getPostsTimeline({currentUser: this.id})
+    let posts = await timeline.getPosts(0, -1)
+
+    let fixedUsers = []
 
     // first of all, let's revive likes
     for (let post of posts) {
@@ -398,40 +391,58 @@ exports.addModel = function(database) {
 
       let [likes, comments] = await* [post.getLikes(), post.getComments()];
 
-      for (let likes_chunk of _.chunk(likes, 10)) {
-        let promises = likes_chunk.map(async (user) => {
-          let timelineId = await user.getLikesTimelineId()
+      for (let usersChunk of _.chunk(likes, 10)) {
+        let promises = usersChunk.map(async (user) => {
+          let likesTimelineId = await user.getLikesTimelineId()
           let time = await database.zscoreAsync(mkKey(['post', post.id, 'likes']), user.id)
 
-          actions.push(database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), time, post.id))
-          actions.push(database.saddAsync(mkKey(['post', post.id, 'timelines']), timelineId))
+          actions.push(database.zaddAsync(mkKey(['timeline', likesTimelineId, 'posts']), time, post.id))
+          actions.push(database.saddAsync(mkKey(['post', post.id, 'timelines']), likesTimelineId))
         })
 
         await* promises
       }
 
-      for (let comments_chunk of _.chunk(comments, 10)) {
-        let promises = comments_chunk.map(async (comment) => {
-          let user = await models.User.findById(comment.userId)
-          let timelineId = await user.getCommentsTimelineId()
+      let commenters = _.uniq(await* comments.map(comment => models.User.findById(comment.userId)), 'id')
+
+      for (let usersChunk of _.chunk(commenters, 10)) {
+        let promises = usersChunk.map(async (user) => {
+          let commentsTimelineId = await user.getCommentsTimelineId()
 
           // NOTE: I'm cheating with time when we supposed to add that
           // post to comments timeline, but who notices this?
           let time = post.updatedAt
 
-          actions.push(database.zaddAsync(mkKey(['timeline', timelineId, 'posts']), time, post.id))
-          actions.push(database.saddAsync(mkKey(['post', post.id, 'timelines']), timelineId))
+          actions.push(database.zaddAsync(mkKey(['timeline', commentsTimelineId, 'posts']), time, post.id))
+          actions.push(database.saddAsync(mkKey(['post', post.id, 'timelines']), commentsTimelineId))
         })
 
         await* promises
       }
 
       await* actions
+
+      fixedUsers = _.uniq(fixedUsers.concat(likes).concat(commenters), 'id')
+    }
+
+    for (let usersChunk of _.chunk(fixedUsers, 10)) {
+      let promises = usersChunk.map(async (user) => {
+        let [riverId, commentsTimeline, likesTimeline] = await* [
+          user.getRiverOfNewsTimelineId(),
+          user.getCommentsTimeline(),
+          user.getLikesTimeline()
+        ]
+
+        await commentsTimeline.mergeTo(riverId)
+        await likesTimeline.mergeTo(riverId)
+      })
+
+      await* promises
     }
   }
 
   User.prototype.unsubscribeNonFriends = async function() {
-    var subscriptionIds = await this.getFriendIds()
+    var subscriberIds = await this.getSubscriberIds()
     var timeline = await this.getPostsTimeline()
 
     // users that I'm not following are ex-followers now
@@ -452,8 +463,8 @@ exports.addModel = function(database) {
 
     for (let post of posts) {
       let timelines = await post.getTimelines()
-      let user_promises = timelines.map(timeline => timeline.getUser())
-      let users = await* user_promises
+      let userPromises = timelines.map(timeline => timeline.getUser())
+      let users = await* userPromises
 
       allUsers = _.uniq(allUsers.concat(users), 'id')
     }
@@ -461,7 +472,7 @@ exports.addModel = function(database) {
     // and remove all private posts from all strangers timelines
     let users = _.filter(
       allUsers,
-      user => (subscriptionIds.indexOf(user.id) === -1 && user.id != this.id)
+      user => (subscriberIds.indexOf(user.id) === -1 && user.id != this.id)
     )
 
     for (let chunk of _.chunk(users, 10)) {
@@ -564,22 +575,13 @@ exports.addModel = function(database) {
     })
   }
 
-  User.prototype.getGenericTimeline = function(name, params) {
-    var that = this
-    var p_timeline
+  User.prototype.getGenericTimeline = async function(name, params) {
+    let timelineId = await this["get" + name + "TimelineId"](params)
+    let timeline = await models.Timeline.findById(timelineId, params)
 
-    return new Promise(function(resolve, reject) {
-      that["get" + name + "TimelineId"](params)
-        .then(function(timelineId) { return models.Timeline.findById(timelineId, params) })
-        .then(function(timeline) {
-          p_timeline = timeline
-          return timeline.getPosts(timeline.offset, timeline.limit)
-        })
-        .then(function(posts) {
-          p_timeline.posts = posts.filter(Boolean) // @fixme already filtered in getPosts
-          resolve(p_timeline)
-        })
-    })
+    timeline.posts = await timeline.getPosts(timeline.offset, timeline.limit)
+
+    return timeline
   }
 
   User.prototype.getHidesTimelineId = function(params) {
@@ -817,7 +819,7 @@ exports.addModel = function(database) {
           })
         })
         .then(function(res) { return that.getRiverOfNewsTimelineId() })
-        .then(function(riverOfNewsId) { return timeline.merge(riverOfNewsId) })
+        .then(function(riverOfNewsId) { return timeline.mergeTo(riverOfNewsId) })
         .then(function() { return models.Stats.findById(that.id) })
         .then(function(stats) { return stats.addSubscription() })
         .then(function() { return models.Stats.findById(theUser.id) })
@@ -835,24 +837,28 @@ exports.addModel = function(database) {
     if (user.username == this.username)
       throw new Error("Invalid")
 
-    var timelineIds = await user.getPublicTimelineIds()
+    let promises = []
 
     if (_.isUndefined(options.skip)) {
-      await* _.flatten(timelineIds.map((timelineId) => [
+      // remove timelines from user's subscriptions
+      let timelineIds = await user.getPublicTimelineIds()
+
+      let unsubPromises = _.flatten(timelineIds.map((timelineId) => [
         database.zremAsync(mkKey(['user', this.id, 'subscriptions']), timelineId),
         database.zremAsync(mkKey(['timeline', timelineId, 'subscribers']), this.id)
       ]))
+
+      promises = promises.concat(unsubPromises)
     }
 
-    var promises = []
+    // remove all posts of The Timeline from user's River of News
+    promises.push(timeline.unmerge(await this.getRiverOfNewsTimelineId()))
 
-    if (_.isUndefined(options.skip))
-      promises.push(timeline.unmerge(await this.getRiverOfNewsTimelineId()))
-
-    // remove post from likes or comments timelines when user goes private
+    // remove all posts of The Timeline from likes timeline of user
     if (options.likes)
       promises.push(timeline.unmerge(await this.getLikesTimelineId()))
 
+    // remove all post of The Timeline from comments timeline of user
     if (options.comments)
       promises.push(timeline.unmerge(await this.getCommentsTimelineId()))
 

@@ -1,4 +1,5 @@
 var request = require('superagent')
+  , _ = require('lodash')
   , app = require('../../index')
   , models = require('../../app/models')
   , funcTestHelper = require('./functional_test_helper')
@@ -347,6 +348,7 @@ describe("PostsController", function() {
           .post(app.config.host + '/v1/posts')
           .send({ post: { body: body }, meta: { feeds: [groupName, ctx.username] }, authToken: ctx.authToken })
           .end(function(err, res) {
+            _.isUndefined(res).should.be.false
             res.body.should.not.be.empty
             res.body.should.have.property('posts')
             res.body.posts.should.have.property('body')
