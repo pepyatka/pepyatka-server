@@ -16,7 +16,7 @@
   "dependencies": {
     "async": "1.2.1",
     "aws-sdk": "2.1.39",
-    "babel": "5.8.19",
+    "babel": "5.8.21",
     "bcrypt": "0.8.3",
     "bluebird": "2.9.33",
     "body-parser": "1.13.1",
