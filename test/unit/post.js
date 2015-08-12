@@ -333,6 +333,7 @@ describe('Post', function() {
           newPost.id.should.eql(post.id)
         })
         .then(function() { done() })
+        .catch(function(e) { done(e) })
     })
 
     it('should add user to likes', function(done) {
@@ -346,6 +347,7 @@ describe('Post', function() {
           user.id.should.eql(userA.id)
         })
         .then(function() { done() })
+        .catch(function(e) { done(e) })
     })
   })
 
@@ -412,6 +414,7 @@ describe('Post', function() {
           user.id.should.eql(userA.id)
         })
         .then(function() { done() })
+        .catch(function(e) { done(e) })
     })
   })
 

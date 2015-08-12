@@ -622,6 +622,7 @@ describe('User', function() {
           newPost.id.should.eql(post.id)
           done()
         })
+        .catch(function(e) { done(e) })
     })
   })
 
