@@ -644,7 +644,7 @@ exports.addModel = function(database) {
   Post.prototype.addLike = async function(userId) {
     var timelines = []
     var user = await models.User.findById(userId)
-    await user.validateCanLikePost(this.id)
+    await user.validateCanLikePost(this)
 
     if (!await this.isPrivate())
       timelines = await this.getLikesFriendOfFriendTimelines(userId)
@@ -654,7 +654,7 @@ exports.addModel = function(database) {
     promises.push(database.zaddAsync(mkKey(['post', this.id, 'likes']), now, userId))
     await* promises
 
-    await pubSub.newLike(this.id, userId)
+    await pubSub.newLike(this, userId)
     var stats = await models.Stats.findById(userId)
     return stats.addLike()
   }
@@ -668,7 +668,7 @@ exports.addModel = function(database) {
       models.User.findById(userId)
         .then(function(user) {
           theUser = user
-          return user.validateCanUnLikePost(that.id)
+          return user.validateCanUnLikePost(that)
         })
         .then(function() {
           return database.zremAsync(mkKey(['post', that.id, 'likes']), userId)

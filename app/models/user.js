@@ -1035,12 +1035,12 @@ exports.addModel = function(database) {
   }
 
   /* checks if user can like some post */
-  User.prototype.validateCanLikePost = function(postId) {
-    return this.validateCanLikeOrUnlikePost('like', postId)
+  User.prototype.validateCanLikePost = function(post) {
+    return this.validateCanLikeOrUnlikePost('like', post)
   }
 
-  User.prototype.validateCanUnLikePost = function(postId) {
-    return this.validateCanLikeOrUnlikePost('unlike', postId)
+  User.prototype.validateCanUnLikePost = function(post) {
+    return this.validateCanLikeOrUnlikePost('unlike', post)
   }
 
   User.prototype.validateCanComment = function(postId) {
@@ -1063,8 +1063,8 @@ exports.addModel = function(database) {
     })
   }
 
-  User.prototype.validateCanLikeOrUnlikePost = async function(action, postId) {
-    let result = await database.zscoreAsync(mkKey(['post', postId, 'likes']), this.id)
+  User.prototype.validateCanLikeOrUnlikePost = async function(action, post) {
+    let result = await database.zscoreAsync(mkKey(['post', post.id, 'likes']), this.id)
 
     if (result != null && action == 'like')
       throw new ForbiddenException("You can't like post that you have already liked")
@@ -1072,7 +1072,6 @@ exports.addModel = function(database) {
     if (result == null && action == 'unlike')
       throw new ForbiddenException("You can't un-like post that you haven't yet liked")
 
-    let post = await models.Post.findById(postId)
     let valid = await post.validateCanShow(this.id)
 
     if (!valid)

@@ -90,8 +90,7 @@ export default class pubSub {
     await* promises
   }
 
-  async newLike(postId, userId) {
-    var post = await models.Post.findById(postId)
+  async newLike(post, userId) {
     var timelines = await post.getTimelines()
 
     var promises = timelines.map(async (timeline) => {
@@ -99,14 +98,14 @@ export default class pubSub {
       var isHidden = await post.isHiddenIn(timeline.id)
 
       if (!isHidden && !isBanned) {
-        let payload = JSON.stringify({ timelineId: timeline.id, userId: userId, postId: postId })
+        let payload = JSON.stringify({ timelineId: timeline.id, userId: userId, postId: post.id })
         await this.database.publishAsync('like:new', payload)
       }
     })
 
     await* promises
 
-    let payload = JSON.stringify({ userId: userId, postId: postId })
+    let payload = JSON.stringify({ userId: userId, postId: post.id })
     await this.database.publishAsync('like:new', payload)
   }
 
