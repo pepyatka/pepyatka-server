@@ -128,14 +128,19 @@ exports.addController = function(app) {
     }
   }
 
-  PostsController.like = function(req, res) {
-    if (!req.user)
-      return res.status(401).jsonp({ err: 'Not found' })
+  PostsController.like = async function(req, res) {
+    if (!req.user) {
+      res.status(401).jsonp({ err: 'Not found' })
+      return
+    }
 
-    models.Post.getById(req.params.postId)
-      .then(function(post) { return post.addLike(req.user.id) })
-      .then(function() { res.status(200).send({}) })
-      .catch(exceptions.reportError(res))
+    try {
+      let post = await models.Post.getById(req.params.postId)
+      await post.addLike(req.user.id)
+      res.status(200).send({})
+    } catch(e) {
+      exceptions.reportError(res)(e)
+    }
   }
 
   PostsController.unlike = function(req, res) {
