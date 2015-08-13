@@ -139,12 +139,12 @@ exports.addController = function(app) {
       let post = await models.Post.getById(req.params.postId)
       let affectedTimelines = await post.addLike(req.user)
 
+      let stats = await models.Stats.findById(req.user.id)
+      await stats.addLike()
+
       res.status(200).send({})
 
       await pubSub.newLike(post, req.user.id, affectedTimelines)
-
-      let stats = await models.Stats.findById(req.user.id)
-      await stats.addLike()
     } catch(e) {
       exceptions.reportError(res)(e)
     }
