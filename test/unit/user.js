@@ -604,7 +604,7 @@ describe('User', function() {
           post = newPost
           return newPost.create()
         })
-        .then(function(post) { return post.addLike(user.id) })
+        .then(function(post) { return post.addLike(user) })
         .then(function() { return user.getMyDiscussionsTimeline() })
         .then(function(timeline) {
           timeline.should.be.an.instanceOf(Timeline)

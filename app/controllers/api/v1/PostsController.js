@@ -136,7 +136,7 @@ exports.addController = function(app) {
 
     try {
       let post = await models.Post.getById(req.params.postId)
-      await post.addLike(req.user.id)
+      await post.addLike(req.user)
       res.status(200).send({})
     } catch(e) {
       exceptions.reportError(res)(e)

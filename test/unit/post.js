@@ -322,7 +322,7 @@ describe('Post', function() {
     })
 
     it('should add like to friend of friend timelines', function(done) {
-      post.addLike(userA.id)
+      post.addLike(userA)
         .then(function(res) { return userC.getRiverOfNewsTimeline() })
         .then(function(timeline) { return timeline.getPosts() })
         .then(function(posts) {
@@ -337,7 +337,7 @@ describe('Post', function() {
     })
 
     it('should add user to likes', function(done) {
-      post.addLike(userA.id)
+      post.addLike(userA)
         .then(function(res) { return post.getLikes() })
         .then(function(users) {
           users.should.not.be.empty
@@ -393,7 +393,7 @@ describe('Post', function() {
     })
 
     it('should remove like from friend of friend timelines', function(done) {
-      post.addLike(userA.id)
+      post.addLike(userA)
         .then(function(res) { return post.removeLike(userA.id) })
         .then(function(res) { return post.getLikes() })
         .then(function(users) {
@@ -404,7 +404,7 @@ describe('Post', function() {
     })
 
     it('should add user to likes', function(done) {
-      post.addLike(userA.id)
+      post.addLike(userA)
         .then(function(res) { return post.getLikes() })
         .then(function(users) {
           users.should.not.be.empty
