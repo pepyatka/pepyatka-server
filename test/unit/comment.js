@@ -33,12 +33,12 @@ describe('Comment', function() {
           }
           return userA.newComment(commentAttrs)
         })
-        .then(function(comment) { return comment.create() })
         .then(function(newComment) {
           comment = newComment
-          return comment
+          return comment.create()
         })
         .then(function(res) { done() })
+        .catch(function(e) { done(e) })
     })
 
     it('should update without error', function(done) {
@@ -55,6 +55,7 @@ describe('Comment', function() {
           newComment.body.should.eql(comment.body)
         })
         .then(function() { done() })
+        .catch(function(e) { done(e) })
     })
   })
 
@@ -82,6 +83,7 @@ describe('Comment', function() {
           return post.create()
         })
         .then(function() { done() })
+        .catch(function(e) { done(e) })
     })
 
     it('should create without error', function(done) {
@@ -92,7 +94,7 @@ describe('Comment', function() {
       })
 
       comment.create()
-        .then(function(comment) {
+        .then(function(timelines) {
           comment.should.be.an.instanceOf(Comment)
           comment.should.not.be.empty
           comment.should.have.property('id')
@@ -107,6 +109,7 @@ describe('Comment', function() {
           newComment.id.should.eql(comment.id)
         })
         .then(function() { done() })
+        .catch(function(e) { done(e) })
     })
 
     it('should ignore whitespaces in body', function(done) {
@@ -118,8 +121,7 @@ describe('Comment', function() {
         })
 
       comment.create()
-        .then(function(comment) { return comment })
-        .then(function(comment) { return Comment.findById(comment.id) })
+        .then(function(timelines) { return Comment.findById(comment.id) })
         .then(function(newComment) {
           newComment.should.be.an.instanceOf(Comment)
           newComment.should.not.be.empty
@@ -179,8 +181,7 @@ describe('Comment', function() {
       })
 
       comment.create()
-        .then(function(comment) { return comment })
-        .then(function(comment) { return Comment.findById(comment.id) })
+        .then(function(timelines) { return Comment.findById(comment.id) })
         .then(function(newComment) {
           newComment.should.be.an.instanceOf(Comment)
           newComment.should.not.be.empty
@@ -225,10 +226,9 @@ describe('Comment', function() {
           }
           return userA.newComment(commentAttrs)
         })
-        .then(function(comment) { return comment.create() })
         .then(function(newComment) {
           comment = newComment
-          return comment
+          return comment.create()
         })
         .then(function(res) { done() })
     })

@@ -876,11 +876,8 @@ exports.addModel = function(database) {
   }
 
   User.prototype.newComment = function(attrs) {
-    return new Promise(function(resolve, reject) {
-      attrs.userId = this.id
-
-      resolve(new models.Comment(attrs))
-    }.bind(this))
+    attrs.userId = this.id
+    return new models.Comment(attrs)
   }
 
   User.prototype.newAttachment = function(attrs) {

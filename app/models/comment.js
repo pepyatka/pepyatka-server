@@ -57,44 +57,37 @@ exports.addModel = function(database) {
     return this
   }
 
-  Comment.prototype.validateOnCreate = function() {
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      Promise.join(that.validate(),
-                   that.validateUniquness(mkKey(['comment', that.id])),
-                   function(valid, idIsUnique) {
-                     resolve(that)
-                   })
-        .catch(function(e) { reject(e) })
-      })
+  Comment.prototype.validateOnCreate = async function() {
+    await* [
+      this.validate(),
+      this.validateUniquness(mkKey(['comment', this.id]))
+    ]
   }
 
-  Comment.prototype.create = function() {
-    var that = this
+  Comment.prototype.create = async function() {
+    this.createdAt = new Date().getTime()
+    this.updatedAt = new Date().getTime()
+    this.id = uuid.v4()
 
-    return new Promise(function(resolve, reject) {
-      that.createdAt = new Date().getTime()
-      that.updatedAt = new Date().getTime()
-      that.id = uuid.v4()
+    await this.validateOnCreate()
 
-      that.validateOnCreate()
-        .then(function(comment) {
-          return database.hmsetAsync(mkKey(['comment', comment.id]),
-                                     { 'body': comment.body,
-                                       'userId': comment.userId,
-                                       'postId': comment.postId,
-                                       'createdAt': comment.createdAt.toString(),
-                                       'updatedAt': comment.updatedAt.toString(),
-                                     })
-        })
-        .then(function(res) { return Post.findById(that.postId) })
-        .then(function(post) { return post.addComment(that.id)})
-        .then(function() { return models.Stats.findById(that.userId) })
-        .then(function(stats) { return stats.addComment() })
-        .then(function() { resolve(that) })
-        .catch(function(e) { reject(e) })
-    })
+    let payload = {
+      'body': this.body,
+      'userId': this.userId,
+      'postId': this.postId,
+      'createdAt': this.createdAt.toString(),
+      'updatedAt': this.updatedAt.toString()
+    }
+
+    await database.hmsetAsync(mkKey(['comment', this.id]), payload)
+
+    let post = await Post.findById(this.postId)
+    let timelines = await post.addComment(this)
+
+    let stats = await models.Stats.findById(this.userId)
+    await stats.addComment()
+
+    return timelines
   }
 
   Comment.prototype.update = function(params) {

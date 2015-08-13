@@ -365,18 +365,27 @@ exports.addModel = function(database) {
     })
   }
 
-  Post.prototype.addComment = async function(commentId) {
-    var timelines = []
-    var comment = await models.Comment.findById(commentId)
+  Post.prototype.addComment = async function(comment) {
+    let user = await models.User.findById(comment.userId)
 
-    if (!await this.isPrivate()) {
-      let user = await models.User.findById(comment.userId)
-      timelines = await this.getCommentsFriendOfFriendTimelines(user)
+    let subscriberIds = await user.getSubscriberIds()
+    let bannedIds = await user.getBanIds()
+    let timelines = await this.getCommentsFriendOfFriendTimelines(user)
+
+    if (await this.isPrivate()) {
+      // only subscribers are allowed to read private posts
+      timelines = timelines.filter((timeline) => timeline.userId in subscriberIds)
     }
 
-    await* timelines.map((timeline) => timeline.updatePost(this.id))
-    await database.rpushAsync(mkKey(['post', this.id, 'comments']), commentId)
-    return pubSub.newComment(commentId)
+    // no need to post updates to rivers of banned users
+    timelines = timelines.filter((timeline) => !(timeline.userId in bannedIds))
+
+    let promises = timelines.map((timeline) => timeline.updatePost(this.id))
+    promises.push(database.rpushAsync(mkKey(['post', this.id, 'comments']), comment.id))
+
+    await* promises
+
+    return timelines
   }
 
   Post.prototype.getOmittedComments = function() {

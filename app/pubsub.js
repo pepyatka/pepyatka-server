@@ -45,24 +45,20 @@ export default class pubSub {
     await* promises
   }
 
-  async newComment(commentId) {
-    var comment = await models.Comment.findById(commentId)
-    var post = await comment.getPost()
-    var timelines = await post.getTimelines()
+  async newComment(comment, timelines) {
+    let post = await comment.getPost()
 
-    var promises = timelines.map(async (timeline) => {
-      let isBanned = await post.isBannedFor(timeline.userId)
-      let isHidden = await post.isHiddenIn(timeline)
+    let promises = timelines.map(async (timeline) => {
+      if (await post.isHiddenIn(timeline))
+        return
 
-      if (!isHidden && !isBanned) {
-        let payload = JSON.stringify({ timelineId: timeline.id, commentId: commentId })
-        await this.database.publishAsync('comment:new', payload)
-      }
+      let payload = JSON.stringify({ timelineId: timeline.id, commentId: comment.id })
+      await this.database.publishAsync('comment:new', payload)
     })
 
     await* promises
 
-    let payload = JSON.stringify({ postId: post.id, commentId: commentId })
+    let payload = JSON.stringify({ postId: post.id, commentId: comment.id })
     await this.database.publishAsync('comment:new', payload)
   }
 

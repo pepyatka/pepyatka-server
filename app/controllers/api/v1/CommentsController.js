@@ -1,6 +1,6 @@
 "use strict";
 
-import models, {CommentSerializer} from '../../../models'
+import models, {CommentSerializer, pubSub} from '../../../models'
 import exceptions, {ForbiddenException} from '../../../support/exceptions'
 
 exports.addController = function(app) {
@@ -16,16 +16,17 @@ exports.addController = function(app) {
         if (!valid)
           throw new ForbiddenException("Not found")
 
-        var newComment = await req.user.newComment({
+        var newComment = req.user.newComment({
           body: req.body.comment.body,
           postId: req.body.comment.postId
         })
 
-        await newComment.create()
+        let timelines = await newComment.create()
 
-        new CommentSerializer(newComment).toJSON(function(err, json) {
-          res.jsonp(json)
-        })
+        let json = await new CommentSerializer(newComment).promiseToJSON()
+        res.jsonp(json)
+
+        await pubSub.newComment(comment, timelines)
       } catch (e) {
         exceptions.reportError(res)(e)
       }

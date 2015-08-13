@@ -462,8 +462,10 @@ describe('Post', function() {
         body: 'Comment body',
         postId: post.id
       }
-      userA.newComment(commentAttrs)
-        .then(function(comment) { return comment.create() })
+
+      let comment = userA.newComment(commentAttrs)
+
+      comment.create()
         .then(function(res) { return userC.getRiverOfNewsTimeline() })
         .then(function(timeline) { return timeline.getPosts() })
         .then(function(posts) {
@@ -501,12 +503,10 @@ describe('Post', function() {
           }
           return userA.newComment(commentAttrs)
         })
-        .then(function(comment) { return comment.create() })
         .then(function(newComment) {
           comment = newComment
-          return comment
+          return comment.create()
         })
-
         .then(function(res) { done() })
     })
 
