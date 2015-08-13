@@ -599,17 +599,18 @@ exports.addModel = function(database) {
 
   Post.prototype.isPrivate = async function() {
     var timelines = await this.getPostedTo()
-    var arr = await* timelines.map(async (timeline) => {
-      var owner = await models.User.findById(timeline.userId)
 
-      if (timeline.isDirects() || owner.isPrivate === '1')
+    var arr = timelines.map(async (timeline) => {
+      if (timeline.isDirects())
         return true
 
-      // we do not have private feeds yet so user can open any
-      // post if it's not a direct message
-      return false
+      let owner = await models.User.findById(timeline.userId)
+
+      return (owner.isPrivate === '1')
     })
-    return _.every(arr, _.identity, true)
+
+    // one public timeline is enough
+    return _.every(await* arr)
   }
 
   Post.prototype.addLike = async function(userId) {
