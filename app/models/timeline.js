@@ -192,14 +192,25 @@ exports.addModel = function(database) {
     let postIds = await this.getPostIds(offset, limit)
     let posts = (await* postIds.map(postId => Post.findById(postId, { currentUser: this.currentUser }))).filter(Boolean)
 
+    let usersCache = {}
+    async function userById(id) {
+      if (!(id in usersCache)) {
+        let user = await models.User.findById(id)
+        let bans = await user.getBanIds()
+
+        usersCache[id] = [user, bans]
+      }
+
+      return usersCache[id]
+    }
+
     posts = await* posts.map(async (post) => {
       if (post.userId === this.currentUser) {
         // shortcut for the author
         return post
       }
 
-      let author = await models.User.findById(post.userId)
-      let reverseBanIds = await author.getBanIds()
+      let [author, reverseBanIds] = await userById(post.userId)
 
       let readerBannedAuthor = (banIds.indexOf(post.userId) >= 0)
       let authorBannedReader = (reverseBanIds.indexOf(this.currentUser) >= 0)
