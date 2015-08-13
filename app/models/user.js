@@ -1035,12 +1035,12 @@ exports.addModel = function(database) {
   }
 
   /* checks if user can like some post */
-  User.prototype.validateCanLikePost = function(postId) {
-    return this.validateCanLikeOrUnlikePost('like', postId)
+  User.prototype.validateCanLikePost = function(post) {
+    return this.validateCanLikeOrUnlikePost('like', post)
   }
 
-  User.prototype.validateCanUnLikePost = function(postId) {
-    return this.validateCanLikeOrUnlikePost('unlike', postId)
+  User.prototype.validateCanUnLikePost = function(post) {
+    return this.validateCanLikeOrUnlikePost('unlike', post)
   }
 
   User.prototype.validateCanComment = function(postId) {
@@ -1063,35 +1063,21 @@ exports.addModel = function(database) {
     })
   }
 
-  User.prototype.validateCanLikeOrUnlikePost = function(action, postId) {
-    var that = this
+  User.prototype.validateCanLikeOrUnlikePost = async function(action, post) {
+    let result = await database.zscoreAsync(mkKey(['post', post.id, 'likes']), this.id)
 
-    return new Promise(function(resolve, reject) {
-      return database.zscoreAsync(mkKey(['post', postId, 'likes']), that.id)
-        .then(function(result) {
-          switch (true) {
-            case result != null && action == 'like':
-              reject(new ForbiddenException("You can't like post that you have already liked"))
-              break;
-            case result == null && action == 'unlike':
-              reject(new ForbiddenException("You can't un-like post that you haven't yet liked"))
-              break;
-            default:
-              models.Post.findById(postId)
-                .then(function(post) { return post.validateCanShow(that.id) })
-                .then(function(valid) {
-                  if (valid)
-                    resolve(that)
-                  else
-                    reject(new Error("Not found"))
-                })
-              break;
-          }
-        }).catch(function(e) {
-          reject(new Error("Failed to validate like"));
-        })
-    })
+    if (result != null && action == 'like')
+      throw new ForbiddenException("You can't like post that you have already liked")
 
+    if (result == null && action == 'unlike')
+      throw new ForbiddenException("You can't un-like post that you haven't yet liked")
+
+    let valid = await post.validateCanShow(this.id)
+
+    if (!valid)
+      throw new Error("Not found")
+
+    return this
   }
 
   User.prototype.updateLastActivityAt = async function() {

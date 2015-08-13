@@ -264,92 +264,61 @@ exports.addModel = function(database) {
     return this.postedTo
   }
 
-  Post.prototype.getGenericFriendOfFriendTimelineIds = function(userId, type) {
-    var that = this
-    var timelineIds = []
-    var user, feeds, groupOnly
+  Post.prototype.getGenericFriendOfFriendTimelineIds = async function(user, type) {
+    let timelineIds = []
 
-    return new Promise(function(resolve, reject) {
-      models.User.findById(userId)
-        .then(function(newUser) {
-          user = newUser
-          return user['get' + type + 'Timeline']()
-        })
-        .then(function(timeline) {
-          timelineIds.push(timeline.id)
-          return timeline.getSubscribers()
-        })
-        .then(function(users) {
-          feeds = users
-          return that.getPostedToIds()
-            .then(function(postedToIds) {
-              return Promise.map(postedToIds, function(timelineId) {
-                return models.Timeline.findById(timelineId)
-                  .then(function(timeline) { return timeline.getUser() })
-                  .then(function(user) { return user.isUser() })
-              })
-            })
-        })
-        .then(function(users) {
-          // Adds the specified post to River of News if and only if
-          // that post has been published to user's Post timeline,
-          // otherwise this post will stay in group(s) timelines
-          if (_.any(users, _.identity, true)) {
-            groupOnly = false
-            return Promise.map(feeds, function(user) {
-              return user.getRiverOfNewsTimelineId()
-            })
-          } else {
-            groupOnly = true
-            return []
-          }
-        })
-        .then(function(subscribedTimelineIds) {
-          timelineIds = timelineIds.concat(subscribedTimelineIds)
-          return that.getSubscribedTimelineIds(groupOnly)
-        })
-        .then(function(subscribedTimelineIds) {
-          timelineIds = timelineIds.concat(subscribedTimelineIds)
-          return user.getRiverOfNewsTimelineId()
-        })
-        .then(function(timelineId) {
-          timelineIds.push(timelineId)
-          timelineIds = _.uniq(timelineIds)
-          resolve(timelineIds)
-        })
+    let timeline = await user['get' + type + 'Timeline']()
+    timelineIds.push(timeline.id)
+
+    let postedToIds = await this.getPostedToIds()
+
+    let userPromises = postedToIds.map(async (timelineId) => {
+      let timeline = await models.Timeline.findById(timelineId)
+      let timelineOwner = await timeline.getUser()
+
+      return timelineOwner.isUser()
     })
+
+    // Adds the specified post to River of News if and only if
+    // that post has been published to user's Post timeline,
+    // otherwise this post will stay in group(s) timelines
+    let groupOnly = true
+
+    if (_.any(await* userPromises)) {
+      groupOnly = false
+
+      let feeds = await timeline.getSubscribers()
+      timelineIds.push(...await* feeds.map(feed => feed.getRiverOfNewsTimelineId()))
+    }
+
+    timelineIds.push(...await this.getSubscribedTimelineIds(groupOnly))
+    timelineIds.push(await user.getRiverOfNewsTimelineId())
+    timelineIds = _.uniq(timelineIds)
+
+    return timelineIds
   }
 
-  Post.prototype.getGenericFriendOfFriendTimelines = function(userId, type) {
-    var that = this
+  Post.prototype.getGenericFriendOfFriendTimelines = async function(user, type) {
+    let timelineIds = await this.getGenericFriendOfFriendTimelineIds(user, type)
+    let promises = timelineIds.map(timelineId => models.Timeline.findById(timelineId))
 
-    return new Promise(function(resolve, reject) {
-      that.getGenericFriendOfFriendTimelineIds(userId, type)
-        .then(function(timelineIds) {
-          return Promise.map(timelineIds, function(timelineId) {
-            return models.Timeline.findById(timelineId)
-          })
-        })
-        .then(function(timelines) {
-          resolve(timelines)
-        })
-    })
+    return await* promises
   }
 
-  Post.prototype.getPostsFriendOfFriendTimelineIds = function(userId) {
-    return this.getGenericFriendOfFriendTimelineIds(userId, 'Posts')
+  Post.prototype.getPostsFriendOfFriendTimelineIds = function(user) {
+    return this.getGenericFriendOfFriendTimelineIds(user, 'Posts')
   }
 
-  Post.prototype.getPostsFriendOfFriendTimelines = function(userId) {
-    return this.getGenericFriendOfFriendTimelines(userId, 'Posts')
+  Post.prototype.getPostsFriendOfFriendTimelines = function(user) {
+    return this.getGenericFriendOfFriendTimelines(user, 'Posts')
   }
 
-  Post.prototype.getLikesFriendOfFriendTimelines = function(userId) {
-    return this.getGenericFriendOfFriendTimelines(userId, 'Likes')
+  Post.prototype.getLikesFriendOfFriendTimelines = function(user) {
+    return this.getGenericFriendOfFriendTimelines(user, 'Likes')
   }
 
-  Post.prototype.getCommentsFriendOfFriendTimelines = function(userId) {
-    return this.getGenericFriendOfFriendTimelines(userId, 'Comments')
+  Post.prototype.getCommentsFriendOfFriendTimelines = function(user) {
+    return this.getGenericFriendOfFriendTimelines(user, 'Comments')
   }
 
   Post.prototype.hide = function(userId) {
@@ -400,8 +369,10 @@ exports.addModel = function(database) {
     var timelines = []
     var comment = await models.Comment.findById(commentId)
 
-    if (!await this.isPrivate())
-      timelines = await this.getCommentsFriendOfFriendTimelines(comment.userId)
+    if (!await this.isPrivate()) {
+      let user = await models.User.findById(comment.userId)
+      timelines = await this.getCommentsFriendOfFriendTimelines(user)
+    }
 
     await* timelines.map((timeline) => timeline.updatePost(this.id))
     await database.rpushAsync(mkKey(['post', this.id, 'comments']), commentId)
@@ -628,35 +599,43 @@ exports.addModel = function(database) {
 
   Post.prototype.isPrivate = async function() {
     var timelines = await this.getPostedTo()
-    var arr = await* timelines.map(async (timeline) => {
-      var owner = await models.User.findById(timeline.userId)
 
-      if (timeline.isDirects() || owner.isPrivate === '1')
+    var arr = timelines.map(async (timeline) => {
+      if (timeline.isDirects())
         return true
 
-      // we do not have private feeds yet so user can open any
-      // post if it's not a direct message
-      return false
+      let owner = await models.User.findById(timeline.userId)
+
+      return (owner.isPrivate === '1')
     })
-    return _.every(arr, _.identity, true)
+
+    // one public timeline is enough
+    return _.every(await* arr)
   }
 
-  Post.prototype.addLike = async function(userId) {
-    var timelines = []
-    var user = await models.User.findById(userId)
-    await user.validateCanLikePost(this.id)
+  Post.prototype.addLike = async function(user) {
+    await user.validateCanLikePost(this)
 
-    if (!await this.isPrivate())
-      timelines = await this.getLikesFriendOfFriendTimelines(userId)
+    let subscriberIds = await user.getSubscriberIds()
+    let bannedIds = await user.getBanIds()
+    let timelines = await this.getLikesFriendOfFriendTimelines(user)
+
+    if (await this.isPrivate()) {
+      // only subscribers are allowed to read private posts
+      timelines = timelines.filter((timeline) => timeline.userId in subscriberIds)
+    }
+
+    // no need to post updates to rivers of banned users
+    timelines = timelines.filter((timeline) => !(timeline.userId in bannedIds))
+
+    let promises = timelines.map((timeline) => timeline.updatePost(this.id, 'like'))
 
     var now = new Date().getTime()
-    var promises = timelines.map((timeline) => timeline.updatePost(this.id, 'like'))
-    promises.push(database.zaddAsync(mkKey(['post', this.id, 'likes']), now, userId))
+    promises.push(database.zaddAsync(mkKey(['post', this.id, 'likes']), now, user.id))
+
     await* promises
 
-    await pubSub.newLike(this.id, userId)
-    var stats = await models.Stats.findById(userId)
-    return stats.addLike()
+    return timelines
   }
 
   Post.prototype.removeLike = function(userId) {
@@ -668,7 +647,7 @@ exports.addModel = function(database) {
       models.User.findById(userId)
         .then(function(user) {
           theUser = user
-          return user.validateCanUnLikePost(that.id)
+          return user.validateCanUnLikePost(that)
         })
         .then(function() {
           return database.zremAsync(mkKey(['post', that.id, 'likes']), userId)
@@ -705,23 +684,17 @@ exports.addModel = function(database) {
     })
   }
 
-  Post.prototype.isHiddenIn = function(timelineId) {
-    var that = this
+  Post.prototype.isHiddenIn = async function(timeline) {
+    // hides are applicable only to river
+    if (!(timeline.isRiverOfNews() || timeline.isHides()))
+      return false
 
-    return new Promise(function(resolve, reject) {
-      models.Timeline.findById(timelineId)
-        .then(function(timeline) {
-          if (!(timeline.isRiverOfNews() || timeline.isHides()))
-            resolve(false)
+    let owner = await timeline.getUser()
+    let hidesTimelineId = await owner.getHidesTimelineId()
 
-          return timeline.getUser()
-        })
-        .then(function(user) { return user.getHidesTimelineId() })
-        .then(function(timelineId) {
-          return database.zscoreAsync(mkKey(['timeline', timelineId, 'posts']), that.id)
-        })
-        .then(function(score) { resolve(score && score >= 0) })
-    })
+    let score = await database.zscoreAsync(mkKey(['timeline', hidesTimelineId, 'posts']), this.id)
+
+    return (score && score >= 0)
   }
 
   Post.prototype.validateCanShow = async function(userId) {

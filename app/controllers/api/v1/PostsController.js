@@ -5,6 +5,7 @@ var Promise = require('bluebird')
   , exceptions = require('../../../support/exceptions')
   , PostSerializer = models.PostSerializer
   , FeedFactory = models.FeedFactory
+  , pubSub = models.PubSub
   , ForbiddenException = exceptions.ForbiddenException
   , _ = require('lodash')
 
@@ -128,14 +129,25 @@ exports.addController = function(app) {
     }
   }
 
-  PostsController.like = function(req, res) {
-    if (!req.user)
-      return res.status(401).jsonp({ err: 'Not found' })
+  PostsController.like = async function(req, res) {
+    if (!req.user) {
+      res.status(401).jsonp({ err: 'Not found' })
+      return
+    }
 
-    models.Post.getById(req.params.postId)
-      .then(function(post) { return post.addLike(req.user.id) })
-      .then(function() { res.status(200).send({}) })
-      .catch(exceptions.reportError(res))
+    try {
+      let post = await models.Post.getById(req.params.postId)
+      let affectedTimelines = await post.addLike(req.user)
+
+      res.status(200).send({})
+
+      await pubSub.newLike(post, req.user.id, affectedTimelines)
+
+      let stats = await models.Stats.findById(req.user.id)
+      await stats.addLike()
+    } catch(e) {
+      exceptions.reportError(res)(e)
+    }
   }
 
   PostsController.unlike = function(req, res) {
