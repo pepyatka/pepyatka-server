@@ -616,22 +616,26 @@ exports.addModel = function(database) {
   Post.prototype.addLike = async function(user) {
     await user.validateCanLikePost(this)
 
-    let timelines = []
+    let subscriberIds = await user.getSubscriberIds()
+    let bannedIds = await user.getBanIds()
+    let timelines = await this.getLikesFriendOfFriendTimelines(user)
 
-    if (!await this.isPrivate())
-      timelines = await this.getLikesFriendOfFriendTimelines(user)
+    if (await this.isPrivate()) {
+      // only subscribers are allowed to read private posts
+      timelines = timelines.filter((timeline) => timeline.userId in subscriberIds)
+    }
 
-    var promises = timelines.map((timeline) => timeline.updatePost(this.id, 'like'))
+    // no need to post updates to rivers of banned users
+    timelines = timelines.filter((timeline) => !(timeline.userId in bannedIds))
+
+    let promises = timelines.map((timeline) => timeline.updatePost(this.id, 'like'))
 
     var now = new Date().getTime()
     promises.push(database.zaddAsync(mkKey(['post', this.id, 'likes']), now, user.id))
 
     await* promises
 
-    await pubSub.newLike(this, user.id)
-
-    var stats = await models.Stats.findById(user.id)
-    return stats.addLike()
+    return timelines
   }
 
   Post.prototype.removeLike = function(userId) {
@@ -680,23 +684,17 @@ exports.addModel = function(database) {
     })
   }
 
-  Post.prototype.isHiddenIn = function(timelineId) {
-    var that = this
+  Post.prototype.isHiddenIn = async function(timeline) {
+    // hides are applicable only to river
+    if (!(timeline.isRiverOfNews() || timeline.isHides()))
+      return false
 
-    return new Promise(function(resolve, reject) {
-      models.Timeline.findById(timelineId)
-        .then(function(timeline) {
-          if (!(timeline.isRiverOfNews() || timeline.isHides()))
-            resolve(false)
+    let owner = await timeline.getUser()
+    let hidesTimelineId = await owner.getHidesTimelineId()
 
-          return timeline.getUser()
-        })
-        .then(function(user) { return user.getHidesTimelineId() })
-        .then(function(timelineId) {
-          return database.zscoreAsync(mkKey(['timeline', timelineId, 'posts']), that.id)
-        })
-        .then(function(score) { resolve(score && score >= 0) })
-    })
+    let score = await database.zscoreAsync(mkKey(['timeline', hidesTimelineId, 'posts']), this.id)
+
+    return (score && score >= 0)
   }
 
   Post.prototype.validateCanShow = async function(userId) {

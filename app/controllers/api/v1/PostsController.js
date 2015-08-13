@@ -5,6 +5,7 @@ var Promise = require('bluebird')
   , exceptions = require('../../../support/exceptions')
   , PostSerializer = models.PostSerializer
   , FeedFactory = models.FeedFactory
+  , pubSub = models.PubSub
   , ForbiddenException = exceptions.ForbiddenException
   , _ = require('lodash')
 
@@ -136,8 +137,14 @@ exports.addController = function(app) {
 
     try {
       let post = await models.Post.getById(req.params.postId)
-      await post.addLike(req.user)
+      let affectedTimelines = await post.addLike(req.user)
+
       res.status(200).send({})
+
+      await pubSub.newLike(post, req.user.id, affectedTimelines)
+
+      let stats = await models.Stats.findById(req.user.id)
+      await stats.addLike()
     } catch(e) {
       exceptions.reportError(res)(e)
     }
