@@ -16,24 +16,23 @@ var Promise = require('bluebird')
 
 Promise.promisifyAll(jwt)
 
-var findUser = function(req, res, next) {
+var findUser = async function(req, res, next) {
   var authToken = req.headers['x-authentication-token'] ||
       req.body.authToken || req.query.authToken
-  if (authToken) {
-    var secret = config.secret
 
-    jwt.verifyAsync(authToken, secret)
-      .then(function(decoded) {
-        return models.User.findById(decoded.userId)
-      })
-      .then(function(user) {
-        if (user) req.user = user
-        next()
-      })
-      .catch(function(e) { next() })
-  } else {
-    next()
+  if (authToken) {
+    try {
+      let decoded = await jwt.verifyAsync(authToken, config.secret)
+      let user = await models.User.findById(decoded.userId)
+
+      if (user) {
+        req.user = user
+      }
+    } catch(e) {
+    }
   }
+
+  next()
 }
 
 module.exports = function(app) {
