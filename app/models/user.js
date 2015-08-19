@@ -995,6 +995,13 @@ exports.addModel = function(database) {
     })
   }
 
+  User.prototype.validateCanDestroyPost = async function(post) {
+    if (post.userId != this.id) {
+      throw (new ForbiddenException(
+        "You can't delete another user's post"))
+    }
+  }
+
   User.prototype.validateCanSubscribe = async function(timelineId) {
     var timelineIds = await this.getSubscriptionIds()
     if (_.includes(timelineIds, timelineId)) {
