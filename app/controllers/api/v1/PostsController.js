@@ -78,6 +78,11 @@ exports.addController = function(app) {
 
     models.Post.findById(req.params.postId)
       .then(function(post) {
+        if (req.user.isAnonymous()) {
+          return Promise.reject(new ForbiddenException(
+              "Anonymous can't update posts"))
+        }
+
         if (post.userId != req.user.id) {
           return Promise.reject(new ForbiddenException(
               "You can't update another user's post"))

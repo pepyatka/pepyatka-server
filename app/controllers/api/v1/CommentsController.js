@@ -39,6 +39,10 @@ exports.addController = function(app) {
       try {
         var comment = await models.Comment.getById(req.params.commentId)
 
+        if (req.user.isAnonymous()) {
+          throw new ForbiddenException("Anonymous can't update comments")
+        }
+
         if (comment.userId != req.user.id) {
           throw new ForbiddenException(
             "You can't update another user's comment"
@@ -63,6 +67,10 @@ exports.addController = function(app) {
 
       try {
         var comment = await models.Comment.getById(req.params.commentId);
+
+        if (req.user.isAnonymous()) {
+          throw new ForbiddenException("Anonymous can't delete comments")
+        }
 
         if (comment.userId != req.user.id) {
           throw new ForbiddenException(

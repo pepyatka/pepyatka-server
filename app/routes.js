@@ -13,6 +13,7 @@ var Promise = require('bluebird')
   , jwt = require('jsonwebtoken')
   , config = require('../config/config').load()
   , models = require('./models')
+  , _ = require('lodash')
 
 Promise.promisifyAll(jwt)
 
@@ -25,11 +26,14 @@ var findUser = async function(req, res, next) {
       let decoded = await jwt.verifyAsync(authToken, config.secret)
       let user = await models.User.findById(decoded.userId)
 
-      if (user) {
-        req.user = user
-      }
+      req.user = user
     } catch(e) {
     }
+  }
+
+  // set currentUser to anonymous user
+  if (_.isUndefined(req.user)) {
+    req.user = await models.User.findByUsername('anonymous')
   }
 
   next()
