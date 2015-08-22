@@ -32,7 +32,8 @@ var findUser = async function(req, res, next) {
   }
 
   // set currentUser to anonymous user
-  if (_.isUndefined(req.user)) {
+  console.log(req.user)
+  if (_.isEmpty(req.user)) {
     req.user = await models.User.findByUsername('anonymous')
   }
 
