@@ -1017,10 +1017,6 @@ exports.addModel = function(database) {
   }
 
   User.prototype.validateCanSubscribe = async function(timelineId) {
-    if (this.isAnonymous()) {
-      throw new ForbiddenException("Anonymous can't subscribe")
-    }
-
     var timelineIds = await this.getSubscriptionIds()
     if (_.includes(timelineIds, timelineId)) {
       throw new ForbiddenException("You are already subscribed to that user")
@@ -1043,10 +1039,6 @@ exports.addModel = function(database) {
   }
 
   User.prototype.validateCanUnsubscribe = function(timelineId) {
-    if (this.isAnonymous()) {
-      throw new ForbiddenException("Anonymous can't unsubscribe")
-    }
-
     var that = this
 
     return new Promise(function(resolve, reject) {
