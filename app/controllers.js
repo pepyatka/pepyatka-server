@@ -1,5 +1,6 @@
 "use strict";
 
+exports.BookmarkletController = require('./controllers/api/v1/BookmarkletController').addController()
 exports.SessionController = require('./controllers/api/v1/SessionController').addController()
 exports.UsersController = require('./controllers/api/v1/UsersController').addController()
 exports.GroupsController = require('./controllers/api/v1/GroupsController').addController()
