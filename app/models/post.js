@@ -117,16 +117,30 @@ exports.addModel = function(database) {
   }
 
   Post.prototype.update = async function(params) {
+    // Reflect post changes and validate
     this.updatedAt = new Date().getTime()
     this.body = params.body
-
     this.validate()
 
+    // Calculate changes in attachments
+    let oldAttachments = await this.getAttachmentIds() || []
+    let newAttachments = params.attachments || []
+    let addedAttachments = newAttachments.filter(i => oldAttachments.indexOf(i) < 0)
+    let removedAttachments = oldAttachments.filter(i => newAttachments.indexOf(i) < 0)
+
+    // Update post body in DB
     await database.hmsetAsync(mkKey(['post', this.id]),
                               { 'body': this.body,
                                 'updatedAt': this.updatedAt.toString()
                               })
 
+    // Update post attachments in DB
+    await* [
+      this.linkAttachments(addedAttachments),
+      this.unlinkAttachments(removedAttachments)
+    ]
+
+    // Finally, publish changes
     await pubSub.updatePost(this.id)
 
     return this
@@ -459,21 +473,49 @@ exports.addModel = function(database) {
     })
   }
 
-  Post.prototype.linkAttachments = function() {
+  Post.prototype.linkAttachments = function(attachmentList) {
     var that = this
-    var attachments = that.attachments || []
+    var attachments = attachmentList || that.attachments || []
 
     var attachmentPromises = attachments.map(function(attachmentId, index) {
       return new Promise(function(resolve, reject) {
         models.Attachment.findById(attachmentId)
           .then(function(attachment) {
-            // Replace attachment ids with attachment objects
-            that.attachments[index] = attachment
+            // Replace attachment ids with attachment objects (on create-post)
+            if (that.attachments) {
+              let pos = that.attachments.indexOf(attachmentId)
+              if (pos < 0) {
+                that.attachments.push(attachment)
+              } else {
+                that.attachments[pos] = attachment
+              }
+            }
 
             // Update connections in DB
             return Promise.all([
               database.rpushAsync(mkKey(['post', that.id, 'attachments']), attachmentId),
               database.hsetAsync(mkKey(['attachment', attachmentId]), 'postId', that.id)
+            ])
+          })
+          .then(function(res) { resolve(res) })
+      })
+    })
+
+    return Promise.settle(attachmentPromises)
+  }
+
+  Post.prototype.unlinkAttachments = function(attachmentList) {
+    var that = this
+    var attachments = attachmentList || []
+
+    var attachmentPromises = attachments.map(function(attachmentId, index) {
+      return new Promise(function(resolve, reject) {
+        models.Attachment.findById(attachmentId)
+          .then(function(attachment) {
+            // Update connections in DB
+            return Promise.all([
+              database.lremAsync(mkKey(['post', that.id, 'attachments']), 0, attachmentId),
+              database.hsetAsync(mkKey(['attachment', attachmentId]), 'postId', '')
             ])
           })
           .then(function(res) { resolve(res) })
