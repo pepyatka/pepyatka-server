@@ -96,7 +96,7 @@ exports.addModel = function(database) {
           if (attachment.fileName && attachment.fileName.match(supportedExtensions) !== null) {
             attachment.fileExtension = attachment.fileName.match(supportedExtensions)[1].toLowerCase()
           } else {
-            attachment.fileExtension = null
+            attachment.fileExtension = ''
           }
 
           return that.handleMedia(attachment)
