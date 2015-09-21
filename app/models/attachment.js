@@ -90,13 +90,15 @@ exports.addModel = function(database) {
           attachment.fileSize = attachment.file.size
           attachment.mimeType = attachment.file.type
 
+          // Determine initial file extension
+          // (it might be overridden later when we know MIME type from its contents)
           // TODO: extract to config
-          var supportedExtensions = /\.(jpe?g|png|gif|mp3|m4a|pdf|ppt|txt|docx?)$/i
+          var supportedExtensions = /\.(jpe?g|png|gif|mp3|m4a|ogg|wav|txt|pdf|docx?|pptx?|xlsx?)$/i
 
           if (attachment.fileName && attachment.fileName.match(supportedExtensions) !== null) {
             attachment.fileExtension = attachment.fileName.match(supportedExtensions)[1].toLowerCase()
           } else {
-            attachment.fileExtension = null
+            attachment.fileExtension = ''
           }
 
           return that.handleMedia(attachment)
@@ -175,11 +177,19 @@ exports.addModel = function(database) {
   Attachment.prototype.handleMedia = async function(attachment) {
     var tmpAttachmentFile = this.file.path
     var tmpThumbnailFile = tmpAttachmentFile + '.thumbnail'
-    var attachmentFile = this.getPath()
-    var thumbnailFile = this.getThumbnailPath()
 
-    const supportedImageTypes = ['image/jpeg', 'image/gif', 'image/png']
-    const supportedAudioTypes = ['audio/x-m4a', 'audio/mp4', 'audio/mpeg', 'audio/ogg', 'audio/x-wav']
+    const supportedImageTypes = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/gif': 'gif'
+    }
+    const supportedAudioTypes = {
+      'audio/mpeg': 'mp3',
+      'audio/x-m4a': 'm4a',
+      'audio/mp4': 'm4a',
+      'audio/ogg': 'ogg',
+      'audio/x-wav': 'wav'
+    }
 
     // Check a mime type
     try {
@@ -193,12 +203,14 @@ exports.addModel = function(database) {
       // otherwise, we'll use the fallback provided by the user
     }
 
-    if (supportedImageTypes.indexOf(this.mimeType) != -1) {
+    if (supportedImageTypes[this.mimeType]) {
+      // Set media properties for 'image' type
+      this.mediaType = 'image'
+      this.fileExtension = supportedImageTypes[this.mimeType]
+
       // Store a thumbnail for a compatible image
       let img = Promise.promisifyAll(gm(tmpAttachmentFile))
       let size = await img.sizeAsync()
-
-      this.mediaType = 'image'
 
       if (size.width > 525 || size.height > 175) {
         // Looks big enough, needs a resize
@@ -214,20 +226,21 @@ exports.addModel = function(database) {
           await this.uploadToS3(tmpThumbnailFile, config.thumbnails)
           await fs.unlinkAsync(tmpThumbnailFile)
         } else {
-          await img.writeAsync(thumbnailFile)
+          await img.writeAsync(this.getThumbnailPath())
         }
       } else {
         // Since it's small, just use the original image
         this.noThumbnail = '1'
       }
-    } else if (supportedAudioTypes.indexOf(this.mimeType) != -1) {
-      // analyze metadata to get Artist & Title
-      this.noThumbnail = '1'
+    } else if (supportedAudioTypes[this.mimeType]) {
+      // Set media properties for 'audio' type
       this.mediaType = 'audio'
+      this.fileExtension = supportedAudioTypes[this.mimeType]
+      this.noThumbnail = '1'
 
+      // Analyze metadata to get Artist & Title
       let readStream = fs.createReadStream(tmpAttachmentFile)
       let asyncMeta = Promise.promisify(meta)
-
       let metadata = await asyncMeta(readStream)
 
       this.title = metadata.title
@@ -238,8 +251,9 @@ exports.addModel = function(database) {
         this.artist = metadata.artist
       }
     } else {
-      this.noThumbnail = '1'
+      // Set media properties for 'general' type
       this.mediaType = 'general'
+      this.noThumbnail = '1'
     }
 
     // Store an original attachment
@@ -247,7 +261,7 @@ exports.addModel = function(database) {
       await this.uploadToS3(tmpAttachmentFile, config.attachments)
       await fs.unlinkAsync(tmpAttachmentFile)
     } else {
-      await fs.renameAsync(tmpAttachmentFile, attachmentFile)
+      await fs.renameAsync(tmpAttachmentFile, this.getPath())
     }
 
     return attachment
