@@ -181,7 +181,8 @@ exports.addModel = function(database) {
     const supportedImageTypes = {
       'image/jpeg': 'jpg',
       'image/png': 'png',
-      'image/gif': 'gif'
+      'image/gif': 'gif',
+      'image/svg+xml': 'svg'
     }
     const supportedAudioTypes = {
       'audio/mpeg': 'mp3',
@@ -208,29 +209,34 @@ exports.addModel = function(database) {
       this.mediaType = 'image'
       this.fileExtension = supportedImageTypes[this.mimeType]
 
-      // Store a thumbnail for a compatible image
-      let img = Promise.promisifyAll(gm(tmpAttachmentFile))
-      let size = await img.sizeAsync()
-
-      if (size.width > 525 || size.height > 175) {
-        // Looks big enough, needs a resize
-        this.noThumbnail = '0'
-
-        img = img
-          .resize(525, 175)
-          .autoOrient()
-          .quality(95)
-
-        if (config.thumbnails.storage.type === 's3') {
-          await img.writeAsync(tmpThumbnailFile)
-          await this.uploadToS3(tmpThumbnailFile, config.thumbnails)
-          await fs.unlinkAsync(tmpThumbnailFile)
-        } else {
-          await img.writeAsync(this.getThumbnailPath())
-        }
-      } else {
-        // Since it's small, just use the original image
+      // SVG is special (it's a vector image, so doesn't need resizing)
+      if (this.mimeType === 'image/svg+xml') {
         this.noThumbnail = '1'
+      } else {
+        // Store a thumbnail for a compatible image
+        let img = Promise.promisifyAll(gm(tmpAttachmentFile))
+        let size = await img.sizeAsync()
+
+        if (size.width > 525 || size.height > 175) {
+          // Looks big enough, needs a resize
+          this.noThumbnail = '0'
+
+          img = img
+            .resize(525, 175)
+            .autoOrient()
+            .quality(95)
+
+          if (config.thumbnails.storage.type === 's3') {
+            await img.writeAsync(tmpThumbnailFile)
+            await this.uploadToS3(tmpThumbnailFile, config.thumbnails)
+            await fs.unlinkAsync(tmpThumbnailFile)
+          } else {
+            await img.writeAsync(this.getThumbnailPath())
+          }
+        } else {
+          // Since it's small, just use the original image
+          this.noThumbnail = '1'
+        }
       }
     } else if (supportedAudioTypes[this.mimeType]) {
       // Set media properties for 'audio' type
