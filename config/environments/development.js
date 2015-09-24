@@ -48,7 +48,6 @@ exports.getConfig = function() {
                          'friends', 'list', 'search', 'summary', 'share','404',
                          'iphone', 'attachments', 'files', 'profilepics', 'requests']
   }
-
   config.media = {
     // Public URL prefix
     url: config.host + '/', // must have trailing slash
@@ -107,5 +106,12 @@ exports.getConfig = function() {
     }
   }
 
+  config.secret_pg = {
+    user        : 'frf_secret',
+    database    : 'frf_secret',
+    ssl         : false, //consider making it true for a remote server
+    host        : 'localhost',
+    server_port : 3030
+  }
   return config
 }

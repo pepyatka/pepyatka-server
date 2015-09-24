@@ -9,6 +9,7 @@ var SessionRoute = require('./routes/api/v1/SessionRoute')
   , CommentsRoute = require('./routes/api/v1/CommentsRoute')
   , GroupsRoute = require('./routes/api/v1/GroupsRoute')
   , PasswordsRoute = require('./routes/api/v1/PasswordsRoute')
+  , SecretRoute = require('./routes/api/secret/SecretRoute')
 
 var Promise = require('bluebird')
   , jwt = require('jsonwebtoken')
@@ -52,4 +53,5 @@ module.exports = function(app) {
   PostsRoute.addRoutes(app)
   AttachmentsRoute.addRoutes(app)
   CommentsRoute.addRoutes(app)
+  SecretRoute.addRoutes(app)
 }
