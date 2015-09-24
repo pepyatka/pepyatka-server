@@ -365,24 +365,26 @@ describe('User', function() {
   })
 
   describe('#findByEmail()', function() {
-    it('should find a user by email', async function(done) {
-      var user = new User({
-        username: 'Luna',
-        password: 'password',
-        email: 'luna@example.com'
-      })
+    it('should find a user by email', function(done) {
+      let asyncFunc = async function() {
+        var user = new User({
+          username: 'Luna',
+          password: 'password',
+          email: 'luna@example.com'
+        })
 
-      await user.create()
-      await user.update({ email: user.email })
+        await user.create()
+        await user.update({ email: user.email })
 
-      var newUser = await User.findByEmail(user.email)
+        var newUser = await User.findByEmail(user.email)
 
-      newUser.should.be.an.instanceOf(User)
-      newUser.should.not.be.empty
-      newUser.should.have.property('id')
-      newUser.id.should.eql(user.id)
+        newUser.should.be.an.instanceOf(User)
+        newUser.should.not.be.empty
+        newUser.should.have.property('id')
+        newUser.id.should.eql(user.id)
+      }
 
-      done();
+      asyncFunc().then(() => {done()}).catch((e) => {done(e)})
     })
 
     it('should not find a user by invalid email', function(done) {
