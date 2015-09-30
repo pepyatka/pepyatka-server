@@ -120,6 +120,10 @@ exports.addModel = function(database) {
     return this.type === "user"
   }
 
+  User.prototype.isAnonymous = function() {
+    return this.username === 'anonymous'
+  }
+
   User.prototype.newPost = async function(attrs) {
     attrs.userId = this.id
 
@@ -234,6 +238,7 @@ exports.addModel = function(database) {
     valid = this.isValidUsername().value()
       && this.isValidScreenName().value()
       && await this.isValidEmail()
+      && !this.isAnonymous()
 
     if (!valid)
       throw new Error("Invalid")
@@ -305,6 +310,10 @@ exports.addModel = function(database) {
   }
 
   User.prototype.update = async function(params) {
+    if (this.isAnonymous()) {
+      throw new Error("Anonymous can't update her settings")
+    }
+
     var hasChanges = false
       , emailChanged = false
       , oldEmail = ""
@@ -995,6 +1004,18 @@ exports.addModel = function(database) {
     })
   }
 
+  User.prototype.validateCanDestroyPost = async function(post) {
+    if (this.isAnonymous()) {
+      throw (new ForbiddenException(
+        "Anonymous can't delete posts"))
+    }
+
+    if (post.userId != this.id) {
+      throw (new ForbiddenException(
+        "You can't delete another user's post"))
+    }
+  }
+
   User.prototype.validateCanSubscribe = async function(timelineId) {
     var timelineIds = await this.getSubscriptionIds()
     if (_.includes(timelineIds, timelineId)) {
@@ -1141,6 +1162,10 @@ exports.addModel = function(database) {
   }
 
   User.prototype.validateCanSendSubscriptionRequest = async function(userId) {
+    if (this.isAnonymous()) {
+      throw new ForbiddenException("Anonymous can't send subscription requests")
+    }
+
     var key = mkKey(['user', userId, 'requests'])
     var exists = await database.zscoreAsync(key, this.id)
     var user = await models.User.findById(userId)

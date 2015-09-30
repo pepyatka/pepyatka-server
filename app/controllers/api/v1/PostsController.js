@@ -78,6 +78,11 @@ exports.addController = function(app) {
 
     models.Post.findById(req.params.postId)
       .then(function(post) {
+        if (req.user.isAnonymous()) {
+          return Promise.reject(new ForbiddenException(
+              "Anonymous can't update posts"))
+        }
+
         if (post.userId != req.user.id) {
           return Promise.reject(new ForbiddenException(
               "You can't update another user's post"))
@@ -137,6 +142,9 @@ exports.addController = function(app) {
 
     try {
       let post = await models.Post.getById(req.params.postId)
+
+      await req.user.validateCanLikePost(post)
+
       let affectedTimelines = await post.addLike(req.user)
 
       let stats = await models.Stats.findById(req.user.id)
@@ -150,50 +158,65 @@ exports.addController = function(app) {
     }
   }
 
-  PostsController.unlike = function(req, res) {
+  PostsController.unlike = async function(req, res) {
     if (!req.user)
       return res.status(401).jsonp({ err: 'Not found' })
 
-    models.Post.getById(req.params.postId)
-      .then(function(post) { return post.removeLike(req.user.id) })
-      .then(function() { res.status(200).send({}) })
-      .catch(exceptions.reportError(res))
+    try {
+      let post = await models.Post.getById(req.params.postId)
+
+      await req.user.validateCanUnLikePost(post)
+
+      await post.removeLike(req.user.id)
+      res.status(200).send({})
+    } catch(e) {
+      exceptions.reportError(res)(e)
+    }
   }
 
-  PostsController.destroy = function(req, res) {
+  PostsController.destroy = async function(req, res) {
     if (!req.user)
       return res.status(401).jsonp({ err: 'Not found' })
 
-    models.Post.getById(req.params.postId)
-      .then(function(post) {
-          if (post.userId != req.user.id) {
-            return Promise.reject(new ForbiddenException(
-                "You can't delete another user's post"))
-          }
-          return post.destroy()
-        })
-      .then(function(status) { res.jsonp({}) })
-      .catch(exceptions.reportError(res))
+    try {
+      let post = await models.Post.getById(req.params.postId)
+
+      await req.user.validateCanDestroyPost(post)
+
+      await post.destroy()
+
+      res.jsonp({})
+    } catch(e) {
+      exceptions.reportError(res)(e)
+    }
   }
 
-  PostsController.hide = function(req, res) {
+  PostsController.hide = async function(req, res) {
     if (!req.user)
       return res.status(401).jsonp({ err: 'Not found' })
 
-    models.Post.getById(req.params.postId)
-      .then(function(post) { return post.hide(req.user.id) })
-      .then(function() { res.jsonp({} )})
-      .catch(exceptions.reportError(res))
+    try {
+      let post = await models.Post.getById(req.params.postId)
+      await post.hide(req.user.id)
+
+      res.jsonp({})
+    } catch(e) {
+      exceptions.reportError(res)(e)
+    }
   }
 
-  PostsController.unhide = function(req, res) {
+  PostsController.unhide = async function(req, res) {
     if (!req.user)
       return res.status(401).jsonp({ err: 'Not found' })
 
-    models.Post.getById(req.params.postId)
-      .then(function(post) { return post.unhide(req.user.id) })
-      .then(function() { res.jsonp({} )})
-      .catch(exceptions.reportError(res))
+    try {
+      let post = await models.Post.getById(req.params.postId)
+      await post.unhide(req.user.id)
+
+      res.jsonp({})
+    } catch(e) {
+      exceptions.reportError(res)(e)
+    }
   }
 
   return PostsController
