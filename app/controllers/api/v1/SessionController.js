@@ -17,6 +17,14 @@ exports.addController = function(app) {
           return res.status(401).jsonp({ err: err.message })
         }
 
+        if (user === false) {
+          if (!msg) {
+            msg = 'Internal server error'
+          }
+
+          return res.status(401).jsonp({ err: msg })
+        }
+
         var secret = config.secret
         var authToken = jwt.sign({ userId: user.id }, secret)
 

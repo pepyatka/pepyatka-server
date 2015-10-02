@@ -1,4 +1,5 @@
 import request from 'superagent'
+import fetch from 'node-fetch'
 
 import app from '../../index'
 import models from '../../app/models'
@@ -58,6 +59,14 @@ describe("SessionController", () => {
           res.body.err.should.equal('The password you provided does not match the password in our system.')
           done()
         })
+    })
+
+    it('should not signin with missing username', async () => {
+      let result = await fetch(`${app.config.host}/v1/session`, { method: 'POST', body: 'a=1' })
+      let data = await result.json()
+
+      data.should.not.have.property('authToken')
+      data.should.have.property('err')
     })
   })
 })
