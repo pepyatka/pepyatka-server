@@ -1,15 +1,13 @@
-"use strict";
+import {Strategy as LocalStrategy} from 'passport-local'
 
-var LocalStrategy = require('passport-local').Strategy
-  , models = require('../../app/models')
-  , exceptions = require('../../app/support/exceptions')
+import {User} from '../../app/models'
 
 exports.init = function(passport) {
   passport.use(new LocalStrategy({
     usernameField: 'username',
     passwordField: 'password'
   }, function(username, clearPassword, done) {
-    models.User.findByUsername(username)
+    User.findByUsername(username)
       .then(function(user) {
         if (!user) {
           // db inconsistency. got id, but didn't find object
