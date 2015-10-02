@@ -1,23 +1,23 @@
-var request = require('superagent')
-  , app = require('../../index')
-  , models = require('../../app/models')
-  , funcTestHelper = require('./functional_test_helper')
+import request from 'superagent'
 
-describe("SessionController", function() {
+import app from '../../index'
+import models from '../../app/models'
+import funcTestHelper from './functional_test_helper'
+
+describe("SessionController", () => {
   beforeEach(funcTestHelper.flushDb())
 
-  describe("#create()", function() {
+  describe("#create()", () => {
     var user, userData;
 
-    beforeEach(function(done) {
+    beforeEach(async () => {
       userData = {
         username: 'Luna',
         password: 'password'
       }
       user = new models.User(userData)
 
-      user.create()
-        .then(function(newUser) { done() })
+      await user.create()
     })
 
     it("should sign in with a valid user", function(done) {
