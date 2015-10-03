@@ -291,20 +291,17 @@ exports.addModel = function(database) {
   /**
    * Returns the IDs of users subscribed to this timeline, as a promise.
    */
-  Timeline.prototype.getSubscriberIds = function(includeSelf) {
-    var that = this
+  Timeline.prototype.getSubscriberIds = async function(includeSelf) {
+    let userIds = await database.zrevrangeAsync(mkKey(['timeline', this.id, 'subscribers']), 0, -1)
 
-    return new Promise(function(resolve, reject) {
-      database.zrevrangeAsync(mkKey(['timeline', that.id, 'subscribers']), 0, -1)
-        .then(function(userIds) {
-          // A user is always subscribed to their own posts timeline.
-          if (includeSelf && (that.isPosts() || that.isDirects())) {
-            userIds = _.uniq(userIds.concat([that.userId]))
-          }
-          that.subscriberIds = userIds
-          resolve(userIds)
-        })
-    })
+    // A user is always subscribed to their own posts timeline.
+    if (includeSelf && (this.isPosts() || this.isDirects())) {
+      userIds = _.uniq(userIds.concat([this.userId]))
+    }
+
+    this.subscriberIds = userIds
+
+    return userIds
   }
 
   Timeline.prototype.getSubscribers = async function(includeSelf) {
