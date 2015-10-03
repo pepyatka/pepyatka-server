@@ -1,49 +1,58 @@
-"use strict";
+import Promise from 'bluebird'
+import jwt from 'jsonwebtoken'
+import express from 'express'
 
-var SessionRoute = require('./routes/api/v1/SessionRoute')
-  , BookmarkletRoute = require('./routes/api/v1/BookmarkletRoute')
-  , UsersRoute = require('./routes/api/v1/UsersRoute')
-  , TimelinesRoute = require('./routes/api/v1/TimelinesRoute')
-  , PostsRoute = require('./routes/api/v1/PostsRoute')
-  , AttachmentsRoute = require('./routes/api/v1/AttachmentsRoute')
-  , CommentsRoute = require('./routes/api/v1/CommentsRoute')
-  , GroupsRoute = require('./routes/api/v1/GroupsRoute')
-  , PasswordsRoute = require('./routes/api/v1/PasswordsRoute')
+import config_loader from '../config/config'
+import {User} from './models'
 
-var Promise = require('bluebird')
-  , jwt = require('jsonwebtoken')
-  , config = require('../config/config').load()
-  , models = require('./models')
+import SessionRoute from './routes/api/v1/SessionRoute'
+import BookmarkletRoute from './routes/api/v1/BookmarkletRoute'
+import UsersRoute from './routes/api/v1/UsersRoute'
+import TimelinesRoute from './routes/api/v1/TimelinesRoute'
+import PostsRoute from './routes/api/v1/PostsRoute'
+import AttachmentsRoute from './routes/api/v1/AttachmentsRoute'
+import CommentsRoute from './routes/api/v1/CommentsRoute'
+import GroupsRoute from './routes/api/v1/GroupsRoute'
+import PasswordsRoute from './routes/api/v1/PasswordsRoute'
 
+
+let config = config_loader.load()
 Promise.promisifyAll(jwt)
 
-var findUser = async function(req, res, next) {
-  var authToken = req.headers['x-authentication-token'] ||
-      req.body.authToken || req.query.authToken
+
+var findUser = async (req, res, next) => {
+  var authToken = req.headers['x-authentication-token']
+    || req.body.authToken
+    || req.query.authToken
 
   if (authToken) {
     try {
       let decoded = await jwt.verifyAsync(authToken, config.secret)
-      let user = await models.User.findById(decoded.userId)
+      let user = await User.findById(decoded.userId)
 
       if (user) {
         req.user = user
       }
     } catch(e) {
+      // invalid token. the user will be treated as anonymous
+      console.info(e)
     }
   }
 
   next()
 }
 
-module.exports = function(app) {
-  app.use(require('express').static(__dirname + '/../public'))
+export default function(app) {
+  app.use(express.static(__dirname + '/../public'))
 
-  app.options('/*', function(req, res) { res.status(200).send({}) })
-
+  // unauthenticated routes
+  app.options('/*', (req, res) => {
+    res.status(200).send({})
+  })
   SessionRoute.addRoutes(app)
   PasswordsRoute.addRoutes(app)
 
+  // [at least optionally] authenticated routes
   app.all('/*', findUser)
   BookmarkletRoute.addRoutes(app)
   UsersRoute.addRoutes(app)
