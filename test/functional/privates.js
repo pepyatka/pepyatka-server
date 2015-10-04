@@ -879,4 +879,33 @@ describe("Privates", function() {
       })
     })
   })
+
+  describe('Checking, that private posts are correctly propagated', () => {
+    let lunaContext = {}
+      , marsContext = {}
+      , zeusContext = {}
+
+    beforeEach(funcTestHelper.createUserCtx(lunaContext, 'luna', 'pw'))
+    beforeEach(funcTestHelper.createUserCtx(marsContext, 'mars', 'pw'))
+    beforeEach(funcTestHelper.createUserCtx(zeusContext, 'zeus', 'pw'))
+    beforeEach(() => funcTestHelper.mutualSubscriptions([lunaContext, marsContext, zeusContext]))
+    beforeEach(() => funcTestHelper.goPrivate(lunaContext))
+
+    describe('given we have 2 posts by luna', () => {
+      let post1, post2
+
+      beforeEach(async () => {post1 = await funcTestHelper.createAndReturnPost(lunaContext, 'post 1')})
+      beforeEach(async () => {post2 = await funcTestHelper.createAndReturnPost(lunaContext, 'post 2')})
+
+      it('should bump posts correctly, if someone comments them', async () => {
+        await funcTestHelper.createCommentAsync(marsContext, post1.id, 'comment1')
+
+        let marsRiver = await funcTestHelper.getRiverOfNews(marsContext);
+        marsRiver.timelines.posts[0].should.equal(post1.id, 'order of posts in incorrect')
+
+        let zeusRiver = await funcTestHelper.getRiverOfNews(zeusContext);
+        zeusRiver.timelines.posts[0].should.equal(post1.id, 'order of posts in incorrect')
+      })
+    })
+  })
 })
