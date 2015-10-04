@@ -906,6 +906,24 @@ describe("Privates", function() {
         let zeusRiver = await funcTestHelper.getRiverOfNews(zeusContext);
         zeusRiver.timelines.posts[0].should.equal(post1.id, 'order of posts in incorrect')
       })
+
+      it('should add post to "my discussions" after comment', async () => {
+        await funcTestHelper.createCommentAsync(marsContext, post1.id, 'comment1')
+
+        let marsDiscussions = await funcTestHelper.getMyDiscussions(marsContext);
+        marsDiscussions.timelines.should.have.property('posts')
+        marsDiscussions.timelines.posts.should.include(post1.id, 'commented post is not in "my discussions"')
+        marsDiscussions.timelines.posts[0].should.equal(post1.id, 'order of posts in incorrect')
+      })
+
+      it('should add post to "my discussions" after like', async () => {
+        await funcTestHelper.like(post1.id, marsContext.authToken)
+
+        let marsDiscussions = await funcTestHelper.getMyDiscussions(marsContext);
+        marsDiscussions.timelines.should.have.property('posts')
+        marsDiscussions.timelines.posts.should.include(post1.id, 'liked post is not in "my discussions"')
+        marsDiscussions.timelines.posts[0].should.equal(post1.id, 'order of posts in incorrect')
+      })
     })
   })
 })

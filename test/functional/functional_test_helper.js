@@ -325,12 +325,24 @@ exports.createCommentAsync = (userContext, postId, body) => {
   return postJson('/v1/comments', {comment: {body, postId}, authToken: userContext.authToken})
 }
 
-exports.getRiverOfNews = async (userContext) => {
-  let url = apiUrl('/v1/timelines/home')
-  let encodedToken = encodeURIComponent(userContext.authToken)
+let getTimeline = async (relativeUrl, userContext) => {
+  let url = apiUrl(relativeUrl)
 
-  let response = await fetch(`${url}?authToken=${encodedToken}`)
+  if (!_.isUndefined(userContext)) {
+    let encodedToken = encodeURIComponent(userContext.authToken)
+    url = `${url}?authToken=${encodedToken}`
+  }
+
+  let response = await fetch(url)
   let data = await response.json()
 
   return data
+}
+
+exports.getRiverOfNews = (userContext) => {
+  return getTimeline('/v1/timelines/home', userContext)
+}
+
+exports.getMyDiscussions = (userContext) => {
+  return getTimeline('/v1/timelines/filter/discussions', userContext)
 }
