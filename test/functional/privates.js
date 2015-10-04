@@ -631,6 +631,15 @@ describe("Privates", function() {
           })
         })
 
+        it("should not show her posts in mars's comments timeline to anonymous", function(done) {
+          funcTestHelper.getTimeline('/v1/timelines/' + marsContext.username + '/comments', null, function(err, res) {
+            _.isUndefined(res).should.be.false
+            res.should.have.deep.property('body.timelines')
+            res.body.timelines.should.not.have.property('posts')
+            done()
+          })
+        })
+
         it("should not show zeus her posts in zeus's comments timeline", function(done) {
           funcTestHelper.getTimeline('/v1/timelines/' + zeusContext.username + '/comments', zeusContext.authToken, function(err, res) {
             _.isUndefined(res).should.be.false
@@ -729,6 +738,15 @@ describe("Privates", function() {
 
         it("should not show zeus her posts in mars's likes timeline", function(done) {
           funcTestHelper.getTimeline('/v1/timelines/' + marsContext.username + '/likes', zeusContext.authToken, function(err, res) {
+            _.isUndefined(res).should.be.false
+            res.should.have.deep.property('body.timelines')
+            res.body.timelines.should.not.have.property('posts')
+            done()
+          })
+        })
+
+        it("should not show her posts in mars's likes timeline to anonymous", function(done) {
+          funcTestHelper.getTimeline('/v1/timelines/' + marsContext.username + '/likes', null, function(err, res) {
             _.isUndefined(res).should.be.false
             res.should.have.deep.property('body.timelines')
             res.body.timelines.should.not.have.property('posts')
