@@ -184,16 +184,11 @@ describe("Privates", function() {
             .end(function(err, res) {
               funcTestHelper.createComment('comment', lunaContext.post.id, marsContext.authToken, function(err, res) {
                 funcTestHelper.getTimeline('/v1/timelines/' + marsContext.user.username + '/comments', marsContext.authToken, function(err, res) {
-                  // NOTE: right now we do not have meta to show
-                  // posts per context, once this done we'll need to
-                  // refactor this test
-
-                  // view mars/comments timeline as mars -- 0 posts
-                  res.body.should.not.have.property('posts')
+                  res.body.should.have.property('posts')
 
                   funcTestHelper.getTimeline('/v1/timelines/' + marsContext.user.username + '/comments', zeusContext.authToken, function(err, res) {
-                    // view mars/comments timeline as zeus -- 0 posts
-                    res.body.should.not.have.property('posts')
+                    // view mars/comments timeline as zeus
+                    res.body.should.have.property('posts')
 
                     done()
                   })
@@ -439,7 +434,7 @@ describe("Privates", function() {
           })
       })
 
-      xit('should be visible for auth users in comments timeline', function(done) {
+      it('should be visible for auth users in comments timeline', function(done) {
         funcTestHelper.createComment('body', lunaContext.post.id, lunaContext.authToken, function(err, res) {
           funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.user.username + '/comments', lunaContext.authToken, function(err, res) {
             res.should.not.be.empty
