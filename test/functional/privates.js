@@ -163,16 +163,11 @@ describe("Privates", function() {
                 .send({ authToken: marsContext.authToken })
                 .end(function(err, res) {
                   funcTestHelper.getTimeline('/v1/timelines/' + marsContext.user.username + '/likes', marsContext.authToken, function(err, res) {
-                    // NOTE: right now we do not have meta to show
-                    // posts per context, once this done we'll need to
-                    // refactor this test
-
-                    // view mars/likes timeline as mars -- 0 posts
-                    res.body.should.not.have.property('posts')
+                    res.body.should.have.property('posts')
 
                     funcTestHelper.getTimeline('/v1/timelines/' + marsContext.user.username + '/likes', zeusContext.authToken, function(err, res) {
-                      // view mars/likes timeline as zeus -- 0 posts
-                      res.body.should.not.have.property('posts')
+                      // view mars/likes timeline as zeus
+                      res.body.should.have.property('posts')
 
                       done()
                     })
@@ -407,7 +402,7 @@ describe("Privates", function() {
         })
       })
 
-      xit('should be visible for auth users in likes timeline', function(done) {
+      it('should be visible for auth users in likes timeline', function(done) {
         request
           .post(app.config.host + '/v1/posts/' + lunaContext.post.id + '/like')
           .send({ authToken: lunaContext.authToken })
