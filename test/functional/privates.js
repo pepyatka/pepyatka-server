@@ -1,3 +1,4 @@
+import fetch from 'node-fetch'
 import request from 'superagent'
 import _ from 'lodash'
 
@@ -91,16 +92,7 @@ describe("Privates", function() {
       beforeEach(function(done) { funcTestHelper.subscribeToCtx(marsContext, lunaContext.username)(done) })
       beforeEach(function(done) { funcTestHelper.subscribeToCtx(lunaContext, marsContext.username)(done) })
       beforeEach(function(done) { funcTestHelper.subscribeToCtx(zeusContext, lunaContext.username)(done) })
-      beforeEach(function(done) {
-        request
-          .post(app.config.host + '/v1/users/' + lunaContext.user.id)
-          .send({ authToken: lunaContext.authToken,
-                  user: { isPrivate: "1" },
-                  '_method': 'put' })
-          .end(function(err, res) {
-            done()
-          })
-      })
+      beforeEach(() => funcTestHelper.goPrivate(lunaContext))
       beforeEach(function(done) { funcTestHelper.createPost(lunaContext, 'Post body')(done) })
       beforeEach(funcTestHelper.createUserCtx(herculesContext, 'hercules', 'pw'))
 
@@ -622,16 +614,7 @@ describe("Privates", function() {
         beforeEach(function(done) {
           funcTestHelper.createComment('zeus comment', lunaContext.post.id, zeusContext.authToken, function(req, res) { done() })
         })
-        beforeEach(function(done) {
-          request
-            .post(app.config.host + '/v1/users/' + lunaContext.user.id)
-            .send({ authToken: lunaContext.authToken,
-                    user: { isPrivate: '1' },
-                    '_method': 'put' })
-            .end(function(err, res) {
-              done()
-            })
-        })
+        beforeEach(() => funcTestHelper.goPrivate(lunaContext))
 
         it('should not influence how mars sees posts in his comments timeline', function(done) {
           funcTestHelper.getTimeline('/v1/timelines/' + marsContext.username + '/comments', marsContext.authToken, function(err, res) {
@@ -677,16 +660,7 @@ describe("Privates", function() {
         })
 
         describe('when luna comes back to being public', function(done) {
-          beforeEach(function(done) {
-            request
-              .post(app.config.host + '/v1/users/' + lunaContext.user.id)
-              .send({ authToken: lunaContext.authToken,
-                user: { isPrivate: '0' },
-                '_method': 'put' })
-              .end(function(err, res) {
-                done()
-              })
-          })
+          beforeEach(() => funcTestHelper.goPublic(lunaContext))
 
           it('should not influence how mars sees posts in his comments timeline', function(done) {
             funcTestHelper.getTimeline('/v1/timelines/' + marsContext.username + '/comments', marsContext.authToken, function(err, res) {
@@ -742,33 +716,10 @@ describe("Privates", function() {
         })
       })
 
-      describe('with liked post', function(done) {
-        beforeEach(function(done) {
-          request
-            .post(app.config.host + '/v1/posts/' + lunaContext.post.id + '/like')
-            .send({ authToken: marsContext.authToken })
-            .end(function(err, res) {
-              done()
-            })
-        })
-        beforeEach(function(done) {
-          request
-            .post(app.config.host + '/v1/posts/' + lunaContext.post.id + '/like')
-            .send({ authToken: zeusContext.authToken })
-            .end(function(err, res) {
-              done()
-            })
-        })
-        beforeEach(function(done) {
-          request
-            .post(app.config.host + '/v1/users/' + lunaContext.user.id)
-            .send({ authToken: lunaContext.authToken,
-                    user: { isPrivate: "1" },
-                    '_method': 'put' })
-            .end(function(err, res) {
-              done()
-            })
-        })
+      describe('with liked post', function() {
+        beforeEach(() => funcTestHelper.like(lunaContext.post.id, marsContext.authToken))
+        beforeEach(() => funcTestHelper.like(lunaContext.post.id, zeusContext.authToken))
+        beforeEach(() => funcTestHelper.goPrivate(lunaContext))
 
         it('should not influence how mars sees posts in his likes timeline', function(done) {
           funcTestHelper.getTimeline('/v1/timelines/' + marsContext.username + '/likes', marsContext.authToken, function(err, res) {
@@ -813,19 +764,8 @@ describe("Privates", function() {
           })
         })
 
-        describe('when luna comes back to being public', function(done) {
-          beforeEach(function (done) {
-            request
-              .post(app.config.host + '/v1/users/' + lunaContext.user.id)
-              .send({
-                authToken: lunaContext.authToken,
-                user: {isPrivate: '0'},
-                '_method': 'put'
-              })
-              .end(function (err, res) {
-                done()
-              })
-          })
+        describe('when luna comes back to being public', function() {
+          beforeEach(() => funcTestHelper.goPublic(lunaContext))
 
           it('should not influence how mars sees posts in his likes timeline', function(done) {
             funcTestHelper.getTimeline('/v1/timelines/' + marsContext.username + '/likes', marsContext.authToken, function(err, res) {
@@ -886,16 +826,7 @@ describe("Privates", function() {
       beforeEach(function(done) { funcTestHelper.createPost(lunaContext, 'Post body')(done) })
       beforeEach(function(done) { funcTestHelper.subscribeToCtx(marsContext, lunaContext.username)(done) })
       beforeEach(function(done) { funcTestHelper.createComment('body', lunaContext.post.id, zeusContext.authToken, done) })
-      beforeEach(function(done) {
-        request
-          .post(app.config.host + '/v1/users/' + lunaContext.user.id)
-          .send({ authToken: lunaContext.authToken,
-                  user: { isPrivate: "1" },
-                  '_method': 'put' })
-          .end(function(err, res) {
-            done()
-          })
-      })
+      beforeEach(() => funcTestHelper.goPrivate(lunaContext))
 
       it('should be visible to already subscribed users', function(done) {
         request

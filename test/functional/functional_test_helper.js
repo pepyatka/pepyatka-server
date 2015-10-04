@@ -1,15 +1,17 @@
 "use strict";
 
-var request = require('superagent')
-    , app = require('../../index')
-    , _ = require('lodash')
+import fetch from 'node-fetch'
+import request  from 'superagent'
+import _  from 'lodash'
 
-exports.flushDb = function() {
-  return function(done) {
-    $database.flushdbAsync()
-        .then(function () {
-          done()
-        })
+import app  from '../../index'
+
+
+let apiUrl = relativeUrl => `${app.config.host}${relativeUrl}`
+
+exports.flushDb = () => {
+  return async () => {
+    await $database.flushdbAsync()
   }
 }
 
@@ -218,7 +220,7 @@ exports.getSubscribers = function(username, authToken, callback) {
       sendParams.authToken = authToken
     }
 
-    let url = `${app.config.host}/v1/users/${username}/subscribers`
+    let url = apiUrl(`/v1/users/${username}/subscribers`)
 
     request
       .get(url)
@@ -237,7 +239,7 @@ exports.getSubscriptions = function(username, authToken, callback) {
       sendParams.authToken = authToken
     }
 
-    let url = `${app.config.host}/v1/users/${username}/subscriptions`
+    let url = apiUrl(`/v1/users/${username}/subscriptions`)
 
     request
       .get(url)
@@ -247,4 +249,43 @@ exports.getSubscriptions = function(username, authToken, callback) {
       })
 
   }(callback)
+}
+
+function postJson(relativeUrl, data) {
+  return fetch(
+    apiUrl(relativeUrl),
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    }
+  )
+}
+
+exports.like = (postId, authToken) => {
+  return postJson(`/v1/posts/${postId}/like`, { authToken })
+}
+
+exports.goPrivate = (userContext) => {
+  return postJson(
+    `/v1/users/${userContext.user.id}`,
+    {
+      authToken: userContext.authToken,
+      user: { isPrivate: "1" },
+      '_method': 'put'
+    }
+  )
+}
+
+exports.goPublic = (userContext) => {
+  return postJson(
+    `/v1/users/${userContext.user.id}`,
+    {
+      authToken: userContext.authToken,
+      user: { isPrivate: "0" },
+      '_method': 'put'
+    }
+  )
 }
