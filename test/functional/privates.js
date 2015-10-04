@@ -1,9 +1,11 @@
-var request = require('superagent')
-  , app = require('../../index')
-  , models = require('../../app/models')
-  , funcTestHelper = require('./functional_test_helper')
-  , config = require('../../config/config').load()
-  , _ = require('lodash')
+import request from 'superagent'
+import _ from 'lodash'
+
+import app from '../../index'
+import models from '../../app/models'
+
+import funcTestHelper from './functional_test_helper'
+
 
 describe("Privates", function() {
   beforeEach(funcTestHelper.flushDb())
