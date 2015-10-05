@@ -83,7 +83,8 @@ exports.addController = function(app) {
               "You can't update another user's post"))
         }
         return post.update({
-          body: req.body.post.body
+          body: req.body.post.body,
+          attachments: req.body.post.attachments
         })
       })
       .then(function(post) {
