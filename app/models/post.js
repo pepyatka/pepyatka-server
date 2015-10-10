@@ -321,6 +321,10 @@ exports.addModel = function(database) {
     return this.getGenericFriendOfFriendTimelines(user, 'Likes')
   }
 
+  Post.prototype.getCommentsFriendOfFriendTimelineIds = function(user) {
+    return this.getGenericFriendOfFriendTimelineIds(user, 'Comments')
+  }
+
   Post.prototype.getCommentsFriendOfFriendTimelines = function(user) {
     return this.getGenericFriendOfFriendTimelines(user, 'Comments')
   }
@@ -374,12 +378,18 @@ exports.addModel = function(database) {
 
     let subscriberIds = await user.getSubscriberIds()
     let bannedIds = await user.getBanIds()
-    let timelines = await this.getCommentsFriendOfFriendTimelines(user)
 
-    if (await this.isPrivate()) {
-      // only subscribers are allowed to read private posts
-      timelines = timelines.filter((timeline) => timeline.userId in subscriberIds)
+    let timelineIds = await this.getPostedToIds()
+
+    // only subscribers are allowed to read direct posts
+    if (!await this.isStrictlyDirect()) {
+      let moreTimelineIds = await this.getCommentsFriendOfFriendTimelineIds(user)
+      timelineIds.push(...moreTimelineIds)
+
+      timelineIds = _.uniq(timelineIds)
     }
+
+    let timelines = await* timelineIds.map(id => models.Timeline.findById(id))
 
     // no need to post updates to rivers of banned users
     timelines = timelines.filter((timeline) => !(timeline.userId in bannedIds))
