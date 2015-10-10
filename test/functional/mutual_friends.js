@@ -25,7 +25,7 @@ describe("MutualFriends", function() {
       beforeEach(function(done) { funcTestHelper.subscribeToCtx(zeusContext, marsContext.username)(done) })
       beforeEach(function(done) { funcTestHelper.subscribeToCtx(zeusContext, lunaContext.username)(done) })
 
-      it('should not publish liked private post to home feed of mutual friends', function(done) {
+      it('should not publish liked direct message to home feed of mutual friends', function(done) {
         var body = 'body'
         request
           .post(app.config.host + '/v1/posts')
@@ -47,7 +47,7 @@ describe("MutualFriends", function() {
           })
       })
 
-      it('should not publish liked private post to likes feed', function(done) {
+      it('should not publish liked direct message to likes feed', function(done) {
         var body = 'body'
         request
           .post(app.config.host + '/v1/posts')
@@ -69,7 +69,7 @@ describe("MutualFriends", function() {
           })
       })
 
-      it('should not publish commented private post to home feed of mutual friends', function(done) {
+      it('should not publish commented direct message to home feed of mutual friends', function(done) {
         var body = 'body'
         request
           .post(app.config.host + '/v1/posts')
@@ -88,7 +88,7 @@ describe("MutualFriends", function() {
           })
       })
 
-      it('should not publish commented private post to likes feed', function(done) {
+      it('should not publish commented direct message to comments feed', function(done) {
         var body = 'body'
         request
           .post(app.config.host + '/v1/posts')
