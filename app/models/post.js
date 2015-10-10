@@ -313,6 +313,10 @@ exports.addModel = function(database) {
     return this.getGenericFriendOfFriendTimelines(user, 'Posts')
   }
 
+  Post.prototype.getLikesFriendOfFriendTimelineIds = function(user) {
+    return this.getGenericFriendOfFriendTimelineIds(user, 'Likes')
+  }
+
   Post.prototype.getLikesFriendOfFriendTimelines = function(user) {
     return this.getGenericFriendOfFriendTimelines(user, 'Likes')
   }
@@ -622,19 +626,31 @@ exports.addModel = function(database) {
     return _.every(await* arr)
   }
 
+  Post.prototype.isStrictlyDirect = async function() {
+    let timelines = await this.getPostedTo()
+    let flags = timelines.map((timeline) => timeline.isDirects())
+
+    // one non-direct timeline is enough
+    return _.every(flags)
+  }
+
   Post.prototype.addLike = async function(user) {
     await user.validateCanLikePost(this)
 
-    let subscriberIds = await user.getSubscriberIds()
-    let bannedIds = await user.getBanIds()
-    let timelines = await this.getLikesFriendOfFriendTimelines(user)
+    let timelineIds = await this.getPostedToIds()
 
-    if (await this.isPrivate()) {
-      // only subscribers are allowed to read private posts
-      timelines = timelines.filter((timeline) => timeline.userId in subscriberIds)
+    // only subscribers are allowed to read direct posts
+    if (!await this.isStrictlyDirect()) {
+      let moreTimelineIds = await this.getLikesFriendOfFriendTimelineIds(user)
+      timelineIds.push(...moreTimelineIds)
+
+      timelineIds = _.uniq(timelineIds)
     }
 
+    let timelines = await* timelineIds.map(id => models.Timeline.findById(id))
+
     // no need to post updates to rivers of banned users
+    let bannedIds = await user.getBanIds()
     timelines = timelines.filter((timeline) => !(timeline.userId in bannedIds))
 
     let promises = timelines.map((timeline) => timeline.updatePost(this.id, 'like'))
