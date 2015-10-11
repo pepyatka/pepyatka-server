@@ -59,7 +59,7 @@ exports.createUserCtx = function(context, username, password, attrs) {
 exports.subscribeToCtx = function(context, username) {
   return function(done) {
     request
-      .post(app.config.host + '/v1/users/' + username + '/subscribe')
+      .post(apiUrl(`/v1/users/${username}/subscribe`))
       .send({ authToken: context.authToken })
       .end(function(err, res) {
         done(err, res)
@@ -288,4 +288,61 @@ exports.goPublic = (userContext) => {
       '_method': 'put'
     }
   )
+}
+
+exports.mutualSubscriptions = async (userContexts) => {
+  let promises = []
+
+  for (let ctx1 of userContexts) {
+    for (let ctx2 of userContexts) {
+      if (ctx1.username == ctx2.username) {
+        continue
+      }
+
+      promises.push(postJson(`/v1/users/${ctx2.username}/subscribe`, {authToken: ctx1.authToken}))
+    }
+  }
+
+  await* promises
+}
+
+exports.createAndReturnPost = async (userContext, body) => {
+  let response = await postJson(
+    '/v1/posts',
+    {
+      post: {body},
+      meta: {feeds: userContext.username},
+      authToken: userContext.authToken
+    }
+  )
+
+  let data = await response.json()
+
+  return data.posts
+}
+
+exports.createCommentAsync = (userContext, postId, body) => {
+  return postJson('/v1/comments', {comment: {body, postId}, authToken: userContext.authToken})
+}
+
+let getTimeline = async (relativeUrl, userContext) => {
+  let url = apiUrl(relativeUrl)
+
+  if (!_.isUndefined(userContext)) {
+    let encodedToken = encodeURIComponent(userContext.authToken)
+    url = `${url}?authToken=${encodedToken}`
+  }
+
+  let response = await fetch(url)
+  let data = await response.json()
+
+  return data
+}
+
+exports.getRiverOfNews = (userContext) => {
+  return getTimeline('/v1/timelines/home', userContext)
+}
+
+exports.getMyDiscussions = (userContext) => {
+  return getTimeline('/v1/timelines/filter/discussions', userContext)
 }

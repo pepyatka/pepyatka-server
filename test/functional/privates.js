@@ -163,16 +163,11 @@ describe("Privates", function() {
                 .send({ authToken: marsContext.authToken })
                 .end(function(err, res) {
                   funcTestHelper.getTimeline('/v1/timelines/' + marsContext.user.username + '/likes', marsContext.authToken, function(err, res) {
-                    // NOTE: right now we do not have meta to show
-                    // posts per context, once this done we'll need to
-                    // refactor this test
-
-                    // view mars/likes timeline as mars -- 0 posts
-                    res.body.should.not.have.property('posts')
+                    res.body.should.have.property('posts')
 
                     funcTestHelper.getTimeline('/v1/timelines/' + marsContext.user.username + '/likes', zeusContext.authToken, function(err, res) {
-                      // view mars/likes timeline as zeus -- 0 posts
-                      res.body.should.not.have.property('posts')
+                      // view mars/likes timeline as zeus
+                      res.body.should.have.property('posts')
 
                       done()
                     })
@@ -189,16 +184,11 @@ describe("Privates", function() {
             .end(function(err, res) {
               funcTestHelper.createComment('comment', lunaContext.post.id, marsContext.authToken, function(err, res) {
                 funcTestHelper.getTimeline('/v1/timelines/' + marsContext.user.username + '/comments', marsContext.authToken, function(err, res) {
-                  // NOTE: right now we do not have meta to show
-                  // posts per context, once this done we'll need to
-                  // refactor this test
-
-                  // view mars/comments timeline as mars -- 0 posts
-                  res.body.should.not.have.property('posts')
+                  res.body.should.have.property('posts')
 
                   funcTestHelper.getTimeline('/v1/timelines/' + marsContext.user.username + '/comments', zeusContext.authToken, function(err, res) {
-                    // view mars/comments timeline as zeus -- 0 posts
-                    res.body.should.not.have.property('posts')
+                    // view mars/comments timeline as zeus
+                    res.body.should.have.property('posts')
 
                     done()
                   })
@@ -407,7 +397,7 @@ describe("Privates", function() {
         })
       })
 
-      xit('should be visible for auth users in likes timeline', function(done) {
+      it('should be visible for auth users in likes timeline', function(done) {
         request
           .post(app.config.host + '/v1/posts/' + lunaContext.post.id + '/like')
           .send({ authToken: lunaContext.authToken })
@@ -444,7 +434,7 @@ describe("Privates", function() {
           })
       })
 
-      xit('should be visible for auth users in comments timeline', function(done) {
+      it('should be visible for auth users in comments timeline', function(done) {
         funcTestHelper.createComment('body', lunaContext.post.id, lunaContext.authToken, function(err, res) {
           funcTestHelper.getTimeline('/v1/timelines/' + lunaContext.user.username + '/comments', lunaContext.authToken, function(err, res) {
             res.should.not.be.empty
@@ -641,6 +631,15 @@ describe("Privates", function() {
           })
         })
 
+        it("should not show her posts in mars's comments timeline to anonymous", function(done) {
+          funcTestHelper.getTimeline('/v1/timelines/' + marsContext.username + '/comments', null, function(err, res) {
+            _.isUndefined(res).should.be.false
+            res.should.have.deep.property('body.timelines')
+            res.body.timelines.should.not.have.property('posts')
+            done()
+          })
+        })
+
         it("should not show zeus her posts in zeus's comments timeline", function(done) {
           funcTestHelper.getTimeline('/v1/timelines/' + zeusContext.username + '/comments', zeusContext.authToken, function(err, res) {
             _.isUndefined(res).should.be.false
@@ -739,6 +738,15 @@ describe("Privates", function() {
 
         it("should not show zeus her posts in mars's likes timeline", function(done) {
           funcTestHelper.getTimeline('/v1/timelines/' + marsContext.username + '/likes', zeusContext.authToken, function(err, res) {
+            _.isUndefined(res).should.be.false
+            res.should.have.deep.property('body.timelines')
+            res.body.timelines.should.not.have.property('posts')
+            done()
+          })
+        })
+
+        it("should not show her posts in mars's likes timeline to anonymous", function(done) {
+          funcTestHelper.getTimeline('/v1/timelines/' + marsContext.username + '/likes', null, function(err, res) {
             _.isUndefined(res).should.be.false
             res.should.have.deep.property('body.timelines')
             res.body.timelines.should.not.have.property('posts')
@@ -876,6 +884,53 @@ describe("Privates", function() {
             res.body.subscriptions.length.should.eql(3)
             done()
           })
+      })
+    })
+  })
+
+  describe('Checking, that private posts are correctly propagated', () => {
+    let lunaContext = {}
+      , marsContext = {}
+      , zeusContext = {}
+
+    beforeEach(funcTestHelper.createUserCtx(lunaContext, 'luna', 'pw'))
+    beforeEach(funcTestHelper.createUserCtx(marsContext, 'mars', 'pw'))
+    beforeEach(funcTestHelper.createUserCtx(zeusContext, 'zeus', 'pw'))
+    beforeEach(() => funcTestHelper.mutualSubscriptions([lunaContext, marsContext, zeusContext]))
+    beforeEach(() => funcTestHelper.goPrivate(lunaContext))
+
+    describe('given we have 2 posts by luna', () => {
+      let post1, post2
+
+      beforeEach(async () => {post1 = await funcTestHelper.createAndReturnPost(lunaContext, 'post 1')})
+      beforeEach(async () => {post2 = await funcTestHelper.createAndReturnPost(lunaContext, 'post 2')})
+
+      it('should bump posts correctly, if someone comments them', async () => {
+        await funcTestHelper.createCommentAsync(marsContext, post1.id, 'comment1')
+
+        let marsRiver = await funcTestHelper.getRiverOfNews(marsContext);
+        marsRiver.timelines.posts[0].should.equal(post1.id, 'order of posts in incorrect')
+
+        let zeusRiver = await funcTestHelper.getRiverOfNews(zeusContext);
+        zeusRiver.timelines.posts[0].should.equal(post1.id, 'order of posts in incorrect')
+      })
+
+      it('should add post to "my discussions" after comment', async () => {
+        await funcTestHelper.createCommentAsync(marsContext, post1.id, 'comment1')
+
+        let marsDiscussions = await funcTestHelper.getMyDiscussions(marsContext);
+        marsDiscussions.timelines.should.have.property('posts')
+        marsDiscussions.timelines.posts.should.include(post1.id, 'commented post is not in "my discussions"')
+        marsDiscussions.timelines.posts[0].should.equal(post1.id, 'order of posts in incorrect')
+      })
+
+      it('should add post to "my discussions" after like', async () => {
+        await funcTestHelper.like(post1.id, marsContext.authToken)
+
+        let marsDiscussions = await funcTestHelper.getMyDiscussions(marsContext);
+        marsDiscussions.timelines.should.have.property('posts')
+        marsDiscussions.timelines.posts.should.include(post1.id, 'liked post is not in "my discussions"')
+        marsDiscussions.timelines.posts[0].should.equal(post1.id, 'order of posts in incorrect')
       })
     })
   })
