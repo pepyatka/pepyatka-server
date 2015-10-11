@@ -18,7 +18,7 @@
     "aws-sdk": "2.1.39",
     "babel": "5.8.23",
     "bcrypt": "0.8.5",
-    "bluebird": "2.10.1",
+    "bluebird": "2.10.2",
     "body-parser": "1.13.1",
     "console-stamp": "^0.1.6",
     "ejs": "2.3.1",

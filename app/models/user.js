@@ -248,7 +248,7 @@ exports.addModel = function(database) {
       this.validateUniquness(mkKey(['user', this.id]))
     ];
 
-    await* promises
+    await Promise.all(promises)
 
     return this
   }
@@ -293,7 +293,7 @@ exports.addModel = function(database) {
       user.createEmailIndex()
     ]
 
-    await* promises
+    await Promise.all(promises)
 
     var stats = new models.Stats({
       id: this.id
@@ -368,7 +368,7 @@ exports.addModel = function(database) {
         }
       }
 
-      await* promises
+      await Promise.all(promises)
     }
 
     return this
@@ -389,7 +389,7 @@ exports.addModel = function(database) {
     for (let post of posts) {
       let actions = []
 
-      let [likes, comments] = await* [post.getLikes(), post.getComments()];
+      let [likes, comments] = await Promise.all([post.getLikes(), post.getComments()]);
 
       for (let usersChunk of _.chunk(likes, 10)) {
         let promises = usersChunk.map(async (user) => {
@@ -400,10 +400,10 @@ exports.addModel = function(database) {
           actions.push(database.saddAsync(mkKey(['post', post.id, 'timelines']), likesTimelineId))
         })
 
-        await* promises
+        await Promise.all(promises)
       }
 
-      let commenters = _.uniq(await* comments.map(comment => models.User.findById(comment.userId)), 'id')
+      let commenters = _.uniq(await Promise.all(comments.map(comment => models.User.findById(comment.userId)), 'id'))
 
       for (let usersChunk of _.chunk(commenters, 10)) {
         let promises = usersChunk.map(async (user) => {
@@ -417,27 +417,27 @@ exports.addModel = function(database) {
           actions.push(database.saddAsync(mkKey(['post', post.id, 'timelines']), commentsTimelineId))
         })
 
-        await* promises
+        await Promise.all(promises)
       }
 
-      await* actions
+      await Promise.all(actions)
 
       fixedUsers = _.uniq(fixedUsers.concat(likes).concat(commenters), 'id')
     }
 
     for (let usersChunk of _.chunk(fixedUsers, 10)) {
       let promises = usersChunk.map(async (user) => {
-        let [riverId, commentsTimeline, likesTimeline] = await* [
+        let [riverId, commentsTimeline, likesTimeline] = await Promise.all([
           user.getRiverOfNewsTimelineId(),
           user.getCommentsTimeline(),
           user.getLikesTimeline()
-        ]
+        ])
 
         await commentsTimeline.mergeTo(riverId)
         await likesTimeline.mergeTo(riverId)
       })
 
-      await* promises
+      await Promise.all(promises)
     }
   }
 
@@ -447,12 +447,12 @@ exports.addModel = function(database) {
 
     // users that I'm not following are ex-followers now
     // var subscribers = await this.getSubscribers()
-    // await* subscribers.map(function(user) {
+    // await Promise.all(subscribers.map(function(user) {
     //   // this is not friend, let's unsubscribe her before going to private
     //   if (subscriptionIds.indexOf(user.id) === -1) {
     //     return user.unsubscribeFrom(timeline.id, { likes: true, comments: true })
     //   }
-    // })
+    // }))
 
     // we need to review post by post as some strangers that are not
     // followers and friends could commented on or like my posts
@@ -464,7 +464,7 @@ exports.addModel = function(database) {
     for (let post of posts) {
       let timelines = await post.getTimelines()
       let userPromises = timelines.map(timeline => timeline.getUser())
-      let users = await* userPromises
+      let users = await Promise.all(userPromises)
 
       allUsers = _.uniq(allUsers.concat(users), 'id')
     }
@@ -477,7 +477,7 @@ exports.addModel = function(database) {
 
     for (let chunk of _.chunk(users, 10)) {
       let actions = chunk.map(user => user.unsubscribeFrom(timeline.id, { likes: true, comments: true, skip: true }))
-      await* actions
+      await Promise.all(actions)
     }
   }
 
@@ -716,7 +716,7 @@ exports.addModel = function(database) {
     var timelineIds = await this.getSubscriptionIds()
 
     var subscriptionPromises = timelineIds.map((timelineId) => models.Timeline.findById(timelineId))
-    this.subscriptions = await* subscriptionPromises
+    this.subscriptions = await Promise.all(subscriptionPromises)
 
     return this.subscriptions
   }
@@ -724,12 +724,12 @@ exports.addModel = function(database) {
   User.prototype.getFriendIds = async function() {
     var timelines = await this.getSubscriptions()
     timelines = _.filter(timelines, _.method('isPosts'))
-    return await* timelines.map((timeline) => timeline.userId)
+    return await Promise.all(timelines.map((timeline) => timeline.userId))
   }
 
   User.prototype.getFriends = async function() {
     var userIds = await this.getFriendIds()
-    return await* userIds.map((userId) => models.User.findById(userId))
+    return await Promise.all(userIds.map((userId) => models.User.findById(userId)))
   }
 
   User.prototype.getSubscriberIds = async function() {
@@ -743,7 +743,7 @@ exports.addModel = function(database) {
   User.prototype.getSubscribers = async function() {
     var subscriberIds = await this.getSubscriberIds()
     var subscriberPromises = subscriberIds.map(userId => models.User.findById(userId))
-    this.subscribers = await* subscriberPromises
+    this.subscribers = await Promise.all(subscriberPromises)
 
     return this.subscribers
   }
@@ -782,7 +782,7 @@ exports.addModel = function(database) {
     var requestIds = await this.getSubscriptionRequestIds()
     if (requestIds.indexOf(user.id) >= 0)
       promises.push(this.rejectSubscriptionRequest(user.id))
-    return await* promises
+    return await Promise.all(promises)
   }
 
   User.prototype.unban = async function(username) {
@@ -866,7 +866,7 @@ exports.addModel = function(database) {
     promises.push((await models.Stats.findById(this.id)).removeSubscription())
     promises.push((await models.Stats.findById(user.id)).removeSubscriber())
 
-    await* promises
+    await Promise.all(promises)
 
     return this
   }
@@ -1090,19 +1090,19 @@ exports.addModel = function(database) {
     await this.validateCanSendSubscriptionRequest(userId)
 
     var currentTime = new Date().getTime()
-    return await* [
+    return await Promise.all([
       database.zaddAsync(mkKey(['user', userId, 'requests']), currentTime, this.id),
       database.zaddAsync(mkKey(['user', this.id, 'pending']), currentTime, userId)
-    ]
+    ])
   }
 
   User.prototype.acceptSubscriptionRequest = async function(userId) {
     await this.validateCanManageSubscriptionRequests(userId)
 
-    await* [
+    await Promise.all([
       database.zremAsync(mkKey(['user', this.id, 'requests']), userId),
       database.zremAsync(mkKey(['user', userId, 'pending']), this.id)
-    ]
+    ])
 
     var timelineId = await this.getPostsTimelineId()
 
@@ -1113,10 +1113,10 @@ exports.addModel = function(database) {
   User.prototype.rejectSubscriptionRequest = async function(userId) {
     await this.validateCanManageSubscriptionRequests(userId)
 
-    return await* [
+    return await Promise.all([
       database.zremAsync(mkKey(['user', this.id, 'requests']), userId),
       database.zremAsync(mkKey(['user', userId, 'pending']), this.id)
-    ]
+    ])
   }
 
   User.prototype.getPendingSubscriptionRequestIds = async function() {
@@ -1127,7 +1127,7 @@ exports.addModel = function(database) {
 
   User.prototype.getPendingSubscriptionRequests = async function() {
     var pendingSubscriptionRequestIds = await this.getPendingSubscriptionRequestIds()
-    return await* pendingSubscriptionRequestIds.map((userId) => models.User.findById(userId))
+    return await Promise.all(pendingSubscriptionRequestIds.map((userId) => models.User.findById(userId)))
   }
 
   User.prototype.getSubscriptionRequestIds = async function() {
@@ -1137,7 +1137,7 @@ exports.addModel = function(database) {
 
   User.prototype.getSubscriptionRequests = async function() {
     var subscriptionRequestIds = await this.getSubscriptionRequestIds()
-    return await* subscriptionRequestIds.map((userId) => models.User.findById(userId))
+    return await Promise.all(subscriptionRequestIds.map((userId) => models.User.findById(userId)))
   }
 
   User.prototype.validateCanSendSubscriptionRequest = async function(userId) {

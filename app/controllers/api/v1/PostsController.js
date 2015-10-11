@@ -49,13 +49,13 @@ exports.addController = function(app) {
           return feed.getPostsTimelineId()
         } else {
           // private post goes to sendee and sender
-          return await* [
+          return await Promise.all([
             feed.getDirectsTimelineId(),
             req.user.getDirectsTimelineId()
-          ]
+          ])
         }
       })
-      let timelineIds = _.flatten(await* promises)
+      let timelineIds = _.flatten(await Promise.all(promises))
 
       let newPost = await req.user.newPost({
         body: req.body.post.body,

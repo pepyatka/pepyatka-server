@@ -69,7 +69,7 @@ exports.addModel = function(database) {
       this.validateUniquness(mkKey(['attachment', this.id]))
     ]
 
-    await* promises
+    await Promise.all(promises)
 
     return this
   }

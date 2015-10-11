@@ -58,10 +58,10 @@ exports.addModel = function(database) {
   }
 
   Comment.prototype.validateOnCreate = async function() {
-    await* [
+    await Promise.all([
       this.validate(),
       this.validateUniquness(mkKey(['comment', this.id]))
-    ]
+    ])
   }
 
   Comment.prototype.create = async function() {

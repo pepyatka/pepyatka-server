@@ -82,7 +82,7 @@ exports.addModel = function(database) {
 
       var group = await this.validateOnCreate()
 
-      await* [
+      await Promise.all([
         database.setAsync(mkKey(['username', group.username, 'uid']), group.id),
         database.hmsetAsync(mkKey(['user', group.id]),
                             { 'username': group.username,
@@ -92,17 +92,17 @@ exports.addModel = function(database) {
                               'updatedAt': group.updatedAt.toString(),
                               'isPrivate': group.isPrivate
                             })
-      ]
+      ])
 
       var stats = new models.Stats({
         id: this.id
       })
 
-      await* [
+      await Promise.all([
         this.addAdministrator(ownerId),
         this.subscribeOwner(ownerId),
         stats.create()
-      ]
+      ])
 
       return this
   }
@@ -193,7 +193,7 @@ exports.addModel = function(database) {
 
   Group.prototype.getAdministrators = async function() {
     var adminIds = await this.getAdministratorIds()
-    this.administrators = await* adminIds.map((userId) => models.User.findById(userId))
+    this.administrators = await Promise.all(adminIds.map((userId) => models.User.findById(userId)))
     return this.administrators
   }
 
