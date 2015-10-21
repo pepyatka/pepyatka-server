@@ -576,9 +576,9 @@ exports.addModel = function(database) {
   }
 
   User.prototype.getGenericTimeline = async function(name, params) {
-    let timelineId = await this["get" + name + "TimelineId"](params)
-    let timeline = await models.Timeline.findById(timelineId, params)
+    let timelineId = await this[`get${name}TimelineId`](params)
 
+    let timeline = await models.Timeline.findById(timelineId, params)
     timeline.posts = await timeline.getPosts(timeline.offset, timeline.limit)
 
     return timeline
