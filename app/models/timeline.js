@@ -196,6 +196,11 @@ exports.addModel = function(database) {
     async function userById(id) {
       if (!(id in usersCache)) {
         let user = await models.User.findById(id)
+
+        if (!user) {
+          throw new Error(`no user for id=${id}`)
+        }
+
         let bans = await user.getBanIds()
 
         usersCache[id] = [user, bans]
@@ -210,7 +215,13 @@ exports.addModel = function(database) {
         return post
       }
 
-      let [author, reverseBanIds] = await userById(post.userId)
+      let author, reverseBanIds
+
+      try {
+        [author, reverseBanIds] = await userById(post.userId)
+      } catch (e) {
+        throw new Error(`did not find user-object of author of post with id=${post.id}\nPREVIOUS: ${e.message}`)
+      }
 
       let readerBannedAuthor = (banIds.indexOf(post.userId) >= 0)
       let authorBannedReader = (reverseBanIds.indexOf(this.currentUser) >= 0)
