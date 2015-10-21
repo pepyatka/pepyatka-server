@@ -55,9 +55,8 @@ exports.addController = function(app) {
         currentUser: currentUser
       })
 
-      new TimelineSerializer(timeline).toJSON(function(err, json) {
-        res.jsonp(json)
-      })
+      let json = await new TimelineSerializer(timeline).promiseToJSON();
+      res.jsonp(json);
     } catch(e) {
       exceptions.reportError(res)(e)
     }
