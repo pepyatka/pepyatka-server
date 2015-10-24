@@ -19,32 +19,19 @@ exports.addModel = function(database) {
     return config.application.USERNAME_STOP_LIST
   }
 
-  FeedFactory.findById = function(identifier) {
-    return new Promise(function(resolve, reject) {
-      database.hgetAsync(mkKey(['user', identifier]), 'type')
-        .then(function(type) {
-          switch(type) {
-          case 'group':
-            Group.findById(identifier)
-              .then(function(group) { resolve(group) })
-            break
+  FeedFactory.findById = async function(identifier) {
+    let type = await database.hgetAsync(mkKey(['user', identifier]), 'type')
 
-          default:
-            User.findById(identifier)
-              .then(function(user) { resolve(user) })
-            break
-          }
-        })
-    })
+    if (type === 'group') {
+      return Group.findById(identifier)
+    } else {
+      return User.findById(identifier)
+    }
   }
 
-  FeedFactory.findByUsername = function(username) {
-    return Promise.resolve(
-      database.getAsync(mkKey(['username', username, 'uid']))
-        .then(function(identifier) {
-          return FeedFactory.findById(identifier)
-        })
-    )
+  FeedFactory.findByUsername = async function(username) {
+    let identifier = await database.getAsync(mkKey(['username', username, 'uid']))
+    return FeedFactory.findById(identifier)
   }
 
   return FeedFactory

@@ -102,23 +102,26 @@ exports.addController = function(app) {
     }
   }
 
-  TimelineController.myDiscussions = function(req, res) {
-    if (!req.user)
-      return res.status(401).jsonp({ err: 'Not found', status: 'fail'})
+  TimelineController.myDiscussions = async function(req, res) {
+    if (!req.user) {
+      res.status(401).jsonp({ err: 'Not found', status: 'fail'})
+      return
+    }
 
     var user = req.user
 
-    user.getMyDiscussionsTimeline({
-      offset: req.query.offset,
-      limit: req.query.limit,
-      currentUser: req.user ? req.user.id : null
-    })
-      .then(function(timeline) {
-        new TimelineSerializer(timeline).toJSON(function(err, json) {
-          res.jsonp(json)
-        })
+    try {
+      let timeline = await user.getMyDiscussionsTimeline({
+        offset: req.query.offset,
+        limit: req.query.limit,
+        currentUser: req.user ? req.user.id : null
       })
-      .catch(function(e) { res.status(422).send({}) })
+
+      let json = await new TimelineSerializer(timeline).promiseToJSON()
+      res.jsonp(json)
+    } catch (e) {
+      exceptions.reportError(res)(e)
+    }
   }
 
   return TimelineController

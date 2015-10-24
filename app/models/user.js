@@ -511,68 +511,62 @@ exports.addModel = function(database) {
     return [this]
   }
 
-  User.prototype.getMyDiscussionsTimeline = function(params) {
-    var that = this
+  User.prototype.getMyDiscussionsTimeline = async function(params) {
+    var commentsId
+      , likesId
 
-    return new Promise(function(resolve, reject) {
-      var commentsId
-        , likesId
+    await Promise.join(
+      this.getCommentsTimelineId(),
+      this.getLikesTimelineId(),
+      (cId, lId) => {
+        commentsId = cId
+        likesId = lId
+      }
+    )
 
-      Promise.join(
-        that.getCommentsTimelineId(),
-        that.getLikesTimelineId()
-        , function(cId, lId) {
-          commentsId = cId
-          likesId = lId
-        })
-        .then(function() { return models.Timeline.findById(that.id, params) })
-        .then(function(timeline) {
-          if (!timeline) {
-            timeline = new models.Timeline({
-              id: that.id,
-              name: "MyDiscussions",
-              userId: that.id
-            })
-            return timeline.create()
-          } else {
-            return timeline
-          }
-        })
-        .then(function(timeline) {
-          return database.zunionstoreAsync(
-            mkKey(['timeline', that.id, 'posts']), 2,
-            mkKey(['timeline', commentsId, 'posts']),
-            mkKey(['timeline', likesId, 'posts']),
-            'AGGREGATE', 'MAX')
-        })
-        .then(function(res) { resolve(models.Timeline.findById(that.id, params)) })
-    })
+    let timeline = await models.Timeline.findById(this.id, params)
+
+    if (!timeline) {
+      timeline = new models.Timeline({
+        id: this.id,
+        name: "MyDiscussions",
+        userId: this.id
+      })
+
+      await timeline.create()
+    }
+
+    await database.zunionstoreAsync(
+      mkKey(['timeline', this.id, 'posts']), 2,
+      mkKey(['timeline', commentsId, 'posts']),
+      mkKey(['timeline', likesId, 'posts']),
+      'AGGREGATE', 'MAX'
+    )
+
+    return models.Timeline.findById(this.id, params)
   }
 
-  User.prototype.getGenericTimelineId = function(name, params) {
-    var that = this
+  User.prototype.getGenericTimelineId = async function(name, params) {
+    let timelineIds = await this.getTimelineIds()
 
-    return new Promise(function(resolve, reject) {
-      that.getTimelineIds()
-        .then(function(timelineIds) {
-          var timeline
-          if (timelineIds[name]) {
-            params = params || {}
-            timeline = models.Timeline.findById(timelineIds[name], {
-              offset: params.offset,
-              limit: params.limit
-            })
-          } else {
-            timeline = new models.Timeline({
-              name: name,
-              userId: that.id
-            })
-            timeline = timeline.create()
-          }
-          return timeline
-        })
-        .then(function(timeline) { resolve(timeline.id) })
-    })
+    let timeline
+
+    if (timelineIds[name]) {
+      params = params || {}
+      timeline = await models.Timeline.findById(timelineIds[name], {
+        offset: params.offset,
+        limit: params.limit
+      })
+    } else {
+      timeline = new models.Timeline({
+        name: name,
+        userId: this.id
+      })
+
+      timeline = await timeline.create()
+    }
+
+    return timeline.id
   }
 
   User.prototype.getGenericTimeline = async function(name, params) {
@@ -596,51 +590,26 @@ exports.addModel = function(database) {
     return this.getGenericTimelineId('RiverOfNews', params)
   }
 
-  User.prototype.getRiverOfNewsTimeline = function(params) {
-    var that = this
+  User.prototype.getRiverOfNewsTimeline = async function(params) {
+    let timelineId = await this.getRiverOfNewsTimelineId(params)
+    let hidesTimelineId = await this.getHidesTimelineId(params)
 
-    return new Promise(function(resolve, reject) {
-      that.getRiverOfNewsTimelineId(params).bind({})
-        .then(function(timelineId) {
-          this.riverOfNewsId = timelineId
-          return that.getHidesTimelineId(params)
-        })
-        .then(function(timelineId) {
-          this.hidesTimelineId = timelineId
-          return models.Timeline.findById(this.riverOfNewsId, params)
-        })
-        .then(function(riverOfNewsTimeline) {
-          this.riverOfNewsTimeline = riverOfNewsTimeline
-          return that.getBanIds()
-        })
-        .then(function(banIds) {
-          this.banIds = banIds
-          return this.riverOfNewsTimeline.getPosts(this.riverOfNewsTimeline.offset,
-                                                   this.riverOfNewsTimeline.limit)
-        })
-        .then(function(posts) {
-          var self = this
-          return Promise.map(posts, function(post) {
-            // we check posts individually for the time being because
-            // timestamp in timelines could be mistiming (several ms),
-            // we need to refactor Timeline.prototype.updatePost method first
-            return database.zscoreAsync(mkKey(['timeline', this.hidesTimelineId, 'posts']), post.id)
-              .then(function(score) {
-                if (score && score >= 0) {
-                  post.isHidden = true
-                }
-                return post
-              })
-              .then(function(post) {
-                return self.banIds.indexOf(post.userId) >= 0 ? null : post
-              })
-          }.bind(this))
-        })
-        .then(function(posts) {
-          this.riverOfNewsTimeline.posts = posts
-          resolve(this.riverOfNewsTimeline)
-        })
-    })
+    let riverOfNewsTimeline = await models.Timeline.findById(timelineId, params)
+    let banIds = await this.getBanIds()
+    let posts = await riverOfNewsTimeline.getPosts(riverOfNewsTimeline.offset,
+                                                   riverOfNewsTimeline.limit)
+
+    riverOfNewsTimeline.posts = await Promise.all(posts.map(async (post) => {
+      let score = await database.zscoreAsync(mkKey(['timeline', hidesTimelineId, 'posts']), post.id)
+
+      if (score && score >= 0) {
+        post.isHidden = true
+      }
+
+      return banIds.indexOf(post.userId) >= 0 ? null : post
+    }))
+
+    return riverOfNewsTimeline
   }
 
   User.prototype.getLikesTimelineId = function(params) {
@@ -675,11 +644,9 @@ exports.addModel = function(database) {
     return this.getGenericTimeline('Directs', params)
   }
 
-  User.prototype.getTimelineIds = function() {
-    return new Promise(function(resolve, reject) {
-      database.hgetallAsync(mkKey(['user', this.id, 'timelines']))
-        .then(function(timelineIds) { resolve(timelineIds || {}) })
-    }.bind(this))
+  User.prototype.getTimelineIds = async function() {
+    let timelineIds = await database.hgetallAsync(mkKey(['user', this.id, 'timelines']))
+    return timelineIds || {}
   }
 
   User.prototype.getTimelines = function(params) {

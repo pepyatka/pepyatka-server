@@ -133,34 +133,31 @@ exports.addModel = function(database) {
     })
   }
 
-  Timeline.prototype.getPostIds = function(offset, limit) {
+  Timeline.prototype.getPostIds = async function(offset, limit) {
     if (_.isUndefined(offset))
       offset = this.offset
-    else
-      if (offset < 0) offset = 0
+    else if (offset < 0)
+      offset = 0
+
     // -1 = special magic number, meaning “do not use limit defaults,
     // do not use passed in value, use 0 instead". this is at the very least
     // used in Timeline.mergeTo()
     if (_.isUndefined(limit))
       limit = this.limit
-    else
-      if (limit < 0) limit = 0
+    else if (limit < 0)
+      limit = 0
 
-    var that = this
-    return new Promise(function(resolve, reject) {
-      that.validateCanShow(that.currentUser)
-        .then(function(valid) {
-          // this is a private timeline, you shall not pass
-          if (!valid)
-            return resolve([])
+    let valid = await this.validateCanShow(this.currentUser)
 
-          return database.zrevrangeAsync(mkKey(['timeline', that.id, 'posts']), offset, offset+limit-1)
-        })
-        .then(function(postIds) {
-          that.postIds = postIds
-          resolve(that.postIds)
-        })
-    })
+    if (!valid)
+      return []
+
+    this.postIds = await database.zrevrangeAsync(
+      mkKey(['timeline', this.id, 'posts']),
+      offset, offset + limit - 1
+    )
+
+    return this.postIds
   }
 
   Timeline.prototype.getPostIdsByScore = function(min, max) {
