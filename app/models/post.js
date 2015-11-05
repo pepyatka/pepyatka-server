@@ -44,6 +44,7 @@ exports.addModel = function(database) {
 
   Post.className = Post
   Post.namespace = "post"
+  Post.initObject = Post.super_.initObject
   Post.findById = Post.super_.findById
   Post.getById = Post.super_.getById
 

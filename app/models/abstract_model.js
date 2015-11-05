@@ -13,6 +13,15 @@ exports.addModel = function(database) {
   var AbstractModel = function() {
   }
 
+  AbstractModel.initObject = function(attrs, identifier, params) {
+    attrs.id = identifier
+    _.each(params, function(value, key) {
+      attrs[key] = value
+    })
+
+    return new this.className(attrs)
+  }
+
   AbstractModel.findById = async function(identifier, params) {
     let attrs = await database.hgetallAsync(mkKey([this.namespace, identifier]))
 
@@ -20,12 +29,17 @@ exports.addModel = function(database) {
       return null
     }
 
-    attrs.id = identifier
-    _.each(params, function(value, key) {
-      attrs[key] = value
-    })
+    return this.initObject(attrs, identifier, params)
+  }
 
-    return new this.className(attrs)
+  AbstractModel.findByIds = async function(identifiers) {
+    let keys = identifiers.map(id => mkKey([this.namespace, id]))
+    let requests = keys.map(key => ['hgetall', key])
+
+    let responses = await database.multi(requests).execAsync()
+    let objects = responses.map((attrs, i) => this.initObject(attrs, identifiers[i]))
+
+    return objects
   }
 
   AbstractModel.findByAttribute = function(attribute, value) {

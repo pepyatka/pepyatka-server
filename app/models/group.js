@@ -31,6 +31,7 @@ exports.addModel = function(database) {
 
   Group.className = Group
   Group.namespace = "user"
+  Group.initObject = Group.super_.initObject
   Group.findById = Group.super_.findById
   Group.getById = Group.super_.getById
   Group.findByAttribute = Group.super_.findByAttribute

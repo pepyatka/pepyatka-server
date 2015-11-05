@@ -33,6 +33,7 @@ exports.addModel = function(database) {
 
   Comment.className = Comment
   Comment.namespace = "comment"
+  Comment.initObject = Comment.super_.initObject
   Comment.findById = Comment.super_.findById
   Comment.getById = Comment.super_.getById
 

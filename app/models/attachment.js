@@ -47,6 +47,7 @@ exports.addModel = function(database) {
 
   Attachment.className = Attachment
   Attachment.namespace = 'attachment'
+  Attachment.initObject = Attachment.super_.initObject
   Attachment.findById = Attachment.super_.findById
 
   Attachment.prototype.validate = async function() {

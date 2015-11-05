@@ -23,6 +23,7 @@ exports.addModel = function(database) {
 
   Stats.className = Stats
   Stats.namespace = "stats"
+  Stats.initObject = Stats.super_.initObject
   Stats.findById = Stats.super_.findById
 
   Stats.prototype.validateOnCreate = function() {
