@@ -14,28 +14,27 @@ var Promise = require('bluebird')
   , origin = require('./initializers/origin')
   , methodOverride = require('method-override')
 
-var selectEnvironment = function(app) {
-  return new Promise(function(resolve, reject) {
-    var logger = new (winston.Logger)({
-      transports: [
-        new (winston.transports.Console)({
-          'timestamp': true,
-          'level': config.logLevel || 'debug'
-        })
-      ]
-    })
-    app.logger = logger
-    app.config = config
-
-    app.set('redisdb', config.database)
-    app.set('port', process.env.PORT || config.port)
-
-    redis.selectDatabase()
-      .then(function() { resolve(app) })
+var selectEnvironment = async function(app) {
+  var logger = new (winston.Logger)({
+    transports: [
+      new (winston.transports.Console)({
+        'timestamp': true,
+        'level': config.logLevel || 'debug'
+      })
+    ]
   })
+  app.logger = logger
+  app.config = config
+
+  app.set('redisdb', config.database)
+  app.set('port', process.env.PORT || config.port)
+
+  await redis.selectDatabase()
+
+  return app
 }
 
-exports.init = function(app) {
+exports.init = async function(app) {
   app.use(bodyParser.json({limit: config.attachments.fileSizeLimit}))
   app.use(bodyParser.urlencoded({limit: config.attachments.fileSizeLimit, extended: true}))
   app.use(passport.initialize())
@@ -52,8 +51,5 @@ exports.init = function(app) {
   var accessLogStream = fs.createWriteStream(__dirname + '/../log/' + env + '.log', {flags: 'a'})
   app.use(morgan('combined', {stream: accessLogStream}))
 
-  return new Promise(function(resolve, reject) {
-    selectEnvironment(app)
-      .then(function(app) { resolve(app) })
-  })
+  return selectEnvironment(app)
 }

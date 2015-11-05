@@ -29,11 +29,8 @@ function logAndQuit(type) {
   }
 }
 
-exports.selectDatabase = function() {
-  return new Promise(function(resolve, reject) {
-    database.selectAsync(config.database)
-      .then(function(database) { resolve(database) })
-  })
+exports.selectDatabase = async function() {
+  return database.selectAsync(config.database)
 }
 
 exports.connect = function() {
