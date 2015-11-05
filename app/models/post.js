@@ -287,19 +287,14 @@ exports.addModel = function(database) {
 
     let postedToIds = await this.getPostedToIds()
     let timelines = await models.Timeline.findByIds(postedToIds)
-
-    let userPromises = timelines.map(async (timeline) => {
-      let timelineOwner = await timeline.getUser()
-
-      return timelineOwner.isUser()
-    })
+    let timelineOwners = await models.FeedFactory.findByIds(timelines.map(tl => tl.userId))
 
     // Adds the specified post to River of News if and only if
     // that post has been published to user's Post timeline,
     // otherwise this post will stay in group(s) timelines
     let groupOnly = true
 
-    if (_.any(await Promise.all(userPromises))) {
+    if (_.any(timelineOwners.map((owner) => owner.isUser()))) {
       groupOnly = false
 
       let feeds = await timeline.getSubscribers()

@@ -29,6 +29,22 @@ exports.addModel = function(database) {
     }
   }
 
+  FeedFactory.findByIds = async function(identifiers) {
+    let keys = identifiers.map(id => mkKey(['user', id]))
+    let requests = keys.map(key => ['hgetall', key])
+
+    let responses = await database.batch(requests).execAsync()
+    let objects = responses.map((attrs, i) => {
+      if (attrs.type === 'group') {
+        return Group.initObject(attrs, identifiers[i])
+      } else {
+        return User.initObject(attrs, identifiers[i])
+      }
+    })
+
+    return objects
+  }
+
   FeedFactory.findByUsername = async function(username) {
     let identifier = await database.getAsync(mkKey(['username', username, 'uid']))
     return FeedFactory.findById(identifier)
