@@ -220,30 +220,21 @@ exports.addModel = function(database) {
     return models.User.findById(this.userId)
   }
 
-  Post.prototype.getSubscribedTimelineIds = function(groupOnly) {
-    var that = this
-    var timelineIds
+  Post.prototype.getSubscribedTimelineIds = async function(groupOnly) {
     if (typeof groupOnly === 'undefined')
       groupOnly = false
 
-    return new Promise(function(resolve, reject) {
-      FeedFactory.findById(that.userId)
-        .then(function(feed) {
-          var feeds = [feed.getRiverOfNewsTimelineId()]
-          if (!groupOnly)
-            feeds.push(feed.getPostsTimelineId())
-          return Promise.all(feeds)
-        })
-        .then(function(newTimelineIds) {
-          timelineIds = newTimelineIds
-          return that.getTimelineIds()
-        })
-        .then(function(newTimelineIds) {
-          timelineIds = timelineIds.concat(newTimelineIds)
-          timelineIds = _.uniq(timelineIds)
-          resolve(timelineIds)
-        })
-    })
+    let feed = await FeedFactory.findById(this.userId)
+
+    let feeds = [feed.getRiverOfNewsTimelineId()]
+    if (!groupOnly)
+      feeds.push(feed.getPostsTimelineId())
+
+    let timelineIds = await Promise.all(feeds)
+    let newTimelineIds = await this.getTimelineIds()
+
+    timelineIds = timelineIds.concat(newTimelineIds)
+    return _.uniq(timelineIds)
   }
 
   Post.prototype.getSubscribedTimelines = async function() {
