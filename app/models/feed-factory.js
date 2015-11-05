@@ -20,12 +20,12 @@ exports.addModel = function(database) {
   }
 
   FeedFactory.findById = async function(identifier) {
-    let type = await database.hgetAsync(mkKey(['user', identifier]), 'type')
+    let attrs = await database.hgetallAsync(mkKey(['user', identifier]))
 
-    if (type === 'group') {
-      return Group.findById(identifier)
+    if (attrs.type === 'group') {
+      return Group.initObject(attrs, identifier)
     } else {
-      return User.findById(identifier)
+      return User.initObject(attrs, identifier)
     }
   }
 
