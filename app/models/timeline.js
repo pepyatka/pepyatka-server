@@ -316,9 +316,7 @@ exports.addModel = function(database) {
 
   Timeline.prototype.getSubscribers = async function(includeSelf) {
     var userIds = await this.getSubscriberIds(includeSelf)
-    var promises = userIds.map((userId) => models.User.findById(userId))
-
-    this.subscribers = await Promise.all(promises)
+    this.subscribers = await models.User.findByIds(userIds)
 
     return this.subscribers
   }

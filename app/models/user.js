@@ -67,6 +67,7 @@ exports.addModel = function(database) {
   User.namespace = "user"
   User.initObject = User.super_.initObject
   User.findById = User.super_.findById
+  User.findByIds = User.super_.findByIds
   User.getById = User.super_.getById
   User.findByAttribute = User.super_.findByAttribute
 
