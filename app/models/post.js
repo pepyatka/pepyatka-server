@@ -286,9 +286,9 @@ exports.addModel = function(database) {
     timelineIds.push(timeline.id)
 
     let postedToIds = await this.getPostedToIds()
+    let timelines = await models.Timeline.findByIds(postedToIds)
 
-    let userPromises = postedToIds.map(async (timelineId) => {
-      let timeline = await models.Timeline.findById(timelineId)
+    let userPromises = timelines.map(async (timeline) => {
       let timelineOwner = await timeline.getUser()
 
       return timelineOwner.isUser()

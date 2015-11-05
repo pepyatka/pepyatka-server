@@ -36,6 +36,7 @@ exports.addModel = function(database) {
   Timeline.namespace = "timeline"
   Timeline.initObject = Timeline.super_.initObject
   Timeline.findById = Timeline.super_.findById
+  Timeline.findByIds = Timeline.super_.findByIds
 
   Object.defineProperty(Timeline.prototype, 'name', {
     get: function() { return this.name_ },
