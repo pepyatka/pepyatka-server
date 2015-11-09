@@ -717,13 +717,8 @@ exports.addModel = function(database) {
     return this.subscribers
   }
 
-  User.prototype.getBanIds = function() {
-    var that = this
-
-    return new Promise(function(resolve, reject) {
-      database.zrevrangeAsync(mkKey(['user', that.id, 'bans']), 0, -1)
-        .then(function(userIds) { resolve(userIds) })
-    })
+  User.prototype.getBanIds = async function() {
+    return database.zrevrangeAsync(mkKey(['user', this.id, 'bans']), 0, -1)
   }
 
   User.prototype.getBans = function() {
