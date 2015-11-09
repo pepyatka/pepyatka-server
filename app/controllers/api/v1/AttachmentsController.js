@@ -26,11 +26,14 @@ exports.addController = function(app) {
           })
         })
         .catch(function(e) {
-          let errorDetails = {}
           if (e.message && e.message.indexOf('Corrupt image') > -1) {
-            errorDetails = { message: 'Corrupt image' }
+            console.log(e)
+
+            let errorDetails = { message: 'Corrupt image' }
+            exceptions.reportError(res)(errorDetails)
+          } else {
+            exceptions.reportError(res)(e)
           }
-          res.status(422).send(errorDetails)
         })
     })
 
