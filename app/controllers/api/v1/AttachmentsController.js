@@ -24,7 +24,13 @@ exports.addController = function(app) {
             res.jsonp(json)
           })
         })
-        .catch(function(e) { res.status(422).send({}) })
+        .catch(function(e) {
+          let errorDetails = {}
+          if (e.message && e.message.indexOf('Corrupt image') > -1) {
+            errorDetails = { message: 'Corrupt image' }
+          }
+          res.status(422).send(errorDetails)
+        })
     })
 
     form.parse(req)
