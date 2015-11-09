@@ -46,6 +46,7 @@ exports.addModel = function(database) {
   Post.namespace = "post"
   Post.initObject = Post.super_.initObject
   Post.findById = Post.super_.findById
+  Post.findByIds = Post.super_.findByIds
   Post.getById = Post.super_.getById
 
   Object.defineProperty(Post.prototype, 'body', {
@@ -252,8 +253,8 @@ exports.addModel = function(database) {
 
   Post.prototype.getTimelines = async function() {
     var timelineIds = await this.getTimelineIds()
-    var timelines = await Promise.all(timelineIds.map((timelineId) => models.Timeline.findById(timelineId)))
-    this.timelines = timelines
+    this.timelines = await models.Timeline.findByIds(timelineIds)
+
     return this.timelines
   }
 
