@@ -49,6 +49,11 @@ exports.addModel = function(database) {
 
   FeedFactory.findByUsername = async function(username) {
     let identifier = await database.getAsync(mkKey(['username', username, 'uid']))
+
+    if (null === identifier) {
+      throw new NotFoundException(`user "${username}" is not found`)
+    }
+
     return FeedFactory.findById(identifier)
   }
 
