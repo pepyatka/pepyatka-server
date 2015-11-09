@@ -1,8 +1,9 @@
 "use strict";
 
-var models = require('../../../models')
-  , formidable = require('formidable')
-  , AttachmentSerializer = models.AttachmentSerializer
+import formidable from 'formidable'
+
+import { AttachmentSerializer } from '../../../models'
+import exceptions from '../../../support/exceptions'
 
 exports.addController = function(app) {
   var AttachmentsController = function() {
