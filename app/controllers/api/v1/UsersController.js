@@ -87,11 +87,17 @@ exports.addController = function(app) {
     }
 
     static async show(req, res) {
-      var feed = await models.FeedFactory.findByUsername(req.params.username)
-      // HACK: feed.isUser() ? UserSerializer : GroupSerializer
-      var serializer = UserSerializer
-      var json = await new serializer(feed).promiseToJSON()
-      res.jsonp(json)
+      try {
+        var feed = await models.FeedFactory.findByUsername(req.params.username)
+
+        // HACK: feed.isUser() ? UserSerializer : GroupSerializer
+        var serializer = UserSerializer
+
+        var json = await new serializer(feed).promiseToJSON()
+        res.jsonp(json)
+      } catch (e) {
+        exceptions.reportError(res)(e)
+      }
     }
 
     static async subscribers(req, res) {

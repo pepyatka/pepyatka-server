@@ -1,13 +1,15 @@
 "use strict";
 
-var Promise = require('bluebird')
-  , inherits = require("util").inherits
-  , models = require("../../app/models")
-  , AbstractModel = models.AbstractModel
-  , User = models.User
-  , Group = models.Group
-  , mkKey = require("../support/models").mkKey
-  , config = require('../../config/config').load()
+import Promise from "bluebird"
+import { inherits } from "util"
+
+import { AbstractModel, User, Group } from "../../app/models"
+import { mkKey } from "../support/models"
+import { load as configLoader } from "../../config/config"
+import { NotFoundException } from "../support/exceptions"
+
+let config = configLoader()
+
 
 exports.addModel = function(database) {
   var FeedFactory = function() {
@@ -47,6 +49,11 @@ exports.addModel = function(database) {
 
   FeedFactory.findByUsername = async function(username) {
     let identifier = await database.getAsync(mkKey(['username', username, 'uid']))
+
+    if (null === identifier) {
+      throw new NotFoundException(`user "${username}" is not found`)
+    }
+
     return FeedFactory.findById(identifier)
   }
 

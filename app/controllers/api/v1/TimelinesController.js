@@ -8,23 +8,26 @@ exports.addController = function(app) {
   var TimelineController = function() {
   }
 
-  TimelineController.home = function(req, res) {
-    if (!req.user)
-      return res.status(401).jsonp({ err: 'Not found', status: 'fail'})
+  TimelineController.home = async function(req, res) {
+    if (!req.user) {
+      res.status(401).jsonp({ err: 'Not found', status: 'fail'})
+      return
+    }
 
-    var user = req.user
+    try {
+      var user = req.user
 
-    user.getRiverOfNewsTimeline({
-      offset: req.query.offset,
-      limit: req.query.limit,
-      currentUser: user.id
-    })
-      .then(function(timeline) {
-        new TimelineSerializer(timeline).toJSON(function(err, json) {
-          res.jsonp(json)
-        })
+      let timeline = await user.getRiverOfNewsTimeline({
+        offset: req.query.offset,
+        limit: req.query.limit,
+        currentUser: user.id
       })
-      .catch(function(e) { res.status(422).send({}) })
+
+      let json = await new TimelineSerializer(timeline).promiseToJSON()
+      res.jsonp(json)
+    } catch (e) {
+      exceptions.reportError(res)(e)
+    }
   }
 
   TimelineController.directs = function(req, res) {

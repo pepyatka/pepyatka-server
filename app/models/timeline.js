@@ -189,9 +189,19 @@ exports.addModel = function(database) {
     let banIds = reader ? (await reader.getBanIds()) : []
 
     let postIds = await this.getPostIds(offset, limit)
-    let posts = (await Promise.all(postIds.map(postId => Post.findById(postId, { currentUser: this.currentUser })))).filter(Boolean)
+    let posts = (await Post.findByIds(postIds, { currentUser: this.currentUser })).filter(Boolean)
+
+    let uids = _.uniq(posts.map(post => post.userId))
+    let users = (await models.User.findByIds(uids)).filter(Boolean)
+    let bans = await Promise.all(users.map(async (user) => user.getBanIds()))
 
     let usersCache = {}
+
+    for (let i = 0; i < users.length; i++) {
+      let user = users[i];
+      usersCache[user.id] = [user, bans[i]];
+    }
+
     async function userById(id) {
       if (!(id in usersCache)) {
         let user = await models.User.findById(id)

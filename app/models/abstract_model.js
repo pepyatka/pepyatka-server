@@ -32,12 +32,12 @@ exports.addModel = function(database) {
     return this.initObject(attrs, identifier, params)
   }
 
-  AbstractModel.findByIds = async function(identifiers) {
+  AbstractModel.findByIds = async function(identifiers, params) {
     let keys = identifiers.map(id => mkKey([this.namespace, id]))
     let requests = keys.map(key => ['hgetall', key])
 
     let responses = await database.batch(requests).execAsync()
-    let objects = responses.map((attrs, i) => this.initObject(attrs, identifiers[i]))
+    let objects = responses.map((attrs, i) => this.initObject(attrs, identifiers[i], params))
 
     return objects
   }
