@@ -14,7 +14,7 @@
     "url": "git://github.com/epicmonkey/pepyatka-server.git"
   },
   "dependencies": {
-    "async": "1.2.1",
+    "async": "1.5.0",
     "aws-sdk": "2.1.39",
     "babel": "5.8.23",
     "bcrypt": "0.8.5",
@@ -41,8 +41,8 @@
     "passport-local": "1.0.0",
     "redis": "2.3.0",
     "request": "2.61.0",
-    "socket.io": "1.3.5",
-    "socket.io-redis": "0.1.4",
+    "socket.io": "1.3.7",
+    "socket.io-redis": "git+https://github.com/devoidfury/socket.io-redis.git#e1b1ed671d6074bae1040792d0a08649a10c994c",
     "superagent": "1.4.0",
     "underscore.string": "3.1.1",
     "url": "0.10.3",
