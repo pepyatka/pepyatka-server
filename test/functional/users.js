@@ -665,23 +665,6 @@ describe("UsersController", function() {
           })
         })
       })
-
-      it('should let user "reset" password using newly set email', function(done) {
-        funcTestHelper.updateUserCtx(marsContext, {email: 'other@example.org'})(function (err, res) {
-          $should.not.exist(err)
-
-          funcTestHelper.sendResetPassword(marsContext.attributes.email)(function(err2, res2) {
-            $should.exist(err2)
-
-            funcTestHelper.sendResetPassword('other@example.org')(function(err3, res3) {
-              $should.not.exist(err3)
-              $should.exist(res3)
-              res3.body.message.should.eql('We will send a password reset link to other@example.org in a moment')
-              done()
-            })
-          })
-        })
-      })
     })
   })
 
