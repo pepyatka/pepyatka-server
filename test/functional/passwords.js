@@ -45,6 +45,19 @@ describe("PasswordsController", function() {
       data.should.have.property('message')
       data.message.should.eql('We will send a password reset link to ' + email + ' in a moment')
     })
+
+    it('should generate resetToken by email with capital letters', async () => {
+      let email = "Luna@example.com"
+
+      await funcTestHelper.updateUserAsync(context, { email })
+
+      let response = await funcTestHelper.sendResetPassword(email)
+      response.status.should.equal(200, `failed to reset password for ${email} email`)
+
+      let data = await response.json()
+      data.should.have.property('message')
+      data.message.should.eql('We will send a password reset link to ' + email + ' in a moment')
+    })
   })
 
   describe('#update()', function() {
